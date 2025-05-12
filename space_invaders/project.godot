@@ -14,3 +14,8 @@ config/name="space_invaders"
 run/main_scene="uid://we3jr2li5bcj"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=800
+window/size/viewport_height=1000
