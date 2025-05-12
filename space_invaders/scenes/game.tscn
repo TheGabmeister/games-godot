@@ -1,8 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://we3jr2li5bcj"]
+[gd_scene load_steps=5 format=3 uid="uid://we3jr2li5bcj"]
 
 [ext_resource type="PackedScene" uid="uid://ctw41ubm0fbhp" path="res://scenes/player.tscn" id="1_uwrxv"]
-
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_uwrxv"]
+[ext_resource type="PackedScene" uid="uid://btnlfjpmd2jar" path="res://scenes/enemies/enemy_blue.tscn" id="2_lbhrr"]
+[ext_resource type="PackedScene" uid="uid://bdio47uwtprje" path="res://scenes/enemies/enemy_green.tscn" id="3_iywne"]
+[ext_resource type="PackedScene" uid="uid://ciyvulth5wl5o" path="res://scenes/enemies/enemy_orange.tscn" id="4_p57ef"]
 
 [node name="Game" type="Node2D"]
 
@@ -12,10 +13,11 @@ position = Vector2(148, -201)
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(0, -500)
 
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
-position = Vector2(-206, -154)
-rotation = 1.68072
-metadata/_edit_group_ = true
+[node name="Enemy" parent="." instance=ExtResource("2_lbhrr")]
+position = Vector2(-212, -814)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
-shape = SubResource("WorldBoundaryShape2D_uwrxv")
+[node name="Enemy2" parent="." instance=ExtResource("3_iywne")]
+position = Vector2(-27, -730)
+
+[node name="Enemy3" parent="." instance=ExtResource("4_p57ef")]
+position = Vector2(226, -735)
