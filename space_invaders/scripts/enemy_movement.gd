@@ -1,10 +1,10 @@
 extends Node2D
 
 var movement_speed: float = 300.0
-const VERTICAL_MOVEMENT := 30
-const BOUNDARY := 350
-static var direction := 1
-static var has_moved_vertical := false
+const VERTICAL_MOVEMENT: float = 30.0
+const BOUNDARY: float = 350.0
+static var direction: int = 1
+static var has_moved_vertical: bool = false
 
 func _ready() -> void:
 	pass 
@@ -24,9 +24,11 @@ func _move_vertical() -> void:
 		return
 	
 	has_moved_vertical = true
-	for enemy in get_parent().get_children():
+	
+	for enemy: Node2D in get_parent().get_children():
 		if enemy.is_in_group("enemies"):
 			enemy.position.y += VERTICAL_MOVEMENT
+
 	call_deferred("_reset_has_moved_vertical")
 
 func _reset_has_moved_vertical() -> void:
