@@ -1,5 +1,7 @@
 extends Node2D
 
+const SCORE: int = 100
+
 var movement_speed: float = 300.0
 const VERTICAL_MOVEMENT: float = 30.0
 const BOUNDARY: float = 350.0
@@ -24,7 +26,7 @@ func _move_vertical() -> void:
 		return
 	
 	has_moved_vertical = true
-	
+
 	for enemy: Node2D in get_parent().get_children():
 		if enemy.is_in_group("enemies"):
 			enemy.position.y += VERTICAL_MOVEMENT
@@ -33,3 +35,6 @@ func _move_vertical() -> void:
 
 func _reset_has_moved_vertical() -> void:
 	has_moved_vertical = false
+
+func die() -> void:
+	EventBus.emit("player_scored", SCORE)
