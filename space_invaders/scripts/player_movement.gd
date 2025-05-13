@@ -1,9 +1,9 @@
 extends Node2D
 
 # Speed of the player in pixels per second
-var speed := 200
-var boundary := 350
-var cooldown := 1
+const SPEED := 200
+const BOUNDARY := 350
+const COOLDOWN := 1
 var cooldown_remaining := 0.0
 var bullet = preload("res://scenes/player_laser.tscn")
 
@@ -22,14 +22,14 @@ func _process(delta):
 		var bullet_inst = bullet.instantiate()
 		bullet_inst.position = position
 		get_tree().root.add_child(bullet_inst)
-		cooldown_remaining = cooldown
+		cooldown_remaining = COOLDOWN
 
 	# make sure player doesn't go off screen
-	if position.x > boundary:
-		position.x = boundary
-	if position.x < -boundary:
-		position.x = -boundary
+	if position.x > BOUNDARY:
+		position.x = BOUNDARY
+	if position.x < -BOUNDARY:
+		position.x = -BOUNDARY
 
 	if direction != Vector2.ZERO:
 		direction = direction.normalized()
-		position += direction * speed * delta
+		position += direction * SPEED * delta
