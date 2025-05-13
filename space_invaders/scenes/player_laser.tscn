@@ -1,12 +1,14 @@
 [gd_scene load_steps=4 format=3 uid="uid://clb64bcrmswos"]
 
 [ext_resource type="Texture2D" uid="uid://bdxqv7qhqyrxn" path="res://sprites/player_laser.png" id="1_8lrg4"]
-[ext_resource type="Script" uid="uid://7yrennlb4v2w" path="res://scripts/player_laser.gd" id="2_p3bga"]
+[ext_resource type="Script" uid="uid://7yrennlb4v2w" path="res://scripts/projectile.gd" id="2_p3bga"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_p3bga"]
 
 [node name="PlayerLaser" type="Node2D"]
 script = ExtResource("2_p3bga")
+speed = -300.0
+target_group = "enemies"
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_8lrg4")
