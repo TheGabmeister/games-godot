@@ -1,6 +1,6 @@
 extends Node2D
 
-var movement_speed := 300.0
+var movement_speed: float = 300.0
 const VERTICAL_MOVEMENT := 30
 const BOUNDARY := 350
 static var direction := 1
@@ -10,7 +10,7 @@ func _ready() -> void:
 	pass 
 
 func _process(delta: float) -> void:
-	if (position.x > BOUNDARY):
+	if position.x > BOUNDARY:
 		_move_vertical()
 		direction = -1
 	if position.x < -BOUNDARY:
@@ -19,7 +19,7 @@ func _process(delta: float) -> void:
 	position.x += movement_speed * direction * delta
 
 # when moving down, prevent other instances from triggering the group movement
-func _move_vertical():
+func _move_vertical() -> void:
 	if has_moved_vertical:
 		return
 	
@@ -29,5 +29,5 @@ func _move_vertical():
 			enemy.position.y += VERTICAL_MOVEMENT
 	call_deferred("_reset_has_moved_vertical")
 
-func _reset_has_moved_vertical():
+func _reset_has_moved_vertical() -> void:
 	has_moved_vertical = false

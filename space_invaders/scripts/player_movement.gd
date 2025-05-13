@@ -5,9 +5,9 @@ const SPEED := 200
 const BOUNDARY := 350
 const COOLDOWN := 1
 var cooldown_remaining := 0.0
-var bullet = preload("res://scenes/player_laser.tscn")
+var bullet: PackedScene = preload("res://scenes/player_laser.tscn")
 
-func _process(delta):
+func _process(delta: float) -> void:
 	var direction := Vector2.ZERO
 
 	if Input.is_action_pressed("move_right"):
@@ -19,9 +19,9 @@ func _process(delta):
 	if cooldown_remaining > 0.0:
 		cooldown_remaining -= delta
 	if Input.is_action_just_pressed("jump") and cooldown_remaining <= 0.0:
-		var bullet_inst = bullet.instantiate()
+		var bullet_inst: Node2D = bullet.instantiate()
 		bullet_inst.position = position
-		get_tree().root.add_child(bullet_inst)
+		get_tree().current_scene.add_child(bullet_inst)
 		cooldown_remaining = COOLDOWN
 
 	# make sure player doesn't go off screen
