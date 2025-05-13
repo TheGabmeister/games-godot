@@ -1,14 +1,14 @@
 extends Node2D
 
 # Speed of the player in pixels per second
-const SPEED := 200
-const BOUNDARY := 350
-const COOLDOWN := 1
-var cooldown_remaining := 0.0
+const SPEED: float = 200.0
+const BOUNDARY: float = 350.0
+const COOLDOWN: float = 1.0
+var cooldown_remaining: float = 0.0
 var bullet: PackedScene = preload("res://scenes/player_laser.tscn")
 
 func _process(delta: float) -> void:
-	var direction := Vector2.ZERO
+	var direction: Vector2 = Vector2.ZERO
 
 	if Input.is_action_pressed("move_right"):
 		direction.x += 1
@@ -33,3 +33,6 @@ func _process(delta: float) -> void:
 	if direction != Vector2.ZERO:
 		direction = direction.normalized()
 		position += direction * SPEED * delta
+
+func _update_score(_value: int) -> void:
+	pass

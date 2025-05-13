@@ -9,6 +9,7 @@ static var direction: int = 1
 static var has_moved_vertical: bool = false
 
 func _ready() -> void:
+	GameEvents.enemy_killed.emit(SCORE)
 	pass 
 
 func _process(delta: float) -> void:
@@ -37,4 +38,4 @@ func _reset_has_moved_vertical() -> void:
 	has_moved_vertical = false
 
 func die() -> void:
-	EventBus.emit("player_scored", SCORE)
+	pass
