@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameManager="*res://scripts/game_manager.gd"
+EventBus="*res://addons/event_bus_plugin/EventBus.gd"
 
 [debug]
 
@@ -32,6 +33,10 @@ gdscript/warnings/unsafe_call_argument=1
 
 window/size/viewport_width=800
 window/size/viewport_height=1000
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/event_bus_plugin/plugin.cfg")
 
 [global_group]
 
