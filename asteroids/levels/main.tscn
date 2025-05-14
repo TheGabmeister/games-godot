@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3 uid="uid://bud6jfam66xwa"]
+
+[ext_resource type="PackedScene" uid="uid://chxy41s4d86cs" path="res://player/player.tscn" id="1_2262g"]
+
+[node name="Main" type="Node"]
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="Player" parent="World" instance=ExtResource("1_2262g")]
+position = Vector2(615, 540)
+
+[node name="Camera2D" type="Camera2D" parent="World"]
+position = Vector2(584, 323)
+
+[node name="GUI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
