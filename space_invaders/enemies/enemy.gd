@@ -30,16 +30,15 @@ func _move_vertical() -> void:
 	
 	_has_moved_vertical = true
 
-	var enemies: Array = get_parent().get_children().filter(func(n: Node) -> bool: return n is Node2D)
-	for enemy: Node2D in enemies:
-		if enemy.is_in_group("enemies"):
-			enemy.position.y += VERTICAL_MOVEMENT
+	var enemies: Array = get_parent().get_children().filter(func(n: Node) -> bool: return n is Enemy)
+	for enemy: Enemy in enemies:
+		enemy.position.y += VERTICAL_MOVEMENT
 
 	call_deferred("_reset_has_moved_vertical")
 
 func _reset_has_moved_vertical() -> void:
 	_has_moved_vertical = false
 
-func die() -> void:
+func on_hit() -> void:
 	GameEvents.enemy_killed.emit(SCORE)
 	queue_free()
