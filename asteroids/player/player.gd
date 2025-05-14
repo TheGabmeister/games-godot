@@ -3,8 +3,7 @@ class_name Player
 
 const SPEED := 300.0
 const ROTATION_SPEED := 5.0
-const COOLDOWN := 1.0
-var _cooldown_remaining := 1.0
+var _cooldown := 1.0
 #var bullet: PackedScene = preload("res://player/player_laser.tscn")
 
 func _process(delta):
@@ -18,8 +17,8 @@ func _process(delta):
 	if Input.is_action_pressed("move_down"):
 		position -= Vector2.UP.rotated(rotation) * SPEED * delta
 
-	if _cooldown_remaining > 0:
-		_cooldown_remaining -= delta
-	if Input.is_action_pressed("fire") && _cooldown_remaining < 0:
+	if Input.is_action_pressed("fire") && _cooldown <= 0:
 		print("Fired")
-		_cooldown_remaining = COOLDOWN
+		_cooldown = 1.0
+	elif _cooldown > 0:
+		_cooldown -= delta
