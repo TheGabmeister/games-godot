@@ -5,3 +5,4 @@ extends Node
 
 signal enemy_killed(score: int)
 signal update_score(score: int)
+signal update_hi_score(score: int)

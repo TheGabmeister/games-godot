@@ -26,16 +26,16 @@ position = Vector2(396, 227)
 [node name="Enemy3" parent="World" instance=ExtResource("4_6et1j")]
 position = Vector2(535, 440)
 
-[node name="UI" type="Control" parent="." node_paths=PackedStringArray("score_one", "score_two")]
+[node name="UI" type="Control" parent="." node_paths=PackedStringArray("_score_one", "_hi_score")]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("5_5k4jt")
-score_one = NodePath("Score_01")
-score_two = NodePath("Score_02")
+_score_one = NodePath("Score_One")
+_hi_score = NodePath("Hi_Score")
 
-[node name="Score_01" type="Label" parent="UI"]
+[node name="Score_One" type="Label" parent="UI"]
 layout_mode = 0
 offset_left = 75.0
 offset_top = 92.0
@@ -44,12 +44,21 @@ offset_bottom = 147.0
 theme_override_font_sizes/font_size = 40
 text = "0"
 
-[node name="Score_02" type="Label" parent="UI"]
+[node name="Score_Two" type="Label" parent="UI"]
 layout_mode = 0
 offset_left = 576.0
 offset_top = 111.0
 offset_right = 616.0
 offset_bottom = 166.0
+theme_override_font_sizes/font_size = 40
+text = "0"
+
+[node name="Hi_Score" type="Label" parent="UI"]
+layout_mode = 0
+offset_left = 304.0
+offset_top = 57.0
+offset_right = 344.0
+offset_bottom = 112.0
 theme_override_font_sizes/font_size = 40
 text = "0"
 
