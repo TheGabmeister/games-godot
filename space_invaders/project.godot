@@ -11,13 +11,13 @@ config_version=5
 [application]
 
 config/name="space_invaders"
-run/main_scene="uid://crm21bj7k0o30"
+run/main_scene="uid://ctw41ubm0fbhp"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
-GameEvents="*res://scripts/game_events.gd"
+GameEvents="*res://autoloads/game_events.gd"
 
 [debug]
 

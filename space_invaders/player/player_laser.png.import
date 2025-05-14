@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://puxgc8jl5upc"
-path="res://.godot/imported/player.png-f534b8a02ffb80eefc72936296201445.ctex"
+uid="uid://bdxqv7qhqyrxn"
+path="res://.godot/imported/player_laser.png-12f0fe79a129cc5811a1c53f02673976.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player.png"
-dest_files=["res://.godot/imported/player.png-f534b8a02ffb80eefc72936296201445.ctex"]
+source_file="res://player/player_laser.png"
+dest_files=["res://.godot/imported/player_laser.png-12f0fe79a129cc5811a1c53f02673976.ctex"]
 
 [params]
 

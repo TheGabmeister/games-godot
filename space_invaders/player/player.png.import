@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c21a8qbofuqd5"
-path="res://.godot/imported/enemy_laser.png-ac6537172a8900be0f1239a9bca2d444.ctex"
+uid="uid://puxgc8jl5upc"
+path="res://.godot/imported/player.png-1ad27fc2a62fa126eae918723933dd6f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/enemy_laser.png"
-dest_files=["res://.godot/imported/enemy_laser.png-ac6537172a8900be0f1239a9bca2d444.ctex"]
+source_file="res://player/player.png"
+dest_files=["res://.godot/imported/player.png-1ad27fc2a62fa126eae918723933dd6f.ctex"]
 
 [params]
 
