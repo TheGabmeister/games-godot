@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://crm21bj7k0o30"]
+[gd_scene load_steps=6 format=3 uid="uid://crm21bj7k0o30"]
 
 [ext_resource type="PackedScene" uid="uid://ctw41ubm0fbhp" path="res://scenes/player.tscn" id="1_tbgi4"]
 [ext_resource type="PackedScene" uid="uid://btnlfjpmd2jar" path="res://scenes/enemies/enemy_blue.tscn" id="2_tefeu"]
 [ext_resource type="PackedScene" uid="uid://bdio47uwtprje" path="res://scenes/enemies/enemy_green.tscn" id="3_o6xl0"]
 [ext_resource type="PackedScene" uid="uid://ciyvulth5wl5o" path="res://scenes/enemies/enemy_orange.tscn" id="4_tipki"]
+[ext_resource type="Script" uid="uid://wgw05it2bqya" path="res://scripts/game_manager.gd" id="5_tbgi4"]
 
 [node name="Main" type="Node"]
 
@@ -29,3 +30,6 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("5_tbgi4")

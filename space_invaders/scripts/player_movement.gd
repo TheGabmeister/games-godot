@@ -33,6 +33,3 @@ func _process(delta: float) -> void:
 	if direction != Vector2.ZERO:
 		direction = direction.normalized()
 		position += direction * SPEED * delta
-
-func _update_score(_value: int) -> void:
-	pass

@@ -1,7 +1,9 @@
+class_name Enemy
 extends Node2D
+#@warning_ignore("unsafe_property_access", "untyped_declaration")
+#var implements = Interface.ExampleInterface
 
 const SCORE: int = 100
-
 var movement_speed: float = 300.0
 const VERTICAL_MOVEMENT: float = 30.0
 const BOUNDARY: float = 700.0
