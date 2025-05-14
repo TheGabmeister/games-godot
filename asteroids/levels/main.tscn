@@ -10,7 +10,7 @@
 position = Vector2(615, 540)
 
 [node name="Camera2D" type="Camera2D" parent="World"]
-position = Vector2(584, 323)
+position = Vector2(512, 384)
 
 [node name="GUI" type="Control" parent="."]
 layout_mode = 3
