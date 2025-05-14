@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bn215ew8na0en"]
+
+[ext_resource type="Script" uid="uid://duk144ao6otp7" path="res://interfaces/ihittable.gd" id="1_mvq4r"]
+
+[node name="IHittable" type="Node"]
+script = ExtResource("1_mvq4r")

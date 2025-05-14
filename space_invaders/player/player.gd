@@ -1,11 +1,12 @@
 extends Node2D
+class_name Player
 
 # Speed of the player in pixels per second
 const SPEED: float = 200.0
 const BOUNDARY: float = 350.0
 const COOLDOWN: float = 1.0
 var cooldown_remaining: float = 0.0
-var bullet: PackedScene = preload("res://scenes/player_laser.tscn")
+var bullet: PackedScene = preload("res://player/player_laser.tscn")
 
 func _process(delta: float) -> void:
 	var direction: Vector2 = Vector2.ZERO
