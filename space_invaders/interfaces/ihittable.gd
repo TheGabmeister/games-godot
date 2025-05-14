@@ -10,7 +10,7 @@ func _notification(what: int) -> void:
 			get_parent().set_meta(IHITTABLE, self)
 		NOTIFICATION_UNPARENTED:
 			## Remove itself from parent as a metadata
-			get_parent().set_meta(IHITTABLE, self)
+			get_parent().set_meta(IHITTABLE, null)
 	pass
 	
 func _ready() -> void:
@@ -21,7 +21,7 @@ func _ready() -> void:
 	assert(owner.has_method("on_hit"))
 	pass
 
-func interact(interactor: Node) -> void:
+func on_hit(instigator: Node) -> void:
 	@warning_ignore("unsafe_method_access")
-	owner.on_hit(interactor) ## proxying the call to parent
+	owner.on_hit(instigator) ## proxying the call to parent
 	pass

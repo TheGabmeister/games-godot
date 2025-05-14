@@ -7,5 +7,7 @@ func _process(delta: float) -> void:
 	position.y += speed * delta
 
 func _on_area_2d_area_entered(area: Area2D) -> void:
-	area.get_parent().queue_free()
+	if area.get_parent().has_meta(IHittable.IHITTABLE):
+		var i: IHittable = area.get_parent().get_meta(IHittable.IHITTABLE)
+		i.on_hit(self)
 	queue_free()

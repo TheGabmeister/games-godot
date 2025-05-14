@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://crm21bj7k0o30"]
+[gd_scene load_steps=7 format=3 uid="uid://crm21bj7k0o30"]
 
 [ext_resource type="PackedScene" uid="uid://ctw41ubm0fbhp" path="res://player/player.tscn" id="1_ifaiv"]
 [ext_resource type="PackedScene" uid="uid://btnlfjpmd2jar" path="res://enemies/enemy_blue.tscn" id="2_5k4jt"]
 [ext_resource type="PackedScene" uid="uid://bdio47uwtprje" path="res://enemies/enemy_green.tscn" id="3_qy63d"]
 [ext_resource type="PackedScene" uid="uid://ciyvulth5wl5o" path="res://enemies/enemy_orange.tscn" id="4_6et1j"]
+[ext_resource type="Script" uid="uid://cgy1vh4p18h86" path="res://ui/gui.gd" id="5_5k4jt"]
 [ext_resource type="Script" uid="uid://wgw05it2bqya" path="res://managers/game_manager.gd" id="5_etqu2"]
 
 [node name="Main" type="Node"]
@@ -25,11 +26,32 @@ position = Vector2(396, 227)
 [node name="Enemy3" parent="World" instance=ExtResource("4_6et1j")]
 position = Vector2(535, 440)
 
-[node name="UI" type="Control" parent="."]
+[node name="UI" type="Control" parent="." node_paths=PackedStringArray("score_one", "score_two")]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
+script = ExtResource("5_5k4jt")
+score_one = NodePath("Score_01")
+score_two = NodePath("Score_02")
+
+[node name="Score_01" type="Label" parent="UI"]
+layout_mode = 0
+offset_left = 75.0
+offset_top = 92.0
+offset_right = 115.0
+offset_bottom = 147.0
+theme_override_font_sizes/font_size = 40
+text = "0"
+
+[node name="Score_02" type="Label" parent="UI"]
+layout_mode = 0
+offset_left = 576.0
+offset_top = 111.0
+offset_right = 616.0
+offset_bottom = 166.0
+theme_override_font_sizes/font_size = 40
+text = "0"
 
 [node name="GameManager" type="Node" parent="."]
 script = ExtResource("5_etqu2")

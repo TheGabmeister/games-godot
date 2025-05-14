@@ -1,7 +1,5 @@
 class_name Enemy
 extends Node2D
-#@warning_ignore("unsafe_property_access", "untyped_declaration")
-#var implements = Interface.ExampleInterface
 
 const SCORE: int = 100
 var movement_speed: float = 300.0
@@ -9,10 +7,6 @@ const VERTICAL_MOVEMENT: float = 30.0
 const BOUNDARY: float = 700.0
 static var _direction: int = 1
 static var _has_moved_vertical: bool = false
-
-func _ready() -> void:
-	GameEvents.enemy_killed.emit(SCORE)
-	pass 
 
 func _process(delta: float) -> void:
 	if position.x > BOUNDARY:
@@ -39,6 +33,6 @@ func _move_vertical() -> void:
 func _reset_has_moved_vertical() -> void:
 	_has_moved_vertical = false
 
-func on_hit() -> void:
+func on_hit(_instigator: Node) -> void:
 	GameEvents.enemy_killed.emit(SCORE)
 	queue_free()
