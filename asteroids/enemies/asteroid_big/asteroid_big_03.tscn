@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3 uid="uid://cpdp33euihroe"]
+
+[ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_ehoo0"]
+[ext_resource type="Script" uid="uid://1ijgpe82c6qs" path="res://enemies/enemy.gd" id="2_cg4n1"]
+[ext_resource type="Texture2D" uid="uid://dv6nvfjwj4th4" path="res://enemies/asteroid_big/asteroid_big_02.png" id="3_acmnx"]
+[ext_resource type="PackedScene" uid="uid://bfj2uwo7hu5qb" path="res://utils/move_forward_2d.tscn" id="4_axaqe"]
+
+[node name="AsteroidBig_03" instance=ExtResource("1_ehoo0")]
+script = ExtResource("2_cg4n1")
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("3_acmnx")
+
+[node name="Area2D" parent="." index="1"]
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Area2D" index="0"]
+polygon = PackedVector2Array(-39, -42, 7, -48, 60, -29, 47, 21, -9, 34, -26, 50, -54, 27, -62, -4)
+
+[node name="MoveForward2D" parent="." index="2" instance=ExtResource("4_axaqe")]
+
+[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]

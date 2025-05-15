@@ -1,10 +1,15 @@
-[gd_scene load_steps=6 format=3 uid="uid://bud6jfam66xwa"]
+[gd_scene load_steps=10 format=3 uid="uid://bud6jfam66xwa"]
 
 [ext_resource type="PackedScene" uid="uid://bwwu6y2xnqbov" path="res://player/player.tscn" id="1_2262g"]
-[ext_resource type="PackedScene" uid="uid://bi55hoqcx5a3w" path="res://enemies/asteroid.tscn" id="2_wdj6m"]
+[ext_resource type="PackedScene" uid="uid://bi55hoqcx5a3w" path="res://enemies/asteroid_big/asteroid_big_01.tscn" id="2_wdj6m"]
 [ext_resource type="PackedScene" uid="uid://dxos7u340j01s" path="res://environment/boundary.tscn" id="4_5k4jt"]
 [ext_resource type="Script" uid="uid://0ybm8b5tll5h" path="res://gui/gui.gd" id="4_ifaiv"]
 [ext_resource type="Script" uid="uid://hrlkkd13mhyi" path="res://managers/game_manager.gd" id="4_m1504"]
+[ext_resource type="PackedScene" uid="uid://dbnw0rw7s5bj8" path="res://enemies/asteroid_big/asteroid_big_02.tscn" id="6_6et1j"]
+[ext_resource type="PackedScene" uid="uid://cpdp33euihroe" path="res://enemies/asteroid_big/asteroid_big_03.tscn" id="7_etqu2"]
+[ext_resource type="PackedScene" uid="uid://c3b2pqfv6x2e3" path="res://enemies/asteroid_big/asteroid_big_04.tscn" id="8_jw1n3"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6et1j"]
 
 [node name="Main" type="Node"]
 
@@ -12,9 +17,6 @@
 
 [node name="Camera2D" type="Camera2D" parent="World"]
 position = Vector2(512, 384)
-
-[node name="Asteroid" parent="World" instance=ExtResource("2_wdj6m")]
-position = Vector2(325, 306)
 
 [node name="Player" parent="World" instance=ExtResource("1_2262g")]
 position = Vector2(165, 302)
@@ -59,10 +61,10 @@ text = "0
 
 [node name="Hi_Score" type="Label" parent="GUI"]
 layout_mode = 0
-offset_left = 435.0
-offset_top = 72.0
-offset_right = 475.0
-offset_bottom = 185.0
+offset_left = 502.0
+offset_top = 73.0
+offset_right = 542.0
+offset_bottom = 186.0
 theme_override_font_sizes/font_size = 40
 text = "0
 "
@@ -70,3 +72,11 @@ text = "0
 [node name="GameManager" type="Node" parent="."]
 script = ExtResource("4_m1504")
 _player = ExtResource("1_2262g")
+_asteroids = Array[PackedScene]([ExtResource("2_wdj6m"), ExtResource("6_6et1j"), ExtResource("7_etqu2"), ExtResource("8_jw1n3")])
+
+[node name="Area2D" type="Area2D" parent="GameManager"]
+position = Vector2(513, 456)
+scale = Vector2(50, 10)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GameManager/Area2D"]
+shape = SubResource("RectangleShape2D_6et1j")

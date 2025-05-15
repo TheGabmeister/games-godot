@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqqfok8ee4x5v"
-path="res://.godot/imported/asteroid_big_01.png-6b3121cbc33685f1b9e074dd9f56b62b.ctex"
+uid="uid://dknkkoh6uffxy"
+path="res://.godot/imported/asteroid_big_04.png-d315f295433f8f96eb02b36ba4d06725.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://enemies/asteroid_big_01.png"
-dest_files=["res://.godot/imported/asteroid_big_01.png-6b3121cbc33685f1b9e074dd9f56b62b.ctex"]
+source_file="res://enemies/asteroid_big/asteroid_big_04.png"
+dest_files=["res://.godot/imported/asteroid_big_04.png-d315f295433f8f96eb02b36ba4d06725.ctex"]
 
 [params]
 
