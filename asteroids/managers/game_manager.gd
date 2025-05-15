@@ -16,8 +16,9 @@ func _exit_tree():
 	Bus.player_killed.disconnect(_revive_player)
 
 func _ready():
-	#for asteroid in _asteroids:
-	pass
+	await get_tree().create_timer(1.0).timeout
+	_spawn_asteroids()
+	
 
 func _add_score(value: int):
 	_score += value
@@ -32,3 +33,11 @@ func _revive_player():
 	player_inst.position = Vector2(GlobalVars.SCREEN_WIDTH/2, GlobalVars.SCREEN_HEIGHT/2)
 	player_inst.rotation = 0
 	get_tree().current_scene.add_child(player_inst)
+
+func _spawn_asteroids():
+	for asteroid in _asteroids:
+		var spawn_point = _asteroid_spawn_points[randi() % _asteroid_spawn_points.size()]
+		var asteroid_instance = asteroid.instantiate()
+		asteroid_instance.position = spawn_point.position
+		asteroid_instance.rotation = randf() * TAU
+		get_tree().current_scene.add_child(asteroid_instance)

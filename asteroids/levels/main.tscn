@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bud6jfam66xwa"]
+[gd_scene load_steps=9 format=3 uid="uid://bud6jfam66xwa"]
 
 [ext_resource type="PackedScene" uid="uid://bwwu6y2xnqbov" path="res://player/player.tscn" id="1_2262g"]
 [ext_resource type="PackedScene" uid="uid://bi55hoqcx5a3w" path="res://enemies/asteroid_big/asteroid_big_01.tscn" id="2_wdj6m"]
@@ -9,8 +9,6 @@
 [ext_resource type="PackedScene" uid="uid://cpdp33euihroe" path="res://enemies/asteroid_big/asteroid_big_03.tscn" id="7_etqu2"]
 [ext_resource type="PackedScene" uid="uid://c3b2pqfv6x2e3" path="res://enemies/asteroid_big/asteroid_big_04.tscn" id="8_jw1n3"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_6et1j"]
-
 [node name="Main" type="Node"]
 
 [node name="World" type="Node2D" parent="."]
@@ -19,7 +17,7 @@
 position = Vector2(512, 384)
 
 [node name="Player" parent="World" instance=ExtResource("1_2262g")]
-position = Vector2(165, 302)
+position = Vector2(447, 373)
 
 [node name="BoundaryWest" parent="World" instance=ExtResource("4_5k4jt")]
 position = Vector2(-164, 375)
@@ -69,14 +67,38 @@ theme_override_font_sizes/font_size = 40
 text = "0
 "
 
-[node name="GameManager" type="Node" parent="."]
+[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("_asteroid_spawn_points")]
 script = ExtResource("4_m1504")
 _player = ExtResource("1_2262g")
 _asteroids = Array[PackedScene]([ExtResource("2_wdj6m"), ExtResource("6_6et1j"), ExtResource("7_etqu2"), ExtResource("8_jw1n3")])
+_asteroid_spawn_points = [NodePath("SpawnPoint_01"), NodePath("SpawnPoint_02"), NodePath("SpawnPoint_03"), NodePath("SpawnPoint_04"), NodePath("SpawnPoint_05"), NodePath("SpawnPoint_06"), NodePath("SpawnPoint_07"), NodePath("SpawnPoint_08"), NodePath("SpawnPoint_09"), NodePath("SpawnPoint_10")]
 
-[node name="Area2D" type="Area2D" parent="GameManager"]
-position = Vector2(513, 456)
-scale = Vector2(50, 10)
+[node name="SpawnPoint_01" type="Node2D" parent="GameManager"]
+position = Vector2(243, 105)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GameManager/Area2D"]
-shape = SubResource("RectangleShape2D_6et1j")
+[node name="SpawnPoint_02" type="Node2D" parent="GameManager"]
+position = Vector2(211, 652)
+
+[node name="SpawnPoint_03" type="Node2D" parent="GameManager"]
+position = Vector2(900, 684)
+
+[node name="SpawnPoint_04" type="Node2D" parent="GameManager"]
+position = Vector2(432, 73)
+
+[node name="SpawnPoint_05" type="Node2D" parent="GameManager"]
+position = Vector2(928, 94)
+
+[node name="SpawnPoint_06" type="Node2D" parent="GameManager"]
+position = Vector2(951, 353)
+
+[node name="SpawnPoint_07" type="Node2D" parent="GameManager"]
+position = Vector2(643, 681)
+
+[node name="SpawnPoint_08" type="Node2D" parent="GameManager"]
+position = Vector2(90, 486)
+
+[node name="SpawnPoint_09" type="Node2D" parent="GameManager"]
+position = Vector2(81, 240)
+
+[node name="SpawnPoint_10" type="Node2D" parent="GameManager"]
+position = Vector2(719, 68)
