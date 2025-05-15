@@ -1,16 +1,28 @@
-[gd_scene load_steps=5 format=3 uid="uid://ds1i3vt5k2bu6"]
+[gd_scene load_steps=6 format=3 uid="uid://ds1i3vt5k2bu6"]
 
 [ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_cdfcj"]
-[ext_resource type="Script" uid="uid://cas60fu4srjpm" path="res://utils/hurtbox_2d.gd" id="2_ea4s5"]
+[ext_resource type="Script" uid="uid://dktljt2c33hw2" path="res://utils/projectile.gd" id="2_ea4s5"]
 [ext_resource type="Texture2D" uid="uid://d4fs6bm54mmh6" path="res://player/player_shot.png" id="2_l6nq1"]
 [ext_resource type="PackedScene" uid="uid://bfj2uwo7hu5qb" path="res://utils/move_forward_2d.tscn" id="3_it606"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_g6wtb"]
+size = Vector2(54, 9)
 
 [node name="PlayerShot" instance=ExtResource("1_cdfcj")]
 script = ExtResource("2_ea4s5")
 
 [node name="Sprite2D" parent="." index="0"]
-rotation = 1.5708
 texture = ExtResource("2_l6nq1")
 
-[node name="MoveForward" parent="." index="1" instance=ExtResource("3_it606")]
+[node name="Area2D" parent="." index="1"]
+collision_layer = 2
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" index="0"]
+position = Vector2(0, -0.5)
+shape = SubResource("RectangleShape2D_g6wtb")
+
+[node name="MoveForward" parent="." index="2" instance=ExtResource("3_it606")]
 _speed = 300.0
+
+[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]

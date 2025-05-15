@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://bud6jfam66xwa"]
 
-[ext_resource type="PackedScene" uid="uid://chxy41s4d86cs" path="res://player/player.tscn" id="1_2262g"]
+[ext_resource type="PackedScene" uid="uid://bwwu6y2xnqbov" path="res://player/player.tscn" id="1_2262g"]
 [ext_resource type="PackedScene" uid="uid://bi55hoqcx5a3w" path="res://enemies/asteroid.tscn" id="2_wdj6m"]
 [ext_resource type="PackedScene" uid="uid://ds1i3vt5k2bu6" path="res://player/player_shot.tscn" id="3_l8qe7"]
 [ext_resource type="Script" uid="uid://0ybm8b5tll5h" path="res://gui/gui.gd" id="4_ifaiv"]
@@ -9,9 +9,6 @@
 [node name="Main" type="Node"]
 
 [node name="World" type="Node2D" parent="."]
-
-[node name="Player" parent="World" instance=ExtResource("1_2262g")]
-position = Vector2(655, 319)
 
 [node name="Camera2D" type="Camera2D" parent="World"]
 position = Vector2(512, 384)
@@ -53,3 +50,6 @@ text = "0
 
 [node name="Node" type="Node" parent="."]
 script = ExtResource("4_m1504")
+
+[node name="Player" parent="." instance=ExtResource("1_2262g")]
+position = Vector2(165, 302)

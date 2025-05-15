@@ -1,24 +1,21 @@
-[gd_scene load_steps=5 format=3 uid="uid://chxy41s4d86cs"]
+[gd_scene load_steps=5 format=3 uid="uid://bwwu6y2xnqbov"]
 
+[ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_g1dw6"]
 [ext_resource type="Script" uid="uid://2nad0hvhwgxq" path="res://player/player.gd" id="1_oul6g"]
 [ext_resource type="PackedScene" uid="uid://ds1i3vt5k2bu6" path="res://player/player_shot.tscn" id="2_g1dw6"]
 [ext_resource type="Texture2D" uid="uid://cs84qwi7xmegr" path="res://player/player_ship.png" id="2_rkbax"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_oul6g"]
-
-[node name="Player" type="Node2D"]
+[node name="Player" instance=ExtResource("1_g1dw6")]
 script = ExtResource("1_oul6g")
 _shot = ExtResource("2_g1dw6")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-rotation = 1.5708
+[node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("2_rkbax")
 
-[node name="Hitbox" type="Area2D" parent="."]
-collision_mask = 0
+[node name="Area2D" parent="." index="1"]
+collision_mask = 4
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
-scale = Vector2(5, 5)
-shape = SubResource("RectangleShape2D_oul6g")
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Area2D" index="0"]
+polygon = PackedVector2Array(37, -5, 37, 3, -28, 52, -28, 23, -37, 12, -37, -14, -28, -23, -28, -52)
 
-[connection signal="area_entered" from="Hitbox" to="." method="_on_hitbox_area_entered"]
+[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]
