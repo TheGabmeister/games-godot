@@ -1,16 +1,24 @@
-[gd_scene load_steps=2 format=3 uid="uid://bud6jfam66xwa"]
+[gd_scene load_steps=4 format=3 uid="uid://bud6jfam66xwa"]
 
 [ext_resource type="PackedScene" uid="uid://chxy41s4d86cs" path="res://player/player.tscn" id="1_2262g"]
+[ext_resource type="PackedScene" uid="uid://bi55hoqcx5a3w" path="res://enemies/asteroid.tscn" id="2_wdj6m"]
+[ext_resource type="PackedScene" uid="uid://ds1i3vt5k2bu6" path="res://player/player_shot.tscn" id="3_l8qe7"]
 
 [node name="Main" type="Node"]
 
 [node name="World" type="Node2D" parent="."]
 
 [node name="Player" parent="World" instance=ExtResource("1_2262g")]
-position = Vector2(615, 540)
+position = Vector2(655, 319)
 
 [node name="Camera2D" type="Camera2D" parent="World"]
 position = Vector2(512, 384)
+
+[node name="Asteroid" parent="World" instance=ExtResource("2_wdj6m")]
+position = Vector2(325, 306)
+
+[node name="PlayerShot" parent="World" instance=ExtResource("3_l8qe7")]
+position = Vector2(301, 568)
 
 [node name="GUI" type="Control" parent="."]
 layout_mode = 3

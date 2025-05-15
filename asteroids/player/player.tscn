@@ -11,8 +11,10 @@ script = ExtResource("1_oul6g")
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_rkbax")
 
-[node name="Area2D" type="Area2D" parent="."]
+[node name="Hitbox" type="Area2D" parent="."]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
 scale = Vector2(5, 5)
 shape = SubResource("RectangleShape2D_oul6g")
+
+[connection signal="area_entered" from="Hitbox" to="." method="_on_hitbox_area_entered"]

@@ -22,3 +22,8 @@ func _process(delta):
 		_cooldown = 1.0
 	elif _cooldown > 0:
 		_cooldown -= delta
+
+
+func _on_hitbox_area_entered(area: Area2D) -> void:
+	# die
+	pass

@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3 uid="uid://ds1i3vt5k2bu6"]
+
+[ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_cdfcj"]
+[ext_resource type="Texture2D" uid="uid://d4fs6bm54mmh6" path="res://player/player_shot.png" id="2_l6nq1"]
+[ext_resource type="PackedScene" uid="uid://bfj2uwo7hu5qb" path="res://utils/move_forward_2d.tscn" id="3_it606"]
+
+[node name="PlayerShot" instance=ExtResource("1_cdfcj")]
+
+[node name="Sprite2D" parent="." index="0"]
+rotation = 1.5708
+texture = ExtResource("2_l6nq1")
+
+[node name="MoveForward" parent="." index="2" instance=ExtResource("3_it606")]

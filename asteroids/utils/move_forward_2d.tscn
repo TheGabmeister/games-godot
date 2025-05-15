@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bfj2uwo7hu5qb"]
+
+[ext_resource type="Script" uid="uid://du7ilnw7c8b7x" path="res://utils/move_forward_2d.gd" id="1_gix7i"]
+
+[node name="MoveForward2D" type="Node"]
+script = ExtResource("1_gix7i")
