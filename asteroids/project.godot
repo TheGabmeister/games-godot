@@ -62,4 +62,6 @@ fire={
 
 2d_physics/layer_1="player"
 2d_physics/layer_2="player_projectile"
-2d_physics/layer_3="asteroid"
+2d_physics/layer_3="enemy"
+2d_physics/layer_4="enemy_projectile"
+2d_physics/layer_5="environment"
