@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://bud6jfam66xwa"]
+[gd_scene load_steps=6 format=3 uid="uid://bud6jfam66xwa"]
 
 [ext_resource type="PackedScene" uid="uid://chxy41s4d86cs" path="res://player/player.tscn" id="1_2262g"]
 [ext_resource type="PackedScene" uid="uid://bi55hoqcx5a3w" path="res://enemies/asteroid.tscn" id="2_wdj6m"]
 [ext_resource type="PackedScene" uid="uid://ds1i3vt5k2bu6" path="res://player/player_shot.tscn" id="3_l8qe7"]
+[ext_resource type="Script" uid="uid://0ybm8b5tll5h" path="res://gui/gui.gd" id="4_ifaiv"]
+[ext_resource type="Script" uid="uid://hrlkkd13mhyi" path="res://managers/game_manager.gd" id="4_m1504"]
 
 [node name="Main" type="Node"]
 
@@ -20,8 +22,34 @@ position = Vector2(325, 306)
 [node name="PlayerShot" parent="World" instance=ExtResource("3_l8qe7")]
 position = Vector2(301, 568)
 
-[node name="GUI" type="Control" parent="."]
+[node name="GUI" type="Control" parent="." node_paths=PackedStringArray("_score", "_hi_score")]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
+script = ExtResource("4_ifaiv")
+_score = NodePath("Score")
+_hi_score = NodePath("Hi_Score")
+
+[node name="Score" type="Label" parent="GUI"]
+layout_mode = 0
+offset_left = 89.0
+offset_top = 66.0
+offset_right = 129.0
+offset_bottom = 179.0
+theme_override_font_sizes/font_size = 40
+text = "0
+"
+
+[node name="Hi_Score" type="Label" parent="GUI"]
+layout_mode = 0
+offset_left = 435.0
+offset_top = 72.0
+offset_right = 475.0
+offset_bottom = 185.0
+theme_override_font_sizes/font_size = 40
+text = "0
+"
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("4_m1504")
