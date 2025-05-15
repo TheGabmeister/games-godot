@@ -7,5 +7,6 @@ extends Node
 
 signal enemy_killed(score: int)
 signal player_killed()
+signal player_spawned()
 signal update_score(score: int)
 signal update_hi_score(score: int)

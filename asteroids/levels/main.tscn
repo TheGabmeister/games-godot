@@ -19,6 +19,9 @@ position = Vector2(325, 306)
 [node name="PlayerShot" parent="World" instance=ExtResource("3_l8qe7")]
 position = Vector2(301, 568)
 
+[node name="Player" parent="World" instance=ExtResource("1_2262g")]
+position = Vector2(165, 302)
+
 [node name="GUI" type="Control" parent="." node_paths=PackedStringArray("_score", "_hi_score")]
 layout_mode = 3
 anchors_preset = 0
@@ -48,8 +51,6 @@ theme_override_font_sizes/font_size = 40
 text = "0
 "
 
-[node name="Node" type="Node" parent="."]
+[node name="GameManager" type="Node" parent="."]
 script = ExtResource("4_m1504")
-
-[node name="Player" parent="." instance=ExtResource("1_2262g")]
-position = Vector2(165, 302)
+_player = ExtResource("1_2262g")

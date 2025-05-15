@@ -27,6 +27,6 @@ func _process(delta):
 		_cooldown -= delta
 
 
-func _on_area_2d_area_entered(_area: Area2D) -> void:
+func _on_area_2d_area_entered(_area: Area2D):
+	Bus.player_killed.emit()
 	queue_free()
-	pass # Replace with function body.
