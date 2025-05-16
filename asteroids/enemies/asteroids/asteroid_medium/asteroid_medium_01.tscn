@@ -1,27 +1,23 @@
-[gd_scene load_steps=7 format=3 uid="uid://d2rnkcwwsmx2f"]
+[gd_scene load_steps=6 format=3 uid="uid://d2rnkcwwsmx2f"]
 
 [ext_resource type="PackedScene" uid="uid://bl4epurphqhdx" path="res://enemies/asteroids/asteroid_base.tscn" id="1_0yvkx"]
 [ext_resource type="Script" uid="uid://bphfcnjh5orrs" path="res://enemies/asteroids/asteroid.gd" id="2_0yvkx"]
 [ext_resource type="PackedScene" uid="uid://rkhlht6co73i" path="res://enemies/asteroids/asteroid_small/asteroid_small_01.tscn" id="3_4w7t0"]
 [ext_resource type="Texture2D" uid="uid://bw3pmd6bvi8ey" path="res://enemies/asteroids/asteroid_medium/asteroid_medium_01.png" id="3_vkw4j"]
 [ext_resource type="PackedScene" uid="uid://bfj2uwo7hu5qb" path="res://utils/move_forward_2d.tscn" id="4_4w7t0"]
-[ext_resource type="AudioStream" uid="uid://bvldru3eequte" path="res://enemies/enemy_death.ogg" id="4_pea6l"]
 
 [node name="AsteroidMedium_01" instance=ExtResource("1_0yvkx")]
 script = ExtResource("2_0yvkx")
 _asteroid_child = ExtResource("3_4w7t0")
-_death_sound = ExtResource("4_pea6l")
+_child_amount = 2
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("3_vkw4j")
 
 [node name="Area2D" parent="." index="1"]
-collision_layer = 4
 collision_mask = 2
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Area2D" index="0"]
 polygon = PackedVector2Array(-10, -21, 18, -20, 21, 7, 1, 22, -15, 15, -22, -4)
 
 [node name="MoveForward2D" parent="." index="2" instance=ExtResource("4_4w7t0")]
-
-[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]

@@ -12,3 +12,7 @@ signal update_score(score: int)
 signal update_hi_score(score: int)
 
 signal sfx_play_sound(sound: AudioStream)
+
+signal music_play(sound: AudioStream)
+signal music_pause_toggle()
+signal music_stop()

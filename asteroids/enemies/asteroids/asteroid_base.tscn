@@ -2,4 +2,4 @@
 
 [ext_resource type="PackedScene" uid="uid://bll5alhnm8vrg" path="res://enemies/enemy_base.tscn" id="1_d8yjn"]
 
-[node name="Base2D" instance=ExtResource("1_d8yjn")]
+[node name="AsteroidBase" instance=ExtResource("1_d8yjn")]

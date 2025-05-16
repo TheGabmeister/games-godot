@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://bud6jfam66xwa"]
+[gd_scene load_steps=12 format=3 uid="uid://bud6jfam66xwa"]
 
 [ext_resource type="PackedScene" uid="uid://bwwu6y2xnqbov" path="res://player/player.tscn" id="1_2262g"]
 [ext_resource type="PackedScene" uid="uid://bi55hoqcx5a3w" path="res://enemies/asteroids/asteroid_big/asteroid_big_01.tscn" id="2_wdj6m"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://c3b2pqfv6x2e3" path="res://enemies/asteroids/asteroid_big/asteroid_big_04.tscn" id="8_jw1n3"]
 [ext_resource type="PackedScene" uid="uid://drpintn20hbhu" path="res://managers/sfx_manager.tscn" id="9_etqu2"]
 [ext_resource type="PackedScene" uid="uid://2a5y513o73th" path="res://explosion/explosion.tscn" id="10_jw1n3"]
+[ext_resource type="PackedScene" uid="uid://kofbts006jj7" path="res://enemies/alien/alien.tscn" id="11_xdh4e"]
 
 [node name="Main" type="Node2D"]
 
@@ -111,3 +112,6 @@ position = Vector2(719, 68)
 
 [node name="Explosion" parent="." instance=ExtResource("10_jw1n3")]
 position = Vector2(747, 222)
+
+[node name="Alien" parent="." instance=ExtResource("11_xdh4e")]
+position = Vector2(779, 359)
