@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://drpintn20hbhu"]
+[gd_scene load_steps=3 format=3 uid="uid://drpintn20hbhu"]
 
 [ext_resource type="Script" uid="uid://cx5377c45o4rx" path="res://managers/sfx_manager.gd" id="1_tm8cp"]
 
+[sub_resource type="AudioStreamPolyphonic" id="AudioStreamPolyphonic_tm8cp"]
+
 [node name="SfxManager" type="AudioStreamPlayer"]
+stream = SubResource("AudioStreamPolyphonic_tm8cp")
 script = ExtResource("1_tm8cp")

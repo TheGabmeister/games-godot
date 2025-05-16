@@ -3,9 +3,12 @@ class_name Player
 
 @export var _speed := 300.0
 @export var _rotation_speed := 5.0
-@export var _cooldown := 1.0
+@export var _cooldown := 0.2
 @export var _shot: PackedScene
 @export var _shot_sound: AudioStream
+@export var _death_sound: AudioStream
+
+@onready var _cooldown_base := _cooldown
 
 func _process(delta):
 
@@ -24,11 +27,12 @@ func _process(delta):
 		shot_inst.rotation = rotation
 		get_tree().current_scene.add_child(shot_inst)
 		Bus.sfx_play_sound.emit(_shot_sound)
-		_cooldown = 1.0
+		_cooldown = _cooldown_base
 	elif _cooldown > 0:
 		_cooldown -= delta
 
 
 func _on_area_2d_area_entered(_area: Area2D):
 	Bus.player_killed.emit()
+	Bus.sfx_play_sound.emit(_death_sound)
 	queue_free()

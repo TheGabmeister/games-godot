@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://kofbts006jj7"]
+[gd_scene load_steps=6 format=3 uid="uid://kofbts006jj7"]
 
 [ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_fqr4t"]
 [ext_resource type="Script" uid="uid://birkndoe47ajs" path="res://enemies/alien/alien.gd" id="2_uax61"]
+[ext_resource type="AudioStream" uid="uid://bvldru3eequte" path="res://enemies/enemy_death.ogg" id="3_le0rs"]
 [ext_resource type="Texture2D" uid="uid://dxgsdopxn45kf" path="res://enemies/alien/alien.png" id="3_xeivg"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_le0rs"]
@@ -9,6 +10,7 @@
 [node name="Alien" instance=ExtResource("1_fqr4t")]
 script = ExtResource("2_uax61")
 _score = 300
+_death_sound = ExtResource("3_le0rs")
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("3_xeivg")

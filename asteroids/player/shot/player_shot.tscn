@@ -10,6 +10,7 @@ size = Vector2(54, 9)
 
 [node name="PlayerShot" instance=ExtResource("1_cdfcj")]
 script = ExtResource("2_ea4s5")
+_lifetime = 1.0
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("2_l6nq1")
@@ -23,6 +24,6 @@ position = Vector2(0, -0.5)
 shape = SubResource("RectangleShape2D_g6wtb")
 
 [node name="MoveForward" parent="." index="2" instance=ExtResource("3_it606")]
-_speed = 300.0
+_speed = 600.0
 
 [connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]
