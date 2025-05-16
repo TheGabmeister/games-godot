@@ -22,7 +22,7 @@ func _toggle_pause_music():
 		_is_paused = true
 		_music_position = get_playback_position()
 		stop()
-	
+
 func _stop_music():
 	stop()
 	_is_paused = false
