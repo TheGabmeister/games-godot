@@ -2,7 +2,7 @@ extends Node
 
 @export var _player: PackedScene
 @export var _asteroids: Array[PackedScene]
-@export var _asteroid_spawn_points: Array[Node2D]
+@export var _spawn_points: Array[Node2D]
 @export var _revive_time := 3.0
 var _score := 0
 var _hi_score := 0
@@ -36,8 +36,8 @@ func _revive_player():
 
 func _spawn_asteroids():
 	for asteroid in _asteroids:
-		var spawn_point = _asteroid_spawn_points[randi() % _asteroid_spawn_points.size()]
-		var asteroid_instance = asteroid.instantiate()
-		asteroid_instance.position = spawn_point.position
-		asteroid_instance.rotation = randf() * TAU
-		get_tree().current_scene.add_child(asteroid_instance)
+		var spawn_point = _spawn_points[randi() % _spawn_points.size()]
+		var instance = asteroid.instantiate()
+		instance.position = spawn_point.position
+		instance.rotation = randf() * TAU
+		get_tree().current_scene.add_child(instance)

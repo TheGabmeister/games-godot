@@ -67,11 +67,10 @@ theme_override_font_sizes/font_size = 40
 text = "0
 "
 
-[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("_asteroid_spawn_points")]
+[node name="GameManager" type="Node" parent="."]
 script = ExtResource("4_m1504")
 _player = ExtResource("1_2262g")
 _asteroids = Array[PackedScene]([ExtResource("2_wdj6m"), ExtResource("6_6et1j"), ExtResource("7_etqu2"), ExtResource("8_jw1n3")])
-_asteroid_spawn_points = [NodePath("SpawnPoint_01"), NodePath("SpawnPoint_02"), NodePath("SpawnPoint_03"), NodePath("SpawnPoint_04"), NodePath("SpawnPoint_05"), NodePath("SpawnPoint_06"), NodePath("SpawnPoint_07"), NodePath("SpawnPoint_08"), NodePath("SpawnPoint_09"), NodePath("SpawnPoint_10")]
 
 [node name="SpawnPoint_01" type="Node2D" parent="GameManager"]
 position = Vector2(243, 105)

@@ -1,12 +1,12 @@
 [gd_scene load_steps=5 format=3 uid="uid://cthsm8ou5g7er"]
 
 [ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_xikxm"]
-[ext_resource type="Script" uid="uid://1ijgpe82c6qs" path="res://enemies/enemy.gd" id="2_f5ejv"]
+[ext_resource type="Script" uid="uid://bphfcnjh5orrs" path="res://enemies/asteroid.gd" id="2_xikxm"]
 [ext_resource type="Texture2D" uid="uid://cyqg4gk0d65mp" path="res://enemies/asteroid_medium/asteroid_medium_02.png" id="3_xikxm"]
 [ext_resource type="PackedScene" uid="uid://bfj2uwo7hu5qb" path="res://utils/move_forward_2d.tscn" id="4_1k0nr"]
 
 [node name="AsteroidMedium_02" instance=ExtResource("1_xikxm")]
-script = ExtResource("2_f5ejv")
+script = ExtResource("2_xikxm")
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("3_xikxm")

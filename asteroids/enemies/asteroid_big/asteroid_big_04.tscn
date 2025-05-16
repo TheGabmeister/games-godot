@@ -1,12 +1,14 @@
-[gd_scene load_steps=5 format=3 uid="uid://c3b2pqfv6x2e3"]
+[gd_scene load_steps=6 format=3 uid="uid://c3b2pqfv6x2e3"]
 
 [ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_1im8s"]
-[ext_resource type="Script" uid="uid://1ijgpe82c6qs" path="res://enemies/enemy.gd" id="2_vpn7a"]
+[ext_resource type="Script" uid="uid://bphfcnjh5orrs" path="res://enemies/asteroid.gd" id="2_1im8s"]
 [ext_resource type="Texture2D" uid="uid://dknkkoh6uffxy" path="res://enemies/asteroid_big/asteroid_big_04.png" id="3_1im8s"]
+[ext_resource type="PackedScene" uid="uid://cthsm8ou5g7er" path="res://enemies/asteroid_medium/asteroid_medium_02.tscn" id="3_vpn7a"]
 [ext_resource type="PackedScene" uid="uid://bfj2uwo7hu5qb" path="res://utils/move_forward_2d.tscn" id="4_akqel"]
 
 [node name="AsteroidBig_04" instance=ExtResource("1_1im8s")]
-script = ExtResource("2_vpn7a")
+script = ExtResource("2_1im8s")
+_asteroid_child = ExtResource("3_vpn7a")
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("3_1im8s")

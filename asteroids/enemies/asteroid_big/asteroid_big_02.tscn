@@ -1,12 +1,14 @@
-[gd_scene load_steps=5 format=3 uid="uid://dbnw0rw7s5bj8"]
+[gd_scene load_steps=6 format=3 uid="uid://dbnw0rw7s5bj8"]
 
 [ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_ckhor"]
-[ext_resource type="Script" uid="uid://1ijgpe82c6qs" path="res://enemies/enemy.gd" id="2_0lij7"]
+[ext_resource type="Script" uid="uid://bphfcnjh5orrs" path="res://enemies/asteroid.gd" id="2_ckhor"]
+[ext_resource type="PackedScene" uid="uid://d2rnkcwwsmx2f" path="res://enemies/asteroid_medium/asteroid_medium_01.tscn" id="3_0lij7"]
 [ext_resource type="Texture2D" uid="uid://dv6nvfjwj4th4" path="res://enemies/asteroid_big/asteroid_big_02.png" id="3_ckhor"]
 [ext_resource type="PackedScene" uid="uid://bfj2uwo7hu5qb" path="res://utils/move_forward_2d.tscn" id="4_i54ga"]
 
 [node name="AsteroidBig_02" instance=ExtResource("1_ckhor")]
-script = ExtResource("2_0lij7")
+script = ExtResource("2_ckhor")
+_asteroid_child = ExtResource("3_0lij7")
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("3_ckhor")

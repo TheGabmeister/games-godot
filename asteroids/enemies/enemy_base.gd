@@ -1,4 +1,6 @@
-extends Node
+# This is an abstract base class. Do not attach to any nodes!
+class_name EnemyBase
+extends Node2D
 
 @export var _score = 100
 
