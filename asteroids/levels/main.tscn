@@ -38,6 +38,38 @@ position = Vector2(516, 932)
 scale = Vector2(70, 10)
 _boundary_pos = 1
 
+[node name="SpawnPoints" type="Node2D" parent="World"]
+
+[node name="SpawnPoint_01" type="Node2D" parent="World/SpawnPoints"]
+position = Vector2(243, 105)
+
+[node name="SpawnPoint_02" type="Node2D" parent="World/SpawnPoints"]
+position = Vector2(211, 652)
+
+[node name="SpawnPoint_03" type="Node2D" parent="World/SpawnPoints"]
+position = Vector2(900, 684)
+
+[node name="SpawnPoint_04" type="Node2D" parent="World/SpawnPoints"]
+position = Vector2(432, 73)
+
+[node name="SpawnPoint_05" type="Node2D" parent="World/SpawnPoints"]
+position = Vector2(928, 94)
+
+[node name="SpawnPoint_06" type="Node2D" parent="World/SpawnPoints"]
+position = Vector2(951, 353)
+
+[node name="SpawnPoint_07" type="Node2D" parent="World/SpawnPoints"]
+position = Vector2(643, 681)
+
+[node name="SpawnPoint_08" type="Node2D" parent="World/SpawnPoints"]
+position = Vector2(90, 486)
+
+[node name="SpawnPoint_09" type="Node2D" parent="World/SpawnPoints"]
+position = Vector2(81, 240)
+
+[node name="SpawnPoint_10" type="Node2D" parent="World/SpawnPoints"]
+position = Vector2(719, 68)
+
 [node name="GUI" type="Control" parent="." node_paths=PackedStringArray("_score", "_hi_score")]
 layout_mode = 3
 anchors_preset = 0
@@ -67,37 +99,8 @@ theme_override_font_sizes/font_size = 40
 text = "0
 "
 
-[node name="GameManager" type="Node" parent="."]
+[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("_spawn_point_parent")]
 script = ExtResource("4_m1504")
 _player = ExtResource("1_2262g")
 _asteroids = Array[PackedScene]([ExtResource("2_wdj6m"), ExtResource("6_6et1j"), ExtResource("7_etqu2"), ExtResource("8_jw1n3")])
-
-[node name="SpawnPoint_01" type="Node2D" parent="GameManager"]
-position = Vector2(243, 105)
-
-[node name="SpawnPoint_02" type="Node2D" parent="GameManager"]
-position = Vector2(211, 652)
-
-[node name="SpawnPoint_03" type="Node2D" parent="GameManager"]
-position = Vector2(900, 684)
-
-[node name="SpawnPoint_04" type="Node2D" parent="GameManager"]
-position = Vector2(432, 73)
-
-[node name="SpawnPoint_05" type="Node2D" parent="GameManager"]
-position = Vector2(928, 94)
-
-[node name="SpawnPoint_06" type="Node2D" parent="GameManager"]
-position = Vector2(951, 353)
-
-[node name="SpawnPoint_07" type="Node2D" parent="GameManager"]
-position = Vector2(643, 681)
-
-[node name="SpawnPoint_08" type="Node2D" parent="GameManager"]
-position = Vector2(90, 486)
-
-[node name="SpawnPoint_09" type="Node2D" parent="GameManager"]
-position = Vector2(81, 240)
-
-[node name="SpawnPoint_10" type="Node2D" parent="GameManager"]
-position = Vector2(719, 68)
+_spawn_point_parent = NodePath("../World/SpawnPoints")

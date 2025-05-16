@@ -2,10 +2,12 @@ extends Node
 
 @export var _player: PackedScene
 @export var _asteroids: Array[PackedScene]
-@export var _spawn_points: Array[Node2D]
+@export var _spawn_point_parent: Node2D
 @export var _revive_time := 3.0
 var _score := 0
 var _hi_score := 0
+
+@onready var _spawn_points = _spawn_point_parent.get_children()
 
 func _enter_tree():
 	Bus.enemy_killed.connect(_add_score)
