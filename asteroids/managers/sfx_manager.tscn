@@ -2,5 +2,5 @@
 
 [ext_resource type="Script" uid="uid://cx5377c45o4rx" path="res://managers/sfx_manager.gd" id="1_tm8cp"]
 
-[node name="SfxManager" type="Node"]
+[node name="SfxManager" type="AudioStreamPlayer"]
 script = ExtResource("1_tm8cp")

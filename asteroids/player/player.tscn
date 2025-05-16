@@ -1,13 +1,15 @@
-[gd_scene load_steps=5 format=3 uid="uid://bwwu6y2xnqbov"]
+[gd_scene load_steps=6 format=3 uid="uid://bwwu6y2xnqbov"]
 
 [ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_g1dw6"]
 [ext_resource type="Script" uid="uid://2nad0hvhwgxq" path="res://player/player.gd" id="1_oul6g"]
-[ext_resource type="PackedScene" uid="uid://ds1i3vt5k2bu6" path="res://player/player_shot.tscn" id="2_g1dw6"]
+[ext_resource type="PackedScene" uid="uid://ds1i3vt5k2bu6" path="res://player/shot/player_shot.tscn" id="2_g1dw6"]
 [ext_resource type="Texture2D" uid="uid://cs84qwi7xmegr" path="res://player/player_ship.png" id="2_rkbax"]
+[ext_resource type="AudioStream" uid="uid://cwsxq823ut5lk" path="res://player/shot/player_shot.wav" id="4_qjkh3"]
 
 [node name="Player" instance=ExtResource("1_g1dw6")]
 script = ExtResource("1_oul6g")
 _shot = ExtResource("2_g1dw6")
+_shot_sound = ExtResource("4_qjkh3")
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("2_rkbax")

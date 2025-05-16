@@ -5,6 +5,7 @@ class_name Player
 @export var _rotation_speed := 5.0
 @export var _cooldown := 1.0
 @export var _shot: PackedScene
+@export var _shot_sound: AudioStream
 
 func _process(delta):
 
@@ -22,6 +23,7 @@ func _process(delta):
 		shot_inst.position = position
 		shot_inst.rotation = rotation
 		get_tree().current_scene.add_child(shot_inst)
+		Bus.sfx_play_sound.emit(_shot_sound)
 		_cooldown = 1.0
 	elif _cooldown > 0:
 		_cooldown -= delta

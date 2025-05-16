@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://bud6jfam66xwa"]
+[gd_scene load_steps=10 format=3 uid="uid://bud6jfam66xwa"]
 
 [ext_resource type="PackedScene" uid="uid://bwwu6y2xnqbov" path="res://player/player.tscn" id="1_2262g"]
 [ext_resource type="PackedScene" uid="uid://bi55hoqcx5a3w" path="res://enemies/asteroid_big/asteroid_big_01.tscn" id="2_wdj6m"]
@@ -8,8 +8,9 @@
 [ext_resource type="PackedScene" uid="uid://dbnw0rw7s5bj8" path="res://enemies/asteroid_big/asteroid_big_02.tscn" id="6_6et1j"]
 [ext_resource type="PackedScene" uid="uid://cpdp33euihroe" path="res://enemies/asteroid_big/asteroid_big_03.tscn" id="7_etqu2"]
 [ext_resource type="PackedScene" uid="uid://c3b2pqfv6x2e3" path="res://enemies/asteroid_big/asteroid_big_04.tscn" id="8_jw1n3"]
+[ext_resource type="PackedScene" uid="uid://drpintn20hbhu" path="res://managers/sfx_manager.tscn" id="9_etqu2"]
 
-[node name="Main" type="Node"]
+[node name="Main" type="Node2D"]
 
 [node name="World" type="Node2D" parent="."]
 
@@ -37,38 +38,6 @@ scale = Vector2(70, 10)
 position = Vector2(516, 932)
 scale = Vector2(70, 10)
 _boundary_pos = 1
-
-[node name="SpawnPoints" type="Node2D" parent="World"]
-
-[node name="SpawnPoint_01" type="Node2D" parent="World/SpawnPoints"]
-position = Vector2(243, 105)
-
-[node name="SpawnPoint_02" type="Node2D" parent="World/SpawnPoints"]
-position = Vector2(211, 652)
-
-[node name="SpawnPoint_03" type="Node2D" parent="World/SpawnPoints"]
-position = Vector2(900, 684)
-
-[node name="SpawnPoint_04" type="Node2D" parent="World/SpawnPoints"]
-position = Vector2(432, 73)
-
-[node name="SpawnPoint_05" type="Node2D" parent="World/SpawnPoints"]
-position = Vector2(928, 94)
-
-[node name="SpawnPoint_06" type="Node2D" parent="World/SpawnPoints"]
-position = Vector2(951, 353)
-
-[node name="SpawnPoint_07" type="Node2D" parent="World/SpawnPoints"]
-position = Vector2(643, 681)
-
-[node name="SpawnPoint_08" type="Node2D" parent="World/SpawnPoints"]
-position = Vector2(90, 486)
-
-[node name="SpawnPoint_09" type="Node2D" parent="World/SpawnPoints"]
-position = Vector2(81, 240)
-
-[node name="SpawnPoint_10" type="Node2D" parent="World/SpawnPoints"]
-position = Vector2(719, 68)
 
 [node name="GUI" type="Control" parent="." node_paths=PackedStringArray("_score", "_hi_score")]
 layout_mode = 3
@@ -103,4 +72,38 @@ text = "0
 script = ExtResource("4_m1504")
 _player = ExtResource("1_2262g")
 _asteroids = Array[PackedScene]([ExtResource("2_wdj6m"), ExtResource("6_6et1j"), ExtResource("7_etqu2"), ExtResource("8_jw1n3")])
-_spawn_point_parent = NodePath("../World/SpawnPoints")
+_spawn_point_parent = NodePath("SpawnPoints")
+
+[node name="SpawnPoints" type="Node2D" parent="GameManager"]
+
+[node name="SpawnPoint_01" type="Node2D" parent="GameManager/SpawnPoints"]
+position = Vector2(243, 105)
+
+[node name="SpawnPoint_02" type="Node2D" parent="GameManager/SpawnPoints"]
+position = Vector2(211, 652)
+
+[node name="SpawnPoint_03" type="Node2D" parent="GameManager/SpawnPoints"]
+position = Vector2(900, 684)
+
+[node name="SpawnPoint_04" type="Node2D" parent="GameManager/SpawnPoints"]
+position = Vector2(432, 73)
+
+[node name="SpawnPoint_05" type="Node2D" parent="GameManager/SpawnPoints"]
+position = Vector2(928, 94)
+
+[node name="SpawnPoint_06" type="Node2D" parent="GameManager/SpawnPoints"]
+position = Vector2(951, 353)
+
+[node name="SpawnPoint_07" type="Node2D" parent="GameManager/SpawnPoints"]
+position = Vector2(643, 681)
+
+[node name="SpawnPoint_08" type="Node2D" parent="GameManager/SpawnPoints"]
+position = Vector2(90, 486)
+
+[node name="SpawnPoint_09" type="Node2D" parent="GameManager/SpawnPoints"]
+position = Vector2(81, 240)
+
+[node name="SpawnPoint_10" type="Node2D" parent="GameManager/SpawnPoints"]
+position = Vector2(719, 68)
+
+[node name="SfxManager" parent="." instance=ExtResource("9_etqu2")]
