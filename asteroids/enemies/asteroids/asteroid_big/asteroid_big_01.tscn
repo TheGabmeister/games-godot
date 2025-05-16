@@ -1,9 +1,9 @@
 [gd_scene load_steps=7 format=3 uid="uid://bi55hoqcx5a3w"]
 
-[ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_cl75w"]
-[ext_resource type="Script" uid="uid://bphfcnjh5orrs" path="res://enemies/asteroid.gd" id="2_23rvj"]
-[ext_resource type="PackedScene" uid="uid://d2rnkcwwsmx2f" path="res://enemies/asteroid_medium/asteroid_medium_01.tscn" id="3_2urh7"]
-[ext_resource type="Texture2D" uid="uid://bak1rs7fuypmw" path="res://enemies/asteroid_big/asteroid_big_03.png" id="3_23rvj"]
+[ext_resource type="PackedScene" uid="uid://bl4epurphqhdx" path="res://enemies/asteroids/asteroid_base.tscn" id="1_cl75w"]
+[ext_resource type="Script" uid="uid://bphfcnjh5orrs" path="res://enemies/asteroids/asteroid.gd" id="2_23rvj"]
+[ext_resource type="PackedScene" uid="uid://d2rnkcwwsmx2f" path="res://enemies/asteroids/asteroid_medium/asteroid_medium_01.tscn" id="3_2urh7"]
+[ext_resource type="Texture2D" uid="uid://bak1rs7fuypmw" path="res://enemies/asteroids/asteroid_big/asteroid_big_03.png" id="3_23rvj"]
 [ext_resource type="PackedScene" uid="uid://bfj2uwo7hu5qb" path="res://utils/move_forward_2d.tscn" id="3_l2316"]
 [ext_resource type="AudioStream" uid="uid://bvldru3eequte" path="res://enemies/enemy_death.ogg" id="4_t16f4"]
 

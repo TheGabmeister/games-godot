@@ -1,4 +1,5 @@
-# This is an abstract base class. Do not attach to any nodes!
+# This is an a base class for enemies. Do not spawn this on the level.
+# Only inherit from this base
 class_name EnemyBase
 extends Node2D
 

@@ -1,13 +1,13 @@
 [gd_scene load_steps=11 format=3 uid="uid://bud6jfam66xwa"]
 
 [ext_resource type="PackedScene" uid="uid://bwwu6y2xnqbov" path="res://player/player.tscn" id="1_2262g"]
-[ext_resource type="PackedScene" uid="uid://bi55hoqcx5a3w" path="res://enemies/asteroid_big/asteroid_big_01.tscn" id="2_wdj6m"]
+[ext_resource type="PackedScene" uid="uid://bi55hoqcx5a3w" path="res://enemies/asteroids/asteroid_big/asteroid_big_01.tscn" id="2_wdj6m"]
 [ext_resource type="PackedScene" uid="uid://dxos7u340j01s" path="res://environment/boundary.tscn" id="4_5k4jt"]
 [ext_resource type="Script" uid="uid://0ybm8b5tll5h" path="res://gui/gui.gd" id="4_ifaiv"]
 [ext_resource type="Script" uid="uid://hrlkkd13mhyi" path="res://managers/game_manager.gd" id="4_m1504"]
-[ext_resource type="PackedScene" uid="uid://dbnw0rw7s5bj8" path="res://enemies/asteroid_big/asteroid_big_02.tscn" id="6_6et1j"]
-[ext_resource type="PackedScene" uid="uid://cpdp33euihroe" path="res://enemies/asteroid_big/asteroid_big_03.tscn" id="7_etqu2"]
-[ext_resource type="PackedScene" uid="uid://c3b2pqfv6x2e3" path="res://enemies/asteroid_big/asteroid_big_04.tscn" id="8_jw1n3"]
+[ext_resource type="PackedScene" uid="uid://dbnw0rw7s5bj8" path="res://enemies/asteroids/asteroid_big/asteroid_big_02.tscn" id="6_6et1j"]
+[ext_resource type="PackedScene" uid="uid://cpdp33euihroe" path="res://enemies/asteroids/asteroid_big/asteroid_big_03.tscn" id="7_etqu2"]
+[ext_resource type="PackedScene" uid="uid://c3b2pqfv6x2e3" path="res://enemies/asteroids/asteroid_big/asteroid_big_04.tscn" id="8_jw1n3"]
 [ext_resource type="PackedScene" uid="uid://drpintn20hbhu" path="res://managers/sfx_manager.tscn" id="9_etqu2"]
 [ext_resource type="PackedScene" uid="uid://2a5y513o73th" path="res://explosion/explosion.tscn" id="10_jw1n3"]
 

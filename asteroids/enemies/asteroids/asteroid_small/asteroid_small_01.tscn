@@ -1,9 +1,9 @@
 [gd_scene load_steps=6 format=3 uid="uid://rkhlht6co73i"]
 
-[ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_mwi4a"]
-[ext_resource type="Script" uid="uid://bphfcnjh5orrs" path="res://enemies/asteroid.gd" id="2_mwi4a"]
+[ext_resource type="PackedScene" uid="uid://bl4epurphqhdx" path="res://enemies/asteroids/asteroid_base.tscn" id="1_mwi4a"]
+[ext_resource type="Script" uid="uid://bphfcnjh5orrs" path="res://enemies/asteroids/asteroid.gd" id="2_mwi4a"]
 [ext_resource type="AudioStream" uid="uid://bvldru3eequte" path="res://enemies/enemy_death.ogg" id="3_hcywa"]
-[ext_resource type="Texture2D" uid="uid://djv7lpo0amrdd" path="res://enemies/asteroid_small/asteroid_small_01.png" id="3_hpw4n"]
+[ext_resource type="Texture2D" uid="uid://djv7lpo0amrdd" path="res://enemies/asteroids/asteroid_small/asteroid_small_01.png" id="3_hpw4n"]
 [ext_resource type="PackedScene" uid="uid://bfj2uwo7hu5qb" path="res://utils/move_forward_2d.tscn" id="4_xm2ys"]
 
 [node name="AsteroidSmall_01" instance=ExtResource("1_mwi4a")]
