@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://bll5alhnm8vrg"]
+
+[ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_tllp7"]
+[ext_resource type="Script" uid="uid://1ijgpe82c6qs" path="res://enemies/enemy_base.gd" id="2_6dmn1"]
+[ext_resource type="AudioStream" uid="uid://bvldru3eequte" path="res://enemies/enemy_death.ogg" id="3_xiu3r"]
+
+[node name="EnemyBase" instance=ExtResource("1_tllp7")]
+script = ExtResource("2_6dmn1")
+_death_sound = ExtResource("3_xiu3r")
+
+[node name="Area2D" parent="." index="1"]
+collision_layer = 4
+collision_mask = 3
+
+[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]

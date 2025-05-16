@@ -1,0 +1,25 @@
+[gd_scene load_steps=7 format=3 uid="uid://bwwu6y2xnqbov"]
+
+[ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_g1dw6"]
+[ext_resource type="Script" uid="uid://2nad0hvhwgxq" path="res://player/player.gd" id="1_oul6g"]
+[ext_resource type="PackedScene" uid="uid://ds1i3vt5k2bu6" path="res://player/shot/player_shot.tscn" id="2_g1dw6"]
+[ext_resource type="Texture2D" uid="uid://cs84qwi7xmegr" path="res://player/player_ship.png" id="2_rkbax"]
+[ext_resource type="AudioStream" uid="uid://cwsxq823ut5lk" path="res://player/shot/player_shot.wav" id="4_qjkh3"]
+[ext_resource type="AudioStream" uid="uid://ex66jv5juugv" path="res://player/player_death.wav" id="5_g6k8r"]
+
+[node name="Player" instance=ExtResource("1_g1dw6")]
+script = ExtResource("1_oul6g")
+_shot = ExtResource("2_g1dw6")
+_shot_sound = ExtResource("4_qjkh3")
+_death_sound = ExtResource("5_g6k8r")
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_rkbax")
+
+[node name="Area2D" parent="." index="1"]
+collision_mask = 12
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Area2D" index="0"]
+polygon = PackedVector2Array(37, -5, 37, 3, -28, 52, -28, 23, -37, 12, -37, -14, -28, -23, -28, -52)
+
+[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]
