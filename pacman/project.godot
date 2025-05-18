@@ -11,5 +11,23 @@ config_version=5
 [application]
 
 config/name="pacman"
+run/main_scene="uid://bacbgvfb2j2br"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+GlobalVars="*res://autoloads/global_vars.gd"
+Bus="*res://autoloads/bus.gd"
+
+[display]
+
+window/size/viewport_width=800
+window/size/viewport_height=1000
+
+[layer_names]
+
+2d_physics/layer_1="environment"
+2d_physics/layer_2="player"
+2d_physics/layer_3="enemy"
+2d_physics/layer_4="pickup"

@@ -1,26 +1,35 @@
 extends Node
 
 @export var _player: PackedScene
-@export var _asteroids: Array[PackedScene]
-@export var _spawn_point_parent: Node2D
-@export var _revive_time := 3.0
+@export var _player_spawn_point: Node2D
+@export var _ghost: PackedScene
+@export var _ghost_spawn_points: Array[Node2D]
 var _score := 0
 var _hi_score := 0
 
-@onready var _spawn_points = _spawn_point_parent.get_children()
-
 func _enter_tree():
 	Bus.enemy_killed.connect(_add_score)
-	Bus.player_killed.connect(_revive_player)
+	Bus.game_reset_level.connect(_reset_level)
 
 func _exit_tree():
 	Bus.enemy_killed.disconnect(_add_score)
-	Bus.player_killed.disconnect(_revive_player)
+	Bus.game_reset_level.disconnect(_reset_level)
 
 func _ready():
-	await get_tree().create_timer(1.0).timeout
-	_spawn_asteroids()
+	_start_level()
+
+func _start_level():
 	
+	var player: Node2D = _player.instantiate()
+	player.position = _player_spawn_point.position
+	player.rotation = 0
+	get_tree().current_scene.add_child(player)
+	
+	for i in _ghost_spawn_points:
+		var ghost: Node2D = _ghost.instantiate()
+		ghost.position = _ghost_spawn_points[i].position
+		ghost.rotation = 0
+		get_tree().current_scene.add_child(ghost)
 
 func _add_score(value: int):
 	_score += value
@@ -29,17 +38,5 @@ func _add_score(value: int):
 		Bus.update_hi_score.emit(_hi_score)
 	Bus.update_score.emit(_score)
 
-func _revive_player():
-	await get_tree().create_timer(_revive_time).timeout
-	var player_inst: Node2D = _player.instantiate()
-	player_inst.position = Vector2(GlobalVars.SCREEN_WIDTH/2, GlobalVars.SCREEN_HEIGHT/2)
-	player_inst.rotation = 0
-	get_tree().current_scene.add_child(player_inst)
-
-func _spawn_asteroids():
-	for asteroid in _asteroids:
-		var spawn_point = _spawn_points[randi() % _spawn_points.size()]
-		var instance = asteroid.instantiate()
-		instance.position = spawn_point.position
-		instance.rotation = randf() * TAU
-		get_tree().current_scene.add_child(instance)
+func _reset_level():
+	pass

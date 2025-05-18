@@ -1,16 +1,44 @@
-[gd_scene load_steps=7 format=3 uid="uid://bwwu6y2xnqbov"]
+[gd_scene load_steps=11 format=4 uid="uid://bwwu6y2xnqbov"]
 
 [ext_resource type="PackedScene" uid="uid://bmby60d0hoagw" path="res://utils/base_2d.tscn" id="1_g1dw6"]
 [ext_resource type="Script" uid="uid://2nad0hvhwgxq" path="res://player/player.gd" id="1_oul6g"]
-[ext_resource type="PackedScene" uid="uid://ds1i3vt5k2bu6" path="res://player/shot/player_shot.tscn" id="2_g1dw6"]
-[ext_resource type="Texture2D" uid="uid://cs84qwi7xmegr" path="res://player/player_ship.png" id="2_rkbax"]
-[ext_resource type="AudioStream" uid="uid://cwsxq823ut5lk" path="res://player/shot/player_shot.wav" id="4_qjkh3"]
+[ext_resource type="Texture2D" uid="uid://bolyq7jo8nuk0" path="res://icon.svg" id="2_rkbax"]
 [ext_resource type="AudioStream" uid="uid://ex66jv5juugv" path="res://player/player_death.wav" id="5_g6k8r"]
+
+[sub_resource type="Resource" id="Resource_yw30f"]
+metadata/__load_path__ = "res://utils/projectile.gd"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_qjkh3"]
+load_path = "res://.godot/imported/player_shot.png-7425b5d5f69faf7ea3b15012b5a35dfe.ctex"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_g6wtb"]
+size = Vector2(54, 9)
+
+[sub_resource type="Resource" id="Resource_g6k8r"]
+metadata/__load_path__ = "res://utils/move_forward_2d.tscn"
+
+[sub_resource type="PackedScene" id="PackedScene_boad6"]
+_bundled = {
+"base_scene": 0,
+"conn_count": 1,
+"conns": PackedInt32Array(1073741829, 1073741828, 15, 14, 2, 0, 0),
+"editable_instances": [],
+"names": PackedStringArray("PlayerShot", "script", "_lifetime", "Sprite2D", "texture", "Area2D", "collision_layer", "collision_mask", "CollisionShape2D", "CollisionShape2D", "position", "shape", "MoveForward", "_speed", "_on_area_2d_area_entered", "area_entered"),
+"node_count": 5,
+"node_paths": [NodePath("."), NodePath("."), NodePath("./Area2D"), NodePath("."), NodePath("."), NodePath("Area2D")],
+"nodes": PackedInt32Array(-1, -1, 2147483647, 0, -1, 2, 1, 1, 2, 2, 0, 1073741824, -1, 2147483647, 262147, -1, 1, 4, 3, 0, 1073741825, -1, 2147483647, 524293, -1, 2, 6, 4, 7, 5, 0, 1073741826, 0, 9, 262152, -1, 2, 10, 6, 11, 7, 0, 1073741827, 0, 2147483647, 786444, 8, 1, 13, 9, 0),
+"variants": [ExtResource("1_g1dw6"), SubResource("Resource_yw30f"), 1.0, SubResource("CompressedTexture2D_qjkh3"), 2, 4, Vector2(0, -0.5), SubResource("RectangleShape2D_g6wtb"), SubResource("Resource_g6k8r"), 600.0],
+"version": 3
+}
+
+[sub_resource type="AudioStreamWAV" id="AudioStreamWAV_rgyib"]
+data = PackedByteArray("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4gYghFEAggFdUQQSSSSWWT/v9/ttbZZJsEEgbEhIIog3pAiCCSyy3Tdfvvv99trp0gggEggZMBGMEAAAQQQQQTTbbdtt9999ckgkgkEEAg7sSAiAAQQCCE4YIYYZZZbrO++3vmtssEiyAQRs0UgiiDuyQAAJJLLLN1u2++3321uyCCCCQCCNmHGyiQARBABBMkksst12230/b33XTSSSQbBBI2JCQAABXFAgEEEEkEk627bfb7b3a9IIIIIIIIKxdPTJJAAAEAg2CSSyy23XbT9vtt7rbbZI0gEEgjIkBFFcYgiiAQQQQTZZbbddtt77O2utsskgkAjgSMQQAACAQWwAIIIJBBJBN1uu2222u1vSCCCCCCCCDgEArEQMsgUw47nlauHWBhH4MAbm9hoilHxYyiSAAABBPFMEEsMsst03Xa7ba62229IBIIBBIKxIcaRIIAAEAgEpUw2aa7bf/ztdttddbbZJ0ggEEggDEgBtMEgiiACCASlDLNNdvvv/O212ut1slkmiCAQSARsQUG0iQCKIAIIBKUMst1223/867XXXW2yyw7BIIBBBI0JAXTKJIAAAAggiCSy2W66+/TrdddbrbbZZwggEggEEg5FqNIkkEACAASQABDDLLbddK2+/+//+998m22ywSCACALCxIACIAIBBXFEggEEEggkm3Xbb7/f/7yt9rrpbYJJK4gEEjMEAAEF8UQAQQCCCCC6bLbddtt/9L////3vuulvSCAQSCAQcQWmiiQQAABABLFEEkkstl1sq+/ff//f/byttdbZLJIII0gEHEEAAEAE8tEgiiiCCCCbJZbdddt99L3+++992utnCCAQSCCAQcFbm0kSCQAAAE6SBEFlt228m267bb7777yvvfddbbZLDsEggEEHIkABNIokEEUUQQBIIJbbdt9//Ku222++3298na622WySGCLIBBIWJAAABXBIAAAAgEEAmSCSwy2W3Wyr7tvtvffdtJ1ttlklgkEGQQSDsCUAAADkiSSQAAABBJMEkkssttt0nXbbbe+7bayrrbZZZJIJIkgEEHYkBFFFMIEEEUQACARzRDDbdd7//Juuu22223vsq7XW22yyWGKIBBIIByBIAXBIIABEAAgEs0AQQQSSWSyLLbbdbrtdtJ2uuumtstliSCCCCASCAZkZc2kUSSQCAJJJBAAAEEEgmCWSyy2W62yrddddddbbbH+3utsssAgCwQSCMQQUQQDkESSQQAAAAFoAAkkst1u0iy2222663XSdbrbbbbZZLEVlsgkAABACsASAACAQCCC2SQSCKABAIFgktltu12+8mW6a23W626SrbLbZZZJYYkggEEgggLEhHlkkkggigABW2iigSAAIJElllt112338m22223W222xv997ttbdLJgggEEggHQEg9tJIoIEgggBmkUSSACIIJEksstt112+0my22222222xv999ttrrrZkgggEEgggYE6NpJFEkkEEB02kiiSCCIAEEkhlhtmmusbbb77/f///R//v99tvdrrGtstkkkkAgCARkSCACACCC2CSQQQQAAAEIAAgEkEslkWW23W7bbb7xt9/vv999vtG292uuttsstyCAQSCDswQCO2yyiiiSCQHSKJJIIIAAEQQQwSyWWW2xbrrtttt799G+33v23vu2sbXW3Wy2WSSYIIBBwJAIIBPJAABFFEAAEcEkEAEUQQCBJJJJZLLLbbFuuuuu22128XbbbbbXa7XRdbrbZbZLJLgEEg4ggggEE8EAAACiACABKCCARRAABBEEEkkksMsssS2223W3XW6xrrrrdddbrbF1tltsssslhyCCCCDgQQQTzQAAABAABAEpBIBAAIogAHAAGGKzbXfRJZLJZZbZbbFlttttttttsWW22Wy2WWWBZLJJJJJBJBXQkgEEEAgggXAAgAEUQAAAigSAAAIIJLAUUVuuu2238SwyWSyWWSyxLJZZZZLLJZEslhksMkkklCCCCCCCDoQyhAIBBAIBBADtJAIAAAAEACCCCCGGAwwwFDLFFFFLbbB1ut12uuuu0Ha663W63W2wbbbbZZZYoYMggggggghZgewQQQQQQQQQBBBDTTRBBBAEEEMEENNNMEwCCGiCCCAQAIBAIAAAAA")
+format = 3
 
 [node name="Player" instance=ExtResource("1_g1dw6")]
 script = ExtResource("1_oul6g")
-_shot = ExtResource("2_g1dw6")
-_shot_sound = ExtResource("4_qjkh3")
+_shot = SubResource("PackedScene_boad6")
+_shot_sound = SubResource("AudioStreamWAV_rgyib")
 _death_sound = ExtResource("5_g6k8r")
 
 [node name="Sprite2D" parent="." index="0"]

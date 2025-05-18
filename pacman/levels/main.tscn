@@ -1,0 +1,36 @@
+[gd_scene load_steps=4 format=3 uid="uid://bacbgvfb2j2br"]
+
+[ext_resource type="PackedScene" uid="uid://bq6m01vo72vms" path="res://managers/game_manager.tscn" id="1_2262g"]
+[ext_resource type="Script" uid="uid://fn5ooutn63dw" path="res://managers/ui_manager.gd" id="1_l8qe7"]
+[ext_resource type="PackedScene" uid="uid://bwwu6y2xnqbov" path="res://player/player.tscn" id="2_wdj6m"]
+
+[node name="Main" type="Node2D"]
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_l8qe7")
+
+[node name="GameManager" parent="." node_paths=PackedStringArray("_player_spawn_point", "_ghost_spawn_points") instance=ExtResource("1_2262g")]
+_player = ExtResource("2_wdj6m")
+_player_spawn_point = NodePath("../SpawnPoints/SpawnPoint_Player")
+_ghost_spawn_points = [NodePath("../SpawnPoints/SpawnPoint_Ghost_01"), NodePath("../SpawnPoints/SpawnPoint_Ghost_02"), NodePath("../SpawnPoints/SpawnPoint_Ghost_03"), NodePath("../SpawnPoints/SpawnPoint_Ghost_04")]
+
+[node name="SpawnPoints" type="Node2D" parent="."]
+
+[node name="SpawnPoint_Player" type="Node2D" parent="SpawnPoints"]
+position = Vector2(399, 759)
+
+[node name="SpawnPoint_Ghost_01" type="Node2D" parent="SpawnPoints"]
+position = Vector2(469, 403)
+
+[node name="SpawnPoint_Ghost_02" type="Node2D" parent="SpawnPoints"]
+position = Vector2(352, 424)
+
+[node name="SpawnPoint_Ghost_03" type="Node2D" parent="SpawnPoints"]
+position = Vector2(409, 450)
+
+[node name="SpawnPoint_Ghost_04" type="Node2D" parent="SpawnPoints"]
+position = Vector2(380, 308)

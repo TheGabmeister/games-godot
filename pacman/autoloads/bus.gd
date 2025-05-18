@@ -1,13 +1,16 @@
 # event bus implementation in Godot
-
 extends Node
 
 # Because the event bus is autoloaded, we add this to ignore the warnings
 @warning_ignore_start("unused_signal") 
 
-signal enemy_killed(score: int)
+signal game_reset_level()
+
 signal player_killed()
 signal player_spawned()
+
+signal enemy_killed(score: int)
+
 signal update_score(score: int)
 signal update_hi_score(score: int)
 
