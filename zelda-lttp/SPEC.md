@@ -65,7 +65,8 @@ res://
 |   |-- inventory_manager.gd
 |   |-- audio_manager.gd
 |   |-- scene_manager.gd
-|   `-- save_manager.gd
+|   |-- save_manager.gd
+|   `-- cutscene.gd
 |-- components/
 |   |-- state_machine.tscn/.gd
 |   |-- state.gd
@@ -90,6 +91,7 @@ res://
 |   |   |   |-- dash_state.gd
 |   |   |   |-- item_use_state.gd
 |   |   |   |-- item_get_state.gd
+|   |   |   |-- cutscene_state.gd
 |   |   |   `-- swim_state.gd
 |   |   `-- components/
 |   |       `-- shield_component.tscn/.gd
@@ -158,6 +160,10 @@ res://
 |   |   |-- impact_particles.tscn
 |   |   |-- magic_particles.tscn
 |   |   `-- dust_particles.tscn
+|   |-- cutscenes/                   # Coroutine-based scripted sequences
+|   |   |-- armos_intro.gd
+|   |   |-- boss_defeat.gd
+|   |   `-- ...
 |   |-- ui/
 |   |   |-- hud.tscn/.gd
 |   |   |-- hearts_display.tscn/.gd
@@ -516,6 +522,7 @@ Autoload registration order:
 4. `AudioManager`
 5. `SceneManager`
 6. `SaveManager`
+7. `Cutscene` (added in Phase 5, see section 5.4)
 
 ### 1.2 Main Scene
 
@@ -555,7 +562,9 @@ Pure signal hub. Initial signals:
 - `room_transition_requested(target_room_id, entry_point)`
 - `world_switch_requested(target_world_type)`
 - `dialog_requested(lines)`
+- `dialog_closed()` — emitted when dialog box dismisses (used by cutscene system to await completion)
 - `screen_shake_requested(intensity, duration)`
+- `cutscene_started()` / `cutscene_finished()` — emitted by Cutscene autoload (see section 5.4)
 
 **GameManager**
 
@@ -1505,22 +1514,161 @@ Future bosses follow the same pattern — bespoke scene, `base_boss.gd` script, 
 - **Moldorm (Dungeon 3)**: Chain of `CharacterBody2D` segments. Only the tail segment has a `HurtboxComponent`. Controller drives erratic movement, speeds up as health drops.
 - Each boss should have at least 2 phases with a visible transition (flash, shake, color change).
 
-### 5.4 Dungeon Completion Flow
+### 5.4 Cutscene System
+
+Phase 5 introduces a lightweight cutscene sequencer because boss encounters need intro/outro choreography (camera pan to boss, boss roar, camera return, etc.) that the existing `ItemGetState` and dialog system can't handle. The system is general-purpose and is used throughout the rest of the project for scripted sequences.
+
+**Design: coroutine-based (not AnimationPlayer).** Each cutscene is a GDScript coroutine using `await`. No timeline UI, no method call tracks — just a readable sequence of steps. This is chosen over AnimationPlayer because cutscenes here are short (5–15 steps) and linear; a script is more maintainable than a timeline with method call tracks and signal wiring.
+
+Godot has no native Level Sequencer equivalent. This system is the project's lightweight substitute.
+
+**`Cutscene` autoload** — helper that exposes the primitive operations cutscenes are built from:
+
+```gdscript
+# autoloads/cutscene.gd
+extends Node
+
+var is_playing: bool = false
+
+signal cutscene_started
+signal cutscene_finished
+
+func start() -> void:
+    is_playing = true
+    cutscene_started.emit()
+    # Player script listens and transitions to CutsceneState (input disabled)
+
+func finish() -> void:
+    is_playing = false
+    cutscene_finished.emit()
+    # Player script listens and returns control
+
+# --- Primitives (all awaitable) ---
+
+func wait(seconds: float) -> void:
+    await get_tree().create_timer(seconds).timeout
+
+func move_entity(entity: Node2D, target: Vector2, duration: float) -> void:
+    var tween := create_tween()
+    tween.tween_property(entity, "position", target, duration)
+    await tween.finished
+
+func camera_pan(camera: Camera2D, target: Vector2, duration: float) -> void:
+    # Temporarily detach camera from follow target, tween position, restore on finish
+    ...
+
+func camera_shake(intensity: float, duration: float) -> void:
+    EventBus.screen_shake_requested.emit(intensity, duration)
+    await wait(duration)
+
+func dialog(lines: PackedStringArray) -> void:
+    EventBus.dialog_requested.emit(lines)
+    await EventBus.dialog_closed
+
+func sfx(sfx_name: StringName) -> void:
+    AudioManager.play_sfx(sfx_name)
+
+func fade_to_black(duration: float) -> void:
+    # Tween TransitionOverlay alpha 0→1
+    ...
+
+func fade_from_black(duration: float) -> void: ...
+
+func flash(color: Color, duration: float) -> void: ...
+```
+
+**Player state integration:** when `Cutscene.start()` fires, the player's state machine transitions to a new `CutsceneState`. Input is disabled; the player remains in whatever pose was active. The cutscene script can move the player via `move_entity()` or call custom methods. When `Cutscene.finish()` fires, the player returns to `IdleState`.
+
+**Writing a cutscene:** each cutscene is a `.gd` file under `scenes/cutscenes/` with a `play()` function. The source that triggers it (boss room, chest, NPC) calls the cutscene's `play()` and optionally awaits its completion.
+
+Example — Armos Knights boss intro (`scenes/cutscenes/armos_intro.gd`):
+
+```gdscript
+class_name ArmosIntroCutscene extends RefCounted
+
+static func play(boss: ArmosKnights, player: Player, camera: Camera2D) -> void:
+    Cutscene.start()
+    await Cutscene.wait(0.3)
+    await Cutscene.camera_pan(camera, boss.position, 0.5)
+    await Cutscene.wait(0.4)
+    boss.play_awaken_animation()   # knights rise from ground
+    await Cutscene.wait(0.8)
+    Cutscene.sfx(&"boss_roar")
+    await Cutscene.camera_shake(2.0, 0.3)
+    await Cutscene.camera_pan(camera, player.position, 0.5)
+    await Cutscene.wait(0.2)
+    Cutscene.finish()
+    boss.start_encounter()   # boss takes over, combat begins
+```
+
+Example — boss defeat sequence (`scenes/cutscenes/boss_defeat.gd`):
+
+```gdscript
+static func play(boss: BaseBoss, player: Player, camera: Camera2D) -> void:
+    Cutscene.start()
+    await Cutscene.camera_shake(3.0, 0.6)
+    Cutscene.sfx(&"boss_explode")
+    await Cutscene.flash(Color.WHITE, 0.4)
+    boss.spawn_death_particles()
+    await Cutscene.wait(0.5)
+    boss.queue_free()
+    await Cutscene.camera_pan(camera, boss.position, 0.3)
+    await Cutscene.wait(0.3)
+    var heart_container := boss.spawn_heart_container()
+    await Cutscene.wait(0.6)
+    Cutscene.finish()
+```
+
+**Directory:**
+
+```
+res://
+  autoloads/
+    cutscene.gd                    # The Cutscene autoload
+  scenes/
+    player/
+      states/
+        cutscene_state.gd          # Player state for cutscene lockout
+    cutscenes/
+      armos_intro.gd
+      boss_defeat.gd
+      master_sword_pull.gd         # future
+      zelda_telepathy.gd           # future
+      opening_sequence.gd          # future
+```
+
+**When to use cutscenes vs other systems:**
+
+| Scenario | System |
+|---|---|
+| Player picks up a key item | `ItemGetState` (specific presentation pattern) |
+| NPC says a line | `EventBus.dialog_requested` (just text, no camera/movement) |
+| Boss intro/outro | Cutscene |
+| Chest-triggered story moment | Cutscene |
+| Dungeon entrance flyover | Cutscene |
+| Game opening sequence | Cutscene |
+| Room-to-room scroll | `SceneManager` (deterministic transition) |
+
+The cutscene system is only used when multiple subsystems (camera, movement, dialog, SFX, effects) need to be coordinated in a timed sequence.
+
+### 5.5 Dungeon Completion Flow
 
 On boss defeat:
 
-1. Set dungeon completion flag
-2. Spawn Heart Container pickup
-3. Fully heal player on pickup
-4. Spawn warp tile back to dungeon entrance
+1. Boss controller calls `BossDefeatCutscene.play(self, player, camera)` — handles shake, flash, explosion, particles, and heart container spawn
+2. Cutscene awaits player picking up the heart container (dispatches `ItemGetState`)
+3. Set dungeon completion flag
+4. Fully heal player
+5. Spawn warp tile back to dungeon entrance
 
-### 5.5 Phase 5 Deliverable
+### 5.6 Phase 5 Deliverable
 
 Acceptance criteria:
 
 1. One dungeon can be entered, cleared, and exited end to end.
 2. The boss has at least two distinct phases.
-3. Completion flagging, reward drop, and exit warp all work in one continuous run.
+3. Boss intro and defeat sequences play through the cutscene system.
+4. Completion flagging, reward drop, and exit warp all work in one continuous run.
 
 ---
 
