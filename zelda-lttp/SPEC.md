@@ -450,20 +450,7 @@ These values are starting points — balance via playtesting.
 
 ### Save Schema
 
-Save files must include at minimum:
-
-```json
-{
-  "schema_version": 1,
-  "slot": 1,
-  "timestamp_utc": "2026-04-04T10:00:00Z",
-  "player": {},
-  "inventory": {},
-  "game_state": {}
-}
-```
-
-The exact payload can grow later, but `schema_version` is required from the first real save implementation onward.
+See Phase 2 section 2.7 for the full save/load system, JSON schema, and SaveManager API. The key rule: `schema_version` is required from the first save implementation onward so future changes can migrate old saves.
 
 ### Debug Expectations
 
@@ -1024,7 +1011,50 @@ Pickup types:
 - Arrow bundle
 - Bomb bundle
 
-### 2.7 Phase 2 Deliverable
+### 2.7 Save and Load
+
+The save system is built in Phase 2 so that game state can be persisted during development. The `SaveManager` autoload stub from Phase 1 becomes functional here.
+
+**Save data** (`user://save_{slot}.json`):
+
+```json
+{
+  "schema_version": 1,
+  "slot": 1,
+  "timestamp_utc": "2026-04-04T10:00:00Z",
+  "play_time_seconds": 3600,
+  "player": {
+    "room_id": "light_overworld_2_1",
+    "position": [128, 112],
+    "facing": [0, 1]
+  },
+  "world_type": "light",
+  "inventory": {},
+  "flags": {}
+}
+```
+
+`inventory` is the full serialized state of `InventoryManager` (owned items, passives, consumables, dungeon keys, health, magic, heart pieces). `flags` is the full `GameManager.flags` dictionary. Both managers expose `serialize() -> Dictionary` and `deserialize(data: Dictionary)` methods.
+
+**Save system requirements:**
+
+- 3 save slots
+- Slot metadata for title screen UI: play time, last save timestamp, player health, heart count
+- `schema_version` field so future changes can migrate old saves
+- Save triggers: save points in the world (beds, statues, dungeon entrance markers). In Phase 2, also expose a debug save hotkey for testing.
+- Load from title screen "Continue" → slot select → load
+
+**SaveManager public methods:**
+
+- `save_game(slot: int) -> void` — serializes GameManager + InventoryManager + player state to JSON
+- `load_game(slot: int) -> void` — deserializes and restores all state, triggers room load via SceneManager
+- `get_slot_metadata(slot: int) -> Dictionary` — for title screen display (returns empty dict if slot unused)
+- `has_save(slot: int) -> bool`
+- `delete_save(slot: int) -> void`
+
+As Phases 3–4 add more state (items, passives, dungeon progress, world type), the save system automatically captures it because it serializes the full manager dictionaries. No save code changes needed per feature — just ensure new state lives in GameManager flags or InventoryManager.
+
+### 2.8 Phase 2 Deliverable
 
 Acceptance criteria:
 
@@ -1032,6 +1062,7 @@ Acceptance criteria:
 2. Player and enemies both use hitbox and hurtbox components with knockback and invincibility frames.
 3. Enemies drop pickups through weighted tables.
 4. Shield-blockable projectiles and non-blockable damage sources are distinguishable in data.
+5. Save and load works: game can be saved, editor restarted, and state fully restored from the title screen.
 
 ---
 
@@ -1619,30 +1650,13 @@ Biomes:
 - Village
 - Graveyard
 
-### 7.6 Save and Load
-
-Real save system requirements:
-
-- Three save slots
-- Slot metadata for UI, including play time and last save timestamp
-- Save points or safe save triggers
-- Load from title screen
-
-Saved data must include:
-
-- Player room id and position
-- Current world type
-- InventoryManager state
-- GameManager flags
-- Dungeon progression state
-
-### 7.7 Phase 7 Deliverable
+### 7.6 Phase 7 Deliverable
 
 Acceptance criteria:
 
 1. Three dungeons are completable.
-2. Save and load work across multiple slots.
-3. Overworld includes NPCs, optional rewards, and destructible interactions.
+2. Overworld includes NPCs, optional rewards, and destructible interactions.
+3. Save/load (built in Phase 2) handles all new state from Phases 3–7 without modification.
 
 ---
 
@@ -1935,12 +1949,12 @@ collect_amount = 5
 | Phase | Milestone | Key Systems |
 |---|---|---|
 | 1 | Link Walks Around a Room | Movement, room loading, player, HUD (hearts, rupees, item slot), autoloads |
-| 2 | Link Fights Enemies | Combat components, enemy archetypes, drops |
+| 2 | Link Fights Enemies | Combat components, enemy archetypes, drops, save/load |
 | 3 | Link Has Equipment | Inventory, active items, passive upgrades |
 | 4 | Explorable Overworld | Screen transitions, dungeon structure, world switching |
 | 5 | First Dungeon Complete | Boss architecture, full dungeon completion loop |
 | 6 | Feels Like a Game | HUD polish, dialog, shader/particle polish pass, title screen |
-| 7 | Full Game Loop | Additional dungeons, NPCs, heart pieces, save/load |
+| 7 | Full Game Loop | Additional dungeons, NPCs, heart pieces, expanded overworld |
 | 8 | Feature Complete | Swimming, lifting, throwing, magic, game over, advanced enemies |
 
 Rules for phase completion:
