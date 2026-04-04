@@ -93,22 +93,34 @@ res://
 |   |   `-- components/
 |   |       `-- shield_component.tscn/.gd
 |   |-- enemies/
-|   |   |-- base_enemy.tscn/.gd
-|   |   |-- states/
-|   |   |   |-- enemy_state.gd
-|   |   |   |-- patrol_state.gd
-|   |   |   |-- chase_state.gd
-|   |   |   |-- attack_state.gd
-|   |   |   `-- stunned_state.gd
-|   |   `-- types/
-|   |       |-- soldier.tscn/.gd
-|   |       |-- octorok.tscn/.gd
-|   |       |-- stalfos.tscn/.gd
-|   |       |-- keese.tscn/.gd
-|   |       `-- buzz_blob.tscn/.gd
+|   |   |-- base_enemy.gd          # Script base class only, no base .tscn
+|   |   |-- enemy_state.gd         # Base EnemyState class
+|   |   |-- soldier/
+|   |   |   |-- soldier.tscn/.gd
+|   |   |   `-- states/            # States unique to this enemy
+|   |   |       |-- soldier_patrol.gd
+|   |   |       |-- soldier_chase.gd
+|   |   |       `-- soldier_attack.gd
+|   |   |-- octorok/
+|   |   |   |-- octorok.tscn/.gd
+|   |   |   `-- states/
+|   |   |       |-- octorok_wander.gd
+|   |   |       `-- octorok_shoot.gd
+|   |   |-- keese/
+|   |   |   `-- keese.tscn/.gd     # Simple enough for one script, no subfolder states
+|   |   |-- stalfos/
+|   |   |   |-- stalfos.tscn/.gd
+|   |   |   `-- states/
+|   |   |       |-- stalfos_wander.gd
+|   |   |       `-- stalfos_throw.gd
+|   |   `-- buzz_blob/
+|   |       `-- buzz_blob.tscn/.gd  # Wander-only, one script
 |   |-- bosses/
-|   |   |-- base_boss.tscn/.gd
-|   |   `-- armos_knights.tscn/.gd
+|   |   |-- base_boss.gd            # Script base class only, no base .tscn
+|   |   `-- armos_knights/
+|   |       |-- armos_knights.tscn/.gd
+|   |       |-- armos_knight_unit.tscn/.gd
+|   |       `-- states/
 |   |-- items/
 |   |   |-- base_item.gd
 |   |   |-- sword_hitbox.tscn/.gd
@@ -313,7 +325,7 @@ All driven by `AnimationPlayer` tracks on the visual node's `scale` property:
 
 ### Screen Shake
 
-Triggered via `EventBus.screen_shake_requested(intensity, duration)`. Implemented by randomizing `Camera2D.offset` each physics frame during the shake window, decaying intensity linearly.
+Triggered via `EventBus.screen_shake_requested(intensity, duration)`. Implemented by randomizing `Camera2D.offset` each physics frame during the shake window, decaying intensity linearly. If a new shake request arrives while one is active, keep whichever has the higher current intensity — do not stack them additively.
 
 | Trigger | Intensity | Duration |
 |---|---|---|
@@ -760,66 +772,108 @@ enum HitEffect {
 
 ### 2.2 Enemy Data Resource
 
+`EnemyData` stores only stats that are genuinely shared by all enemies. Movement behavior, detection logic, and attack patterns live in each enemy's state scripts — not in data.
+
 ```gdscript
 class_name EnemyData extends Resource
 
 @export var id: StringName
 @export var display_name: String
 @export var max_health: int
-@export var contact_damage: int
-@export var knockback_resistance: float
-@export var speed: float
-@export var detection_radius: float
-@export var attack_range: float
+@export var contact_damage: int           # 0 if enemy has no contact hitbox
+@export var knockback_resistance: float   # 0.0 = full knockback, 1.0 = immune
 @export var drop_table: LootTable
-@export var color: Color
-@export var damage_immunities: Array[int]
-@export var contact_enabled: bool = true
+@export var color: Color                  # Primary body color for _draw()
+@export var damage_immunities: Array[int] # DamageType enum values this enemy ignores
 ```
 
-Keep balance data in resources, not hard-coded in enemy behavior scripts.
+Balance-tunable values like movement speed, detection radius, attack range, and firing cadence are `@export` vars on the enemy's own script or its state scripts — not on EnemyData. This avoids forcing a flat structure onto enemies with multi-modal behavior (e.g., Soldier walks slowly on patrol but runs when chasing).
 
-### 2.3 Enemy Base Scene
+### 2.3 Enemy Architecture
 
-`scenes/enemies/base_enemy.tscn`
+**Composition over scene inheritance.** There is no `base_enemy.tscn`. Instead:
 
-- `BaseEnemy` (`CharacterBody2D`)
-  - `EnemyBody`
-  - `CollisionShape2D`
-  - `HurtboxComponent`
-  - `ContactHitbox`
-  - `HealthComponent`
-  - `KnockbackComponent`
-  - `FlashComponent`
-  - `LootDropComponent`
-  - `StateMachine`
-  - `NavigationAgent2D`
-  - `DetectionZone`
+- `base_enemy.gd` is a **script** that extends `CharacterBody2D`. It holds shared logic: health management, death sequence (particles + loot + `EventBus.enemy_defeated` + `queue_free()`), damage reception, and the `@export var enemy_data: EnemyData` binding.
+- Each enemy type is its own **standalone scene** that uses `base_enemy.gd` (or a type-specific subclass of it) as its root script. The scene includes only the components that enemy actually needs.
 
-Behavior:
+Example — Soldier scene:
 
-- Enemies use `EnemyData` for stats
-- Death triggers particles, loot roll, `EventBus.enemy_defeated`, then `queue_free()`
-- Navigation may fall back to direct vector pursuit in small rooms where a nav mesh is unnecessary
+```
+Soldier (CharacterBody2D, script: soldier.gd extends BaseEnemy)
+  ├── CollisionShape2D
+  ├── EnemyBody (Node2D, _draw())
+  ├── HurtboxComponent        ← always
+  ├── ContactHitbox            ← because Soldier deals contact damage
+  ├── HealthComponent          ← always
+  ├── KnockbackComponent       ← always
+  ├── FlashComponent           ← always
+  ├── LootDropComponent        ← always
+  ├── StateMachine
+  │     ├── Patrol  (soldier_patrol.gd)
+  │     ├── Chase   (soldier_chase.gd)
+  │     ├── Attack  (soldier_attack.gd)
+  │     └── Stunned (shared stunned_state.gd)
+  ├── NavigationAgent2D        ← Soldier needs pathfinding
+  └── DetectionZone (Area2D)   ← Soldier reacts to player proximity
+```
 
-Enemy state set:
+Example — Keese scene (much simpler):
 
-| State | Behavior |
-|---|---|
-| Patrol | Random walk, fixed path, or stationary idle |
-| Chase | Pursue player once detected |
-| Attack | Contact rush, projectile fire, or lunge |
-| Stunned | Temporary immobilize from specific effects |
+```
+Keese (CharacterBody2D, script: keese.gd extends BaseEnemy)
+  ├── CollisionShape2D
+  ├── EnemyBody
+  ├── HurtboxComponent
+  ├── ContactHitbox
+  ├── HealthComponent
+  ├── KnockbackComponent
+  ├── FlashComponent
+  ├── LootDropComponent
+  └── StateMachine
+        ├── Flutter  (keese_flutter.gd)  ← erratic sine-wave movement + contact
+        └── Stunned  (shared stunned_state.gd)
+```
 
-### 2.4 Initial Enemy Set
+No `NavigationAgent2D`, no `DetectionZone` — Keese doesn't need them.
 
-| Enemy | Shape | Behavior |
-|---|---|---|
-| Soldier | Red rectangle with helmet | Patrol, chase, lunge |
-| Octorok | Red circle | Slow move, cardinal projectile shots |
-| Keese | Purple diamond | Fluttering contact attacker |
-| Stalfos | White triangle | Random walk, bone projectile |
-| Buzz Blob | Yellow circle | Contact damage, immune to sword |
+**`EnemyState`** (`scenes/enemies/enemy_state.gd`): extends `State`, types `actor` as `BaseEnemy`. Shared convenience: `StunnedState` can be reused by all enemies since stun behavior is universal (immobile, blue tint, timer). Everything else is per-type.
+
+### 2.4 Level Design Exports
+
+Each enemy scene exposes `@export` properties for per-instance configuration in the room editor:
+
+```gdscript
+# On base_enemy.gd or the type-specific script
+@export var enemy_data: EnemyData
+@export var initial_facing: Vector2 = Vector2.DOWN
+
+# On enemies with patrol behavior (Soldier, Octorok, Stalfos)
+@export var patrol_points: PackedVector2Array  # Local-space waypoints
+@export var patrol_wait_time: float = 1.0      # Pause at each point
+
+# On enemies with detection (Soldier, Stalfos)
+@export var detection_radius: float = 80.0
+@export var lose_interest_radius: float = 120.0
+
+# On enemies with ranged attacks (Octorok, Stalfos)
+@export var fire_cadence: float = 2.0          # Seconds between shots
+
+# On enemies with chase behavior (Soldier)
+@export var patrol_speed: float = 30.0
+@export var chase_speed: float = 60.0
+```
+
+This means the same Soldier scene can be placed twice in one room with different patrol routes, facing directions, and detection ranges — all configured in the editor without touching code.
+
+### 2.5 Initial Enemy Set
+
+| Enemy | Shape | Components | States | Notes |
+|---|---|---|---|---|
+| Soldier | Red rectangle + helmet triangle | Nav, Detection, Contact | Patrol → Chase → Attack (lunge) → Stunned | Two speeds: `patrol_speed` and `chase_speed` |
+| Octorok | Red circle | Contact | Wander → Shoot → Stunned | No detection zone — shoots on a timer in facing direction. `fire_cadence` export. |
+| Keese | Purple diamond | Contact | Flutter → Stunned | One movement state: erratic sine-wave path. No patrol points, no detection. |
+| Stalfos | White triangle | Detection, Contact | Wander → Throw → Stunned | Random walk, throws bone projectile when player is in detection range. |
+| Buzz Blob | Yellow pulsing circle | Contact | Wander → Stunned | Random walk only. Immune to sword (`damage_immunities` includes SLASH). |
 
 ### 2.5 Projectile System
 
@@ -1104,40 +1158,55 @@ Acceptance criteria:
 
 **Milestone**: "First Dungeon Complete"
 
-### 5.1 Boss Base System
+### 5.1 Boss Architecture
 
-Bosses extend enemy rules and add:
+Bosses are **not extensions of the enemy system**. Each boss is a bespoke scene with its own structure, because boss encounters vary too much to share a base scene (multi-entity formations, segment chains, teleporters, etc.).
 
-- `phase` tracking by health thresholds or scripted triggers
-- Boss health bar UI
-- Camera lock to room bounds
-- Boss door closure on encounter start
-- Brief invulnerability and flourish on phase changes
+What bosses share is a **`base_boss.gd` script** (extends `Node2D`, not `CharacterBody2D`) that provides:
+
+- `phase: int` — current phase, changed by the boss's own logic
+- `total_health: int` / `current_health: int` — aggregate HP (may be split across sub-entities)
+- `_on_phase_change(new_phase)` — virtual. Called automatically when `phase` changes. Triggers brief invulnerability, particle flourish, and screen shake.
+- `start_encounter()` — called when player enters boss room. Locks camera to room bounds, closes boss door, starts BGM.
+- `end_encounter()` — called on defeat. Spawns heart container, warp tile, sets dungeon completion flag.
+- `BossHealthBar` — a `Control` child that draws at the top of the screen. Updated via signal.
+
+Each boss scene owns its own `StateMachine` with **boss-specific states** (not Patrol/Chase/Attack). The state machine drives phase behavior.
 
 ### 5.2 Armos Knights
 
-Boss structure:
+```
+ArmosKnights (Node2D, script: armos_knights.gd extends BaseBoss)
+  ├── StateMachine
+  │     ├── Formation  (phase 1: coordinated hopping)
+  │     └── LastStand  (phase 2: solo aggressive knight)
+  ├── BossHealthBar
+  ├── Knight1 (CharacterBody2D, script: armos_knight_unit.gd)
+  │     ├── CollisionShape2D
+  │     ├── KnightBody (Node2D, _draw())
+  │     ├── HurtboxComponent
+  │     └── ContactHitbox
+  ├── Knight2 ... Knight6
+  └── SpawnPositions (Marker2D nodes)
+```
 
-- One controller node manages six knight instances
+The controller (`armos_knights.gd`) manages all 6 knight units. Individual knights are **not** full enemies — they have hitboxes/hurtboxes but no `StateMachine` of their own. The controller tells them where to hop.
 
-Phase 1:
+**Phase 1** (6 alive): Knights hop in a synchronized grid pattern. The controller picks a formation, tweens all knights to target positions, pauses, repeats. Occasionally one knight targets the player's position. Contact damage. Each knight has individual HP. When one dies: death particles, remaining knights speed up slightly. Phase change triggers when 5 are dead.
 
-- Knights hop in coordinated patterns
-- Contact damage on collision
-- Surviving knights increase aggression as others die
+**Phase 2** (1 remaining): Last knight turns red (shader color shift). Hops faster. Jump-attacks the player's position — a shadow indicator (dark circle on ground) telegraphs the landing spot 0.4s before impact. Higher contact damage.
 
-Phase 2:
+**Defeat**: heart container drop + warp tile via `end_encounter()`.
 
-- Final knight changes color to red
-- Movement and leap speed increase
-- Landing point telegraph appears before impact
+### 5.3 Boss Design Guidelines
 
-Defeat reward:
+Future bosses follow the same pattern — bespoke scene, `base_boss.gd` script, own state machine:
 
-- Heart Container
-- Warp tile
+- **Dungeon 2 boss**: Could be a single large entity with projectile-pattern phases. Scene is a `CharacterBody2D` extending `BaseBoss` directly (no sub-entities needed).
+- **Moldorm (Dungeon 3)**: Chain of `CharacterBody2D` segments. Only the tail segment has a `HurtboxComponent`. Controller drives erratic movement, speeds up as health drops.
+- Each boss should have at least 2 phases with a visible transition (flash, shake, color change).
 
-### 5.3 Dungeon Completion Flow
+### 5.4 Dungeon Completion Flow
 
 On boss defeat:
 
@@ -1146,7 +1215,7 @@ On boss defeat:
 3. Fully heal player on pickup
 4. Spawn warp tile back to dungeon entrance
 
-### 5.4 Phase 5 Deliverable
+### 5.5 Phase 5 Deliverable
 
 Acceptance criteria:
 
@@ -1392,11 +1461,51 @@ Continue behavior:
 
 ### 8.5 Advanced Enemies
 
-| Enemy | Behavior |
-|---|---|
-| Wizzrobe | Teleports, telegraphs, fires magic, relocates |
-| Like-Like | Engulfs on contact, can threaten shield equipment |
-| Moldorm | Multi-segment body, only tail vulnerable |
+These enemies have unique state sets that don't map to the simple Patrol/Chase/Attack model, reinforcing why per-enemy states are necessary.
+
+**Wizzrobe** — standalone scene, no `NavigationAgent2D`, no `DetectionZone`:
+
+```
+Wizzrobe (CharacterBody2D, script: wizzrobe.gd extends BaseEnemy)
+  ├── HurtboxComponent, HealthComponent, FlashComponent, LootDropComponent
+  └── StateMachine
+        ├── Hidden    (invisible, invulnerable, picking next teleport spot)
+        ├── Appear    (fade in over 0.2s, become vulnerable)
+        ├── Telegraph (brief wind-up visual, ~0.4s)
+        ├── Fire      (spawn magic projectile)
+        └── Disappear (fade out, become invulnerable → Hidden)
+```
+
+Cycle: Hidden → Appear → Telegraph → Fire → Disappear → repeat. Can only be damaged during Appear/Telegraph/Fire.
+
+**Like-Like** — needs a unique Engulf state:
+
+```
+LikeLike (CharacterBody2D, script: like_like.gd extends BaseEnemy)
+  ├── HurtboxComponent, ContactHitbox, HealthComponent, ...
+  ├── DetectionZone
+  └── StateMachine
+        ├── Idle     (stationary, waits for detection)
+        ├── Pursue   (slow movement toward player)
+        ├── Engulf   (captures player: disable player input, tick damage, player mashes to escape)
+        └── Stunned
+```
+
+On Engulf: player's state machine is forced into a special trapped state. If engulf duration expires before escape, shield tier drops by 1.
+
+**Moldorm** — note: this is a mini-boss, not a regular enemy. Uses the boss architecture:
+
+```
+Moldorm (Node2D, script: moldorm.gd extends BaseBoss)
+  ├── StateMachine
+  │     ├── Erratic  (phase 1: random direction changes)
+  │     └── Frenzy   (phase 2: faster, tighter turns)
+  ├── Head (CharacterBody2D, contact damage, no hurtbox)
+  ├── Segment1 ... Segment3 (follow head, contact damage, no hurtbox)
+  └── Tail (CharacterBody2D, contact damage, HAS hurtbox — only vulnerable point)
+```
+
+Segments follow the head using a position history queue (each segment takes the position the one ahead had N frames ago). Only the tail takes damage. Speed increases as health drops.
 
 ### 8.6 Audio Hookup Coverage
 
@@ -1463,7 +1572,7 @@ func physics_update(_delta: float) -> void:
     pass
 ```
 
-Player states should type `actor` more specifically in their subclass, for example `Player`, and enemy states should type it as `BaseEnemy`.
+Player states extend `PlayerState` (types `actor` as `Player`). Enemy states extend `EnemyState` (types `actor` as `BaseEnemy`). Each enemy type has its own state scripts — only `StunnedState` is shared across enemies. Boss states extend `State` directly since bosses use `BaseBoss` (Node2D), not `BaseEnemy` (CharacterBody2D).
 
 ### State Machine Pattern
 
