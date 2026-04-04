@@ -1,9 +1,6 @@
 extends CharacterBody2D
 
 
-var _started: bool = false
-
-
 func _ready() -> void:
 	GameManager.game_started.connect(_on_game_started)
 	GameManager.game_over.connect(_on_game_over)
@@ -18,8 +15,9 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 		return
 
-	if not _started:
-		position.y = 360.0 + sin(Time.get_ticks_msec() / 300.0) * 10.0
+	if GameManager.is_idle:
+		position = Config.BIRD_START_POSITION
+		position.y += sin(Time.get_ticks_msec() / 300.0) * Config.BIRD_IDLE_BOB_AMPLITUDE
 		queue_redraw()
 		return
 
@@ -39,7 +37,7 @@ func _physics_process(delta: float) -> void:
 	if get_slide_collision_count() > 0:
 		GameManager.end_game()
 
-	if position.y < -50 or position.y > 770:
+	if position.y < Config.BIRD_MIN_Y or position.y > Config.BIRD_MAX_Y:
 		GameManager.end_game()
 
 
@@ -78,15 +76,8 @@ func _draw() -> void:
 	])
 	draw_colored_polygon(beak_points, Color(1.0, 0.549, 0.0))
 
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("flap") and not _started and not GameManager.is_game_over:
-		GameManager.start_game()
-
-
 func _on_game_started() -> void:
-	_started = true
-	position = Vector2(120, 360)
+	position = Config.BIRD_START_POSITION
 	velocity = Vector2.ZERO
 	rotation = 0.0
 

@@ -26,6 +26,13 @@ window/size/viewport_width=480
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 
+[input]
+
+flap={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":32), Object(InputEventMouseButton,"button_index":1)]
+}
+
 [rendering]
 
 environment/defaults/default_clear_color=Color(0.529412, 0.807843, 0.921569, 1)

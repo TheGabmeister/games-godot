@@ -1,7 +1,5 @@
 extends CanvasLayer
 
-var _can_restart: bool = false
-
 @onready var _score_label: Label = $ScoreLabel
 @onready var _start_label: Label = $StartLabel
 @onready var _game_over_label: Label = $GameOverLabel
@@ -13,27 +11,22 @@ func _ready() -> void:
 	GameManager.game_started.connect(_on_game_started)
 	GameManager.game_over.connect(_on_game_over)
 	GameManager.score_changed.connect(_on_score_changed)
+	GameManager.restart_enabled.connect(_on_restart_enabled)
 
 	_score_label.visible = false
-	_start_label.visible = true
+	_start_label.visible = GameManager.is_idle
 	_game_over_label.visible = false
 	_final_score_label.visible = false
 	_restart_label.visible = false
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if _can_restart and event.is_action_pressed("flap"):
-		_can_restart = false
-		GameManager.start_game()
 
 
 func _on_game_started() -> void:
 	_score_label.visible = true
+	_score_label.text = str(GameManager.score)
 	_start_label.visible = false
 	_game_over_label.visible = false
 	_final_score_label.visible = false
 	_restart_label.visible = false
-	_can_restart = false
 
 
 func _on_game_over() -> void:
@@ -41,10 +34,10 @@ func _on_game_over() -> void:
 	_final_score_label.text = "Score: %d" % GameManager.score
 	_final_score_label.visible = true
 
-	await get_tree().create_timer(1.0).timeout
-	_restart_label.visible = true
-	_can_restart = true
-
 
 func _on_score_changed(new_score: int) -> void:
 	_score_label.text = str(new_score)
+
+
+func _on_restart_enabled() -> void:
+	_restart_label.visible = true

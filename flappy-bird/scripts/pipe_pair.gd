@@ -34,7 +34,7 @@ func _setup_pipes() -> void:
 	_top_collision.shape = top_shape
 
 	# Bottom pipe collision
-	var bottom_height: float = Config.SCREEN_HEIGHT - gap_bottom
+	var bottom_height: float = Config.GROUND_TOP_Y - gap_bottom
 	var bottom_shape := RectangleShape2D.new()
 	bottom_shape.size = Vector2(Config.PIPE_WIDTH, bottom_height)
 	$BottomPipe.position = Vector2(0, gap_bottom + bottom_height / 2.0)
@@ -79,7 +79,7 @@ func _draw() -> void:
 		-Config.PIPE_WIDTH / 2.0,
 		gap_bottom,
 		Config.PIPE_WIDTH,
-		Config.SCREEN_HEIGHT - gap_bottom
+		Config.GROUND_TOP_Y - gap_bottom
 	)
 	draw_rect(bottom_rect, pipe_color)
 	draw_rect(bottom_rect, pipe_dark, false, 3.0)
