@@ -1,9 +1,5 @@
 extends CharacterBody2D
 
-const GRAVITY: float = 980.0
-const FLAP_VELOCITY: float = -330.0
-const MAX_FALL_SPEED: float = 600.0
-const ROTATION_SPEED: float = 4.0
 
 var _started: bool = false
 
@@ -15,8 +11,8 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if GameManager.is_game_over:
-		velocity.y += GRAVITY * delta
-		velocity.y = minf(velocity.y, MAX_FALL_SPEED)
+		velocity.y += Config.GRAVITY * delta
+		velocity.y = minf(velocity.y, Config.MAX_FALL_SPEED)
 		move_and_slide()
 		_update_rotation(delta)
 		queue_redraw()
@@ -30,11 +26,11 @@ func _physics_process(delta: float) -> void:
 	if not GameManager.is_playing:
 		return
 
-	velocity.y += GRAVITY * delta
-	velocity.y = minf(velocity.y, MAX_FALL_SPEED)
+	velocity.y += Config.GRAVITY * delta
+	velocity.y = minf(velocity.y, Config.MAX_FALL_SPEED)
 
 	if Input.is_action_just_pressed("flap"):
-		velocity.y = FLAP_VELOCITY
+		velocity.y = Config.FLAP_VELOCITY
 
 	move_and_slide()
 	_update_rotation(delta)
@@ -52,8 +48,8 @@ func _update_rotation(delta: float) -> void:
 	if velocity.y < 0:
 		target_rotation = deg_to_rad(-25.0)
 	else:
-		target_rotation = deg_to_rad(minf(velocity.y / MAX_FALL_SPEED * 90.0, 70.0))
-	rotation = lerp(rotation, target_rotation, ROTATION_SPEED * delta)
+		target_rotation = deg_to_rad(minf(velocity.y / Config.MAX_FALL_SPEED * 90.0, 70.0))
+	rotation = lerp(rotation, target_rotation, Config.ROTATION_SPEED * delta)
 
 
 func _draw() -> void:

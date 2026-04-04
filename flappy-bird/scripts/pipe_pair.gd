@@ -1,9 +1,5 @@
 extends Node2D
 
-const SPEED: float = 150.0
-const PIPE_WIDTH: float = 70.0
-const GAP_SIZE: float = 160.0
-const SCREEN_HEIGHT: float = 720.0
 
 var gap_center_y: float = 360.0
 var _scored: bool = false
@@ -21,32 +17,32 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not GameManager.is_playing:
 		return
-	position.x -= SPEED * delta
-	if position.x < -PIPE_WIDTH:
+	position.x -= Config.PIPE_SPEED * delta
+	if position.x < -Config.PIPE_WIDTH:
 		queue_free()
 
 
 func _setup_pipes() -> void:
-	var gap_top: float = gap_center_y - GAP_SIZE / 2.0
-	var gap_bottom: float = gap_center_y + GAP_SIZE / 2.0
+	var gap_top: float = gap_center_y - Config.GAP_SIZE / 2.0
+	var gap_bottom: float = gap_center_y + Config.GAP_SIZE / 2.0
 
 	# Top pipe collision
 	var top_height: float = gap_top
 	var top_shape := RectangleShape2D.new()
-	top_shape.size = Vector2(PIPE_WIDTH, top_height)
+	top_shape.size = Vector2(Config.PIPE_WIDTH, top_height)
 	$TopPipe.position = Vector2(0, top_height / 2.0)
 	_top_collision.shape = top_shape
 
 	# Bottom pipe collision
-	var bottom_height: float = SCREEN_HEIGHT - gap_bottom
+	var bottom_height: float = Config.SCREEN_HEIGHT - gap_bottom
 	var bottom_shape := RectangleShape2D.new()
-	bottom_shape.size = Vector2(PIPE_WIDTH, bottom_height)
+	bottom_shape.size = Vector2(Config.PIPE_WIDTH, bottom_height)
 	$BottomPipe.position = Vector2(0, gap_bottom + bottom_height / 2.0)
 	_bottom_collision.shape = bottom_shape
 
 	# Score zone (thin vertical area in the gap)
 	var score_shape := RectangleShape2D.new()
-	score_shape.size = Vector2(10.0, GAP_SIZE)
+	score_shape.size = Vector2(10.0, Config.GAP_SIZE)
 	$ScoreZone.position = Vector2(0, gap_center_y)
 	_score_collision.shape = score_shape
 
@@ -54,8 +50,8 @@ func _setup_pipes() -> void:
 
 
 func _draw() -> void:
-	var gap_top: float = gap_center_y - GAP_SIZE / 2.0
-	var gap_bottom: float = gap_center_y + GAP_SIZE / 2.0
+	var gap_top: float = gap_center_y - Config.GAP_SIZE / 2.0
+	var gap_bottom: float = gap_center_y + Config.GAP_SIZE / 2.0
 	var cap_extra: float = 10.0
 	var cap_height: float = 26.0
 
@@ -64,15 +60,15 @@ func _draw() -> void:
 	var cap_color := Color(0.180, 0.545, 0.180)
 
 	# Top pipe body
-	var top_rect := Rect2(-PIPE_WIDTH / 2.0, 0.0, PIPE_WIDTH, gap_top)
+	var top_rect := Rect2(-Config.PIPE_WIDTH / 2.0, 0.0, Config.PIPE_WIDTH, gap_top)
 	draw_rect(top_rect, pipe_color)
 	draw_rect(top_rect, pipe_dark, false, 3.0)
 
 	# Top pipe cap
 	var top_cap := Rect2(
-		-(PIPE_WIDTH + cap_extra) / 2.0,
+		-(Config.PIPE_WIDTH + cap_extra) / 2.0,
 		gap_top - cap_height,
-		PIPE_WIDTH + cap_extra,
+		Config.PIPE_WIDTH + cap_extra,
 		cap_height
 	)
 	draw_rect(top_cap, cap_color)
@@ -80,19 +76,19 @@ func _draw() -> void:
 
 	# Bottom pipe body
 	var bottom_rect := Rect2(
-		-PIPE_WIDTH / 2.0,
+		-Config.PIPE_WIDTH / 2.0,
 		gap_bottom,
-		PIPE_WIDTH,
-		SCREEN_HEIGHT - gap_bottom
+		Config.PIPE_WIDTH,
+		Config.SCREEN_HEIGHT - gap_bottom
 	)
 	draw_rect(bottom_rect, pipe_color)
 	draw_rect(bottom_rect, pipe_dark, false, 3.0)
 
 	# Bottom pipe cap
 	var bottom_cap := Rect2(
-		-(PIPE_WIDTH + cap_extra) / 2.0,
+		-(Config.PIPE_WIDTH + cap_extra) / 2.0,
 		gap_bottom,
-		PIPE_WIDTH + cap_extra,
+		Config.PIPE_WIDTH + cap_extra,
 		cap_height
 	)
 	draw_rect(bottom_cap, cap_color)
