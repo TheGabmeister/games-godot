@@ -384,6 +384,59 @@ enum DamageType {
 }
 ```
 
+### Damage Formula
+
+All damage values are in **half-heart units** (1 unit = half heart, 2 units = full heart).
+
+**Step 1 — Shield check** (before any damage is applied):
+- If the hit is a projectile, it came from the front, and it hit the `ShieldArea`:
+  - Check `projectile_class` against shield tier blocking table (see section 3.4)
+  - If blockable: deflect (tier 1–2, projectile vanishes) or reflect (tier 3, projectile reverses). **No damage taken. Skip all remaining steps.**
+  - If not blockable: proceed to Step 2.
+- Non-projectile damage (CONTACT, SWORD, SPIKE, PIT) is never blocked by shield.
+
+**Step 2 — Immunity check**:
+- Check `damage_type` against the target's `damage_immunities` array.
+- If immune: **no damage. No knockback. No effect.** Play a "clink" SFX to give feedback.
+
+**Step 3 — Armor reduction** (player only, enemies have no armor):
+- Armor only reduces **combat damage types**: CONTACT, SWORD, ARROW, BOMB, FIRE, ICE, MAGIC.
+- **Environmental damage types bypass armor entirely**: PIT, WATER, SPIKE. These always deal their raw value.
+- Reduction formula: `final_damage = max(raw_damage - armor_reduction, 1)`
+  - Armor tier 0 (no armor): 0 reduction
+  - Armor tier 1 (Green Mail): 0 reduction (this is the baseline — Green Mail is the default tunic)
+  - Armor tier 2 (Blue Mail): damage halved (`raw_damage / 2`, rounded up)
+  - Armor tier 3 (Red Mail): damage quartered (`raw_damage / 4`, rounded up)
+- Minimum 1 unit of damage after reduction (no hit is ever completely negated by armor alone).
+
+**Step 4 — Apply damage**:
+- `HealthComponent.take_damage(final_damage)`
+- All side effects fire: flash, knockback, i-frames, screen shake, SFX.
+
+**Sword damage output** (for reference):
+
+| Sword Tier | Base Damage | Notes |
+|---|---|---|
+| 1 (Fighter's) | 2 | |
+| 2 (Master) | 4 | |
+| 3 (Tempered) | 8 | |
+| 4 (Golden) | 16 | At full health, emits sword beam (2 damage) |
+
+**Standard enemy damage output**:
+
+| Source | Raw Damage | Notes |
+|---|---|---|
+| Weak enemy contact (Keese, Octorok) | 2 | 1 heart |
+| Medium enemy contact (Soldier) | 4 | 2 hearts |
+| Strong enemy contact (Dark World) | 8 | 4 hearts |
+| Boss contact | 8 | |
+| Boss special attack | 12 | |
+| Pit / fall | 2 | Bypasses armor |
+| Spike | 2 | Bypasses armor |
+| Water (no Flippers) | 2 | Bypasses armor, pushes player back |
+
+These values are starting points — balance via playtesting.
+
 ### Save Schema
 
 Save files must include at minimum:
@@ -985,7 +1038,7 @@ Each active item extends a common base with `activate(player, direction)`.
 | Upgrade | Tiers | Effect |
 |---|---|---|
 | Sword | 1-4 | Damage increase, stronger slash visuals, sword beam at full health |
-| Armor | 1-3 | Incoming damage reduction |
+| Armor | 1-3 (Green/Blue/Red Mail) | Combat damage halved (tier 2) or quartered (tier 3). Environmental damage bypasses armor. See Damage Formula. |
 | Shield | 1-3 | Blocks additional projectile classes |
 | Gloves | 1-2 | Lift light or heavy objects |
 | Flippers | Boolean | Enter water and swim |
