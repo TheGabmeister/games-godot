@@ -23,7 +23,7 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
 	var cam_x: float = 0.0
 	if _camera:
-		cam_x = _camera.global_position.x
+		cam_x = _camera.get_screen_center_position().x
 
 	_draw_hills(cam_x)
 	_draw_clouds(cam_x)
