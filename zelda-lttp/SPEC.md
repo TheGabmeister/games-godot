@@ -1036,6 +1036,17 @@ The save system is built in Phase 2 so that game state can be persisted during d
 
 `inventory` is the full serialized state of `InventoryManager` (owned items, passives, consumables, dungeon keys, health, magic, heart pieces). `flags` is the full `GameManager.flags` dictionary. Both managers expose `serialize() -> Dictionary` and `deserialize(data: Dictionary)` methods.
 
+**JSON type serialization**: Godot's built-in `JSON.stringify()` / `JSON.parse_string()` only support basic types (strings, numbers, bools, arrays, dicts). Godot-specific types must be converted manually in `serialize()` / `deserialize()`:
+
+| Godot Type | JSON Representation | Example |
+|---|---|---|
+| `Vector2` | `[x, y]` array | `[128, 112]` |
+| `Vector2i` | `[x, y]` array | `[2, 1]` |
+| `Color` | `[r, g, b, a]` array | `[1.0, 0.0, 0.0, 1.0]` |
+| `StringName` | `String` | `"bow"` (auto-converted by JSON) |
+
+Keep all save data in JSON-safe primitives. Do not use `var_to_str()` / `str_to_var()` — they work but produce Godot-specific syntax that is fragile across engine versions and not human-readable.
+
 **Save system requirements:**
 
 - 3 save slots
