@@ -11,16 +11,12 @@ const P := preload("res://scripts/color_palette.gd")
 var _camera: Camera2D
 
 
-func _ready() -> void:
-	# Find the player's camera
-	var player := get_tree().get_first_node_in_group("player")
-	if player:
-		_camera = player.get_node("Camera2D") as Camera2D
-
-
 func _process(_delta: float) -> void:
+	if not _camera:
+		var player := get_tree().get_first_node_in_group("player")
+		if player:
+			_camera = player.get_node("Camera2D") as Camera2D
 	if _camera:
-		# Shift position based on camera for parallax effect
 		queue_redraw()
 
 
