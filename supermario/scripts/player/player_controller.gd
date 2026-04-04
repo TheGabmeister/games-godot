@@ -144,6 +144,31 @@ func die() -> void:
 	EventBus.player_died.emit()
 
 
+func power_up(item_type: StringName, _position: Vector2 = Vector2.ZERO) -> void:
+	var current := GameManager.current_power_state
+	var new_state: int = current
+	match item_type:
+		&"mushroom":
+			if current == GameManager.PowerState.SMALL:
+				new_state = GameManager.PowerState.BIG
+		&"fire_flower":
+			if current == GameManager.PowerState.SMALL:
+				new_state = GameManager.PowerState.BIG
+			else:
+				new_state = GameManager.PowerState.FIRE
+
+	if new_state == current:
+		# Already at max — just award points
+		GameManager.add_score(1000, global_position)
+		return
+
+	GameManager.set_power_state(new_state)
+	GameManager.add_score(1000, global_position)
+	_update_collision_shape()
+	# Small upward nudge so the bigger collision shape doesn't clip into ground
+	global_position.y -= 1.0
+
+
 func _update_collision_shape() -> void:
 	var shape := collision_shape.shape as RectangleShape2D
 	if _is_crouching or GameManager.current_power_state == GameManager.PowerState.SMALL:

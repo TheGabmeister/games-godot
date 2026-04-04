@@ -1,10 +1,13 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/level/level_base.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="Script" path="res://scripts/level/kill_zone.gd" id="3_killzone"]
 [ext_resource type="Script" path="res://scripts/level/parallax_controller.gd" id="4_parallax"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://scenes/objects/question_block.tscn" id="6_qblock"]
+[ext_resource type="PackedScene" path="res://scenes/objects/brick_block.tscn" id="7_brick"]
+[ext_resource type="PackedScene" path="res://scenes/objects/coin.tscn" id="8_coin"]
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
@@ -57,9 +60,72 @@ script = ExtResource("4_parallax")
 
 [node name="Blocks" type="Node2D" parent="."]
 
+[node name="QBlock_16_8" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(264, 144)
+contents = &"coin"
+
+[node name="Brick_20_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(328, 144)
+
+[node name="QBlock_21_8" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(344, 144)
+contents = &"mushroom"
+
+[node name="Brick_22_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(360, 144)
+
+[node name="QBlock_23_8" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(376, 144)
+contents = &"coin"
+
+[node name="Brick_24_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(392, 144)
+
+[node name="QBlock_22_4" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(360, 80)
+contents = &"coin"
+
+[node name="Brick_78_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(1256, 144)
+
+[node name="Brick_79_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(1272, 144)
+
+[node name="QBlock_80_8" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(1288, 144)
+contents = &"fire_flower"
+
+[node name="Brick_81_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(1304, 144)
+
+[node name="MultiCoin_130_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(2088, 144)
+coin_count = 8
+
 [node name="Pipes" type="Node2D" parent="."]
 
 [node name="Coins" type="Node2D" parent="."]
+
+[node name="Coin_10_11" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(168, 184)
+
+[node name="Coin_12_11" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(200, 184)
+
+[node name="Coin_30_7" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(488, 120)
+
+[node name="Coin_31_7" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(504, 120)
+
+[node name="Coin_32_7" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(520, 120)
+
+[node name="Coin_100_8" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(1608, 136)
+
+[node name="Coin_101_8" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(1624, 136)
 
 [node name="Enemies" type="Node2D" parent="."]
 
