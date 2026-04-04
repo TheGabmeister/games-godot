@@ -32,8 +32,7 @@ All visuals are rendered from primitive shapes, shaders, particles, and 2D light
 ### Technical Foundation
 
 - Engine: Godot 4.6, GDScript
-- Target renderer: Compatibility
-- Current repo state: [`project.godot`](/c:/dev/games-godot/zelda-lttp/project.godot) still declares Forward Plus, so Phase 1 must explicitly switch the project to Compatibility
+- Renderer: Forward Plus (already configured; supports the 2D lighting and shader effects this project uses)
 - Resolution: 256x224 logical pixels, integer-scaled to 1024x896 by default
 - Stretch settings: `display/window/stretch/mode = "viewport"`, `display/window/stretch/aspect = "keep"`
 - Physics: Godot built-in 2D physics only
@@ -48,8 +47,9 @@ All visuals are rendered from primitive shapes, shaders, particles, and 2D light
 
 - The player is a persistent scene instance created once per run and reparented into the active room's `Entities` node during transitions.
 - The sword is always available. There is one active item slot, not two.
-- Room scripts must expose a stable `room_id` string for persistence and analytics.
-- Persistent flags use slash-separated keys, for example `world/light/overworld_0_0/chest_01_opened`.
+- Room scripts must expose a stable `room_id: StringName` for persistence and analytics (e.g., `light_overworld_0_0`, `dungeon_01_room_03`). Set via `@export`, never derived from the file name at runtime.
+- Every persistent entity (chest, push block, switch, boss, locked door) must have an `@export var persist_id: StringName` set in the editor. This is a stable identifier that never changes even if the node is renamed or reparented. Flag keys are built as `{room_id}/{persist_id}` (e.g., `light_overworld_0_0/chest_north`).
+- The editor should warn (via `_get_configuration_warnings()`) if `persist_id` is empty on a persistent entity.
 - JSON save data must include a schema version so future migrations are possible.
 - All phase deliverables must be testable from either the normal game flow or [`debug/debug_room.tscn`](/c:/dev/games-godot/zelda-lttp/debug/debug_room.tscn) once that scene exists.
 
@@ -183,7 +183,8 @@ res://
 |   |-- damage_flash.gdshader
 |   |-- screen_transition.gdshader
 |   |-- dark_world_palette.gdshader
-|   `-- lighting_overlay.gdshader
+|   |-- lighting_overlay.gdshader
+|   `-- post_process.gdshader
 |-- audio/
 |   |-- bgm/
 |   `-- sfx/
@@ -223,6 +224,113 @@ Color should encode intent consistently:
 - Blue for water, magic, and stun or freeze states
 - Gray and brown for structural environment
 - Gold and yellow for key objectives, keys, and rewards
+
+---
+
+## Visual Direction
+
+The primitive shapes are the skeleton — the effects layer is what makes the game look good. This section defines the visual identity that should be applied consistently throughout all phases.
+
+### Lighting
+
+Every room has a mood set by lighting. This is the single biggest lever for making flat shapes look atmospheric.
+
+- **CanvasModulate** per room sets the base ambient color. Overworld daytime: warm white `Color(1.0, 0.98, 0.9)`. Forests: dappled green `Color(0.7, 0.85, 0.65)`. Dungeons: cool gray `Color(0.5, 0.5, 0.6)`. Dark World: desaturated purple `Color(0.6, 0.45, 0.65)`. Dark rooms: near-black `Color(0.08, 0.08, 0.12)` until torches/lamp activate.
+- **Player glow**: `PointLight2D` (warm yellow, energy ~0.4, texture: soft radial gradient). Always on. Makes the player feel like the focal point.
+- **Torches**: `PointLight2D` with orange tint. Energy oscillates randomly between 0.6–1.0 each frame for flicker. In dark rooms, torches are the only light sources until the Lantern is used.
+- **Boss rooms**: Dramatic lighting — dim ambient with a single strong `PointLight2D` on the boss (red/orange tint).
+- **Water glow**: Faint blue `PointLight2D` emanating from water tile areas, giving caves with water a cool ambient bounce.
+
+### Shaders
+
+These run throughout the game, not just as one-off effects:
+
+- **Water** (`water.gdshader`): Sine-wave UV distortion (amplitude ~2px, period ~1.5s) + slow blue color cycling between two blue tones. Applied to all water `TileMapLayer` cells. Makes water feel alive.
+- **Damage flash** (`damage_flash.gdshader`): `mix(original_color, white, flash_amount)`. Tweened 1.0→0.0 over 0.08s. Applied to any entity on hit via `FlashComponent`.
+- **Screen transitions** (`screen_transition.gdshader`): Iris wipe (expanding/contracting circle) centered on player position. For dungeon doors: iris-out → black → iris-in. For world switch: radial swirl distortion that intensifies to black.
+- **Dark World palette** (`dark_world_palette.gdshader`): Screen-wide post-process on a `CanvasLayer`. Shifts hues toward purple, reduces saturation by ~20%, darkens midtones. Applied whenever the player is in the Dark World.
+- **Lighting overlay** (`lighting_overlay.gdshader`): Subtle vignette (darken screen edges ~15%) for dungeon/cave interiors. Adds visual focus toward the center.
+- **Pulsing glow**: Used on Buzz Blobs, boss weak points, and collectibles. Sinusoidal modulate on `self_modulate.a` or energy for `PointLight2D`.
+
+### Post-Processing
+
+Applied via a `ColorRect` on a dedicated `CanvasLayer` (layer 19, just below `TransitionOverlay`). Both effects share a single `post_process.gdshader` to avoid multiple full-screen passes.
+
+**Bloom / Glow**
+
+Gives lights, magic, and collectibles a soft halo against dark backgrounds. Especially important in dungeons and caves where `CanvasModulate` is dim and bright elements should pop.
+
+- Extract pixels above a brightness threshold (~0.7), blur them (two-pass Gaussian, 3px radius at 256×224 is plenty), and add back to the scene.
+- Intensity controlled by a `bloom_strength` uniform (0.0–1.0). Default 0.3 for subtle glow. Crank to 0.6 in dark rooms.
+- Primary bloom sources: `PointLight2D` halos, magic projectiles (Fire/Ice Rod), collectible pickups, boss weak points, Lamp flame, torch fire, rupee glint.
+- Bloom is applied after `CanvasModulate` so it respects the room's ambient darkness.
+
+**Color Grading Per Biome**
+
+A lookup-based or uniform-driven color adjustment that shifts the overall palette per area. Makes each biome feel distinct beyond just tile colors.
+
+| Area | Grading |
+|---|---|
+| Overworld field | Warm — slight boost to reds/yellows, lift shadows slightly. Sunny feel. |
+| Forest | Green push — shift midtones toward green, slightly crush blacks. Dense canopy mood. |
+| Mountain/cave | Cool desaturate — reduce saturation ~15%, shift shadows toward blue. Stone coldness. |
+| Desert | Hot — boost warm tones, raise overall brightness slightly, reduce blues. |
+| Lake | Cool blue — strong blue shift in shadows, keep highlights neutral. |
+| Dungeon interior | Neutral desaturate — drop saturation ~25%, slightly cool midtones. Sterile stone. |
+| Dark World | Handled by `dark_world_palette.gdshader` (purple shift, desaturate, darken midtones). |
+| Boss room | High contrast — crush blacks harder, boost highlights slightly. Dramatic. |
+
+Implemented as uniforms on the post-process shader: `color_shift: vec3` (additive RGB offset for midtones), `saturation: float`, `brightness: float`, `contrast: float`. `SceneManager` tweens these uniforms during room transitions (0.3s) so the grading shifts smoothly, not abruptly.
+
+`RoomData` stores the grading preset per room (either as direct uniform values or as a `StringName` key into a grading dictionary).
+
+### Particles (GPUParticles2D)
+
+Particles are cheap and add life to every interaction:
+
+- **Sword impact**: 6–10 white/yellow spark sprites, burst outward from hit point, 0.15s lifetime. Triggered on every sword-hits-enemy/wall contact.
+- **Enemy death**: 8–12 triangles in the enemy's body color, explode outward + slight gravity, 0.4s lifetime. Combined with a brief scale-to-zero tween on the body.
+- **Bomb explosion**: 15–20 orange/red circles, radial burst, 0.3s. Accompanied by screen shake (intensity 2.0, 0.2s).
+- **Dash dust**: Continuous trail while dashing. Small brown/tan circles, low velocity downward, 0.3s lifetime, emitting from player's feet.
+- **Grass/bush cut**: 4–6 small green leaf shapes scatter upward with slight spread.
+- **Chest open**: Golden sparkles rise upward from chest, 0.5s, slight drift.
+- **Ambient — forest**: Slow-moving leaf particles drifting diagonally, very low opacity, sparse (1 every ~2s).
+- **Ambient — dungeon**: Floating dust motes, near-stationary, faint white, very low opacity.
+- **Ambient — Dark World**: Faint purple embers drifting upward, slow.
+- **Water splash**: Small blue droplets on entering/exiting water, burst upward.
+- **Magic use**: Colored sparkles matching the item (blue for ice, red for fire, green for magic powder) burst from player on cast.
+
+### Procedural Animation (Squash & Stretch)
+
+All driven by `AnimationPlayer` tracks on the visual node's `scale` property:
+
+- **Sword swing**: Player body squashes horizontally (0.8x, 1.2y) on wind-up frame, then stretches (1.2x, 0.8y) on swing, returns to 1.0 over 0.1s.
+- **Dash start**: Brief horizontal stretch (1.3x, 0.7y) on first frame.
+- **Landing from fall/pit**: Squash (1.3x, 0.6y) on land frame, bounce back over 0.15s.
+- **Enemy hit reaction**: Brief squash (0.8x, 1.15y) toward knockback direction, then snap back.
+- **Pickup collect**: Item scales up (1.5x) and fades out simultaneously over 0.2s.
+- **Chest lid**: Lid rectangle rotates open (0° to -90°) over 0.3s.
+
+### Screen Shake
+
+Triggered via `EventBus.screen_shake_requested(intensity, duration)`. Implemented by randomizing `Camera2D.offset` each physics frame during the shake window, decaying intensity linearly.
+
+| Trigger | Intensity | Duration |
+|---|---|---|
+| Player takes damage | 1.0 | 0.12s |
+| Bomb explosion | 2.5 | 0.25s |
+| Boss stomp/land | 2.0 | 0.2s |
+| Push block lands | 0.5 | 0.08s |
+| Boss phase transition | 3.0 | 0.4s |
+
+### Trails and Motion Lines
+
+For fast-moving entities, draw a fading trail using `_draw()`:
+
+- **Sword arc**: Draw 3–4 fading copies of the sword polygon at previous rotation angles during the swing, each with decreasing alpha. Creates a visible sweep arc.
+- **Boomerang**: Short trail of 2–3 faded copies behind it.
+- **Dash**: Speed lines — 3 short horizontal lines behind the player, drawn via `_draw()`, fading over 0.1s.
+- **Hookshot chain**: Line segments drawn via `_draw()` from player to hook tip, with small joint marks every 8px.
 
 ---
 
@@ -295,7 +403,7 @@ The exact payload can grow later, but `schema_version` is required from the firs
 
 ### 1.1 Project Configuration
 
-- Switch the project renderer from Forward Plus to Compatibility
+- Keep the Forward Plus renderer (already configured, needed for 2D lighting/shaders)
 - Resolution: 256x224 with viewport stretch and integer-friendly upscaling
 - Default window: 1024x896
 - Physics tick: leave at Godot default unless profiling proves it needs adjustment
@@ -401,6 +509,8 @@ Public methods:
 - `set_flag(key: StringName, value: Variant) -> void`
 - `get_flag(key: StringName, default_value := false) -> Variant`
 - `has_flag(key: StringName) -> bool`
+
+Flag keys follow the pattern `{room_id}/{persist_id}` for room-scoped state (chests, blocks, switches) and plain keys like `dungeon_01/boss_defeated` or `items/bow` for global state. Keys are always built from `@export` fields, never from node names or scene paths.
 
 **SceneManager**
 
@@ -589,8 +699,11 @@ Room loading strategy:
 
 Persistence:
 
-- Enemies respawn when re-entering a room unless a specific room script overrides that behavior for a boss or scripted event
-- Chests, solved push blocks, toggled switches, opened boss doors, and world-state changes must restore from `GameManager` flags
+- Enemies respawn when re-entering a room unless a specific room script overrides that behavior for a boss or scripted event.
+- Chests, solved push blocks, toggled switches, opened boss doors, and world-state changes must restore from `GameManager` flags.
+- Each persistent entity has an `@export var persist_id: StringName` (set in editor, never auto-generated from node name). On `_ready()`, the entity builds its flag key as `{room.room_id}/{persist_id}` and checks `GameManager.get_flag()` to restore its solved/opened/defeated state. On state change (chest opened, block pushed, boss killed), it calls `GameManager.set_flag()` with the same key.
+- If `persist_id` is empty, the entity is treated as non-persistent (no save/restore). This is intentional for optional elements like resettable switches.
+- `room_id` and `persist_id` are both `@export` fields set by hand in the editor. This avoids any dependency on node names, scene paths, or tree structure — renaming or reparenting nodes does not break save data.
 
 ### 1.8 Phase 1 Deliverable
 
@@ -1079,25 +1192,23 @@ Triggered through:
 
 - `EventBus.dialog_requested(lines)`
 
-### 6.3 Shader Effects
+### 6.3 Shaders, Effects & Juice
 
-| Shader | Effect |
-|---|---|
-| `screen_transition.gdshader` | Iris and fade transitions |
-| `damage_flash.gdshader` | White flash on hit |
-| `water.gdshader` | UV distortion and subtle color cycling |
-| `dark_world_palette.gdshader` | Palette shift for Dark World tone |
-| `lighting_overlay.gdshader` | Optional room mood or vignette work |
+Phase 6 is when all 5 shaders, all particle types, squash/stretch animation, screen shake, and trail effects described in the **Visual Direction** section are implemented and wired up. These effects are not cosmetic afterthoughts — they are what makes primitive shapes feel like a real game.
 
-### 6.4 Feedback and Juice
+Specifically, Phase 6 must deliver:
+- All shaders functional (water, damage flash, screen transition, dark world palette, lighting overlay, post-process)
+- Post-process bloom working in dark rooms and on magic/light sources
+- Color grading presets applied per biome with smooth transitions between rooms
+- All particle effects for combat (sword impact, enemy death, bomb explosion, grass cut)
+- All particle effects for environment (ambient per-biome, water splash, chest sparkle)
+- Squash/stretch on player attacks, landings, and enemy hit reactions
+- Screen shake hooked up to all triggers (damage, explosions, boss events)
+- Sword arc trail and motion lines on fast-moving entities
+- Per-room `CanvasModulate` lighting applied to all existing rooms
+- Torch `PointLight2D` flicker in dungeon rooms
 
-- Screen shake via `Camera2D.offset`
-- Squash and stretch on attacks and landings
-- Impact particles on hits, kills, and explosions
-- Dash dust during boots movement
-- Ambient particles by biome
-- Per-room `CanvasModulate`
-- Flickering torch lights in dark interiors
+Note: effects should be added incrementally as systems are built in earlier phases (e.g., `FlashComponent` in Phase 2, dash dust in Phase 1). Phase 6 is the pass where everything is polished, consistent, and nothing is missing.
 
 ### 6.5 Title Screen
 
