@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bw4qy352i04fu"]
 
-[node name="Main" type="Node"]
+[node name="Main" type="Node" unique_id=536893474]
 
-[node name="SceneRoot" type="Node" parent="."]
+[node name="SceneRoot" type="Node" parent="." unique_id=1703672426]
 
-[node name="OverlayRoot" type="CanvasLayer" parent="."]
+[node name="OverlayRoot" type="CanvasLayer" parent="." unique_id=1042307969]
 layer = 50
