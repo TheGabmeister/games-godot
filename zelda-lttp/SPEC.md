@@ -89,6 +89,7 @@ res://
 |   |   |   |-- fall_state.gd
 |   |   |   |-- dash_state.gd
 |   |   |   |-- item_use_state.gd
+|   |   |   |-- item_get_state.gd
 |   |   |   `-- swim_state.gd
 |   |   `-- components/
 |   |       `-- shield_component.tscn/.gd
@@ -122,10 +123,20 @@ res://
 |   |       |-- armos_knight_unit.tscn/.gd
 |   |       `-- states/
 |   |-- items/
-|   |   |-- base_item.gd
+|   |   |-- base_item_effect.gd     # BaseItemEffect (RefCounted)
+|   |   |-- effects/                # One script per active item
+|   |   |   |-- bow_effect.gd
+|   |   |   |-- bomb_effect.gd
+|   |   |   |-- boomerang_effect.gd
+|   |   |   |-- hookshot_effect.gd
+|   |   |   |-- lamp_effect.gd
+|   |   |   |-- fire_rod_effect.gd
+|   |   |   |-- ice_rod_effect.gd
+|   |   |   |-- magic_powder_effect.gd
+|   |   |   `-- hammer_effect.gd
 |   |   |-- sword_hitbox.tscn/.gd
 |   |   |-- projectile_base.tscn/.gd
-|   |   |-- arrow.tscn/.gd
+|   |   |-- arrow.tscn/.gd         # Spawned scenes (projectiles, bombs, etc.)
 |   |   |-- bomb.tscn/.gd
 |   |   |-- boomerang.tscn/.gd
 |   |   |-- hookshot.tscn/.gd
@@ -552,7 +563,8 @@ Pure signal hub. Initial signals:
 - `player_damaged(amount, source_type)`
 - `player_died()`
 - `enemy_defeated(enemy_type, position)`
-- `item_acquired(item_id)`
+- `item_get_requested(item: ItemData)` — triggers ItemGetState presentation
+- `item_acquired(item_id)` — emitted after presentation completes and inventory is mutated
 - `room_transition_requested(target_room_id, entry_point)`
 - `world_switch_requested(target_world_type)`
 - `dialog_requested(lines)`
@@ -615,23 +627,32 @@ Behavior:
 
 Owns:
 
-- One equipped active item slot
-- Owned active items
-- Passive upgrade tiers: sword, armor, shield, gloves
-- Consumables: rupees, arrows, bombs
-- Dungeon counters: small keys, big keys, map, compass per dungeon
-- Health, max health, magic, max magic
-- Heart pieces
+- `equipped_item_id: StringName` — currently equipped active item (or `""`)
+- `owned_active_items: Dictionary` — id → ItemData for acquired active items
+- `item_effects: Dictionary` — id → cached BaseItemEffect instance per active item
+- `passives: Dictionary` — StringName → int (e.g., `{"sword": 2, "boots": 1}`)
+- `rupees: int`, `arrows: int`, `bombs: int` — consumable counters
+- `dungeon_keys: Dictionary` — dungeon_id → {small_keys, has_big_key, has_map, has_compass}
+- `current_health: int`, `max_health: int` — in half-heart units
+- `current_magic: int`, `max_magic: int`
+- `heart_pieces: int` — 0–3, resets on reaching 4
+
+Single acquisition entry point: `add_item(item: ItemData)` — branches on `item_type` to handle ACTIVE, PASSIVE, and COLLECTIBLE differently (see section 3.2).
 
 Public methods:
 
-- `add_item(item_id)`
-- `equip_item(item_id)`
-- `has_item(item_id) -> bool`
-- `spend_rupees(amount) -> bool`
-- `spend_ammo(kind, amount) -> bool`
-- `add_key(dungeon_id, amount := 1)`
-- `use_key(dungeon_id) -> bool`
+- `add_item(item: ItemData) -> void`
+- `equip_item(item_id: StringName) -> void`
+- `get_equipped_item() -> ItemData`
+- `get_equipped_effect() -> BaseItemEffect`
+- `has_item(item_id: StringName) -> bool`
+- `get_passive(key: StringName) -> int` — returns 0 if not owned
+- `has_passive(key: StringName) -> bool` — shorthand for `get_passive() > 0`
+- `consume_item_cost(item: ItemData) -> bool` — deducts magic + ammo, returns false if can't afford
+- `spend_rupees(amount: int) -> bool`
+- `spend_ammo(kind: StringName, amount: int) -> bool`
+- `add_key(dungeon_id: StringName, amount: int = 1) -> void`
+- `use_key(dungeon_id: StringName) -> bool`
 
 **SaveManager**
 
@@ -697,6 +718,7 @@ Later states:
 
 - `DashState` after Pegasus Boots
 - `ItemUseState` after active items exist
+- `ItemGetState` for item acquisition presentation (see section 3.2)
 - `SwimState` after Flippers
 - `LiftState`, `CarryState`, and `ThrowState` after gloves
 
@@ -996,18 +1018,24 @@ class_name ItemData extends Resource
 @export var id: StringName
 @export var display_name: String
 @export var description: String
-@export var item_type: ItemType
+@export var item_type: ItemType       # ACTIVE, PASSIVE, COLLECTIBLE
 @export var icon_color: Color
 @export var icon_shape: PackedVector2Array
-@export var magic_cost: int
-@export var ammo_type: StringName
-@export var ammo_cost: int
-@export var tier: int
-@export var use_script: Script
-@export var unlock_flag: StringName
-```
 
-Suggested item type enum:
+# ACTIVE items only:
+@export var magic_cost: int           # 0 if no magic needed
+@export var ammo_type: StringName     # "arrows", "bombs", or "" for none
+@export var ammo_cost: int
+@export var use_script: Script        # Extends BaseItemEffect (see 3.3)
+
+# PASSIVE items only:
+@export var passive_key: StringName   # e.g. "sword", "boots", "armor"
+@export var tier: int                 # Upgrade level (boolean passives use 1)
+
+# COLLECTIBLE items only:
+@export var collect_key: StringName   # e.g. "rupees", "arrows", "heart_piece"
+@export var collect_amount: int       # How much to add
+```
 
 ```gdscript
 enum ItemType {
@@ -1017,40 +1045,185 @@ enum ItemType {
 }
 ```
 
-### 3.2 Active Items
+Not all fields apply to every type. `use_script` is only relevant for ACTIVE, `passive_key` for PASSIVE, etc. Unused fields are left at default.
 
-Each active item extends a common base with `activate(player, direction)`.
+### 3.2 Acquisition Presentation
 
-| Item | Mechanic |
-|---|---|
-| Bow | Fires an arrow in the facing direction, costs 1 arrow |
-| Bomb | Places a timed bomb, costs 1 bomb |
-| Boomerang | Travels out and returns, stuns enemies, can collect pickups |
-| Hookshot | Extends in facing direction, pulls player to hookable targets |
-| Lamp | Creates a temporary light source and lights torches |
-| Magic Powder | Short-range cone effect, used for transformations or puzzle interactions |
-| Fire Rod | Ranged fire projectile, lights torches |
-| Ice Rod | Ranged ice projectile, freezes enemies |
-| Hammer | Short melee strike, pounds pegs, flips certain enemies |
+Significant items (chest contents, dungeon rewards, NPC gifts) get a short presentation sequence before being added to inventory. Minor pickups (rupees, hearts, ammo drops from enemies/bushes) skip presentation and are collected instantly.
 
-### 3.3 Passive Upgrades
+**ItemGetState** (player state):
 
-| Upgrade | Tiers | Effect |
+1. Source (chest, NPC, pickup) calls `EventBus.item_get_requested.emit(item)` 
+2. Player transitions to `ItemGetState`
+3. Gameplay pauses: `get_tree().paused = true` (player scene has `process_mode = ALWAYS`)
+4. Player visual: arms-up pose via `_draw()` — body polygon shifts, item shape drawn above head in `item.icon_color`
+5. `AudioManager.play_sfx("item_fanfare")` — different jingles for major (active/passive) vs minor (key, map) items
+6. Dialog box shows: `"You got the {item.display_name}! {item.description}"`
+7. Wait for player to press `interact` or `action_sword` to dismiss
+8. `InventoryManager.add_item(item)` — actual inventory mutation happens here
+9. `get_tree().paused = false`
+10. Player transitions back to `IdleState`
+
+**What triggers presentation vs instant collect:**
+
+| Source | Presentation? | Reason |
 |---|---|---|
-| Sword | 1-4 | Damage increase, stronger slash visuals, sword beam at full health |
-| Armor | 1-3 (Green/Blue/Red Mail) | Combat damage halved (tier 2) or quartered (tier 3). Environmental damage bypasses armor. See Damage Formula. |
-| Shield | 1-3 | Blocks additional projectile classes |
-| Gloves | 1-2 | Lift light or heavy objects |
-| Flippers | Boolean | Enter water and swim |
-| Pegasus Boots | Boolean | Enables dash |
-| Moon Pearl | Boolean | Prevents Dark World transformation |
+| Chest (active/passive item) | Yes | Major reward |
+| Chest (rupees, ammo) | Short (auto-dismiss ~1.5s) | Minor chest reward, still show the hold pose |
+| Boss defeat (Heart Container) | Yes | Major reward |
+| NPC gift | Yes | Story moment |
+| Ground pickup (heart, rupee, ammo) | No | Collected on overlap, SFX only |
+| Ground pickup (key, heart piece) | Yes | Significant enough to pause |
+
+For the "No" cases, the pickup scene calls `InventoryManager.add_item()` directly and `queue_free()`s itself. No state change.
+
+For the "Yes" cases, the source emits `EventBus.item_get_requested` and the player handles the presentation. The source waits for `EventBus.item_acquired` (emitted at end of presentation) before completing its own logic (e.g., chest stays open).
+
+### 3.3 Inventory Mutation
+
+`InventoryManager.add_item(item: ItemData)` is the single entry point for all inventory changes. Called at the end of the presentation sequence (or immediately for instant pickups). It branches on `item_type`:
+
+**ACTIVE path:**
+1. Store in `owned_active_items: Dictionary` (id → ItemData)
+2. Instantiate the `use_script` and cache it in `item_effects: Dictionary` (id → BaseItemEffect instance)
+3. If no item is currently equipped, auto-equip this one
+4. Emit `EventBus.item_acquired(item.id)`
+
+**PASSIVE path:**
+1. Apply to `passives: Dictionary` (StringName → int): `passives[item.passive_key] = max(current, item.tier)`
+2. Effect is immediate and permanent — no equipping, never appears in the item grid
+3. Emit `EventBus.item_acquired(item.id)`
+
+**COLLECTIBLE path:**
+1. Add to the appropriate counter: rupees, arrows, bombs, heart pieces, etc.
+2. Heart pieces: if count reaches 4, reset to 0 and increase max health by 2 (1 full heart)
+3. Clamp to max capacity (e.g., max 999 rupees, max ammo based on upgrade tier)
+4. Emit the relevant EventBus signal (e.g., `player_rupees_changed`)
+
+No GameManager flags are set for item ownership. `InventoryManager` is the single source of truth. Rooms/NPCs that need to check ownership call `InventoryManager.has_item()` or `InventoryManager.get_passive()` directly.
+
+```gdscript
+# InventoryManager public methods:
+
+# Acquisition
+func add_item(item: ItemData) -> void
+
+# Active items
+func equip_item(item_id: StringName) -> void
+func get_equipped_item() -> ItemData          # null if nothing equipped
+func get_equipped_effect() -> BaseItemEffect  # null if nothing equipped
+func has_item(item_id: StringName) -> bool
+func get_owned_active_items() -> Dictionary   # id → ItemData
+
+# Passive queries — the player script uses these to gate abilities
+func get_passive(key: StringName) -> int      # 0 if not owned
+func has_passive(key: StringName) -> bool     # shorthand for get_passive() > 0
+
+# Consumables
+func spend_rupees(amount: int) -> bool        # false if insufficient
+func spend_ammo(kind: StringName, amount: int) -> bool
+func consume_item_cost(item: ItemData) -> bool  # deducts magic + ammo, false if can't afford
+func add_key(dungeon_id: StringName, amount: int = 1) -> void
+func use_key(dungeon_id: StringName) -> bool
+```
+
+### 3.4 Item Use System
+
+**BaseItemEffect** — lightweight script that defines what an active item does when used:
+
+```gdscript
+class_name BaseItemEffect extends RefCounted
+
+# Can the player afford to use this right now?
+func can_use(player: Player) -> bool:
+    return true
+
+# Execute the item effect. Returns the duration (seconds) that
+# ItemUseState should lock the player before returning to Idle.
+func activate(player: Player) -> float:
+    return 0.0
+```
+
+Each active item has a script extending `BaseItemEffect`. InventoryManager instantiates it once on acquisition and caches the instance. No repeated instantiation on use.
+
+**ItemUseState wiring:**
+
+```gdscript
+# scenes/player/states/item_use_state.gd
+extends PlayerState
+
+var lock_timer: float = 0.0
+
+func enter() -> void:
+    var effect := InventoryManager.get_equipped_effect()
+    var item := InventoryManager.get_equipped_item()
+
+    if effect == null or item == null or not effect.can_use(actor):
+        state_machine.transition_to("idle")
+        return
+
+    InventoryManager.consume_item_cost(item)
+    lock_timer = effect.activate(actor)
+    AudioManager.play_sfx(item.id)  # e.g., "bow", "bomb"
+
+func physics_update(delta: float) -> void:
+    lock_timer -= delta
+    if lock_timer <= 0.0:
+        state_machine.transition_to("idle")
+```
+
+**What each effect does inside `activate()`:**
+
+| Item | activate() behavior | Lock duration |
+|---|---|---|
+| Bow | Spawns Arrow scene in current room, aimed in `player.facing_direction` | ~0.3s |
+| Bomb | Spawns Bomb scene at player position | ~0.2s |
+| Boomerang | Spawns Boomerang projectile, returns to player | ~0.3s (throw anim) |
+| Hookshot | Spawns hookshot chain, extends until hit. On hookable target: pulls player (lock until arrival). On wall/enemy: retracts (lock until retract done). Returns variable duration via callback. | Variable |
+| Lamp | Creates temporary `PointLight2D` ahead of player, lights torches in range | ~0.2s |
+| Magic Powder | Spawns particle cone in facing direction, checks overlap for transformable enemies | ~0.3s |
+| Fire Rod | Spawns fire projectile with particle trail | ~0.3s |
+| Ice Rod | Spawns ice projectile with particle trail | ~0.3s |
+| Hammer | Enables hammer hitbox in facing direction, checks for pegs | ~0.4s |
+
+The spawned things (Arrow, Bomb, Hookshot chain) are full scenes in `scenes/items/` with their own scripts and lifecycle. The effect script is just the trigger.
+
+**Hookshot special case:** Lock duration is not known at activation time (depends on what it hits and how far). The hookshot effect keeps a reference to the player's state machine and calls `transition_to("idle")` directly when the hookshot completes. `activate()` returns a large timeout (e.g., 5.0s) as a safety fallback.
+
+### 3.5 Active Items
+
+| Item | Ammo | Magic | Notes |
+|---|---|---|---|
+| Bow | 1 arrow | 0 | |
+| Bomb | 1 bomb | 0 | 2.5s fuse, Area2D explosion, screen shake |
+| Boomerang | 0 | 0 | Stuns enemies, collects pickups. Magic variant has full-screen range. |
+| Hookshot | 0 | 0 | Pulls player to hookable targets, stuns enemies |
+| Lamp | 0 | 4 | Creates light, ignites torches |
+| Magic Powder | 0 | 4 | Transforms certain enemies |
+| Fire Rod | 0 | 8 | Ranged fire projectile, lights torches |
+| Ice Rod | 0 | 8 | Ranged ice projectile, freezes enemies |
+| Hammer | 0 | 0 | Pounds pegs, flips enemies, short range |
+
+### 3.6 Passive Upgrades
+
+All passives are stored in `InventoryManager.passives: Dictionary` as `{StringName: int}`. Boolean passives use 0 (don't have) / 1 (have). Tiered passives use their tier number. Acquiring a passive calls `passives[key] = max(current, new_tier)` — upgrades only go up.
+
+| `passive_key` | Tiers | Effect | Where it's checked |
+|---|---|---|---|
+| `"sword"` | 1–4 | Damage increase, stronger slash visuals | `AttackState` reads tier for damage + arc width |
+| `"armor"` | 1–3 | Damage reduction (see Damage Formula) | `player._on_hurtbox_hurt()` reads tier for reduction calc |
+| `"shield"` | 1–3 | Blocks more projectile classes | `ShieldComponent` reads tier to decide block/deflect/reflect |
+| `"gloves"` | 1–2 | Lift light (1) or heavy (2) objects | `LiftState.enter()` checks tier vs object weight |
+| `"flippers"` | 0–1 | Swim in water instead of taking damage | Water tile handler checks `has_passive("flippers")` |
+| `"boots"` | 0–1 | Enables dash | `IdleState`/`WalkState` check `has_passive("boots")` before allowing transition to `DashState` |
+| `"moon_pearl"` | 0–1 | Prevents Dark World transformation | `SceneManager` checks on world switch |
 
 Sword beam rule:
 
-- At full health, sword swings may emit a forward beam once the sword tier supports it
+- At full health, sword swings emit a forward beam projectile (2 damage) if sword tier ≥ 2
 - Sword beam does not consume magic
 
-### 3.4 Shield Mechanics
+### 3.7 Shield Mechanics
 
 The shield is primarily passive, matching ALTTP.
 
@@ -1076,7 +1249,7 @@ Implementation note:
 - Incoming projectiles should declare a `projectile_class` or equivalent data field
 - Shield logic should decide block, deflect, or reflect from data, not enemy-specific special cases
 
-### 3.5 Inventory Screen
+### 3.8 Inventory Screen
 
 Pause-driven full-screen overlay:
 
@@ -1091,14 +1264,16 @@ Layout:
 - Cursor: yellow outline rectangle
 - Item icons: generated from `icon_shape` and `icon_color`
 
-### 3.6 Phase 3 Deliverable
+### 3.9 Phase 3 Deliverable
 
 Acceptance criteria:
 
-1. The player can pause, equip an active item, and resume play.
-2. At least four active items are functional.
-3. Ammo and magic consumption are enforced through `InventoryManager`.
-4. Shield tiers and passive upgrades visibly affect gameplay.
+1. The player can pause, equip an active item from the inventory grid, and use it in gameplay.
+2. At least four active items are functional via `BaseItemEffect` scripts.
+3. Ammo and magic consumption are enforced through `InventoryManager.consume_item_cost()`.
+4. Acquiring a passive item (e.g., Pegasus Boots) immediately enables the corresponding ability (e.g., dash) without manual equipping.
+5. `InventoryManager.get_passive()` correctly gates player states (dash, swim, lift).
+6. Shield tiers visibly affect projectile blocking behavior.
 
 ---
 
@@ -1567,7 +1742,7 @@ All major systems should already call `AudioManager` even if assets are absent.
 Coverage list:
 
 - BGM: overworld biomes, dungeons, bosses, title, game over, caves, Dark World
-- SFX: sword swing and hit, shield block, pickups, chest open, door unlock, bomb place and explode, arrow fire, hookshot, player hurt and death, enemy hurt and death, menu move and select, text blip, dash, push block, switch toggle, fall, transitions
+- SFX: sword swing and hit, shield block, pickups, chest open, door unlock, bomb place and explode, arrow fire, hookshot, player hurt and death, enemy hurt and death, menu move and select, text blip, dash, push block, switch toggle, fall, transitions, item fanfare (major), item fanfare (minor)
 
 Asset convention:
 
@@ -1671,20 +1846,47 @@ func transition_to(state_name: StringName) -> void:
     current_state.enter()
 ```
 
-### Item Resource Example
+### Item Resource Examples
 
+Active item (Bow):
 ```gdscript
 [gd_resource type="Resource" script_class="ItemData"]
 
 [resource]
 id = &"bow"
 display_name = "Bow"
-item_type = 0
+item_type = 0  # ACTIVE
 icon_color = Color(0.6, 0.4, 0.2, 1.0)
 magic_cost = 0
 ammo_type = &"arrows"
 ammo_cost = 1
-unlock_flag = &"items/bow"
+use_script = preload("res://scenes/items/effects/bow_effect.gd")
+```
+
+Passive item (Pegasus Boots):
+```gdscript
+[gd_resource type="Resource" script_class="ItemData"]
+
+[resource]
+id = &"pegasus_boots"
+display_name = "Pegasus Boots"
+item_type = 1  # PASSIVE
+icon_color = Color(0.6, 0.3, 0.1, 1.0)
+passive_key = &"boots"
+tier = 1
+```
+
+Collectible (Blue Rupee):
+```gdscript
+[gd_resource type="Resource" script_class="ItemData"]
+
+[resource]
+id = &"rupee_blue"
+display_name = "Blue Rupee"
+item_type = 2  # COLLECTIBLE
+icon_color = Color(0.2, 0.3, 0.9, 1.0)
+collect_key = &"rupees"
+collect_amount = 5
 ```
 
 ### Collision Masks
