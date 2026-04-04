@@ -792,7 +792,36 @@ Persistence:
 - If `persist_id` is empty, the entity is treated as non-persistent (no save/restore). This is intentional for optional elements like resettable switches.
 - `room_id` and `persist_id` are both `@export` fields set by hand in the editor. This avoids any dependency on node names, scene paths, or tree structure — renaming or reparenting nodes does not break save data.
 
-### 1.8 Phase 1 Deliverable
+### 1.8 HUD
+
+The HUD is built in Phase 1, not deferred. It's essential for seeing game state during development.
+
+HUD lives on `CanvasLayer` 10 (already part of `main.tscn`) and remains visible during all gameplay.
+
+**Phase 1 elements** (minimum viable):
+
+- **Hearts** (top-left): drawn via `_draw()`. Full heart = red, half = half-filled, empty = dark outline. Listens to `EventBus.player_health_changed`.
+- **Rupee count** (below hearts): green diamond polygon + monospace `Label`. Listens to `EventBus.player_rupees_changed`.
+- **Equipped item slot** (top-right): box outline. Empty in Phase 1, shows item `icon_shape` in `icon_color` once items exist (Phase 3).
+
+**Added in Phase 3:**
+
+- **Magic meter** (left, under hearts): vertical bar, green fill, dark border. Listens to `EventBus.player_magic_changed`.
+- **Ammo display** (near equipped item): small number showing current arrow/bomb count for the equipped item's ammo type.
+
+**Added in Phase 4:**
+
+- **Dungeon minimap** (top-right corner): grid of small rectangles. Current room = highlighted, visited = dimmed, unvisited = hidden unless dungeon map collected. Only visible when inside a dungeon.
+- **Small key count** (near minimap): key icon + number. Dungeon only.
+
+Rules:
+
+- HUD listens to EventBus signals — never polls managers each frame.
+- Heart rendering supports full, half, and empty states (health is in half-heart units).
+- Dungeon-only widgets are hidden when outside a dungeon.
+- All HUD elements are drawn via `_draw()` or `Polygon2D` — no sprite textures.
+
+### 1.9 Phase 1 Deliverable
 
 Acceptance criteria:
 
@@ -1457,24 +1486,16 @@ Acceptance criteria:
 
 **Milestone**: "Feels Like a Game"
 
-### 6.1 HUD
+### 6.1 HUD Polish Pass
 
-HUD lives on `CanvasLayer` 10 and remains active in gameplay scenes.
+The HUD is built in Phase 1 (section 1.8) and extended in Phases 3–4. Phase 6 is the polish pass:
 
-Elements:
-
-- Hearts at top-left
-- Magic meter under hearts
-- Rupee count near upper left or center-left
-- Equipped item slot near top-right
-- Dungeon minimap when applicable
-- Small key count in dungeons
-
-Rules:
-
-- HUD listens to signals rather than polling managers every frame
-- Heart rendering supports full, half, and empty states
-- Hide dungeon-only widgets when outside dungeons
+- Tighten spacing and alignment of all HUD elements
+- Add subtle background panel (semi-transparent dark bar behind hearts/rupees) for readability over bright rooms
+- Heart damage animation: briefly flash the lost heart white before it goes dark
+- Rupee count: number ticks up/down digit by digit (not instant) when gaining/spending
+- Equipped item: brief highlight flash when switching items
+- Ensure all HUD elements look consistent across overworld, dungeon, and dark world color grading
 
 ### 6.2 Dialog System
 
@@ -1507,7 +1528,7 @@ Specifically, Phase 6 must deliver:
 
 Note: effects should be added incrementally as systems are built in earlier phases (e.g., `FlashComponent` in Phase 2, dash dust in Phase 1). Phase 6 is the pass where everything is polished, consistent, and nothing is missing.
 
-### 6.5 Title Screen
+### 6.4 Title Screen
 
 Minimum title screen features:
 
@@ -1518,13 +1539,15 @@ Minimum title screen features:
 
 `Continue` should be disabled or hidden when no save file exists.
 
-### 6.6 Phase 6 Deliverable
+### 6.5 Phase 6 Deliverable
 
 Acceptance criteria:
 
-1. The game has a functional title screen, HUD, dialog box, and transitions.
-2. Combat and movement have visible feedback through particles, flashes, or shake.
-3. The project feels coherent despite using primitive art.
+1. HUD is polished with animations (heart flash, rupee tick, item highlight).
+2. Dialog system works end-to-end (triggered by NPCs, signs, item acquisition).
+3. All shaders, particles, squash/stretch, screen shake, and trails from the Visual Direction section are implemented and consistent.
+4. Title screen with New Game / Continue flow.
+5. The project feels coherent and polished despite using primitive art.
 
 ---
 
@@ -1911,12 +1934,12 @@ collect_amount = 5
 
 | Phase | Milestone | Key Systems |
 |---|---|---|
-| 1 | Link Walks Around a Room | Movement, room loading, player, HUD stub, autoloads |
+| 1 | Link Walks Around a Room | Movement, room loading, player, HUD (hearts, rupees, item slot), autoloads |
 | 2 | Link Fights Enemies | Combat components, enemy archetypes, drops |
 | 3 | Link Has Equipment | Inventory, active items, passive upgrades |
 | 4 | Explorable Overworld | Screen transitions, dungeon structure, world switching |
 | 5 | First Dungeon Complete | Boss architecture, full dungeon completion loop |
-| 6 | Feels Like a Game | HUD polish, dialog, transitions, particles, title screen |
+| 6 | Feels Like a Game | HUD polish, dialog, shader/particle polish pass, title screen |
 | 7 | Full Game Loop | Additional dungeons, NPCs, heart pieces, save/load |
 | 8 | Feature Complete | Swimming, lifting, throwing, magic, game over, advanced enemies |
 
