@@ -15,10 +15,12 @@ A mechanics-faithful recreation of The Legend of Zelda: A Link to the Past (SNES
 ### Technical Foundation
 
 - **Engine**: Godot 4.6, GDScript
-- **Renderer**: Forward Plus
+- **Renderer**: Compatibility (switch from Forward Plus — this is a 2D-only project, Compatibility is lighter and sufficient)
 - **Resolution**: 256×224 logical (SNES native), scaled up with integer scaling. `stretch_mode = "viewport"`, `stretch_aspect = "keep"`, window 1024×896 (4×).
 - **Physics**: 2D only (built-in 2D physics)
 - **Tile size**: 16×16 base grid
+- **Health unit**: 1 unit = half heart. Max health displayed as hearts (2 units each). Starting health: 6 (3 hearts).
+- **Input**: Keyboard + gamepad. All input actions mapped to both.
 
 ---
 
@@ -35,6 +37,7 @@ res://
 │   └── inventory_manager.gd
 ├── components/                 # Reusable scene-components
 │   ├── state_machine.tscn/.gd
+│   ├── state.gd                # Base State class
 │   ├── health_component.tscn/.gd
 │   ├── hitbox_component.tscn/.gd
 │   ├── hurtbox_component.tscn/.gd
@@ -79,7 +82,8 @@ res://
 │   │   ├── arrow.tscn/.gd
 │   │   ├── bomb.tscn/.gd
 │   │   ├── boomerang.tscn/.gd
-│   │   └── hookshot.tscn/.gd
+│   │   ├── hookshot.tscn/.gd
+│   │   └── pickup.tscn/.gd        # Collectible drops (hearts, rupees, ammo)
 │   ├── world/
 │   │   ├── room.tscn/.gd
 │   │   ├── door.tscn/.gd
@@ -106,6 +110,8 @@ res://
 │   │   ├── inventory_screen.tscn/.gd
 │   │   ├── dialog_box.tscn/.gd
 │   │   └── title_screen.tscn/.gd
+│   ├── main/
+│   │   └── main.tscn/.gd          # Root scene: holds World, HUD, TransitionOverlay
 │   └── maps/
 │       ├── light_world/
 │       │   ├── overworld_0_0.tscn
@@ -120,6 +126,7 @@ res://
 │           └── ...
 ├── resources/
 │   ├── item_data.gd            # ItemData Resource class
+│   ├── enemy_data.gd           # EnemyData Resource class
 │   ├── loot_table.gd           # LootTable Resource class
 │   ├── dungeon_data.gd         # DungeonData Resource class
 │   ├── items/                  # .tres item definitions
@@ -134,12 +141,17 @@ res://
 │   └── loot_tables/
 │       ├── bush_loot.tres
 │       └── enemy_loot.tres
-└── shaders/
-    ├── water.gdshader
-    ├── damage_flash.gdshader
-    ├── screen_transition.gdshader
-    ├── dark_world_palette.gdshader
-    └── lighting_overlay.gdshader
+├── shaders/
+│   ├── water.gdshader
+│   ├── damage_flash.gdshader
+│   ├── screen_transition.gdshader
+│   ├── dark_world_palette.gdshader
+│   └── lighting_overlay.gdshader
+├── audio/                      # Empty dirs — drop .ogg/.wav here later
+│   ├── bgm/
+│   └── sfx/
+└── debug/
+    └── debug_room.tscn         # Test room with all entity types (not part of game world)
 ```
 
 ---
@@ -171,14 +183,14 @@ Since there are no sprites, every entity uses a consistent shape+color system:
 ### 1.1 Project Configuration
 
 - Display: 256×224, stretch mode "viewport", aspect "keep", 4× window
-- Input map:
-  - `move_up/down/left/right` — WASD + arrows
-  - `action_sword` — J / X
-  - `action_item` — K / Z
-  - `action_dash` — L / C
-  - `action_shield` — Shift
-  - `pause` — Escape / Enter
-  - `interact` — E / Space
+- Input map (keyboard + gamepad):
+  - `move_up/down/left/right` — WASD + arrows + left stick + d-pad
+  - `action_sword` — J / X + gamepad B (east)
+  - `action_item` — K / Z + gamepad Y (west)
+  - `action_dash` — L / C + gamepad A (south)
+  - `action_shield` — Shift + gamepad LB
+  - `pause` — Escape / Enter + gamepad Start
+  - `interact` — E / Space + gamepad X (north)
 - Physics layers:
 
   | Layer | Name | Used By |
@@ -192,9 +204,21 @@ Since there are no sprites, every entity uses a consistent shape+color system:
   | 7 | Hazards | Pits, spikes, lava |
   | 8 | Triggers | Room transitions, event zones |
 
-- Register autoloads: GameManager, EventBus, SceneManager, AudioManager, InventoryManager, SaveManager
+- Register autoloads (load order matters): EventBus, GameManager, InventoryManager, AudioManager, SceneManager, SaveManager
 
-### 1.2 Autoloads
+### 1.2 Main Scene
+
+**Scene** (`scenes/main/main.tscn`) — the project's main/entry scene:
+- `Node` root ("Main")
+  - `World` (Node2D) — SceneManager loads/swaps room scenes as children of this node
+  - `TransitionOverlay` (`CanvasLayer`, layer 20) — `ColorRect` with transition shader, managed by SceneManager
+  - `HUD` (`CanvasLayer`, layer 10) — the HUD scene instance
+  - `DialogLayer` (`CanvasLayer`, layer 15) — dialog box instance
+  - `PauseLayer` (`CanvasLayer`, layer 25) — inventory screen, `process_mode = ALWAYS`
+
+This is the always-loaded root. SceneManager never replaces it — only swaps children under `World`. The title screen is also loaded under `World`.
+
+### 1.3 Autoloads
 
 **EventBus** — Pure signal hub for decoupled communication:
 - `player_health_changed(current, max)`
@@ -219,7 +243,7 @@ Since there are no sprites, every entity uses a consistent shape+color system:
 
 **SaveManager** — Serializes GameManager flags + InventoryManager state to `user://save_{slot}.json`. Phase 1 stub that prints to log.
 
-### 1.3 Player Character
+### 1.4 Player Character
 
 **Scene structure** (`player.tscn`):
 - `CharacterBody2D` root
@@ -235,7 +259,7 @@ Since there are no sprites, every entity uses a consistent shape+color system:
   - `DashDustSpawner` (GPUParticles2D)
   - `PointLight2D` — subtle warm glow
 
-**Properties**: `facing_direction` (Vector2, 8-directional), `speed` (90 px/s), `push_speed` (30 px/s).
+**Properties**: `facing_direction` (Vector2, 8-directional), `speed` (90 px/s), `push_speed` (30 px/s). Diagonal movement is normalized (magnitude clamped to 1.0) so diagonal speed equals cardinal speed.
 
 **State Machine** (`components/state_machine.gd`) — generic reusable node. Dict of child State nodes, tracks `current_state`. Delegates `_physics_process` and `_unhandled_input` to active state. `transition_to(state_name)` calls `exit()` then `enter()`.
 
@@ -252,26 +276,39 @@ Since there are no sprites, every entity uses a consistent shape+color system:
 | Fall | Triggered by pit. Scale tween to 0, respawn at last safe position, 1 heart damage. |
 | Knockback | Hit reaction. Move in knockback direction ~0.2s. 1.0s invincibility frames (flash/blink). → Idle. |
 
-### 1.4 Camera System
+**Input buffering**: The last action input (sword, item, dash) is stored for ~0.1s. If the player presses sword during the last frames of a walk step, the attack triggers as soon as the current state allows a transition. This prevents inputs from being swallowed.
+
+**States added in later phases** (not implemented in Phase 1):
+- `SwimState` — Phase 8 (Flippers)
+- `LiftState` / `CarryState` / `ThrowState` — Phase 8 (Gloves)
+
+### 1.5 Camera System
 
 `Camera2D` on Player node:
 - **Overworld**: Limits set to room boundaries. Room edge crossing → 0.5s scroll tween + player auto-walk. Smooth follow (`position_smoothing_speed = 8.0`).
 - **Dungeons**: Snap to room boundaries, instant fade transitions.
 
-### 1.5 Base Room Structure
+### 1.6 Base Room Structure
 
 **Scene** (`room.tscn`):
 - `Node2D` root
-  - `TileMapLayer` ("Terrain") — ground, walls, water. Programmatic TileSet with colored rect tiles.
-  - `TileMapLayer` ("Overlay") — above-player decoration.
-  - `Entities` (Node2D) — enemies, NPCs, interactables.
+  - `TileMapLayer` ("Terrain") — ground, walls, water. Uses a shared `TileSet` resource (`.tres`) with a single atlas source: a small PNG texture grid of colored 16×16 squares (e.g., 8×4 = 32 tile variants). Physics collision layers baked into wall/hazard tiles.
+  - `TileMapLayer` ("Overlay") — above-player decoration (y-sort layer above player).
+  - `Entities` (Node2D, **`y_sort_enabled = true`**) — enemies, NPCs, interactables, **and the player**. Y-sort ensures entities lower on screen draw in front of entities higher up, matching ALTTP's visual depth.
   - `Transitions` (Node2D) — Area2D triggers at room edges/doors.
+  - `NavigationRegion2D` — baked navigation mesh for enemy pathfinding. Generated from terrain (walkable tiles = navigable). Required for `NavigationAgent2D` to work.
   - `CanvasModulate` — ambient lighting.
   - `PointLight2D` nodes — atmospheric.
 
-**Tile types**: Floor (walkable), Wall (collision), Water (shader, damages without flippers), Pit (triggers fall), Ledge (one-way jump-down), Conveyor (applies velocity), Ice (reduced friction).
+**TileSet**: A single shared `.tres` resource used by all rooms. The atlas source is a minimal PNG grid of colored squares — no hand-painted art. Each tile ID maps to a tile type via custom data layers on the TileSet (e.g., `tile_type: "floor"`, `tile_type: "wall"`). Auto-terrain rules can be set up for wall/floor boundaries.
 
-### 1.6 Phase 1 Deliverable
+**Tile types**: Floor (walkable), Wall (collision), Water (shader, damages without flippers), Pit (triggers fall), Ledge (one-way: `one_way_collision` enabled), Conveyor (applies velocity via custom data), Ice (reduced friction via custom data).
+
+**Room loading strategy**: SceneManager manages the `World` node in `main.tscn`. For **dungeon transitions**: fade out, remove current room, instantiate new room, add to `World`, fade in. For **overworld scroll transitions**: both current and adjacent rooms must be loaded simultaneously (adjacent room instantiated offset by one screen width/height), camera tweens across, then the old room is freed. SceneManager preloads the 4 cardinal neighbor rooms of the current screen using `ResourceLoader.load_threaded_request()`.
+
+**Room persistence**: Enemies respawn every time a room is re-entered (matches ALTTP behavior). Persistent state (opened chests, moved push blocks, toggled switches) is tracked via `GameManager.set_flag()` — rooms check these flags in `_ready()` to restore solved puzzle state.
+
+### 1.7 Phase 1 Deliverable
 
 Single overworld room (~16×11 tiles). Player walks 8 directions, swings sword (visible arc), takes damage from test hazard, hearts on HUD. Camera stays in bounds. Console logs audio events.
 
@@ -291,7 +328,27 @@ Single overworld room (~16×11 tiles). Player walks 8 directions, swings sword (
 
 **FlashComponent**: White flash shader (`flash_intensity` uniform tweened 1.0→0.0 over 0.1s).
 
-### 2.2 Enemy Base
+### 2.2 Enemy Data Resource
+
+```gdscript
+class_name EnemyData extends Resource
+
+@export var id: StringName
+@export var display_name: String
+@export var max_health: int
+@export var contact_damage: int
+@export var knockback_resistance: float  # 0.0 = full knockback, 1.0 = immune
+@export var speed: float
+@export var detection_radius: float
+@export var attack_range: float
+@export var drop_table: LootTable
+@export var color: Color                 # Primary shape color
+@export var immunities: Array[StringName] # e.g., ["sword", "fire"]
+```
+
+Each enemy type has a `.tres` instance. The `base_enemy.gd` script loads its data from an exported `EnemyData` resource, keeping stats separate from behavior.
+
+### 2.3 Enemy Base
 
 **Scene** (`base_enemy.tscn`):
 - `CharacterBody2D` root
@@ -314,7 +371,7 @@ On health=0: death particles + scale-to-zero tween, loot drop, `EventBus.enemy_d
 | Attack | Contact, projectile, or lunge. Cooldown → Chase. |
 | Stunned | Boomerang/stun hit. Immobile X seconds, blue tint flash. |
 
-### 2.3 Enemy Types (Initial Set)
+### 2.4 Enemy Types (Initial Set)
 
 | Enemy | Shape | Behavior |
 |---|---|---|
@@ -324,11 +381,11 @@ On health=0: death particles + scale-to-zero tween, loot drop, `EventBus.enemy_d
 | Stalfos | White triangle | Random walk, throws bone projectiles |
 | Buzz Blob | Yellow circle, pulsing shader | Random walk, contact damage, sword-immune |
 
-### 2.4 Projectile System
+### 2.5 Projectile System
 
 `projectile_base.tscn` — `Area2D` with visual, collision, lifetime timer. Properties: `speed`, `damage`, `direction`, `lifetime`, `pierce`. Wall hit → destroy. Hurtbox hit → damage + (optionally) destroy. Subclasses override (boomerang returns, hookshot retracts, bomb explodes).
 
-### 2.5 Loot Drops
+### 2.6 Loot Drops
 
 **LootTable** (custom Resource): Array of `{item_id, weight, quantity_min, quantity_max}`. `roll()` → weighted random.
 
@@ -336,7 +393,7 @@ On health=0: death particles + scale-to-zero tween, loot drop, `EventBus.enemy_d
 
 Pickup types: Heart (+1), Rupee (green=1, blue=5, red=20), Magic jar, Arrows, Bombs.
 
-### 2.6 Phase 2 Deliverable
+### 2.7 Phase 2 Deliverable
 
 Room with 3–4 enemy types. Combat, drops, knockback, i-frames all functional. Sword arc + collision. Kill effects with particles.
 
@@ -386,13 +443,25 @@ Each extends `BaseActiveItem`. `activate(player, direction)` called from `ItemUs
 |---|---|---|
 | Sword | 1–4 | Damage increase, wider/brighter arc |
 | Armor | 1–3 (Green/Blue/Red) | Damage reduction |
-| Shield | 1–3 | Blocks more projectile types, color changes |
+| Shield | 1–3 | Blocks more projectile types, color changes (see shield mechanics below) |
 | Gloves | 1–2 (Power/Titan's Mitt) | Lift light/heavy objects |
 | Flippers | Boolean | Swim in water instead of taking damage |
 | Pegasus Boots | Boolean | Enables dash |
 | Moon Pearl | Boolean | Prevents Dark World transformation |
 
-### 3.4 Inventory Screen
+### 3.4 Shield Mechanics
+
+The shield is **passive/automatic** (matches ALTTP): when the player is idle or walking and a projectile hits the `ShieldArea` (positioned in `facing_direction`), the projectile is deflected. No button hold required for basic blocking. Holding `action_shield` raises the shield in all directions (wider block arc, slower movement).
+
+| Tier | Blocks |
+|---|---|
+| 1 (Fighter's) | Rocks, arrows |
+| 2 (Fire) | + fireballs, beams |
+| 3 (Mirror) | + magic projectiles, reflects some attacks back |
+
+Deflected projectiles either vanish (tier 1–2) or bounce back toward the source (tier 3 Mirror Shield). Shield is an `Area2D` that checks incoming hitboxes for a `projectile_class` property to decide if it can block.
+
+### 3.5 Inventory Screen
 
 Full-screen overlay on `pause`. `get_tree().paused = true`, screen `process_mode = ALWAYS`.
 
@@ -402,7 +471,7 @@ Full-screen overlay on `pause`. `get_tree().paused = true`, screen `process_mode
 - Cursor: Yellow rectangle outline
 - Items drawn as their `icon_shape` in `icon_color`
 
-### 3.5 Phase 3 Deliverable
+### 3.6 Phase 3 Deliverable
 
 Inventory screen, equip items, use bow/bombs/boomerang. Ammo/magic consumption. Passive upgrades affect gameplay. 4+ active items functional.
 
@@ -667,6 +736,22 @@ Enemy HitboxComponent overlaps Player HurtboxComponent
      → EventBus.screen_shake_requested(0.5, 0.15)
 ```
 
+### State Base Class
+
+```gdscript
+class_name State extends Node
+
+var state_machine: StateMachine
+var actor: CharacterBody2D  # Set by StateMachine._ready()
+
+func enter() -> void: pass
+func exit() -> void: pass
+func handle_input(_event: InputEvent) -> void: pass
+func physics_update(_delta: float) -> void: pass
+```
+
+All player states extend `PlayerState` (which extends `State` and types `actor` as `Player`). All enemy states extend `EnemyState` (types `actor` as `BaseEnemy`).
+
 ### State Machine Pattern
 
 ```gdscript
@@ -677,10 +762,12 @@ var current_state: State
 var states: Dictionary = {}
 
 func _ready():
+    var parent = get_parent()
     for child in get_children():
         if child is State:
             states[child.name.to_lower()] = child
             child.state_machine = self
+            child.actor = parent  # Give each state a reference to the owning entity
     current_state = initial_state
     current_state.enter()
 
@@ -719,10 +806,14 @@ ammo_cost = 1
 | Player body | 2 | 1, 7 |
 | Player hurtbox | 2 | 5 |
 | Player hitbox (sword) | 4 | 3, 6 |
+| Player shield | 2 | 5 |
 | Enemy body | 3 | 1, 3 |
 | Enemy hurtbox | 3 | 4 |
 | Enemy hitbox | 5 | — |
+| Player projectiles | 4 | 1, 3, 6 |
+| Enemy projectiles | 5 | 1, 2 |
 | Pickups | 6 | 2 |
+| Triggers | 8 | 2 |
 
 ---
 
