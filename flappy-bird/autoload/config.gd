@@ -1,27 +1,70 @@
 extends Node
 
-const BIRD_START_X: float = 120.0
-const BIRD_IDLE_BOB_AMPLITUDE: float = 10.0
-const BIRD_OUT_OF_BOUNDS_MARGIN: float = 50.0
+const GAME_CONFIG := preload("res://resources/game_config.tres")
 
-# Ground
-const GROUND_HEIGHT: float = 50.0
-const GROUND_GRASS_HEIGHT: float = 8.0
+var BIRD_START_X: float:
+	get:
+		return GAME_CONFIG.bird_start_x
 
-# Bird
-const GRAVITY: float = 980.0
-const FLAP_VELOCITY: float = -330.0
-const MAX_FALL_SPEED: float = 600.0
-const ROTATION_SPEED: float = 4.0
+var BIRD_IDLE_BOB_AMPLITUDE: float:
+	get:
+		return GAME_CONFIG.bird_idle_bob_amplitude
 
-# Pipes
-const PIPE_SPEED: float = 150.0
-const PIPE_WIDTH: float = 70.0
-const GAP_SIZE: float = 160.0
-const PIPE_SPAWN_MARGIN: float = 40.0
-const GAP_Y_MIN: float = 150.0
-const GAP_BOTTOM_MARGIN: float = 20.0
-const PIPE_SPAWN_INTERVAL: float = 1.6
+var BIRD_OUT_OF_BOUNDS_MARGIN: float:
+	get:
+		return GAME_CONFIG.bird_out_of_bounds_margin
+
+var GROUND_HEIGHT: float:
+	get:
+		return GAME_CONFIG.ground_height
+
+var GROUND_GRASS_HEIGHT: float:
+	get:
+		return GAME_CONFIG.ground_grass_height
+
+var GRAVITY: float:
+	get:
+		return GAME_CONFIG.gravity
+
+var FLAP_VELOCITY: float:
+	get:
+		return GAME_CONFIG.flap_velocity
+
+var MAX_FALL_SPEED: float:
+	get:
+		return GAME_CONFIG.max_fall_speed
+
+var ROTATION_SPEED: float:
+	get:
+		return GAME_CONFIG.rotation_speed
+
+var PIPE_SPEED: float:
+	get:
+		return GAME_CONFIG.pipe_speed
+
+var PIPE_WIDTH: float:
+	get:
+		return GAME_CONFIG.pipe_width
+
+var GAP_SIZE: float:
+	get:
+		return GAME_CONFIG.gap_size
+
+var PIPE_SPAWN_MARGIN: float:
+	get:
+		return GAME_CONFIG.pipe_spawn_margin
+
+var GAP_Y_MIN: float:
+	get:
+		return GAME_CONFIG.gap_y_min
+
+var GAP_BOTTOM_MARGIN: float:
+	get:
+		return GAME_CONFIG.gap_bottom_margin
+
+var PIPE_SPAWN_INTERVAL: float:
+	get:
+		return GAME_CONFIG.pipe_spawn_interval
 
 var SCREEN_WIDTH: float:
 	get:
