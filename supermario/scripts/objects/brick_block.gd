@@ -9,13 +9,10 @@ var _bump_time: float = 0.0
 var _bump_offset: float = 0.0
 var _used: bool = false  # Becomes empty after all coins spent
 
-@onready var bump_detector: Area2D = $BumpDetector
-
 
 func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 0
-	bump_detector.body_entered.connect(_on_bump_detected)
 
 
 func _process(delta: float) -> void:
@@ -53,17 +50,9 @@ func _draw() -> void:
 		draw_rect(Rect2(-8, -16 + y_off, 16, 16), P.BRICK_DARK, false, 1.0)
 
 
-func _on_bump_detected(body: Node2D) -> void:
+func bump_from_below() -> void:
 	if _used:
 		return
-	if not body is CharacterBody2D:
-		return
-	if body.velocity.y >= 0.0:
-		return
-	_hit_from_below()
-
-
-func _hit_from_below() -> void:
 	var is_big: bool = GameManager.current_power_state != GameManager.PowerState.SMALL
 
 	if coin_count > 0:

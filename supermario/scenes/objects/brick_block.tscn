@@ -1,12 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/brick_block.gd" id="1_brick"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_block"]
 size = Vector2(16, 16)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_bump"]
-size = Vector2(12, 4)
 
 [node name="BrickBlock" type="StaticBody2D"]
 script = ExtResource("1_brick")
@@ -14,11 +11,3 @@ script = ExtResource("1_brick")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_block")
-
-[node name="BumpDetector" type="Area2D" parent="."]
-collision_layer = 0
-collision_mask = 2
-
-[node name="BumpShape" type="CollisionShape2D" parent="BumpDetector"]
-position = Vector2(0, -1)
-shape = SubResource("RectangleShape2D_bump")

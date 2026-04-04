@@ -28,3 +28,4 @@ func process_physics(delta: float) -> void:
 		player.update_facing(direction)
 
 	player.move_and_slide()
+	player.check_ceiling_bumps()

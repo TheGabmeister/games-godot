@@ -13,13 +13,10 @@ var _bump_time: float = 0.0
 var _bumping: bool = false
 var _pulse_time: float = 0.0
 
-@onready var bump_detector: Area2D = $BumpDetector
-
 
 func _ready() -> void:
 	collision_layer = 1  # Terrain
 	collision_mask = 0
-	bump_detector.body_entered.connect(_on_bump_detected)
 
 
 func _process(delta: float) -> void:
@@ -65,18 +62,9 @@ func _draw() -> void:
 		draw_rect(Rect2(-1, -4 + y_off, 2, 2), P.QUESTION_DARK)
 
 
-func _on_bump_detected(body: Node2D) -> void:
+func bump_from_below() -> void:
 	if _used:
 		return
-	if not body is CharacterBody2D:
-		return
-	# Only trigger if body is moving upward
-	if body.velocity.y >= 0.0:
-		return
-	_trigger_bump()
-
-
-func _trigger_bump() -> void:
 	_used = true
 	_bumping = true
 	_bump_time = 0.0
@@ -101,7 +89,7 @@ func _spawn_contents() -> void:
 			push_warning("Unknown question block contents: %s" % contents)
 
 
-func _spawn_item(item_type: StringName, position: Vector2) -> void:
+func _spawn_item(item_type: StringName, spawn_pos: Vector2) -> void:
 	var scene: PackedScene
 	match item_type:
 		&"mushroom":
@@ -112,5 +100,5 @@ func _spawn_item(item_type: StringName, position: Vector2) -> void:
 		return
 	var item := scene.instantiate() as Node2D
 	get_parent().add_child(item)
-	item.global_position = position
-	EventBus.item_spawned.emit(item_type, position)
+	item.global_position = spawn_pos
+	EventBus.item_spawned.emit(item_type, spawn_pos)

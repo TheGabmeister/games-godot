@@ -74,6 +74,17 @@ func apply_gravity(delta: float) -> void:
 		velocity.y = minf(velocity.y + grav * delta, MAX_FALL_SPEED)
 
 
+func check_ceiling_bumps() -> void:
+	# Iterate slide collisions from the last move_and_slide and bump any
+	# blocks whose underside we hit with our head.
+	for i in get_slide_collision_count():
+		var col := get_slide_collision(i)
+		if col.get_normal().y > 0.5:  # normal points down → we hit a ceiling
+			var collider := col.get_collider()
+			if collider and collider.has_method("bump_from_below"):
+				collider.bump_from_below()
+
+
 func apply_movement(direction: float, delta: float) -> void:
 	var is_running := Input.is_action_pressed(&"run")
 	var max_speed := RUN_SPEED if is_running else WALK_SPEED
