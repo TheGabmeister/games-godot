@@ -21,13 +21,17 @@ Godot 4.6 project (480x720 viewport, canvas_items stretch mode). All visuals use
 
 ### Signal-Driven Game Flow
 
-**GameManager** (`autoload/game_manager.gd`) is the sole autoload singleton. It owns all game state (`score`, `is_playing`, `is_game_over`) and emits three signals: `game_started`, `game_over`, `score_changed`. All other scripts connect to these signals — components never reference each other directly.
+**GameManager** (`autoload/game_manager.gd`) is the sole autoload singleton. It owns all game state via a `GameState` enum (`IDLE`, `PLAYING`, `GAME_OVER`) with computed properties (`is_idle`, `is_playing`, `is_game_over`). It handles all input (start, restart) and emits signals: `game_started`, `game_over`, `score_changed`, `restart_enabled`, `state_changed`. All other scripts connect to these signals — components never reference each other directly.
 
 ```
 Input → GameManager.start_game()/end_game()/add_score()
          ↓ signals
     Bird, Main, HUD react independently
 ```
+
+### Game Config Resource
+
+Tunable gameplay values live in a `GameConfig` Resource (`resources/game_config.gd` + `resources/game_config.tres`). Scripts load it via `const GAME_CONFIG := preload("res://resources/game_config.tres")`. Derived properties (e.g., `GROUND_TOP_Y`, `BIRD_START_POSITION`, `PIPE_SPAWN_X`) are computed from base values, and screen dimensions are read from `ProjectSettings` — not hardcoded. Values are editable in the Godot inspector.
 
 ### Collision Layers
 
@@ -39,7 +43,8 @@ Bird detects pipe/ground hits via `move_and_slide()` + `get_slide_collision_coun
 
 ### Key Conventions
 
-- Private members prefixed with `_` (e.g., `_started`, `_pipe_container`)
-- Input action `"flap"` is registered programmatically in GameManager (SPACE + left click)
+- Private members prefixed with `_` (e.g., `_can_restart`, `_pipe_container`)
+- Input action `"flap"` is defined in the project input map (SPACE + left click)
 - PipePair collision shapes are created dynamically in `_setup_pipes()` based on `gap_center_y` (set by Main before `add_child`)
 - `queue_redraw()` is called each physics frame for animated elements (bird wing, rotation)
+- Restart is gated by a 1-second delay in GameManager (`_enable_restart_after_delay`) to prevent accidental restarts

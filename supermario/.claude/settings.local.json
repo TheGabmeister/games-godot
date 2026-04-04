@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where godot:*)",
+      "Bash(/d/Godot_v4.6.2-stable_win64.exe --path /c/dev/games-godot/flappy-bird)",
+      "Bash(/d/Godot_v4.6.2-stable_win64.exe --path /c/dev/games-godot/flappy-bird --headless --quit)"
+    ]
+  }
+}
