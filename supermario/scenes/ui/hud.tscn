@@ -1,0 +1,92 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_hud"]
+font_size = 12
+font_color = Color(1, 1, 1, 1)
+shadow_color = Color(0, 0, 0, 0.8)
+shadow_offset = Vector2(1, 1)
+
+[node name="HUD" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_hud")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 8.0
+offset_right = -16.0
+offset_bottom = -8.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="MarioBox" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/HBoxContainer/MarioBox"]
+layout_mode = 2
+label_settings = SubResource("LabelSettings_hud")
+text = "MARIO"
+
+[node name="ScoreLabel" type="Label" parent="MarginContainer/HBoxContainer/MarioBox"]
+unique_name_in_owner = true
+layout_mode = 2
+label_settings = SubResource("LabelSettings_hud")
+text = "000000"
+
+[node name="CoinBox" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CoinTitle" type="Label" parent="MarginContainer/HBoxContainer/CoinBox"]
+layout_mode = 2
+label_settings = SubResource("LabelSettings_hud")
+text = "COINS"
+horizontal_alignment = 1
+
+[node name="CoinLabel" type="Label" parent="MarginContainer/HBoxContainer/CoinBox"]
+unique_name_in_owner = true
+layout_mode = 2
+label_settings = SubResource("LabelSettings_hud")
+text = "x00"
+horizontal_alignment = 1
+
+[node name="WorldBox" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="WorldTitle" type="Label" parent="MarginContainer/HBoxContainer/WorldBox"]
+layout_mode = 2
+label_settings = SubResource("LabelSettings_hud")
+text = "WORLD"
+horizontal_alignment = 1
+
+[node name="WorldLabel" type="Label" parent="MarginContainer/HBoxContainer/WorldBox"]
+unique_name_in_owner = true
+layout_mode = 2
+label_settings = SubResource("LabelSettings_hud")
+text = "1-1"
+horizontal_alignment = 1
+
+[node name="TimeBox" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TimeTitle" type="Label" parent="MarginContainer/HBoxContainer/TimeBox"]
+layout_mode = 2
+label_settings = SubResource("LabelSettings_hud")
+text = "TIME"
+horizontal_alignment = 2
+
+[node name="TimeLabel" type="Label" parent="MarginContainer/HBoxContainer/TimeBox"]
+unique_name_in_owner = true
+layout_mode = 2
+label_settings = SubResource("LabelSettings_hud")
+text = "400"
+horizontal_alignment = 2

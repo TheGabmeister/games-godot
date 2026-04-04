@@ -32,7 +32,12 @@ var _is_crouching: bool = false
 @onready var camera: Camera2D = $Camera2D
 
 
+var _camera_look_ahead: float = 0.0
+var _max_camera_x: float = 0.0
+
+
 func _ready() -> void:
+	add_to_group("player")
 	CameraEffects.register_camera(camera)
 
 
@@ -48,6 +53,17 @@ func _process(delta: float) -> void:
 		_jump_buffer_timer -= delta
 		if _jump_buffer_timer <= 0.0:
 			jump_buffered = false
+
+	# Camera look-ahead and no-backtrack
+	var target_ahead := signf(visuals.scale.x) * 24.0
+	_camera_look_ahead = move_toward(_camera_look_ahead, target_ahead, 80.0 * delta)
+	camera.offset.x = _camera_look_ahead
+
+	# Prevent camera from scrolling left (no backtracking)
+	var cam_left := global_position.x + camera.offset.x - 256.0
+	if cam_left > _max_camera_x:
+		_max_camera_x = cam_left
+	camera.limit_left = int(_max_camera_x)
 
 
 func apply_gravity(delta: float) -> void:

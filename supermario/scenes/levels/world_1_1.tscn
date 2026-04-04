@@ -1,0 +1,89 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/level/level_base.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/level/kill_zone.gd" id="3_killzone"]
+[ext_resource type="Script" path="res://scripts/level/parallax_controller.gd" id="4_parallax"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
+
+[sub_resource type="Shader" id="Shader_sky"]
+code = "shader_type canvas_item;
+
+uniform vec4 top_color : source_color = vec4(0.35, 0.65, 0.95, 1.0);
+uniform vec4 bottom_color : source_color = vec4(0.20, 0.45, 0.85, 1.0);
+
+void fragment() {
+	COLOR = mix(top_color, bottom_color, UV.y);
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
+shader = SubResource("Shader_sky")
+shader_parameter/top_color = Color(0.35, 0.65, 0.95, 1)
+shader_parameter/bottom_color = Color(0.2, 0.45, 0.85, 1)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_killzone"]
+size = Vector2(3392, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bounds"]
+size = Vector2(16, 448)
+
+[sub_resource type="Environment" id="Environment_bloom"]
+background_mode = 3
+glow_enabled = true
+glow_intensity = 0.3
+glow_bloom = 0.1
+glow_blend_mode = 0
+
+[node name="World_1_1" type="Node2D"]
+script = ExtResource("1_level")
+level_width_tiles = 212
+ground_row = 12
+
+[node name="Background" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="SkyGradient" type="ColorRect" parent="Background"]
+material = SubResource("ShaderMaterial_sky")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="ParallaxDecor" type="Node2D" parent="Background"]
+script = ExtResource("4_parallax")
+
+[node name="TileMapLayer_Ground" type="TileMapLayer" parent="."]
+
+[node name="Blocks" type="Node2D" parent="."]
+
+[node name="Pipes" type="Node2D" parent="."]
+
+[node name="Coins" type="Node2D" parent="."]
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Interactables" type="Node2D" parent="."]
+
+[node name="KillZone" type="Area2D" parent="."]
+position = Vector2(1696, 256)
+script = ExtResource("3_killzone")
+
+[node name="KillShape" type="CollisionShape2D" parent="KillZone"]
+shape = SubResource("RectangleShape2D_killzone")
+
+[node name="LevelBounds" type="StaticBody2D" parent="."]
+position = Vector2(-8, 112)
+collision_layer = 1
+collision_mask = 0
+
+[node name="BoundsShape" type="CollisionShape2D" parent="LevelBounds"]
+shape = SubResource("RectangleShape2D_bounds")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(48, 192)
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_bloom")
