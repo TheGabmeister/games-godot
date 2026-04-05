@@ -18,10 +18,22 @@ Godot 4.6 recreation of Zelda: A Link to the Past mechanics using primitive shap
 # Godot executable (aliased as `godot` in bash)
 godot                           # Open editor
 godot --path . --scene res://scenes/main/main.tscn  # Run main scene
-godot --path . --headless       # Headless smoke check
+godot --path . --headless --quit  # Headless smoke check
+
+# GUT unit tests (after GUT is installed in Phase 2)
+godot --path . --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests/unit -gexit
 ```
 
 Editor path: `d:\Godot_v4.6.2-stable_win64.exe`
+
+## Testing
+
+Every subphase in SPEC.md has a **Verification** block with concrete checks. A subphase is not done until its Verification passes — the end-of-phase deliverable is not the only gate.
+
+Three verification types:
+1. **Unit tests** — GUT framework (`res://tests/unit/`) for pure logic: damage formula, inventory operations, loot tables, save serialization.
+2. **Debug scene checks** — load `debug/debug_room.tscn` or a dedicated `tests/scenes/*.tscn` and verify behavior manually against the Verification checklist.
+3. **Headless smoke checks** — `godot --path . --headless --quit` after any change.
 
 ## Architecture
 
@@ -38,7 +50,7 @@ Main (Node)
   └── PauseLayer (CanvasLayer 25, process_mode=ALWAYS)
 ```
 
-**Autoload order matters:** EventBus → GameManager → InventoryManager → AudioManager → SceneManager → SaveManager
+**Autoload order matters:** EventBus → GameManager → InventoryManager → AudioManager → SceneManager → SaveManager → Cutscene (Phase 5+)
 
 **Player is persistent** — created once per run, reparented into each room's `Entities` node during transitions. Never duplicated or recreated.
 

@@ -464,6 +464,55 @@ See Phase 2 section 2.7 for the full save/load system, JSON schema, and SaveMana
 - Any new core interaction should be testable in isolation without needing a full overworld.
 - Audio placeholder logs should include a category prefix so noisy logs stay readable, for example `[Audio][SFX] sword_swing`.
 
+### Testing Strategy
+
+Every subphase has a **Verification** block with concrete, runnable checks. Bugs should surface at the subphase level, not accumulate until end-of-phase deliverables.
+
+**Three types of verification:**
+
+1. **Unit tests** — pure GDScript logic with no scene dependencies (damage formula, inventory ops, loot table rolls, save serialization). Uses the [GUT](https://github.com/bitwes/Gut) framework (Godot Unit Testing). Added as an addon in Phase 2 when the first testable logic lands (damage formula, loot tables, save serialization).
+
+2. **Debug scene checks** — load `debug/debug_room.tscn` or a dedicated test scene in the editor and verify gameplay behavior manually against a checklist. The debug room grows over time to expose every system added so far.
+
+3. **Headless smoke checks** — `godot --path . --headless --quit` to verify the project loads without errors after any change. Also catches broken scene references, missing resources, and parser errors.
+
+**Test folder structure:**
+
+```
+res://
+└── tests/
+    ├── unit/
+    │   ├── test_damage_formula.gd
+    │   ├── test_inventory_manager.gd
+    │   ├── test_loot_table.gd
+    │   ├── test_save_serialization.gd
+    │   └── ...
+    └── scenes/
+        ├── combat_test.tscn       # isolated combat sandbox
+        ├── inventory_test.tscn    # item acquisition + inventory UI
+        ├── cutscene_test.tscn     # cutscene primitives
+        └── ...
+```
+
+**Running tests:**
+
+```bash
+# Headless smoke check
+godot --path . --headless --quit
+
+# GUT unit tests (after GUT is installed)
+godot --path . --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests/unit -gexit
+```
+
+**What to verify at each subphase** (the "Verification" block):
+
+- Name 1–3 concrete observable behaviors
+- Say where to verify: debug_room, test scene, unit test, or headless smoke check
+- Be specific enough that passing the checks is unambiguous
+- Don't re-test things earlier subphases already covered (cumulative, not exhaustive)
+
+**Rule:** a subphase is not "done" until its Verification block passes. The phase deliverable aggregates verified subphases — it is not the only test gate.
+
 ---
 
 ## Phase 1: Core Foundation
@@ -524,6 +573,11 @@ Autoload registration order:
 6. `SaveManager`
 7. `Cutscene` (added in Phase 5, see section 5.4)
 
+**Verification:**
+- Headless smoke check passes (`godot --path . --headless --quit`) — confirms project loads, all autoloads register in order, no parser errors.
+- Every input action in the map responds to its bound key and gamepad button (test with a temporary print on each action in a throwaway scene).
+- Window opens at 1024x896 and scales primitive shapes cleanly (no blurry edges, no stretching).
+
 ### 1.2 Main Scene
 
 `scenes/main/main.tscn` is the always-loaded root scene.
@@ -544,6 +598,11 @@ Rules:
 - `Main` itself is never replaced during gameplay
 - Title screen, overworld rooms, dungeon rooms, and game over screen are all children loaded beneath `World`
 - The persistent player instance is spawned once and inserted into the active room's `Entities` node
+
+**Verification:**
+- Open `main.tscn` in the editor — all CanvasLayers present at correct layer indices.
+- Run `main.tscn` — `World`, `HUDLayer`, `DialogLayer`, `TransitionOverlay`, `PauseLayer` all visible in the remote scene tree.
+- `PauseLayer` continues processing when `get_tree().paused = true` (test by pausing via a temporary hotkey).
 
 ### 1.3 Autoload Responsibilities
 
@@ -662,6 +721,12 @@ Final responsibility:
 - Serialize `GameManager`, `InventoryManager`, and player position to `user://save_{slot}.json`
 - Preserve `schema_version`
 
+**Verification:**
+- `GameManager.set_flag("test/foo", true)` then `get_flag("test/foo")` returns `true`. Flag survives room transitions.
+- `InventoryManager.passives` starts empty; `add_item()` with a passive test item correctly updates the dict.
+- `AudioManager.play_sfx("missing_file")` logs `[Audio][SFX] missing_file` and does not crash.
+- `EventBus` signals can be connected from a test script and fire as expected (emit one, observe receiver).
+
 ### 1.4 Player Character
 
 `scenes/player/player.tscn`
@@ -696,6 +761,12 @@ Rules:
 - `facing_direction` persists when idle
 - `action_dash` does nothing until Pegasus Boots are acquired
 
+**Verification** (in `debug_room.tscn`):
+- Player moves in all 8 directions, diagonal speed equals cardinal speed (no 1.41x boost).
+- Player polygon visibly rotates its cap triangle to match `facing_direction`.
+- Player collision fits through a 16px corridor without snagging.
+- Releasing all movement keys leaves `facing_direction` unchanged.
+
 ### 1.5 Player State Machine
 
 Use a generic reusable `StateMachine` node under `components/`.
@@ -723,6 +794,13 @@ Input buffering:
 - Buffer `action_sword`, `action_item`, and `action_dash` for 0.1 seconds
 - Consume the oldest valid buffered action when the current state becomes interruptible
 
+**Verification** (in `debug_room.tscn`):
+- State transitions fire in response to input: Idle → Walk → Idle → Attack → Idle.
+- Attack state locks movement for its full duration (~0.3s) then returns to Idle or Walk based on held input.
+- Input buffering: press sword during the final frames of walking; attack executes as soon as walk ends.
+- Fall state: stepping on a pit triggers shrink tween and respawn at last safe position with 1 heart of damage.
+- Knockback state: entering it via a test hazard forces motion for ~0.2s then returns control.
+
 ### 1.6 Camera System
 
 Player-owned `Camera2D`:
@@ -740,6 +818,11 @@ Transition behavior:
 
 - Overworld edge crossing: 0.5-second camera scroll and short player auto-walk
 - Dungeon door transition: fade out, swap room, fade in
+
+**Verification** (in `debug_room.tscn`):
+- Camera follows player with visible smoothing (not snapping).
+- Camera respects room bounds — moving the player into a corner does not reveal area outside the room.
+- Moving the player quickly shows smoothing lag of ~8 units/sec feel.
 
 ### 1.7 Base Room Structure
 
@@ -788,6 +871,12 @@ Persistence:
 - If `persist_id` is empty, the entity is treated as non-persistent (no save/restore). This is intentional for optional elements like resettable switches.
 - `room_id` and `persist_id` are both `@export` fields set by hand in the editor. This avoids any dependency on node names, scene paths, or tree structure — renaming or reparenting nodes does not break save data.
 
+**Verification** (in `debug_room.tscn`):
+- Walls block movement, floor is walkable, water/pit tiles trigger expected behavior (damage/fall).
+- `Entities` y-sort correctly: an NPC at y=100 draws behind an NPC at y=150 and in front of one at y=50.
+- `CanvasModulate` visibly tints the room.
+- Test persistence: set a `GameManager` flag, exit and re-enter the room, entity state restores.
+
 ### 1.8 HUD
 
 The HUD is built in Phase 1, not deferred. It's essential for seeing game state during development.
@@ -816,6 +905,12 @@ Rules:
 - Heart rendering supports full, half, and empty states (health is in half-heart units).
 - Dungeon-only widgets are hidden when outside a dungeon.
 - All HUD elements are drawn via `_draw()` or `Polygon2D` — no sprite textures.
+
+**Verification** (in `debug_room.tscn`):
+- 3 full hearts visible at start (6 health units).
+- Damaging the player by 1 unit shows 2 full hearts + 1 half heart.
+- Damaging by 1 more unit shows 2 full hearts + 1 empty outline.
+- Emitting `EventBus.player_rupees_changed(42)` updates the rupee counter label to `42`.
 
 ### 1.9 Phase 1 Deliverable
 
@@ -870,6 +965,11 @@ enum HitEffect {
 }
 ```
 
+**Verification:**
+- **Unit test** (`test_damage_formula.gd`): cover all 4 steps of the damage pipeline (shield block, immunity, armor reduction, minimum 1). Each damage type through each armor tier. Environmental types bypass armor. Immunity = 0 damage.
+- **Debug scene**: Player with HurtboxComponent takes a hit from a test HitboxComponent — correct signal fires, i-frames prevent a second hit for the invincibility window, FlashComponent visibly flashes white.
+- **Debug scene**: KnockbackComponent applied to player pushes them in the specified direction then decelerates.
+
 ### 2.2 Enemy Data Resource
 
 `EnemyData` stores only stats that are genuinely shared by all enemies. Movement behavior, detection logic, and attack patterns live in each enemy's state scripts — not in data.
@@ -888,6 +988,10 @@ class_name EnemyData extends Resource
 ```
 
 Balance-tunable values like movement speed, detection radius, attack range, and firing cadence are `@export` vars on the enemy's own script or its state scripts — not on EnemyData. This avoids forcing a flat structure onto enemies with multi-modal behavior (e.g., Soldier walks slowly on patrol but runs when chasing).
+
+**Verification:**
+- Create a test `EnemyData.tres` with placeholder values. Load it in a dummy scene, confirm all fields serialize/deserialize correctly.
+- `damage_immunities` accepts multiple DamageType values and the runtime check correctly rejects matching hits.
 
 ### 2.3 Enemy Architecture
 
@@ -938,6 +1042,12 @@ No `NavigationAgent2D`, no `DetectionZone` — Keese doesn't need them.
 
 **`EnemyState`** (`scenes/enemies/enemy_state.gd`): extends `State`, types `actor` as `BaseEnemy`. Shared convenience: `StunnedState` can be reused by all enemies since stun behavior is universal (immobile, blue tint, timer). Everything else is per-type.
 
+**Verification** (in `debug_room.tscn`):
+- Soldier scene loads with all expected components, enemy_data reference intact.
+- Keese scene is structurally minimal — confirm no NavigationAgent2D or DetectionZone exist.
+- A test enemy's StateMachine transitions to StunnedState on stun hit, returns to prior state after timer.
+- Enemy death: particles fire, loot drops, `EventBus.enemy_defeated` emits, node frees.
+
 ### 2.4 Level Design Exports
 
 Each enemy scene exposes `@export` properties for per-instance configuration in the room editor:
@@ -965,6 +1075,10 @@ Each enemy scene exposes `@export` properties for per-instance configuration in 
 
 This means the same Soldier scene can be placed twice in one room with different patrol routes, facing directions, and detection ranges — all configured in the editor without touching code.
 
+**Verification:**
+- Place two Soldier instances in `debug_room.tscn` with different `patrol_points`; each walks its own route.
+- `@export` variables show in the Godot inspector and round-trip through save/load without issue.
+
 ### 2.5 Initial Enemy Set
 
 | Enemy | Shape | Components | States | Notes |
@@ -975,7 +1089,14 @@ This means the same Soldier scene can be placed twice in one room with different
 | Stalfos | White triangle | Detection, Contact | Wander → Throw → Stunned | Random walk, throws bone projectile when player is in detection range. |
 | Buzz Blob | Yellow pulsing circle | Contact | Wander → Stunned | Random walk only. Immune to sword (`damage_immunities` includes SLASH). |
 
-### 2.5 Projectile System
+**Verification** (in `debug_room.tscn` with one of each enemy):
+- Soldier: walks patrol route, chases on detection, lunges when close, returns to patrol when out of range.
+- Octorok: fires projectile on its `fire_cadence` regardless of player position.
+- Keese: flies in erratic sine-wave, deals contact damage on overlap.
+- Stalfos: only throws bones when player is within detection radius.
+- Buzz Blob: sword hits do nothing (clink SFX), arrow/bomb kills it normally.
+
+### 2.6 Projectile System
 
 `projectile_base.tscn`
 
@@ -997,7 +1118,12 @@ Rules:
 - Do not damage same-team actors by default
 - Specialized subclasses override behavior, for example boomerang return, hookshot retract, bomb explode
 
-### 2.6 Loot Drops
+**Verification** (in `debug_room.tscn`):
+- An Octorok projectile with `source_team = "enemy"` does not damage another Octorok on contact.
+- A projectile destroys itself on wall collision.
+- `lifetime` expiration auto-destroys the projectile.
+
+### 2.7 Loot Drops
 
 **LootTable**
 
@@ -1020,7 +1146,12 @@ Pickup types:
 - Arrow bundle
 - Bomb bundle
 
-### 2.7 Save and Load
+**Verification:**
+- **Unit test** (`test_loot_table.gd`): given a weighted table `[(A, 1.0), (B, 3.0)]`, 10000 rolls produce ~25%/75% distribution. Empty table returns empty. Single-entry table always returns that entry.
+- **Debug scene**: killing a test enemy spawns pickups that bob and are collected on player overlap.
+- Pickups update the correct counters (heart restores health, green rupee adds 1, etc.).
+
+### 2.8 Save and Load
 
 The save system is built in Phase 2 so that game state can be persisted during development. The `SaveManager` autoload stub from Phase 1 becomes functional here.
 
@@ -1074,7 +1205,13 @@ Keep all save data in JSON-safe primitives. Do not use `var_to_str()` / `str_to_
 
 As Phases 3–4 add more state (items, passives, dungeon progress, world type), the save system automatically captures it because it serializes the full manager dictionaries. No save code changes needed per feature — just ensure new state lives in GameManager flags or InventoryManager.
 
-### 2.8 Phase 2 Deliverable
+**Verification:**
+- **Unit test** (`test_save_serialization.gd`): `InventoryManager.serialize()` → `deserialize()` round-trip preserves all fields. Same for `GameManager`. Vector2 values survive as `[x, y]` arrays. StringName keys become strings and convert back.
+- **Debug scene**: save game → close editor → reopen editor → load game → player position, health, and flags all restored.
+- Loading a save with a different `schema_version` logs a warning (migration hook).
+- `has_save(slot)` returns false for an unused slot, true after saving.
+
+### 2.9 Phase 2 Deliverable
 
 Acceptance criteria:
 
@@ -1127,6 +1264,10 @@ enum ItemType {
 
 Not all fields apply to every type. `use_script` is only relevant for ACTIVE, `passive_key` for PASSIVE, etc. Unused fields are left at default.
 
+**Verification:**
+- Create three test `.tres` files (one ACTIVE, one PASSIVE, one COLLECTIBLE). Each loads cleanly in the editor and at runtime.
+- `item_type` switches correctly in the inspector — ACTIVE items show `use_script` field, PASSIVE shows `passive_key`, etc.
+
 ### 3.2 Acquisition Presentation
 
 Significant items (chest contents, dungeon rewards, NPC gifts) get a short presentation sequence before being added to inventory. Minor pickups (rupees, hearts, ammo drops from enemies/bushes) skip presentation and are collected instantly.
@@ -1158,6 +1299,11 @@ Significant items (chest contents, dungeon rewards, NPC gifts) get a short prese
 For the "No" cases, the pickup scene calls `InventoryManager.add_item()` directly and `queue_free()`s itself. No state change.
 
 For the "Yes" cases, the source emits `EventBus.item_get_requested` and the player handles the presentation. The source waits for `EventBus.item_acquired` (emitted at end of presentation) before completing its own logic (e.g., chest stays open).
+
+**Verification** (in `debug_room.tscn`):
+- Place a test chest. Open it. Game pauses, player poses with item overhead, dialog shows. Press `interact` → dialog dismisses, game resumes.
+- Place a ground rupee. Walking over it collects instantly, no pause, SFX fires.
+- The item is only added to inventory AFTER the presentation dismisses, not before.
 
 ### 3.3 Inventory Mutation
 
@@ -1206,6 +1352,13 @@ func consume_item_cost(item: ItemData) -> bool  # deducts magic + ammo, false if
 func add_key(dungeon_id: StringName, amount: int = 1) -> void
 func use_key(dungeon_id: StringName) -> bool
 ```
+
+**Verification:**
+- **Unit test** (`test_inventory_manager.gd`): ACTIVE path — `add_item(bow)` → `has_item("bow")` true, `get_equipped_item()` returns bow when slot was empty.
+- **Unit test**: PASSIVE path — `add_item(boots)` → `get_passive("boots")` returns 1, adding it again doesn't change the tier.
+- **Unit test**: PASSIVE upgrade — `add_item(sword_t1)` → `get_passive("sword") == 1`. Then `add_item(sword_t3)` → `get_passive("sword") == 3`. Then `add_item(sword_t1)` again → still 3 (max, never downgrades).
+- **Unit test**: COLLECTIBLE — adding 4 heart pieces increases max health by 2 and resets counter to 0. Rupees cap at 999.
+- **Unit test**: `consume_item_cost()` returns false when insufficient ammo/magic, does not deduct.
 
 ### 3.4 Item Use System
 
@@ -1270,6 +1423,12 @@ The spawned things (Arrow, Bomb, Hookshot chain) are full scenes in `scenes/item
 
 **Hookshot special case:** Lock duration is not known at activation time (depends on what it hits and how far). The hookshot effect keeps a reference to the player's state machine and calls `transition_to("idle")` directly when the hookshot completes. `activate()` returns a large timeout (e.g., 5.0s) as a safety fallback.
 
+**Verification** (in `debug_room.tscn`):
+- Equip bow with no arrows → pressing action item does nothing (can_use returns false).
+- Equip bow with arrows → pressing action item spawns arrow, deducts 1, locks player for ~0.3s.
+- Equip bomb → places bomb at player position, bomb explodes after 2.5s dealing damage.
+- `ItemUseState` returns to idle after `lock_duration` expires even if the effect did nothing.
+
 ### 3.5 Active Items
 
 | Item | Ammo | Magic | Notes |
@@ -1283,6 +1442,11 @@ The spawned things (Arrow, Bomb, Hookshot chain) are full scenes in `scenes/item
 | Fire Rod | 0 | 8 | Ranged fire projectile, lights torches |
 | Ice Rod | 0 | 8 | Ranged ice projectile, freezes enemies |
 | Hammer | 0 | 0 | Pounds pegs, flips enemies, short range |
+
+**Verification** (in `inventory_test.tscn` or `debug_room.tscn`):
+- At least 4 active items are individually equippable and usable end-to-end: bow, bomb, boomerang, hookshot.
+- Each active item visibly does its thing: arrow flies, bomb explodes, boomerang returns, hookshot extends and retracts.
+- Magic costs are deducted correctly (test Lamp: uses 4 magic, cannot use at 3).
 
 ### 3.6 Passive Upgrades
 
@@ -1302,6 +1466,12 @@ Sword beam rule:
 
 - At full health, sword swings emit a forward beam projectile (2 damage) if sword tier ≥ 2
 - Sword beam does not consume magic
+
+**Verification** (in `debug_room.tscn`):
+- Without Pegasus Boots: pressing dash button does nothing. Pick up boots from a test chest: dash works immediately, no equip step needed.
+- Without Flippers: walking into water tile damages the player. Pick up flippers: water becomes walkable/swimmable.
+- Armor upgrade visibly reduces incoming damage (take a hit before/after, compare health change).
+- Sword tier upgrade increases damage dealt to enemies (test with an enemy at known HP).
 
 ### 3.7 Shield Mechanics
 
@@ -1329,6 +1499,12 @@ Implementation note:
 - Incoming projectiles should declare a `projectile_class` or equivalent data field
 - Shield logic should decide block, deflect, or reflect from data, not enemy-specific special cases
 
+**Verification** (in `debug_room.tscn`):
+- Tier 1 shield: arrow hitting front vanishes, damage is zero. Arrow hitting back damages player normally.
+- Tier 2 shield: a fireball projectile is blocked. Tier 1 shield lets fireballs through.
+- Tier 3 Mirror Shield: projectile reflects back at source and can damage the shooter.
+- Holding `action_shield` widens the block arc (visible facing-lock + speed reduction).
+
 ### 3.8 Inventory Screen
 
 Pause-driven full-screen overlay:
@@ -1343,6 +1519,12 @@ Layout:
 - Bottom: collectible status such as heart pieces and dungeon collectibles
 - Cursor: yellow outline rectangle
 - Item icons: generated from `icon_shape` and `icon_color`
+
+**Verification:**
+- Press `pause` → inventory opens, game pauses (`get_tree().paused = true`). Press again → closes, resumes.
+- Cursor moves with d-pad/arrows. Selecting an item equips it.
+- Passive items show their tier in the gear display (e.g., sword tier 2 highlights 2 pips).
+- Heart piece count is visible (e.g., `2/4`).
 
 ### 3.9 Phase 3 Deliverable
 
@@ -1381,6 +1563,12 @@ Initial content target:
 - 4x4 light-world overworld
 - Biome variation through tile color and object density
 
+**Verification:**
+- Create at least 2x2 of the 4x4 grid for testing. Walking east from `overworld_0_0` scrolls smoothly to `overworld_1_0` over ~0.5s, player auto-walks into the new room.
+- Scrolling back works identically in reverse. Player can re-cross boundaries repeatedly without getting stuck.
+- Enemies in the previous room respawn on return.
+- `SceneManager.current_screen_coords` updates correctly after each transition.
+
 ### 4.2 Interior and Cave Transitions
 
 `Door` scene requirements:
@@ -1396,6 +1584,11 @@ Transition styles:
 - `fade`
 - `iris`
 - `instant` for debugging only
+
+**Verification:**
+- Place a door in an overworld room pointing to a test interior scene. Walking in triggers iris-out → scene load → iris-in. Player spawns at the correct `target_entry_point` marker.
+- Another door in the interior pointing back to the overworld returns the player to the original room.
+- Iris transition animates from the player's screen position, not from screen center.
 
 ### 4.3 Dungeon Structure
 
@@ -1429,6 +1622,13 @@ Dungeon elements:
 - `Pit`: fall hazard or floor-drop trigger
 - `ConveyorBelt`: continuous directional push
 
+**Verification** (in a test dungeon with 2+ rooms):
+- LockedDoor: walking into it without a key does nothing. With a key, consumes 1 and opens. The door stays open on room re-entry (persistent).
+- PushBlock: player pushes block one tile in facing direction. Block position persists via `GameManager` flag.
+- Switch: sword hit toggles it, linked door opens/closes accordingly. Persists across room transitions.
+- PressurePlate: weight from player or block activates it; weight removed deactivates (unless sticky variant).
+- Chest: opening it triggers ItemGetState and sets the persist flag. Re-entering the room shows the chest already open.
+
 ### 4.4 Light World and Dark World
 
 The game supports paired overworld maps with shared coordinates.
@@ -1450,6 +1650,12 @@ Without Moon Pearl:
 
 - Entering the Dark World transforms the player
 - Transformed state limits sword and item access unless later design changes it deliberately
+
+**Verification:**
+- Activating Magic Mirror in a Dark World test room runs a swirl transition and places the player at the mirrored coordinates in the Light World.
+- The Dark World has a visibly different color grading (purple shift, desaturated).
+- Without Moon Pearl: entering Dark World visibly transforms the player shape. With Moon Pearl: player stays normal.
+- World type survives save/load.
 
 ### 4.5 Phase 4 Deliverable
 
@@ -1481,6 +1687,11 @@ What bosses share is a **`base_boss.gd` script** (extends `Node2D`, not `Charact
 
 Each boss scene owns its own `StateMachine` with **boss-specific states** (not Patrol/Chase/Attack). The state machine drives phase behavior.
 
+**Verification:**
+- Create a minimal test boss with a scripted phase change at 50% HP. Phase change fires `_on_phase_change()`, triggers the brief invulnerability window, particle flash, and screen shake.
+- `start_encounter()` locks camera and closes the boss door (verify with a test room).
+- BossHealthBar appears on encounter start and updates as HP drops.
+
 ### 5.2 Armos Knights
 
 ```
@@ -1505,6 +1716,12 @@ The controller (`armos_knights.gd`) manages all 6 knight units. Individual knigh
 **Phase 2** (1 remaining): Last knight turns red (shader color shift). Hops faster. Jump-attacks the player's position — a shadow indicator (dark circle on ground) telegraphs the landing spot 0.4s before impact. Higher contact damage.
 
 **Defeat**: heart container drop + warp tile via `end_encounter()`.
+
+**Verification** (playable end-to-end in the dungeon 1 boss room):
+- All 6 knights spawn and hop in formation. Hitting one deals damage (tracked individually).
+- Killing 5 knights triggers the Phase 2 transition: remaining knight flashes red and speeds up.
+- Jump attack telegraphs with shadow indicator before landing.
+- Defeating the last knight spawns heart container and warp tile.
 
 ### 5.3 Boss Design Guidelines
 
@@ -1651,6 +1868,13 @@ res://
 
 The cutscene system is only used when multiple subsystems (camera, movement, dialog, SFX, effects) need to be coordinated in a timed sequence.
 
+**Verification** (in `cutscene_test.tscn`):
+- A 5-step test cutscene (wait → camera pan → dialog → shake → wait) runs end to end with `await` on each primitive.
+- Player input is blocked while `Cutscene.is_playing` is true, restored on finish.
+- `cutscene_started` and `cutscene_finished` signals emit at the right moments.
+- Camera returns to following the player after `camera_pan()` completes.
+- Dialog awaits `EventBus.dialog_closed` before resuming the cutscene.
+
 ### 5.5 Dungeon Completion Flow
 
 On boss defeat:
@@ -1660,6 +1884,12 @@ On boss defeat:
 3. Set dungeon completion flag
 4. Fully heal player
 5. Spawn warp tile back to dungeon entrance
+
+**Verification:**
+- Complete the dungeon 1 boss: defeat cutscene plays, heart container spawns, picking it up triggers ItemGetState.
+- After the cutscene, `GameManager.get_flag("dungeon_01/complete")` returns true.
+- Warp tile is interactable and returns player to dungeon entrance.
+- Max health increased by 2 after collecting the heart container.
 
 ### 5.6 Phase 5 Deliverable
 
@@ -1687,6 +1917,12 @@ The HUD is built in Phase 1 (section 1.8) and extended in Phases 3–4. Phase 6 
 - Equipped item: brief highlight flash when switching items
 - Ensure all HUD elements look consistent across overworld, dungeon, and dark world color grading
 
+**Verification:**
+- Take damage — lost heart visibly flashes white before becoming empty.
+- Collect 10 rupees — counter ticks up digit by digit, not instantly.
+- Switch items via inventory — equipped item slot flashes briefly.
+- HUD remains readable over the brightest and darkest rooms in the game.
+
 ### 6.2 Dialog System
 
 Dialog box requirements:
@@ -1699,6 +1935,12 @@ Dialog box requirements:
 Triggered through:
 
 - `EventBus.dialog_requested(lines)`
+
+**Verification:**
+- Place a test sign in `debug_room.tscn`. Pressing `interact` opens the dialog box with typewriter animation.
+- Pressing `interact` during typewriter completes the current page instantly. Pressing again advances to next line.
+- Multi-page text arrays work: `["Page 1", "Page 2", "Page 3"]` shows all three in sequence.
+- Dialog closing emits `EventBus.dialog_closed` exactly once.
 
 ### 6.3 Shaders, Effects & Juice
 
@@ -1718,6 +1960,15 @@ Specifically, Phase 6 must deliver:
 
 Note: effects should be added incrementally as systems are built in earlier phases (e.g., `FlashComponent` in Phase 2, dash dust in Phase 1). Phase 6 is the pass where everything is polished, consistent, and nothing is missing.
 
+**Verification** (walk through the whole game):
+- Every shader from the Visual Direction section is visibly active in at least one context.
+- Bloom visibly glows on torches, magic projectiles, and collectibles in dark rooms.
+- Color grading smoothly transitions between adjacent biomes (no hard cuts).
+- Every combat interaction produces particles (sword hit, enemy death, bomb explosion).
+- Damage → screen shake fires; bomb explosion shake is visibly stronger.
+- Player squashes on sword swing and landing.
+- Torches in dungeons flicker with random energy.
+
 ### 6.4 Title Screen
 
 Minimum title screen features:
@@ -1728,6 +1979,12 @@ Minimum title screen features:
 - Animated background treatment
 
 `Continue` should be disabled or hidden when no save file exists.
+
+**Verification:**
+- Launching the game boots to the title screen, not straight into gameplay.
+- Delete all saves → Continue is hidden/disabled; New Game works.
+- Save a game → restart → Continue is enabled and loads the correct slot.
+- Animated background plays smoothly without stuttering.
 
 ### 6.5 Phase 6 Deliverable
 
@@ -1759,6 +2016,11 @@ Each dungeon should include:
 - Unique boss
 - Heart Container reward
 
+**Verification:**
+- Each dungeon can be entered, completed end-to-end, and exited via warp tile.
+- Map/compass/big key work per dungeon (map reveals minimap, compass reveals key chest location).
+- Defeating each boss sets its completion flag and grants a heart container.
+
 ### 7.2 Heart Pieces
 
 Four pieces combine into one heart container.
@@ -1771,6 +2033,11 @@ Sources:
 - Hidden chests
 - Future mini-games if added
 
+**Verification:**
+- Collecting 4 heart pieces increases max health by 2 (verified by HUD).
+- Heart piece count resets to 0 after the 4th piece.
+- Heart piece pickups persist — already-collected ones don't respawn on room re-entry.
+
 ### 7.3 NPC System
 
 NPC scene expectations:
@@ -1780,6 +2047,11 @@ NPC scene expectations:
 - Interact area
 - `dialog_lines`
 - Optional visibility or dialog gating by flag
+
+**Verification:**
+- Test NPC with `dialog_lines` shows correct text on `interact`.
+- NPC with a `required_flag` is invisible until the flag is set (set via debug hotkey, NPC appears).
+- Wandering NPC variant moves randomly within its assigned area.
 
 ### 7.4 Destructible Objects
 
@@ -1795,6 +2067,12 @@ Behaviors:
 - Can spawn loot
 - Lift and throw once gloves are available
 
+**Verification:**
+- Sword destroys bush → particles fire, loot drops per table.
+- Dash destroys bush (pegasus boots).
+- Pot shatters on throw impact (requires gloves from Phase 8).
+- Destructibles do not respawn on room re-entry if they have a `persist_id`.
+
 ### 7.5 Expanded Overworld
 
 World target grows from 4x4 to 8x8.
@@ -1808,6 +2086,12 @@ Biomes:
 - Lake
 - Village
 - Graveyard
+
+**Verification:**
+- All 8x8 screens load cleanly via headless smoke check.
+- Each biome has its own color grading and distinct tile palette.
+- Walking across biome boundaries smoothly transitions the color grading uniform.
+- Save/load works from any screen in any biome.
 
 ### 7.6 Phase 7 Deliverable
 
@@ -1835,6 +2119,11 @@ Without Flippers:
 
 - Water acts as a hazard or blocked terrain, depending on room design
 
+**Verification:**
+- Without flippers: walking into water deals damage and pushes player back.
+- With flippers (add via debug): player enters water, speed reduced, ripple particles spawn.
+- Exit water back to dry land restores normal movement speed.
+
 ### 8.2 Lifting and Throwing
 
 With gloves:
@@ -1848,6 +2137,12 @@ Tier rules:
 
 - Power Glove lifts light objects
 - Titan's Mitt lifts heavy objects
+
+**Verification:**
+- Without gloves: `interact` on a pot does nothing.
+- With Power Glove: pot lifts, drawn above player head, player enters CarryState.
+- Throwing with `action_sword` or `action_item` launches the pot as a projectile that shatters on wall/enemy contact.
+- With only Power Glove, heavy rocks cannot be lifted. Titan's Mitt enables lifting them.
 
 ### 8.3 Magic System
 
@@ -1869,6 +2164,12 @@ Refills:
 
 Spin attack should not consume magic.
 
+**Verification:**
+- Using Fire Rod at 0 magic does nothing. At 8+ magic, fires projectile and deducts 8.
+- Magic jar pickup restores the correct amount (small = 16, large = full).
+- Half Magic upgrade: using Fire Rod costs 4 after upgrade instead of 8.
+- Magic persists across save/load.
+
 ### 8.4 Game Over
 
 Flow:
@@ -1882,6 +2183,12 @@ Continue behavior:
 
 - Respawn at dungeon entrance or designated overworld safe point
 - Restore to 3 hearts
+
+**Verification:**
+- Take lethal damage: death animation plays, game over screen appears.
+- Continue → player respawns at dungeon entrance (if in dungeon) or overworld safe point (if outside).
+- Health restored to 3 hearts, not full max.
+- Save and Quit → writes save, returns to title screen.
 
 ### 8.5 Advanced Enemies
 
@@ -1931,6 +2238,11 @@ Moldorm (Node2D, script: moldorm.gd extends BaseBoss)
 
 Segments follow the head using a position history queue (each segment takes the position the one ahead had N frames ago). Only the tail takes damage. Speed increases as health drops.
 
+**Verification:**
+- Wizzrobe: cycles through its 5 states correctly, only takes damage during Appear/Telegraph/Fire.
+- Like-Like: engulfs player on contact, mashing `action_sword` escapes, timeout drops shield tier.
+- Moldorm: only tail segment takes damage. Body segments follow the head correctly. Speed visibly increases past 50% HP.
+
 ### 8.6 Audio Hookup Coverage
 
 All major systems should already call `AudioManager` even if assets are absent.
@@ -1944,6 +2256,11 @@ Asset convention:
 
 - `res://audio/bgm/{name}.ogg`
 - `res://audio/sfx/{name}.ogg`
+
+**Verification:**
+- Grep the codebase for `AudioManager.play_sfx` / `play_bgm` calls and cross-reference with the coverage list above. Every entry in the list has at least one call site.
+- Dropping a placeholder `.ogg` at the conventional path plays it instead of logging.
+- No crashes occur if the file is missing — it just logs.
 
 ### 8.7 Phase 8 Deliverable
 
