@@ -46,7 +46,7 @@ All visuals are rendered from primitive shapes, shaders, particles, and 2D light
 ### Core Conventions
 
 - The player is a persistent scene instance created once per run and reparented into the active room's `Entities` node during transitions.
-- The sword is always available. There is one active item slot, not two.
+- The sword is always available. There is one skill slot (the B button), not two.
 - Room scripts must expose a stable `room_id: StringName` for persistence and analytics (e.g., `light_overworld_0_0`, `dungeon_01_room_03`). Set via `@export`, never derived from the file name at runtime.
 - Every persistent entity (chest, push block, switch, boss, locked door) must have an `@export var persist_id: StringName` set in the editor. This is a stable identifier that never changes even if the node is renamed or reparented. Flag keys are built as `{room_id}/{persist_id}` (e.g., `light_overworld_0_0/chest_north`).
 - The editor should warn (via `_get_configuration_warnings()`) if `persist_id` is empty on a persistent entity.
@@ -62,7 +62,7 @@ res://
 |-- autoloads/
 |   |-- event_bus.gd
 |   |-- game_manager.gd
-|   |-- inventory_manager.gd
+|   |-- player_state.gd            # The PlayerState autoload (character sheet)
 |   |-- audio_manager.gd
 |   |-- scene_manager.gd
 |   |-- save_manager.gd
@@ -82,7 +82,7 @@ res://
 |   |-- player/
 |   |   |-- player.tscn/.gd
 |   |   |-- states/
-|   |   |   |-- player_state.gd
+|   |   |   |-- base_player_state.gd  # Base BasePlayerState class (do not confuse with PlayerState autoload)
 |   |   |   |-- idle_state.gd
 |   |   |   |-- walk_state.gd
 |   |   |   |-- attack_state.gd
@@ -97,7 +97,7 @@ res://
 |   |       `-- shield_component.tscn/.gd
 |   |-- enemies/
 |   |   |-- base_enemy.gd          # Script base class only, no base .tscn
-|   |   |-- enemy_state.gd         # Base EnemyState class
+|   |   |-- base_enemy_state.gd    # Base BaseEnemyState class
 |   |   |-- soldier/
 |   |   |   |-- soldier.tscn/.gd
 |   |   |   `-- states/            # States unique to this enemy
@@ -126,7 +126,7 @@ res://
 |   |       `-- states/
 |   |-- items/
 |   |   |-- base_item_effect.gd     # BaseItemEffect (RefCounted)
-|   |   |-- effects/                # One script per active item
+|   |   |-- effects/                # One script per skill
 |   |   |   |-- bow_effect.gd
 |   |   |   |-- bomb_effect.gd
 |   |   |   |-- boomerang_effect.gd
@@ -171,7 +171,7 @@ res://
 |   |   |-- rupee_counter.tscn/.gd
 |   |   |-- item_slot.tscn/.gd
 |   |   |-- minimap.tscn/.gd
-|   |   |-- inventory_screen.tscn/.gd
+|   |   |-- subscreen.tscn/.gd      # Pause subscreen (skills, upgrades, resources)
 |   |   |-- dialog_box.tscn/.gd
 |   |   |-- title_screen.tscn/.gd
 |   |   `-- game_over_screen.tscn/.gd
@@ -427,8 +427,9 @@ All damage values are in **half-heart units** (1 unit = half heart, 2 units = fu
 - Minimum 1 unit of damage after reduction (no hit is ever completely negated by armor alone).
 
 **Step 4 — Apply damage**:
-- `HealthComponent.take_damage(final_damage)`
-- All side effects fire: flash, knockback, i-frames, screen shake, SFX.
+- For the player: `PlayerState.apply_damage(final_damage)`. This mutates `current_health`, emits `EventBus.player_health_changed(current, max)`, and emits `EventBus.player_died` if health reaches 0.
+- For enemies: the enemy's child `HealthComponent.take_damage(final_damage)`. Enemies are transient per room, so a node-local component is the natural fit; the player is persistent and serialized, so its health lives on `PlayerState` instead.
+- All side effects fire regardless of target: flash, knockback, i-frames, screen shake, SFX.
 
 **Sword damage output** (for reference):
 
@@ -470,7 +471,7 @@ Every subphase has a **Verification** block with concrete, runnable checks. Bugs
 
 **Three types of verification:**
 
-1. **Unit tests** — pure GDScript logic with no scene dependencies (damage formula, inventory ops, loot table rolls, save serialization). Uses the [GUT](https://github.com/bitwes/Gut) framework (Godot Unit Testing). Added as an addon in Phase 2 when the first testable logic lands (damage formula, loot tables, save serialization).
+1. **Unit tests** — pure GDScript logic with no scene dependencies (damage formula, PlayerState acquisition, loot table rolls, save serialization). Uses the [GUT](https://github.com/bitwes/Gut) framework (Godot Unit Testing). Added as an addon in Phase 2 when the first testable logic lands (damage formula, loot tables, save serialization).
 
 2. **Debug scene checks** — load `debug/debug_room.tscn` or a dedicated test scene in the editor and verify gameplay behavior manually against a checklist. The debug room grows over time to expose every system added so far.
 
@@ -483,13 +484,13 @@ res://
 └── tests/
     ├── unit/
     │   ├── test_damage_formula.gd
-    │   ├── test_inventory_manager.gd
+    │   ├── test_player_state.gd
     │   ├── test_loot_table.gd
     │   ├── test_save_serialization.gd
     │   └── ...
     └── scenes/
         ├── combat_test.tscn       # isolated combat sandbox
-        ├── inventory_test.tscn    # item acquisition + inventory UI
+        ├── skills_test.tscn       # skill acquisition, equipping, and use
         ├── cutscene_test.tscn     # cutscene primitives
         └── ...
 ```
@@ -567,7 +568,7 @@ Autoload registration order:
 
 1. `EventBus`
 2. `GameManager`
-3. `InventoryManager`
+3. `PlayerState`
 4. `AudioManager`
 5. `SceneManager`
 6. `SaveManager`
@@ -617,7 +618,7 @@ Pure signal hub. Initial signals:
 - `player_died()`
 - `enemy_defeated(enemy_type, position)`
 - `item_get_requested(item: ItemData)` — triggers ItemGetState presentation
-- `item_acquired(item_id)` — emitted after presentation completes and inventory is mutated
+- `item_acquired(item_id)` — emitted after presentation completes and `PlayerState` is mutated
 - `room_transition_requested(target_room_id, entry_point)`
 - `world_switch_requested(target_world_type)`
 - `dialog_requested(lines)`
@@ -642,7 +643,27 @@ Public methods:
 - `get_flag(key: StringName, default_value := false) -> Variant`
 - `has_flag(key: StringName) -> bool`
 
-Flag keys follow the pattern `{room_id}/{persist_id}` for room-scoped state (chests, blocks, switches) and plain keys like `dungeon_01/boss_defeated` or `items/bow` for global state. Keys are always built from `@export` fields, never from node names or scene paths.
+Flag keys follow the pattern `{room_id}/{persist_id}` for room-scoped state (chests, blocks, switches) and `{dungeon_id}/...` or plain keys for global state. Keys are always built from `@export` fields, never from node names or scene paths.
+
+**What belongs in `GameManager` flags vs `PlayerState`:**
+
+| Goes on `PlayerState` | Goes in `GameManager` flags |
+|---|---|
+| Skills (owned_skills, equipped_skill_id) | Per-dungeon booleans (big key, map, compass) |
+| Upgrades (sword tier, armor tier, boots, flippers…) | Pendants (3 total) and Crystals (7 total) |
+| Resources (rupees, arrows, bombs, magic, hearts, small keys) | Dungeon boss defeated, dungeon cleared |
+| Health, heart pieces, bottles | Room-scoped persistence (chests, blocks, switches) |
+| | Story/cutscene progression, NPC dialog flags |
+
+Rule of thumb: if it's on the character sheet (things Link himself carries or is), it's `PlayerState`. If it's a boolean about world/story progress, it's a `GameManager` flag — even when it's technically "collected" like a pendant or crystal. Pendants and crystals are dungeon rewards used as progression gates, not consumables, so they live with the other progression flags.
+
+**Canonical flag keys for progression:**
+
+- `dungeon_01/has_big_key`, `dungeon_01/has_map`, `dungeon_01/has_compass` — per-dungeon once-and-done items. Repeat for each dungeon.
+- `dungeon_01/boss_defeated`, `dungeon_01/complete` — dungeon clear state.
+- `pendants/courage`, `pendants/power`, `pendants/wisdom` — the 3 Light World pendants.
+- `crystals/1` through `crystals/7` — the 7 Dark World crystals.
+- `items/bow`, `items/hookshot`, etc. — **do not use.** Skill ownership lives on `PlayerState.owned_skills`; check with `PlayerState.has_skill("bow")`, never via flags.
 
 **SceneManager**
 
@@ -678,36 +699,92 @@ Behavior:
 - Otherwise log a tagged placeholder message
 - Gameplay code must never branch based on whether a real asset exists
 
-**InventoryManager**
+**PlayerState**
+
+The player character sheet. ALTTP has no inventory in the RPG sense (no slot capacity, no trading, no stacking, no storage) — it has **skills** (permanent ability unlocks), **upgrades** (monotonic stat tiers), and **resources** (countable consumables including health and magic). `PlayerState` is the single autoload that owns all three. It is distinct from `BasePlayerState`, which is the state-machine base class for player states.
 
 Owns:
 
-- `equipped_item_id: StringName` — currently equipped active item (or `""`)
-- `owned_active_items: Dictionary` — id → ItemData for acquired active items
-- `item_effects: Dictionary` — id → cached BaseItemEffect instance per active item
-- `passives: Dictionary` — StringName → int (e.g., `{"sword": 2, "boots": 1}`)
-- `rupees: int`, `arrows: int`, `bombs: int` — consumable counters
-- `dungeon_keys: Dictionary` — dungeon_id → {small_keys, has_big_key, has_map, has_compass}
-- `current_health: int`, `max_health: int` — in half-heart units
-- `current_magic: int`, `max_magic: int`
-- `heart_pieces: int` — 0–3, resets on reaching 4
+```gdscript
+# Skills — permanent ability unlocks, one equipped at a time via the action button
+equipped_skill_id: StringName         # currently equipped skill (or &"")
+owned_skills: Dictionary              # id → ItemData for acquired skill items
+skill_effects: Dictionary             # id → cached BaseItemEffect instance per skill
 
-Single acquisition entry point: `add_item(item: ItemData)` — branches on `item_type` to handle ACTIVE, PASSIVE, and COLLECTIBLE differently (see section 3.2).
+# Upgrades — monotonic stat tiers (sword 1–4, armor 1–3, boots 0–1, etc.)
+upgrades: Dictionary                  # StringName → int (e.g., {"sword": 2, "boots": 1})
+
+# Resources — health, magic, and consumables
+current_health: int                   # in half-heart units
+max_health: int                       # 6 at start (3 hearts)
+current_magic: int
+max_magic: int
+heart_pieces: int                     # 0–3, resets on reaching 4
+rupees: int
+arrows: int
+bombs: int
+dungeon_small_keys: Dictionary        # dungeon_id (StringName) → int; consumable per-dungeon
+
+# Bottles — the one ALTTP mechanic closest to an "inventory"
+bottle_count: int                     # 0–4; how many bottles the player has earned
+bottles: Array[int]                   # fixed size 4; each element is a BottleContents enum value
+                                      # only indices [0, bottle_count) are meaningful; rest are ignored
+```
+
+Per-dungeon booleans (big key, map, compass) and story/progression flags (pendants, crystals, dungeon completion) do **not** live here — they are `GameManager` flags under `{dungeon_id}/...` keys. See GameManager section and section 3.1.
+
+**BottleContents enum:**
+
+```gdscript
+enum BottleContents {
+    EMPTY,          # bottle is owned but currently holding nothing
+    RED_POTION,
+    GREEN_POTION,
+    BLUE_POTION,
+    FAIRY,
+    BEE,
+    GOOD_BEE,
+    MAGIC_POWDER,
+}
+```
+
+ALTTP caps bottle count at 4, so `bottles` is a fixed-size Array of 4 ints, and `bottle_count` tracks how many of those slots the player has actually earned. Slot index is meaningful (it's the order the player sees in the subscreen). `EMPTY` means "owned but nothing inside" — distinct from "not yet earned," which is represented by the slot being outside `[0, bottle_count)`.
+
+Single acquisition entry point: `acquire(item: ItemData)` — branches on `item_type` to handle `SKILL`, `UPGRADE`, and `RESOURCE` differently (see section 3.3).
 
 Public methods:
 
-- `add_item(item: ItemData) -> void`
-- `equip_item(item_id: StringName) -> void`
-- `get_equipped_item() -> ItemData`
-- `get_equipped_effect() -> BaseItemEffect`
-- `has_item(item_id: StringName) -> bool`
-- `get_passive(key: StringName) -> int` — returns 0 if not owned
-- `has_passive(key: StringName) -> bool` — shorthand for `get_passive() > 0`
-- `consume_item_cost(item: ItemData) -> bool` — deducts magic + ammo, returns false if can't afford
-- `spend_rupees(amount: int) -> bool`
-- `spend_ammo(kind: StringName, amount: int) -> bool`
-- `add_key(dungeon_id: StringName, amount: int = 1) -> void`
-- `use_key(dungeon_id: StringName) -> bool`
+```gdscript
+# Acquisition
+func acquire(item: ItemData) -> void
+
+# Skills (equipped via B button)
+func equip_skill(skill_id: StringName) -> void
+func get_equipped_skill() -> ItemData          # null if nothing equipped
+func get_equipped_effect() -> BaseItemEffect   # null if nothing equipped
+func has_skill(skill_id: StringName) -> bool
+func get_owned_skills() -> Dictionary          # id → ItemData
+
+# Upgrades (queried by player states to gate abilities)
+func get_upgrade(key: StringName) -> int       # 0 if not owned
+func has_upgrade(key: StringName) -> bool      # shorthand for get_upgrade() > 0
+
+# Resources
+func apply_damage(amount: int) -> void         # mutates current_health, emits player_health_changed
+func heal(amount: int) -> void
+func spend_rupees(amount: int) -> bool         # false if insufficient
+func spend_ammo(kind: StringName, amount: int) -> bool
+func consume_skill_cost(item: ItemData) -> bool  # deducts magic + ammo, false if can't afford
+
+# Dungeon small keys (consumable, scoped per dungeon)
+func add_small_key(dungeon_id: StringName, amount: int = 1) -> void
+func use_small_key(dungeon_id: StringName) -> bool
+
+# Bottles
+func add_bottle() -> bool                      # increments bottle_count up to 4
+func set_bottle_contents(slot: int, contents: BottleContents) -> void
+func get_bottle_contents(slot: int) -> BottleContents
+```
 
 **SaveManager**
 
@@ -718,12 +795,12 @@ Phase 1 behavior:
 
 Final responsibility:
 
-- Serialize `GameManager`, `InventoryManager`, and player position to `user://save_{slot}.json`
+- Serialize `GameManager`, `PlayerState`, and player position to `user://save_{slot}.json`
 - Preserve `schema_version`
 
 **Verification:**
 - `GameManager.set_flag("test/foo", true)` then `get_flag("test/foo")` returns `true`. Flag survives room transitions.
-- `InventoryManager.passives` starts empty; `add_item()` with a passive test item correctly updates the dict.
+- `PlayerState.upgrades` starts empty; `acquire()` with a test UPGRADE item correctly updates the dict.
 - `AudioManager.play_sfx("missing_file")` logs `[Audio][SFX] missing_file` and does not crash.
 - `EventBus` signals can be connected from a test script and fire as expected (emit one, observe receiver).
 
@@ -784,7 +861,7 @@ Phase 1 required states:
 Later states:
 
 - `DashState` after Pegasus Boots
-- `ItemUseState` after active items exist
+- `ItemUseState` after skills exist
 - `ItemGetState` for item acquisition presentation (see section 3.2)
 - `SwimState` after Flippers
 - `LiftState`, `CarryState`, and `ThrowState` after gloves
@@ -1040,7 +1117,7 @@ Keese (CharacterBody2D, script: keese.gd extends BaseEnemy)
 
 No `NavigationAgent2D`, no `DetectionZone` — Keese doesn't need them.
 
-**`EnemyState`** (`scenes/enemies/enemy_state.gd`): extends `State`, types `actor` as `BaseEnemy`. Shared convenience: `StunnedState` can be reused by all enemies since stun behavior is universal (immobile, blue tint, timer). Everything else is per-type.
+**`BaseEnemyState`** (`scenes/enemies/base_enemy_state.gd`): extends `State`, types `actor` as `BaseEnemy`. Shared convenience: `StunnedState` can be reused by all enemies since stun behavior is universal (immobile, blue tint, timer). Everything else is per-type.
 
 **Verification** (in `debug_room.tscn`):
 - Soldier scene loads with all expected components, enemy_data reference intact.
@@ -1169,12 +1246,12 @@ The save system is built in Phase 2 so that game state can be persisted during d
     "facing": [0, 1]
   },
   "world_type": "light",
-  "inventory": {},
+  "player_state": {},
   "flags": {}
 }
 ```
 
-`inventory` is the full serialized state of `InventoryManager` (owned items, passives, consumables, dungeon keys, health, magic, heart pieces). `flags` is the full `GameManager.flags` dictionary. Both managers expose `serialize() -> Dictionary` and `deserialize(data: Dictionary)` methods.
+`player_state` is the full serialized state of the `PlayerState` autoload (owned skills, upgrades, resources, bottles, small keys, health, magic, heart pieces). `flags` is the full `GameManager.flags` dictionary (includes per-dungeon booleans for big key, map, compass, pendants, and crystals). Both managers expose `serialize() -> Dictionary` and `deserialize(data: Dictionary)` methods.
 
 **JSON type serialization**: Godot's built-in `JSON.stringify()` / `JSON.parse_string()` only support basic types (strings, numbers, bools, arrays, dicts). Godot-specific types must be converted manually in `serialize()` / `deserialize()`:
 
@@ -1197,16 +1274,16 @@ Keep all save data in JSON-safe primitives. Do not use `var_to_str()` / `str_to_
 
 **SaveManager public methods:**
 
-- `save_game(slot: int) -> void` — serializes GameManager + InventoryManager + player state to JSON
+- `save_game(slot: int) -> void` — serializes GameManager + PlayerState + player state to JSON
 - `load_game(slot: int) -> void` — deserializes and restores all state, triggers room load via SceneManager
 - `get_slot_metadata(slot: int) -> Dictionary` — for title screen display (returns empty dict if slot unused)
 - `has_save(slot: int) -> bool`
 - `delete_save(slot: int) -> void`
 
-As Phases 3–4 add more state (items, passives, dungeon progress, world type), the save system automatically captures it because it serializes the full manager dictionaries. No save code changes needed per feature — just ensure new state lives in GameManager flags or InventoryManager.
+As Phases 3–4 add more state (skills, upgrades, dungeon progress, world type), the save system automatically captures it because it serializes the full manager dictionaries. No save code changes needed per feature — just ensure new state lives in `GameManager` flags or `PlayerState`.
 
 **Verification:**
-- **Unit test** (`test_save_serialization.gd`): `InventoryManager.serialize()` → `deserialize()` round-trip preserves all fields. Same for `GameManager`. Vector2 values survive as `[x, y]` arrays. StringName keys become strings and convert back.
+- **Unit test** (`test_save_serialization.gd`): `PlayerState.serialize()` → `deserialize()` round-trip preserves all fields. Same for `GameManager`. Vector2 values survive as `[x, y]` arrays. StringName keys become strings and convert back.
 - **Debug scene**: save game → close editor → reopen editor → load game → player position, health, and flags all restored.
 - Loading a save with a different `schema_version` logs a warning (migration hook).
 - `has_save(slot)` returns false for an unused slot, true after saving.
@@ -1223,9 +1300,17 @@ Acceptance criteria:
 
 ---
 
-## Phase 3: Items and Inventory
+## Phase 3: Skills, Upgrades, and Resources
 
 **Milestone**: "Link Has Equipment"
+
+ALTTP has no inventory in the RPG sense. Everything the player can pick up falls into one of three categories:
+
+- **SKILL** — a permanent ability unlock (Bow, Hookshot, Lamp, Hammer, Medallions…). One skill can be equipped at a time via the action button. Acquiring a skill is one-way; skills are never removed.
+- **UPGRADE** — a monotonic stat tier (sword 1–4, armor 1–3, shield 1–3, gloves 1–2, boots 0–1, flippers 0–1, moon pearl 0–1, magic-halver 0–1). Upgrades stack only upward: re-acquiring a lower tier is a no-op.
+- **RESOURCE** — a countable consumable (rupees, arrows, bombs, magic, hearts, small keys, heart pieces) or the fill state of a bottle.
+
+Per-dungeon booleans (big key, map, compass), pendants, crystals, and dungeon completion are **not** categories here — they are `GameManager` flags.
 
 ### 3.1 Item Data Resource
 
@@ -1235,42 +1320,42 @@ class_name ItemData extends Resource
 @export var id: StringName
 @export var display_name: String
 @export var description: String
-@export var item_type: ItemType       # ACTIVE, PASSIVE, COLLECTIBLE
+@export var item_type: ItemType       # SKILL, UPGRADE, RESOURCE
 @export var icon_color: Color
 @export var icon_shape: PackedVector2Array
 
-# ACTIVE items only:
+# SKILL items only:
 @export var magic_cost: int           # 0 if no magic needed
 @export var ammo_type: StringName     # "arrows", "bombs", or "" for none
 @export var ammo_cost: int
-@export var use_script: Script        # Extends BaseItemEffect (see 3.3)
+@export var use_script: Script        # Extends BaseItemEffect (see 3.4)
 
-# PASSIVE items only:
-@export var passive_key: StringName   # e.g. "sword", "boots", "armor"
-@export var tier: int                 # Upgrade level (boolean passives use 1)
+# UPGRADE items only:
+@export var upgrade_key: StringName   # e.g. "sword", "boots", "armor"
+@export var tier: int                 # Stat tier (boolean upgrades use 1)
 
-# COLLECTIBLE items only:
-@export var collect_key: StringName   # e.g. "rupees", "arrows", "heart_piece"
-@export var collect_amount: int       # How much to add
+# RESOURCE items only:
+@export var resource_key: StringName  # e.g. "rupees", "arrows", "heart_piece"
+@export var resource_amount: int      # How much to add
 ```
 
 ```gdscript
 enum ItemType {
-    ACTIVE,
-    PASSIVE,
-    COLLECTIBLE
+    SKILL,       # permanent ability unlock, equippable
+    UPGRADE,     # monotonic stat tier, permanent and non-equippable
+    RESOURCE,    # countable consumable (rupees, ammo, hearts, keys)
 }
 ```
 
-Not all fields apply to every type. `use_script` is only relevant for ACTIVE, `passive_key` for PASSIVE, etc. Unused fields are left at default.
+`ItemData` is a unified Resource because all three categories share the same acquisition pipeline (pickup → presentation → `PlayerState.acquire()`). Only the fields relevant to a given `item_type` are filled in; the rest stay at default. This is deliberate — do **not** split `ItemData` into three Resources. The unified shape is what lets chests, NPCs, and pickups hand off a single typed value without caring which category it belongs to.
 
 **Verification:**
-- Create three test `.tres` files (one ACTIVE, one PASSIVE, one COLLECTIBLE). Each loads cleanly in the editor and at runtime.
-- `item_type` switches correctly in the inspector — ACTIVE items show `use_script` field, PASSIVE shows `passive_key`, etc.
+- Create three test `.tres` files (one SKILL, one UPGRADE, one RESOURCE). Each loads cleanly in the editor and at runtime.
+- `item_type` switches correctly in the inspector — SKILL items show `use_script` field, UPGRADE shows `upgrade_key`, RESOURCE shows `resource_key`.
 
 ### 3.2 Acquisition Presentation
 
-Significant items (chest contents, dungeon rewards, NPC gifts) get a short presentation sequence before being added to inventory. Minor pickups (rupees, hearts, ammo drops from enemies/bushes) skip presentation and are collected instantly.
+Significant items (chest contents, dungeon rewards, NPC gifts) get a short presentation sequence before being acquired into `PlayerState`. Minor pickups (rupees, hearts, ammo drops from enemies/bushes) skip presentation and are collected instantly.
 
 **ItemGetState** (player state):
 
@@ -1278,10 +1363,10 @@ Significant items (chest contents, dungeon rewards, NPC gifts) get a short prese
 2. Player transitions to `ItemGetState`
 3. Gameplay pauses: `get_tree().paused = true` (player scene has `process_mode = ALWAYS`)
 4. Player visual: arms-up pose via `_draw()` — body polygon shifts, item shape drawn above head in `item.icon_color`
-5. `AudioManager.play_sfx("item_fanfare")` — different jingles for major (active/passive) vs minor (key, map) items
+5. `AudioManager.play_sfx("item_fanfare")` — different jingles for major (SKILL/UPGRADE) vs minor (small key, compass) items
 6. Dialog box shows: `"You got the {item.display_name}! {item.description}"`
 7. Wait for player to press `interact` or `action_sword` to dismiss
-8. `InventoryManager.add_item(item)` — actual inventory mutation happens here
+8. `PlayerState.acquire(item)` — actual state mutation happens here
 9. `get_tree().paused = false`
 10. Player transitions back to `IdleState`
 
@@ -1289,80 +1374,88 @@ Significant items (chest contents, dungeon rewards, NPC gifts) get a short prese
 
 | Source | Presentation? | Reason |
 |---|---|---|
-| Chest (active/passive item) | Yes | Major reward |
+| Chest (SKILL or UPGRADE) | Yes | Major reward |
 | Chest (rupees, ammo) | Short (auto-dismiss ~1.5s) | Minor chest reward, still show the hold pose |
 | Boss defeat (Heart Container) | Yes | Major reward |
 | NPC gift | Yes | Story moment |
 | Ground pickup (heart, rupee, ammo) | No | Collected on overlap, SFX only |
 | Ground pickup (key, heart piece) | Yes | Significant enough to pause |
 
-For the "No" cases, the pickup scene calls `InventoryManager.add_item()` directly and `queue_free()`s itself. No state change.
+For the "No" cases, the pickup scene calls `PlayerState.acquire()` directly and `queue_free()`s itself. No presentation.
 
 For the "Yes" cases, the source emits `EventBus.item_get_requested` and the player handles the presentation. The source waits for `EventBus.item_acquired` (emitted at end of presentation) before completing its own logic (e.g., chest stays open).
 
 **Verification** (in `debug_room.tscn`):
 - Place a test chest. Open it. Game pauses, player poses with item overhead, dialog shows. Press `interact` → dialog dismisses, game resumes.
 - Place a ground rupee. Walking over it collects instantly, no pause, SFX fires.
-- The item is only added to inventory AFTER the presentation dismisses, not before.
+- The item is only applied to `PlayerState` AFTER the presentation dismisses, not before.
 
-### 3.3 Inventory Mutation
+### 3.3 PlayerState Mutation
 
-`InventoryManager.add_item(item: ItemData)` is the single entry point for all inventory changes. Called at the end of the presentation sequence (or immediately for instant pickups). It branches on `item_type`:
+`PlayerState.acquire(item: ItemData)` is the single entry point for all `PlayerState` mutations driven by item pickups. Called at the end of the presentation sequence (or immediately for instant pickups). It branches on `item_type`:
 
-**ACTIVE path:**
-1. Store in `owned_active_items: Dictionary` (id → ItemData)
-2. Instantiate the `use_script` and cache it in `item_effects: Dictionary` (id → BaseItemEffect instance)
-3. If no item is currently equipped, auto-equip this one
+**SKILL path:**
+1. Store in `owned_skills: Dictionary` (id → ItemData)
+2. Instantiate the `use_script` and cache it in `skill_effects: Dictionary` (id → BaseItemEffect instance)
+3. If no skill is currently equipped, auto-equip this one
 4. Emit `EventBus.item_acquired(item.id)`
 
-**PASSIVE path:**
-1. Apply to `passives: Dictionary` (StringName → int): `passives[item.passive_key] = max(current, item.tier)`
-2. Effect is immediate and permanent — no equipping, never appears in the item grid
+**UPGRADE path:**
+1. Apply to `upgrades: Dictionary` (StringName → int): `upgrades[item.upgrade_key] = max(current, item.tier)`
+2. Effect is immediate and permanent — no equipping, never appears in the skill grid
 3. Emit `EventBus.item_acquired(item.id)`
 
-**COLLECTIBLE path:**
-1. Add to the appropriate counter: rupees, arrows, bombs, heart pieces, etc.
-2. Heart pieces: if count reaches 4, reset to 0 and increase max health by 2 (1 full heart)
-3. Clamp to max capacity (e.g., max 999 rupees, max ammo based on upgrade tier)
-4. Emit the relevant EventBus signal (e.g., `player_rupees_changed`)
+**RESOURCE path:**
+1. Add `item.resource_amount` to the counter keyed by `item.resource_key`: rupees, arrows, bombs, heart pieces, small keys (scoped per dungeon), etc.
+2. Heart pieces: if count reaches 4, reset to 0 and increase `max_health` by 2 (1 full heart)
+3. Clamp to max capacity (e.g., max 999 rupees, max ammo based on quiver/bomb-bag upgrade tier)
+4. Emit the relevant EventBus signal (e.g., `player_rupees_changed`, `player_health_changed`)
 
-No GameManager flags are set for item ownership. `InventoryManager` is the single source of truth. Rooms/NPCs that need to check ownership call `InventoryManager.has_item()` or `InventoryManager.get_passive()` directly.
+No GameManager flags are set for skill or upgrade ownership. `PlayerState` is the single source of truth for everything on the character sheet. Rooms/NPCs that need to check skill ownership call `PlayerState.has_skill()`; to check stat tiers, `PlayerState.get_upgrade()`. Per-dungeon booleans (big key, map, compass, pendants, crystals) are `GameManager` flags instead, queried with `GameManager.get_flag(&"dungeon_02/has_big_key")` etc.
 
 ```gdscript
-# InventoryManager public methods:
+# PlayerState public methods:
 
 # Acquisition
-func add_item(item: ItemData) -> void
+func acquire(item: ItemData) -> void
 
-# Active items
-func equip_item(item_id: StringName) -> void
-func get_equipped_item() -> ItemData          # null if nothing equipped
-func get_equipped_effect() -> BaseItemEffect  # null if nothing equipped
-func has_item(item_id: StringName) -> bool
-func get_owned_active_items() -> Dictionary   # id → ItemData
+# Skills
+func equip_skill(skill_id: StringName) -> void
+func get_equipped_skill() -> ItemData           # null if nothing equipped
+func get_equipped_effect() -> BaseItemEffect    # null if nothing equipped
+func has_skill(skill_id: StringName) -> bool
+func get_owned_skills() -> Dictionary           # id → ItemData
 
-# Passive queries — the player script uses these to gate abilities
-func get_passive(key: StringName) -> int      # 0 if not owned
-func has_passive(key: StringName) -> bool     # shorthand for get_passive() > 0
+# Upgrades — the player script uses these to gate abilities
+func get_upgrade(key: StringName) -> int        # 0 if not owned
+func has_upgrade(key: StringName) -> bool       # shorthand for get_upgrade() > 0
 
-# Consumables
-func spend_rupees(amount: int) -> bool        # false if insufficient
+# Resources
+func apply_damage(amount: int) -> void          # mutates current_health, emits player_health_changed
+func heal(amount: int) -> void
+func spend_rupees(amount: int) -> bool          # false if insufficient
 func spend_ammo(kind: StringName, amount: int) -> bool
-func consume_item_cost(item: ItemData) -> bool  # deducts magic + ammo, false if can't afford
-func add_key(dungeon_id: StringName, amount: int = 1) -> void
-func use_key(dungeon_id: StringName) -> bool
+func consume_skill_cost(item: ItemData) -> bool # deducts magic + ammo, false if can't afford
+func add_small_key(dungeon_id: StringName, amount: int = 1) -> void
+func use_small_key(dungeon_id: StringName) -> bool
+
+# Bottles
+func add_bottle() -> bool                       # increments bottle_count up to 4
+func set_bottle_contents(slot: int, contents: BottleContents) -> void
+func get_bottle_contents(slot: int) -> BottleContents
 ```
 
 **Verification:**
-- **Unit test** (`test_inventory_manager.gd`): ACTIVE path — `add_item(bow)` → `has_item("bow")` true, `get_equipped_item()` returns bow when slot was empty.
-- **Unit test**: PASSIVE path — `add_item(boots)` → `get_passive("boots")` returns 1, adding it again doesn't change the tier.
-- **Unit test**: PASSIVE upgrade — `add_item(sword_t1)` → `get_passive("sword") == 1`. Then `add_item(sword_t3)` → `get_passive("sword") == 3`. Then `add_item(sword_t1)` again → still 3 (max, never downgrades).
-- **Unit test**: COLLECTIBLE — adding 4 heart pieces increases max health by 2 and resets counter to 0. Rupees cap at 999.
-- **Unit test**: `consume_item_cost()` returns false when insufficient ammo/magic, does not deduct.
+- **Unit test** (`test_player_state.gd`): SKILL path — `acquire(bow)` → `has_skill("bow")` true, `get_equipped_skill()` returns bow when slot was empty.
+- **Unit test**: UPGRADE path — `acquire(boots)` → `get_upgrade("boots")` returns 1, acquiring it again doesn't change the tier.
+- **Unit test**: UPGRADE monotonicity — `acquire(sword_t1)` → `get_upgrade("sword") == 1`. Then `acquire(sword_t3)` → `get_upgrade("sword") == 3`. Then `acquire(sword_t1)` again → still 3 (never downgrades).
+- **Unit test**: RESOURCE — acquiring 4 heart pieces increases `max_health` by 2 and resets counter to 0. Rupees cap at 999.
+- **Unit test**: `consume_skill_cost()` returns false when insufficient ammo/magic, does not deduct.
+- **Unit test**: `apply_damage(2)` at full health reduces `current_health` by 2 and emits `player_health_changed`. At `current_health == 0`, emits `player_died`.
 
 ### 3.4 Item Use System
 
-**BaseItemEffect** — lightweight script that defines what an active item does when used:
+**BaseItemEffect** — lightweight script that defines what a skill does when used:
 
 ```gdscript
 class_name BaseItemEffect extends RefCounted
@@ -1377,27 +1470,27 @@ func activate(player: Player) -> float:
     return 0.0
 ```
 
-Each active item has a script extending `BaseItemEffect`. InventoryManager instantiates it once on acquisition and caches the instance. No repeated instantiation on use.
+Each skill has a script extending `BaseItemEffect`. `PlayerState` instantiates it once on acquisition and caches the instance. No repeated instantiation on use.
 
 **ItemUseState wiring:**
 
 ```gdscript
 # scenes/player/states/item_use_state.gd
-extends PlayerState
+extends BasePlayerState
 
 var lock_timer: float = 0.0
 
 func enter() -> void:
-    var effect := InventoryManager.get_equipped_effect()
-    var item := InventoryManager.get_equipped_item()
+    var effect := PlayerState.get_equipped_effect()
+    var skill := PlayerState.get_equipped_skill()
 
-    if effect == null or item == null or not effect.can_use(actor):
+    if effect == null or skill == null or not effect.can_use(actor):
         state_machine.transition_to("idle")
         return
 
-    InventoryManager.consume_item_cost(item)
+    PlayerState.consume_skill_cost(skill)
     lock_timer = effect.activate(actor)
-    AudioManager.play_sfx(item.id)  # e.g., "bow", "bomb"
+    AudioManager.play_sfx(skill.id)  # e.g., "bow", "bomb"
 
 func physics_update(delta: float) -> void:
     lock_timer -= delta
@@ -1429,9 +1522,9 @@ The spawned things (Arrow, Bomb, Hookshot chain) are full scenes in `scenes/item
 - Equip bomb → places bomb at player position, bomb explodes after 2.5s dealing damage.
 - `ItemUseState` returns to idle after `lock_duration` expires even if the effect did nothing.
 
-### 3.5 Active Items
+### 3.5 Skills
 
-| Item | Ammo | Magic | Notes |
+| Skill | Ammo | Magic | Notes |
 |---|---|---|---|
 | Bow | 1 arrow | 0 | |
 | Bomb | 1 bomb | 0 | 2.5s fuse, Area2D explosion, screen shake |
@@ -1443,23 +1536,23 @@ The spawned things (Arrow, Bomb, Hookshot chain) are full scenes in `scenes/item
 | Ice Rod | 0 | 8 | Ranged ice projectile, freezes enemies |
 | Hammer | 0 | 0 | Pounds pegs, flips enemies, short range |
 
-**Verification** (in `inventory_test.tscn` or `debug_room.tscn`):
-- At least 4 active items are individually equippable and usable end-to-end: bow, bomb, boomerang, hookshot.
-- Each active item visibly does its thing: arrow flies, bomb explodes, boomerang returns, hookshot extends and retracts.
+**Verification** (in `skills_test.tscn` or `debug_room.tscn`):
+- At least 4 skills are individually equippable and usable end-to-end: bow, bomb, boomerang, hookshot.
+- Each skill visibly does its thing: arrow flies, bomb explodes, boomerang returns, hookshot extends and retracts.
 - Magic costs are deducted correctly (test Lamp: uses 4 magic, cannot use at 3).
 
-### 3.6 Passive Upgrades
+### 3.6 Upgrades
 
-All passives are stored in `InventoryManager.passives: Dictionary` as `{StringName: int}`. Boolean passives use 0 (don't have) / 1 (have). Tiered passives use their tier number. Acquiring a passive calls `passives[key] = max(current, new_tier)` — upgrades only go up.
+All upgrades are stored in `PlayerState.upgrades: Dictionary` as `{StringName: int}`. Boolean upgrades use 0 (don't have) / 1 (have). Tiered upgrades use their tier number. Acquiring an upgrade calls `upgrades[key] = max(current, new_tier)` — tiers only go up.
 
-| `passive_key` | Tiers | Effect | Where it's checked |
+| `upgrade_key` | Tiers | Effect | Where it's checked |
 |---|---|---|---|
 | `"sword"` | 1–4 | Damage increase, stronger slash visuals | `AttackState` reads tier for damage + arc width |
 | `"armor"` | 1–3 | Damage reduction (see Damage Formula) | `player._on_hurtbox_hurt()` reads tier for reduction calc |
 | `"shield"` | 1–3 | Blocks more projectile classes | `ShieldComponent` reads tier to decide block/deflect/reflect |
 | `"gloves"` | 1–2 | Lift light (1) or heavy (2) objects | `LiftState.enter()` checks tier vs object weight |
-| `"flippers"` | 0–1 | Swim in water instead of taking damage | Water tile handler checks `has_passive("flippers")` |
-| `"boots"` | 0–1 | Enables dash | `IdleState`/`WalkState` check `has_passive("boots")` before allowing transition to `DashState` |
+| `"flippers"` | 0–1 | Swim in water instead of taking damage | Water tile handler checks `has_upgrade("flippers")` |
+| `"boots"` | 0–1 | Enables dash | `IdleState`/`WalkState` check `has_upgrade("boots")` before allowing transition to `DashState` |
 | `"moon_pearl"` | 0–1 | Prevents Dark World transformation | `SceneManager` checks on world switch |
 
 Sword beam rule:
@@ -1505,36 +1598,36 @@ Implementation note:
 - Tier 3 Mirror Shield: projectile reflects back at source and can damage the shooter.
 - Holding `action_shield` widens the block arc (visible facing-lock + speed reduction).
 
-### 3.8 Inventory Screen
+### 3.8 Pause Subscreen
 
-Pause-driven full-screen overlay:
+The subscreen is the pause-driven full-screen overlay that displays `PlayerState`. It is **not** an inventory management UI — ALTTP has no inventory management. It is a read-only character sheet plus a single point of interaction: picking which skill to equip to the B button.
 
 - `get_tree().paused = true`
-- Inventory UI nodes use `process_mode = ALWAYS`
+- Subscreen UI nodes use `process_mode = ALWAYS`
 
 Layout:
 
-- Top: one equipped active item slot and a selectable grid of owned active items
-- Middle: passive gear display for sword, armor, shield, gloves
-- Bottom: collectible status such as heart pieces and dungeon collectibles
+- Top: one equipped skill slot and a selectable grid of owned skills
+- Middle: upgrade gear display for sword, armor, shield, gloves
+- Bottom: resource status such as heart pieces, bottles, and dungeon map/compass/keys for the current dungeon
 - Cursor: yellow outline rectangle
 - Item icons: generated from `icon_shape` and `icon_color`
 
 **Verification:**
-- Press `pause` → inventory opens, game pauses (`get_tree().paused = true`). Press again → closes, resumes.
-- Cursor moves with d-pad/arrows. Selecting an item equips it.
-- Passive items show their tier in the gear display (e.g., sword tier 2 highlights 2 pips).
+- Press `pause` → subscreen opens, game pauses (`get_tree().paused = true`). Press again → closes, resumes.
+- Cursor moves with d-pad/arrows. Selecting a skill equips it.
+- Upgrades show their tier in the gear display (e.g., sword tier 2 highlights 2 pips).
 - Heart piece count is visible (e.g., `2/4`).
 
 ### 3.9 Phase 3 Deliverable
 
 Acceptance criteria:
 
-1. The player can pause, equip an active item from the inventory grid, and use it in gameplay.
-2. At least four active items are functional via `BaseItemEffect` scripts.
-3. Ammo and magic consumption are enforced through `InventoryManager.consume_item_cost()`.
-4. Acquiring a passive item (e.g., Pegasus Boots) immediately enables the corresponding ability (e.g., dash) without manual equipping.
-5. `InventoryManager.get_passive()` correctly gates player states (dash, swim, lift).
+1. The player can pause, equip a skill from the skill grid, and use it in gameplay.
+2. At least four skills are functional via `BaseItemEffect` scripts.
+3. Ammo and magic consumption are enforced through `PlayerState.consume_skill_cost()`.
+4. Acquiring an upgrade (e.g., Pegasus Boots) immediately enables the corresponding ability (e.g., dash) without manual equipping.
+5. `PlayerState.get_upgrade()` correctly gates player states (dash, swim, lift).
 6. Shield tiers visibly affect projectile blocking behavior.
 
 ---
@@ -1920,7 +2013,7 @@ The HUD is built in Phase 1 (section 1.8) and extended in Phases 3–4. Phase 6 
 **Verification:**
 - Take damage — lost heart visibly flashes white before becoming empty.
 - Collect 10 rupees — counter ticks up digit by digit, not instantly.
-- Switch items via inventory — equipped item slot flashes briefly.
+- Switch skills via subscreen — equipped skill slot flashes briefly.
 - HUD remains readable over the brightest and darkest rooms in the game.
 
 ### 6.2 Dialog System
@@ -2282,15 +2375,18 @@ Enemy hitbox overlaps player hurtbox
   -> HurtboxComponent emits hurt(hit_data)
   -> Player receives hit_data
   -> Armor and shield rules modify or reject hit
-  -> HealthComponent.take_damage(final_damage)
-  -> EventBus.player_health_changed(current, max)
+  -> PlayerState.apply_damage(final_damage)
+       -> mutates PlayerState.current_health
+       -> emits EventBus.player_health_changed(current, max)
+       -> if current_health <= 0, emits EventBus.player_died
   -> FlashComponent.flash()
   -> KnockbackComponent.apply(direction, force)
   -> StateMachine.transition_to("knockback")
   -> AudioManager.play_sfx("player_hurt")
   -> EventBus.screen_shake_requested(intensity, duration)
-  -> If health <= 0, EventBus.player_died()
 ```
+
+Note: the player does **not** have a `HealthComponent` node. Its health state lives on the `PlayerState` autoload so it survives room transitions and is serialized by `SaveManager` without a node-lifecycle dependency. Enemies do have a `HealthComponent` child because they are transient — spawned per room, freed on death, with no persistence. The hurt handler is polymorphic: the player's handler calls `PlayerState.apply_damage()`, while `BaseEnemy._on_hurtbox_hurt()` calls its child `HealthComponent.take_damage()`.
 
 ### Base State Class
 
@@ -2313,7 +2409,7 @@ func physics_update(_delta: float) -> void:
     pass
 ```
 
-Player states extend `PlayerState` (types `actor` as `Player`). Enemy states extend `EnemyState` (types `actor` as `BaseEnemy`). Each enemy type has its own state scripts — only `StunnedState` is shared across enemies. Boss states extend `State` directly since bosses use `BaseBoss` (Node2D), not `BaseEnemy` (CharacterBody2D).
+Player states extend `BasePlayerState` (types `actor` as `Player`). Enemy states extend `BaseEnemyState` (types `actor` as `BaseEnemy`). Each enemy type has its own state scripts — only `StunnedState` is shared across enemies. Boss states extend `State` directly since bosses use `BaseBoss` (Node2D), not `BaseEnemy` (CharacterBody2D). `BasePlayerState` / `BaseEnemyState` are thin subclasses of `State` that exist only to give `actor` a typed reference — they are distinct from the `PlayerState` autoload (which holds the player character sheet).
 
 ### State Machine Pattern
 
@@ -2361,14 +2457,14 @@ func transition_to(state_name: StringName) -> void:
 
 ### Item Resource Examples
 
-Active item (Bow):
+Skill (Bow):
 ```gdscript
 [gd_resource type="Resource" script_class="ItemData"]
 
 [resource]
 id = &"bow"
 display_name = "Bow"
-item_type = 0  # ACTIVE
+item_type = 0  # SKILL
 icon_color = Color(0.6, 0.4, 0.2, 1.0)
 magic_cost = 0
 ammo_type = &"arrows"
@@ -2376,30 +2472,30 @@ ammo_cost = 1
 use_script = preload("res://scenes/items/effects/bow_effect.gd")
 ```
 
-Passive item (Pegasus Boots):
+Upgrade (Pegasus Boots):
 ```gdscript
 [gd_resource type="Resource" script_class="ItemData"]
 
 [resource]
 id = &"pegasus_boots"
 display_name = "Pegasus Boots"
-item_type = 1  # PASSIVE
+item_type = 1  # UPGRADE
 icon_color = Color(0.6, 0.3, 0.1, 1.0)
-passive_key = &"boots"
+upgrade_key = &"boots"
 tier = 1
 ```
 
-Collectible (Blue Rupee):
+Resource (Blue Rupee):
 ```gdscript
 [gd_resource type="Resource" script_class="ItemData"]
 
 [resource]
 id = &"rupee_blue"
 display_name = "Blue Rupee"
-item_type = 2  # COLLECTIBLE
+item_type = 2  # RESOURCE
 icon_color = Color(0.2, 0.3, 0.9, 1.0)
-collect_key = &"rupees"
-collect_amount = 5
+resource_key = &"rupees"
+resource_amount = 5
 ```
 
 ### Collision Masks
@@ -2424,9 +2520,9 @@ collect_amount = 5
 
 | Phase | Milestone | Key Systems |
 |---|---|---|
-| 1 | Link Walks Around a Room | Movement, room loading, player, HUD (hearts, rupees, item slot), autoloads |
+| 1 | Link Walks Around a Room | Movement, room loading, player, HUD (hearts, rupees, skill slot), autoloads |
 | 2 | Link Fights Enemies | Combat components, enemy archetypes, drops, save/load |
-| 3 | Link Has Equipment | Inventory, active items, passive upgrades |
+| 3 | Link Has Equipment | Skills, upgrades, resources, subscreen |
 | 4 | Explorable Overworld | Screen transitions, dungeon structure, world switching |
 | 5 | First Dungeon Complete | Boss architecture, full dungeon completion loop |
 | 6 | Feels Like a Game | HUD polish, dialog, shader/particle polish pass, title screen |
