@@ -31,7 +31,7 @@ Editor path: `d:\Godot_v4.6.2-stable_win64.exe`
 Every subphase in SPEC.md has a **Verification** block with concrete checks. A subphase is not done until its Verification passes — the end-of-phase deliverable is not the only gate.
 
 Three verification types:
-1. **Unit tests** — GUT framework (`res://tests/unit/`) for pure logic: damage formula, inventory operations, loot tables, save serialization.
+1. **Unit tests** — GUT framework (`res://tests/unit/`) for pure logic: damage formula, `PlayerState` acquisition (`acquire()` branches for SKILL / UPGRADE / RESOURCE), loot tables, save serialization.
 2. **Debug scene checks** — load `debug/debug_room.tscn` or a dedicated `tests/scenes/*.tscn` and verify behavior manually against the Verification checklist.
 3. **Headless smoke checks** — `godot --path . --headless --quit` after any change.
 
@@ -50,17 +50,21 @@ Main (Node)
   └── PauseLayer (CanvasLayer 25, process_mode=ALWAYS)
 ```
 
-**Autoload order matters:** EventBus → GameManager → InventoryManager → AudioManager → SceneManager → SaveManager → Cutscene (Phase 5+)
+**Autoload order matters:** EventBus → GameManager → ItemRegistry → PlayerState → AudioManager → SceneManager → SaveManager → Cutscene (Phase 6+)
+
+`ItemRegistry` scans `res://resources/items/*.tres` at `_ready()` and builds a `Dictionary[StringName, ItemData]` keyed by each item's `id` field. It must register before `PlayerState` because `PlayerState.deserialize()` calls `ItemRegistry.get(id)` to rehydrate `owned_skills` from save files (only the id string is serialized, not the full `ItemData`).
 
 **Player is persistent** — created once per run, reparented into each room's `Entities` node during transitions. Never duplicated or recreated.
 
-**State machines** are generic (`components/state_machine.gd`). Player, enemies, and bosses all use the same StateMachine node with type-specific State subclasses. States are per-entity-type (not shared across enemy types, except StunnedState).
+**State machines** are generic (`components/state_machine.gd`). Player, enemies, and bosses all use the same StateMachine node with type-specific State subclasses. States are per-entity-type (not shared across enemy types, except StunnedState). Player states extend `BasePlayerState` (types `actor` as `Player`); enemy states extend `BaseEnemyState`. **Watch the naming collision**: `BasePlayerState` is the state-machine base class, `PlayerState` is the autoload holding the character sheet (health, skills, upgrades, resources). They are unrelated — do not conflate.
 
 **Enemies use composition, not scene inheritance.** There is no `base_enemy.tscn`. Each enemy is a standalone scene using `base_enemy.gd` as its script base class, including only the components it needs.
 
 **Bosses are NOT enemies.** `base_boss.gd` extends `Node2D` (not `CharacterBody2D`). Each boss is a bespoke scene with its own state machine and sub-entities.
 
-**Item effects** use `BaseItemEffect` (RefCounted) scripts cached by InventoryManager. `ItemUseState` calls `effect.activate(player)` which spawns scenes (arrows, bombs, etc.) and returns a lock duration.
+**Items are not an inventory.** ALTTP has no slot capacity, trading, stacking, or storage. Everything the player can acquire falls into exactly one of three categories: **SKILL** (permanent ability unlock, equippable to the B button — Bow, Hookshot, Lamp, bombs-as-usable…), **UPGRADE** (monotonic stat tier — sword 1–4, armor 1–3, gloves 0–2, boots, flippers, moon_pearl, magic_halver), or **RESOURCE** (countable consumable — rupees, arrows, bombs-as-ammo, hearts, small keys, heart pieces, magic). `PlayerState.acquire(item)` is the single entry point; it branches on `item.item_type`. Only SKILL items live on as `ItemData` references (in `owned_skills`); UPGRADE and RESOURCE items are consumed at acquisition and only their effect is retained. Do not reach for RPG inventory metaphors when implementing new item-like features.
+
+**Item effects** use `BaseItemEffect` (RefCounted) scripts cached by `PlayerState`. `ItemUseState` calls `effect.activate(player)` which spawns scenes (arrows, bombs, etc.) and returns a lock duration.
 
 **Persistence** uses `@export var persist_id: StringName` on entities and `@export var room_id: StringName` on rooms. Flag keys: `{room_id}/{persist_id}`. Never derive IDs from node names or scene paths.
 

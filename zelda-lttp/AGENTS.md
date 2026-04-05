@@ -40,12 +40,16 @@ Follow these conventions from the spec unless the user asks to change them:
 
 - The player is a persistent scene instance created once per run and reparented into each room's `Entities` node during transitions.
 - The sword is always available.
-- There is one active item slot, not two.
+- There is one equipped skill slot on the action button, not two active item slots.
 - Every room script must expose `@export var room_id: StringName`.
 - Persistent objects must expose `@export var persist_id: StringName`.
 - Persistence keys are built as `{room_id}/{persist_id}`.
 - Persistent entities should warn in `_get_configuration_warnings()` when `persist_id` is empty.
 - Save data must include a schema version.
+- Character-sheet state belongs on the `PlayerState` autoload.
+- World/story/per-dungeon boolean progression belongs in `GameManager` flags.
+- Item lookup by stable id belongs through `ItemRegistry`; do not hardcode `.tres` paths in gameplay code.
+- The player does not use a `HealthComponent`; enemy actors do.
 - New systems should fit the spec's directory structure unless there is a strong, documented reason not to.
 
 ## Phase-Oriented Development
@@ -53,10 +57,14 @@ Follow these conventions from the spec unless the user asks to change them:
 Build toward the milestone flow in `SPEC.md`:
 
 1. Phase 1: movement, room loading, player, HUD, autoload foundations
-2. Phase 2: combat, enemies, drops, save/load
-3. Phase 3: inventory, active items, passive upgrades
+2. Phase 2: combat, enemies, drops
+3. Phase 3: skills, upgrades, resources, subscreen
 4. Phase 4: overworld, transitions, dungeon structure, world switching
-5. Phase 5+: bosses, polish, expanded content, advanced mechanics
+5. Phase 5: first dungeon playthrough via reward pedestal placeholder
+6. Phase 6: HUD polish, dialog, cutscenes, title screen, save/load, effects pass
+7. Phase 7: expanded content, additional dungeons, NPCs, baseline lifting/destructibles
+8. Phase 8: glove upgrades, game over, advanced enemies, audio coverage
+9. Phase 9: bosses and boss retrofit into earlier dungeons
 
 If the user asks for a new feature and the repo does not yet support its prerequisite phase, either:
 
@@ -70,6 +78,7 @@ If the user asks for a new feature and the repo does not yet support its prerequ
 - Prefer typed GDScript where practical.
 - Keep scenes and scripts paired and organized by feature domain as described in `SPEC.md`.
 - Reuse shared components for health, hurtboxes, hitboxes, flashing, knockback, loot drops, and state machines instead of duplicating logic.
+- Use the current spec terminology consistently: `skills`, `upgrades`, and `resources`, not an RPG-style inventory model.
 - Enemy behavior is per-enemy-state driven; do not collapse all enemies into a single generic AI script.
 - Bosses are bespoke scenes that may share `base_boss.gd`, but they are not just regular enemies with more HP.
 
@@ -89,6 +98,7 @@ When creating content with save-state implications:
 - Always set stable exported IDs instead of deriving them from filenames or node names at runtime.
 - Avoid renaming persistent IDs casually; that can invalidate saves.
 - Treat room IDs, dungeon IDs, item IDs, and resource IDs as migration-sensitive.
+- Treat `PlayerState` serialization shape and `GameManager` flag keys as migration-sensitive as well.
 - If you must change save-relevant structure, update the schema version and note the migration impact.
 
 ## Implementation Style

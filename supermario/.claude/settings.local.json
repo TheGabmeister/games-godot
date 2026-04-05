@@ -13,7 +13,10 @@
       "Bash(/d/Godot_v4.6.2-stable_win64.exe --path /c/dev/games-godot/supermario --headless --quit)",
       "Bash(/d/Godot_v4.6.2-stable_win64.exe --path /c/dev/games-godot/supermario)",
       "Bash(kill %1)",
-      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --headless --path . --quit)"
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --headless --path . --quit)",
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --headless --path . -s _test_ready_timing.gd)",
+      "Bash(ls \"c:/dev/games-godot/supermario/_test_ready_timing\"*)",
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --headless --path . _test_ready_timing.tscn)"
     ]
   }
 }

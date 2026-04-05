@@ -808,6 +808,14 @@ func spend_ammo(kind: StringName, amount: int) -> bool
 func consume_skill_cost(item: ItemData) -> bool  # deducts magic + ammo, false if can't afford
 
 # Dungeon small keys (consumable, scoped per dungeon)
+# Keys are scoped by dungeon_id at usage time but persist across leaving/re-entering
+# the dungeon — `dungeon_small_keys` is part of PlayerState, so counts survive room
+# transitions, overworld trips, and save/load. Unused keys remain in the dictionary
+# indefinitely, including after the dungeon is completed; they are simply unreachable
+# once every LockedDoor in that dungeon is open, which matches canonical ALTTP behavior.
+# Use-site enforcement: `use_small_key(dungeon_id)` only decrements the slot matching
+# the argument — it never falls back to another dungeon's pool, so a Dungeon 1 key
+# cannot be spent on a Dungeon 2 door even though both counts live in the same dict.
 func add_small_key(dungeon_id: StringName, amount: int = 1) -> void
 func use_small_key(dungeon_id: StringName) -> bool
 
@@ -980,6 +988,11 @@ Persistence:
 - Each persistent entity has an `@export var persist_id: StringName` (set in editor, never auto-generated from node name). On `_ready()`, the entity builds its flag key as `{room.room_id}/{persist_id}` and checks `GameManager.get_flag()` to restore its solved/opened/defeated state. On state change (chest opened, block pushed, boss killed), it calls `GameManager.set_flag()` with the same key.
 - If `persist_id` is empty, the entity is treated as non-persistent (no save/restore). This is intentional for optional elements like resettable switches.
 - `room_id` and `persist_id` are both `@export` fields set by hand in the editor. This avoids any dependency on node names, scene paths, or tree structure — renaming or reparenting nodes does not break save data.
+
+Dungeon scoping:
+
+- Every `Room` script also exposes `@export var dungeon_id: StringName`. For rooms inside a dungeon, this matches the owning `DungeonData.dungeon_id` (e.g., `&"dungeon_01"`). For overworld, interior, and cave rooms, the field is left empty (`&""`).
+- Entities that need dungeon context — `LockedDoor`, `BossDoor`, anything that reads `PlayerState.dungeon_small_keys` or per-dungeon `GameManager` flags — read `dungeon_id` from their containing `Room` at `_ready()` time rather than declaring their own. This prevents a door from drifting out of sync with the dungeon it's placed in (e.g., a Dungeon 1 door copy-pasted into Dungeon 2 would automatically pick up the right dungeon_id from its new parent room).
 
 **Verification** (in `debug_room.tscn`):
 - Walls block movement, floor is walkable, water/pit tiles trigger expected behavior (damage/fall).
@@ -1696,7 +1709,6 @@ class_name DungeonData extends Resource
 @export var rooms: Dictionary
 @export var starting_room: Vector2i
 @export var boss_room: Vector2i
-@export var small_key_count: int
 @export var boss_id: StringName
 ```
 
@@ -1704,11 +1716,12 @@ Notes:
 
 - Dictionary keys can be `Vector2i` in memory, but save serialization should convert them to strings such as `"2,1"`
 - Dungeon rooms use fade transitions rather than side-scroll transitions
+- `DungeonData` does **not** track key counts. Small-key counts are runtime state on `PlayerState.dungeon_small_keys` (see section 1.3), and the number of keys physically placed in chests/drops is a level-design concern expressed by the chest placements themselves — the dungeon resource does not need a separate budget field.
 
 Dungeon elements:
 
-- `LockedDoor`: consumes one small key
-- `BossDoor`: requires big key
+- `LockedDoor`: consumes one small key scoped to its containing room's `dungeon_id`
+- `BossDoor`: requires the big key scoped to its containing room's `dungeon_id`
 - `Chest`: opens once and persists
 - `PushBlock`: pushes one tile and persists if puzzle design needs it
 - `Switch`: toggles linked elements
@@ -1716,8 +1729,14 @@ Dungeon elements:
 - `Pit`: fall hazard or floor-drop trigger
 - `ConveyorBelt`: continuous directional push
 
+**LockedDoor** reads `dungeon_id` from its containing `Room` at `_ready()` (see section 1.7 dungeon scoping note). On interact, it calls `PlayerState.use_small_key(dungeon_id)`; if that returns `true` it opens and sets its persist flag. A door in a Dungeon 1 room will always call `use_small_key(&"dungeon_01")`, even if the scene is copy-pasted into a Dungeon 2 room (the `dungeon_id` is re-inherited from the new parent at `_ready()`).
+
+**BossDoor** likewise reads `dungeon_id` from its containing `Room` and checks `GameManager.get_flag("%s/has_big_key" % dungeon_id)`. Big keys are per-dungeon `GameManager` flags (see section 1.3), not a resource on `PlayerState` — BossDoor does not consume the flag, it just gates on it.
+
 **Verification** (in a test dungeon with 2+ rooms):
 - LockedDoor: walking into it without a key does nothing. With a key, consumes 1 and opens. The door stays open on room re-entry (persistent).
+- **Cross-dungeon key scoping**: set `PlayerState.dungeon_small_keys = {"dungeon_01": 5, "dungeon_02": 0}` via a debug command, then attempt to open a LockedDoor in a room whose `dungeon_id = &"dungeon_02"`. The door does not open despite the 5 Dungeon 1 keys — `use_small_key(&"dungeon_02")` returns `false` and the Dungeon 1 pool is not consulted or decremented. Verify `PlayerState.dungeon_small_keys` is unchanged afterward.
+- **LockedDoor reparenting**: copy a working LockedDoor scene from a Dungeon 1 room into a Dungeon 2 room. Without editing the door, open the project: the door now correctly consumes Dungeon 2 keys because `dungeon_id` is inherited from the new parent room at `_ready()`.
 - PushBlock: player pushes block one tile in facing direction. Block position persists via `GameManager` flag.
 - Switch: sword hit toggles it, linked door opens/closes accordingly. Persists across room transitions.
 - PressurePlate: weight from player or block activates it; weight removed deactivates (unless sticky variant).
