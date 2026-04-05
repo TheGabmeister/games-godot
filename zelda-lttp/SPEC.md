@@ -897,7 +897,7 @@ Later states:
 - `ItemUseState` after skills exist
 - `ItemGetState` for item acquisition presentation (see section 3.2)
 - `SwimState` after Flippers
-- `LiftState`, `CarryState`, and `ThrowState` after gloves
+- `LiftState`, `CarryState`, and `ThrowState` land in Phase 7 with destructibles (section 7.4). Baseline capability covers light objects (pots, signs, small bushes) bare-handed. The `gloves` upgrade in Phase 8 extends the weight cap but does not introduce the states — lifting is not gated on owning gloves.
 
 Input buffering:
 
@@ -1535,7 +1535,7 @@ All upgrades are stored in `PlayerState.upgrades: Dictionary` as `{StringName: i
 | `"sword"` | 1–4 | Damage increase, stronger slash visuals | `AttackState` reads tier for damage + arc width |
 | `"armor"` | 1–3 | Damage reduction (see Damage Formula) | `player._on_hurtbox_hurt()` reads tier for reduction calc |
 | `"shield"` | 1–3 | Blocks more projectile classes | `ShieldComponent` reads tier to decide block/deflect/reflect |
-| `"gloves"` | 1–2 | Lift light (1) or heavy (2) objects | `LiftState.enter()` checks tier vs object weight |
+| `"gloves"` | 0–2 | Extends the lift weight cap above baseline. 0 = bare hands (light only: pots, signs, small bushes). 1 = Power Glove (adds medium: skull rocks). 2 = Titan's Mitt (adds heavy: dark boulders). | `LiftState.enter()` checks `object.weight <= get_upgrade("gloves")` |
 | `"flippers"` | 0–1 | Swim in water instead of taking damage | Water tile handler checks `has_upgrade("flippers")` |
 | `"boots"` | 0–1 | Enables dash | `IdleState`/`WalkState` check `has_upgrade("boots")` before allowing transition to `DashState` |
 | `"moon_pearl"` | 0–1 | Prevents Dark World transformation | `SceneManager` checks on world switch |
@@ -2187,24 +2187,41 @@ NPC scene expectations:
 - NPC with a `required_flag` is invisible until the flag is set (set via debug hotkey, NPC appears).
 - Wandering NPC variant moves randomly within its assigned area.
 
-### 7.4 Destructible Objects
+### 7.4 Destructible Objects and Baseline Lifting
 
-Objects:
+Phase 7 introduces the destructibles the player can interact with in the overworld and dungeons, along with the baseline lift/carry/throw system that lets Link pick up light objects bare-handed — matching ALTTP, where pots, signs, and small bushes are liftable from the start of the game. The `gloves` upgrade (Phase 8.2) extends the weight cap but is **not** required for any of the baseline behavior below.
 
-- Bushes
-- Pots
-- Skulls
+**Object weight categories:**
 
-Behaviors:
+Each destructible/liftable declares an `@export var weight: int` matching the `gloves` upgrade tier required to lift it:
 
-- Destroyable by sword, dash, or throw depending on object type
-- Can spawn loot
-- Lift and throw once gloves are available
+| Weight | Examples | Required `gloves` tier |
+|---|---|---|
+| 0 (LIGHT) | Pots, signs, small bushes, skulls (small) | 0 — bare hands |
+| 1 (MEDIUM) | Skull rocks, light grey stones | 1 — Power Glove |
+| 2 (HEAVY) | Dark boulders, large statues | 2 — Titan's Mitt |
+
+Phase 7 ships weight-0 objects only. Weight-1 and weight-2 objects can be authored in Phase 7 but will be un-liftable until Phase 8.2 grants gloves; design-wise, place them as future-gated obstacles.
+
+**Baseline lift/carry/throw flow** (`LiftState` → `CarryState` → `ThrowState`):
+
+1. `interact` on a weight-0 object in front of the player triggers `LiftState` — brief lift animation, object tweens from its position to above the player's head.
+2. `CarryState` — player moves at reduced speed with the object above their head. Sword is disabled while carrying. Walking over a pit or entering a transition drops the carried object.
+3. `ThrowState` — triggered by `action_sword` or `action_item` while carrying. Object becomes a simple projectile in `player.facing_direction`, shatters on wall/enemy contact, spawns loot per its `LootTable`.
+
+Per-object behaviors:
+
+- **Bush**: destroyable by sword, dash (Pegasus Boots), or throw. Also liftable (weight 0) if the player walks up to it and presses `interact` instead of slashing. Spawns loot from its table.
+- **Pot**: liftable (weight 0), not sword-destroyable. Shatters on throw impact or when dropped from a height.
+- **Skull**: liftable (weight 0), throw-destroyable, can be used to weigh down pressure plates.
+- **Sign**: liftable (weight 0), shatters on throw. Displays its `dialog_lines` when examined before lifting.
 
 **Verification:**
 - Sword destroys bush → particles fire, loot drops per table.
-- Dash destroys bush (pegasus boots).
-- Pot shatters on throw impact (requires gloves from Phase 8).
+- Dash destroys bush (Pegasus Boots).
+- `interact` on a pot with no gloves: pot lifts, drawn above player head, player enters `CarryState`. Throw shatters the pot on impact and spawns loot.
+- `interact` on a weight-1 skull rock with no gloves: nothing happens (log or subtle "can't lift" cue). With Power Glove (Phase 8.2): lifts successfully.
+- Entering a room transition or pit while carrying: object is dropped.
 - Destructibles do not respawn on room re-entry if they have a `persist_id`.
 
 ### 7.5 Expanded Overworld
@@ -2258,25 +2275,30 @@ Without Flippers:
 - With flippers (add via debug): player enters water, speed reduced, ripple particles spawn.
 - Exit water back to dry land restores normal movement speed.
 
-### 8.2 Lifting and Throwing
+### 8.2 Glove Upgrades (Power Glove and Titan's Mitt)
 
-With gloves:
+The baseline lift/carry/throw system was introduced in Phase 7.4. Bare-handed, Link can already lift weight-0 objects (pots, signs, small bushes, skulls). Phase 8.2 adds the two `gloves` upgrade tiers that extend the weight cap to previously un-liftable objects in the world.
 
-- `interact` lifts a valid object in front of the player
-- Object attaches above player while carried
-- Sword use is disabled while carrying unless deliberately changed later
-- Throw launches object as a simple projectile
+**Tier rules:**
 
-Tier rules:
+- `gloves` tier 0 (baseline, no item): weight 0 only — pots, signs, small bushes, skulls. Already working from Phase 7.
+- `gloves` tier 1 (Power Glove): adds weight 1 — skull rocks, light grey stones.
+- `gloves` tier 2 (Titan's Mitt): adds weight 2 — dark boulders, large statues.
 
-- Power Glove lifts light objects
-- Titan's Mitt lifts heavy objects
+`LiftState.enter()` checks `object.weight <= PlayerState.get_upgrade("gloves")`. If the check fails, the state machine bounces back to Idle and plays a "can't lift" cue (subtle grunt SFX + brief shake). This is a soft fail, not a hard block.
+
+**Authoring conventions:**
+
+- Weight-1 and weight-2 obstacles authored in Phase 7 become traversable in Phase 8.2 automatically — no scene edits needed, just the `gloves` upgrade acquisition.
+- Do not write special-case code in the player state machine for "after gloves" — all checks go through `get_upgrade("gloves")` against `object.weight`.
 
 **Verification:**
-- Without gloves: `interact` on a pot does nothing.
-- With Power Glove: pot lifts, drawn above player head, player enters CarryState.
-- Throwing with `action_sword` or `action_item` launches the pot as a projectile that shatters on wall/enemy contact.
-- With only Power Glove, heavy rocks cannot be lifted. Titan's Mitt enables lifting them.
+- Without gloves: `interact` on a pot (weight 0) lifts it successfully (Phase 7 behavior still works).
+- Without gloves: `interact` on a skull rock (weight 1) fails with a "can't lift" cue — nothing lifts.
+- After acquiring Power Glove via `PlayerState.acquire(power_glove_item)`: `interact` on the same skull rock now lifts it. Throwing launches it and destroys it on impact.
+- With only Power Glove: `interact` on a dark boulder (weight 2) still fails.
+- After acquiring Titan's Mitt: dark boulder lifts successfully.
+- `PlayerState.get_upgrade("gloves")` returns 2 after Titan's Mitt is acquired; re-acquiring Power Glove leaves it at 2 (monotonic upgrade rule from section 3.3).
 
 ### 8.3 Magic System
 
