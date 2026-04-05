@@ -62,6 +62,7 @@ res://
 |-- autoloads/
 |   |-- event_bus.gd
 |   |-- game_manager.gd
+|   |-- item_registry.gd           # Scans res://resources/items/ at boot, maps id → ItemData
 |   |-- player_state.gd            # The PlayerState autoload (character sheet)
 |   |-- audio_manager.gd
 |   |-- scene_manager.gd
@@ -568,11 +569,12 @@ Autoload registration order:
 
 1. `EventBus`
 2. `GameManager`
-3. `PlayerState`
-4. `AudioManager`
-5. `SceneManager`
-6. `SaveManager`
-7. `Cutscene` (added in Phase 6, see section 6.3)
+3. `ItemRegistry` — must register before `PlayerState` so that `PlayerState.deserialize()` can resolve item ids during save loads
+4. `PlayerState`
+5. `AudioManager`
+6. `SceneManager`
+7. `SaveManager`
+8. `Cutscene` (added in Phase 6, see section 6.3)
 
 **Verification:**
 - Headless smoke check passes (`godot --path . --headless --quit`) — confirms project loads, all autoloads register in order, no parser errors.
@@ -698,6 +700,35 @@ Behavior:
 - If the requested file exists in `res://audio/bgm` or `res://audio/sfx`, play it
 - Otherwise log a tagged placeholder message
 - Gameplay code must never branch based on whether a real asset exists
+
+**ItemRegistry**
+
+A read-only lookup that maps a stable item id (`StringName`) to its `ItemData` Resource. The registry exists so that save files can reference items by id (a small, stable string) rather than embedding the full `ItemData` — see section 3.1 and section 6.6.
+
+Behavior:
+
+- On `_ready()`, scans `res://resources/items/` recursively, loading every `.tres` file as an `ItemData`
+- For each loaded `ItemData`, registers it under its `id` field in an internal `Dictionary[StringName, ItemData]`
+- If two items share an id, logs an error and keeps the first one loaded (ids must be globally unique)
+- If an `.tres` file in that directory fails to load as `ItemData` (wrong script class, broken reference), logs a warning and skips it
+- Scan runs once at boot and is not repeated at runtime — adding a new item requires an editor reload, which is fine because item authoring is a content-build step, not a gameplay action
+
+Public methods:
+
+```gdscript
+func get(id: StringName) -> ItemData         # null if id not registered
+func has(id: StringName) -> bool
+func all_ids() -> Array[StringName]          # for debug commands like "give every item"
+func all_items() -> Array[ItemData]
+```
+
+Why autoload and not a static class: the scan must run at game boot (needs `_ready()`), the result must live for the full session (not rebuilt per query), and many systems call into it (`PlayerState.deserialize()`, chests, NPCs, debug commands, the 6.5 title screen's save slot preview). An autoload gives all of that for free.
+
+**Verification:**
+- Placing a `.tres` under `res://resources/items/` with `id = &"test_item"` makes `ItemRegistry.get(&"test_item")` return the loaded `ItemData` after a project reload.
+- `ItemRegistry.get(&"nonexistent")` returns `null` and does not crash.
+- Two `.tres` files with the same `id` produce a logged error on boot, and only the first is retained.
+- `ItemRegistry.all_ids()` returns every registered id — useful for the "give every item" debug command.
 
 **PlayerState**
 
@@ -1292,9 +1323,20 @@ enum ItemType {
 
 `ItemData` is a unified Resource because all three categories share the same acquisition pipeline (pickup → presentation → `PlayerState.acquire()`). Only the fields relevant to a given `item_type` are filled in; the rest stay at default. This is deliberate — do **not** split `ItemData` into three Resources. The unified shape is what lets chests, NPCs, and pickups hand off a single typed value without caring which category it belongs to.
 
+**Identity and lookup:**
+
+Each `ItemData` instance is authored as a `.tres` file under `res://resources/items/` (e.g., `bow.tres`, `pegasus_boots.tres`, `rupee_blue.tres`). These files are content, not code — edited in the Godot Inspector, checked into version control, and shipped with the game. They are not generated, mutated, or created at runtime.
+
+- **`id: StringName` is the stable contract.** It is the only field that save files, debug commands, and runtime lookups rely on. Renaming or moving a `.tres` file is safe as long as `id` is unchanged. Renaming an `id` is a save-breaking change and should be treated like a schema migration.
+- **Filename and directory layout are free.** Items can be organized into subdirectories (`items/weapons/`, `items/tools/`, etc.) or flat — the `ItemRegistry` (section 1.3) discovers them by recursive scan, not by path convention.
+- **Runtime references.** At authoring time, pickup/chest/NPC scenes reference items via `@export var item: ItemData`, drag-and-drop in the Inspector. At runtime, code that needs to look up an item from a string (save deserialize, debug commands, pendant/crystal grants from `GameManager` flags) calls `ItemRegistry.get(id)`. Gameplay code should never hardcode `.tres` paths — always go through the registry or an `@export`.
+- **All three item types live in the registry.** Even UPGRADE and RESOURCE items that `PlayerState.acquire()` discards after applying their effect still need to exist as `.tres` files so that pickup/chest scenes can carry them through the acquisition pipeline and so that presentation dialogs can read `display_name` / `description` / `icon_color`.
+
 **Verification:**
 - Create three test `.tres` files (one SKILL, one UPGRADE, one RESOURCE). Each loads cleanly in the editor and at runtime.
 - `item_type` switches correctly in the inspector — SKILL items show `use_script` field, UPGRADE shows `upgrade_key`, RESOURCE shows `resource_key`.
+- `ItemRegistry.get(test_item.id)` returns the same `ItemData` instance after a project reload — confirms scan-at-boot picks up the new file.
+- Moving a test `.tres` to a subdirectory and reloading the project: `ItemRegistry.get(id)` still returns the item (path-independent lookup).
 
 ### 3.2 Acquisition Presentation
 
@@ -2015,8 +2057,36 @@ The save system lands at the end of Phase 6 because the full set of serializable
 | `Vector2i` | `[x, y]` array | `[2, 1]` |
 | `Color` | `[r, g, b, a]` array | `[1.0, 0.0, 0.0, 1.0]` |
 | `StringName` | `String` | `"bow"` (auto-converted by JSON) |
+| `ItemData` reference | `String` (the item's `id`) | `"bow"` — rehydrated via `ItemRegistry.get(id)` on load |
 
 Keep all save data in JSON-safe primitives. Do not use `var_to_str()` / `str_to_var()` — they work but produce Godot-specific syntax that is fragile across engine versions and not human-readable.
+
+**`ItemData` references are serialized by id, not by value.** The Resource itself is never written into the save file — only its `id: StringName` is. On load, `PlayerState.deserialize()` walks the id list and calls `ItemRegistry.get(id)` (see section 1.3) to rehydrate each entry back to a full `ItemData` reference. This keeps the save file small, allows game patches to update item balance without invalidating old saves, and sidesteps the fact that `ItemData.use_script` (a Script reference) cannot be represented in JSON at all.
+
+Concretely, `PlayerState.serialize()` produces something like:
+
+```json
+"player_state": {
+  "equipped_skill_id": "bow",
+  "owned_skills": ["bow", "hookshot", "lamp"],
+  "upgrades": {"sword": 2, "boots": 1, "flippers": 1},
+  "current_health": 8,
+  "max_health": 12,
+  "current_magic": 16,
+  "max_magic": 32,
+  "heart_pieces": 2,
+  "rupees": 145,
+  "arrows": 20,
+  "bombs": 10,
+  "dungeon_small_keys": {"dungeon_01": 2, "dungeon_02": 0},
+  "bottle_count": 2,
+  "bottles": [4, 0, 0, 0]
+}
+```
+
+Only SKILL items appear in `owned_skills` — UPGRADE and RESOURCE items are consumed at acquisition time (see section 3.3) and never stored as `ItemData` references.
+
+**Unknown-id handling on load:** if a save file references an id that `ItemRegistry.get()` returns `null` for (item was removed, renamed, or the save predates current content), `PlayerState.deserialize()` logs a warning like `[PlayerState] Skipping unknown skill id: "old_cane"` and continues. The save loads; the unknown skill is simply not granted. This prevents a single stale id from bricking a save and makes content removal/renaming a soft-fail instead of a hard crash. Renaming an `id` is therefore still a breaking change — treat it like a schema migration and either bump `schema_version` or accept that affected players lose that skill on first load.
 
 **Save system requirements:**
 
@@ -2037,8 +2107,9 @@ Keep all save data in JSON-safe primitives. Do not use `var_to_str()` / `str_to_
 Because `PlayerState` and `GameManager` are the only autoloads holding persistent state, the save system captures everything by serializing their full dictionaries. Phase 7 (additional dungeons, NPCs) and Phase 8 (new mechanics) add no save code — they just need to ensure new state lives in `GameManager` flags or `PlayerState`.
 
 **Verification:**
-- **Unit test** (`test_save_serialization.gd`): `PlayerState.serialize()` → `deserialize()` round-trip preserves all fields. Same for `GameManager`. Vector2 values survive as `[x, y]` arrays. StringName keys become strings and convert back.
-- **Debug scene**: save game → close editor → reopen editor → load game → player position, health, and flags all restored.
+- **Unit test** (`test_save_serialization.gd`): `PlayerState.serialize()` → `deserialize()` round-trip preserves all fields. Same for `GameManager`. Vector2 values survive as `[x, y]` arrays. StringName keys become strings and convert back. `owned_skills` survives the round trip: `[bow, hookshot]` → JSON `["bow", "hookshot"]` → rehydrated via `ItemRegistry.get()` back to the same `ItemData` references.
+- **Unit test**: `PlayerState.deserialize()` with an unknown skill id (e.g., `"nonexistent_cane"`) logs a warning and continues — other fields still load correctly, the unknown skill is not granted, no crash.
+- **Debug scene**: save game → close editor → reopen editor → load game → player position, health, flags, and owned skills all restored.
 - **Title screen integration**: fresh install → Continue is disabled. Play + save → return to title → Continue is enabled and loads the correct slot.
 - Loading a save with a different `schema_version` logs a warning (migration hook).
 - `has_save(slot)` returns false for an unused slot, true after saving.
@@ -2085,7 +2156,7 @@ Each dungeon should include:
 
 Four pieces combine into one heart container.
 
-Sources:
+Sources (in Phase 7):
 
 - Optional caves
 - Mini-puzzles
@@ -2093,10 +2164,13 @@ Sources:
 - Hidden chests
 - Future mini-games if added
 
+> **Phase pacing note**: full heart containers are the traditional ALTTP boss reward, but bosses don't land until Phase 9. Through Phase 7 and Phase 8, every heart container Link gains comes from combining 4 heart pieces — there is no direct `+1 container` source yet. This caps the achievable `max_health` in Phases 7–8 playtesting at `6 + 2 * floor(total_heart_pieces_placed / 4)`. When designing Phase 7's overworld and dungeons, make sure there are enough heart pieces placed to give the player a reasonable ceiling for Phase 8 playtesting (target: 10–14 hearts by end of Phase 8). Phase 9 then adds the 3 dungeon boss heart container drops on top, pushing the ceiling toward the full 20-heart cap in the retrofit.
+
 **Verification:**
 - Collecting 4 heart pieces increases max health by 2 (verified by HUD).
 - Heart piece count resets to 0 after the 4th piece.
 - Heart piece pickups persist — already-collected ones don't respawn on room re-entry.
+- End-of-Phase-7 playtesting: a player who collects every placed heart piece reaches at least 10 hearts of max health with no boss drops.
 
 ### 7.3 NPC System
 
