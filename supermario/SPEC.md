@@ -902,7 +902,9 @@ Allowed content values:
 
 Behavior on hit from below:
 1. Play bump animation
-2. Spawn contents above block
+2. Spawn contents above block (for the `&"coin"` case, spawn the coin pop
+   effect defined in §9.3 and award the coin immediately — no physical
+   pickable coin is spawned)
 3. Switch to empty appearance
 4. Damage or kill enemies standing on top
 5. Emit relevant EventBus signals
@@ -924,9 +926,79 @@ Rules:
 - SMALL Mario can bump but not break
 - BIG and FIRE Mario can break standard bricks
 - Multi-coin bricks pay out one coin per hit, then become empty
+- Each payout spawns the coin pop effect from §9.3 and awards a coin
+  immediately (same visual-only behavior as a coin question block)
 - Enemy standing on top can be popped or killed on impact
 
-### 9.3 Hidden Block
+### 9.3 Coin Pop Effect
+
+Scene: `scenes/effects/coin_pop.tscn`. Visual-only effect spawned when a
+coin question block (§9.1) or multi-coin brick (§9.2) is bumped. The coin
+reward itself is awarded on the same frame via `GameManager.add_coin()` —
+the player never needs to touch the popping coin to collect it.
+
+Scheduled for Phase 6 (Effects and Polish). Until then, coin blocks award
+their coin silently on bump; this is a known gap, not a bug.
+
+Root type: `Node2D` (no physics body, no `Area2D` — purely visual).
+
+Spawn:
+- Spawn position: the block's top edge, i.e. `block.global_position + Vector2(0, -16)`.
+- Spawned as a child of the level's effects container (or any ancestor
+  above the blocks in draw order), not as a child of the block — the block
+  may change visuals or be destroyed (multi-coin brick hitting zero) before
+  the effect finishes.
+
+Motion:
+- Initial velocity: `Vector2(0, -280.0)` (roughly matched to Mario's
+  small-jump velocity so the arc reads as "popping out").
+- Constant gravity: `900.0` px/s² (same value the player uses — consistent
+  arc feel across the whole game).
+- No horizontal velocity, no air resistance.
+- The effect free's itself when either (a) its total lifetime exceeds
+  `0.5 s`, or (b) its `y` velocity has become positive *and* it has
+  returned past its spawn `y` — whichever comes first. In practice the
+  lifetime cap triggers first; the position check is a safety net in case
+  the numbers are later tuned.
+
+Visual:
+- Procedural `_draw()` matching the regular in-world coin (`P.COIN_GOLD`
+  fill, `P.COIN_SHINE` highlight, 1 px dark border) — the player must be
+  able to read it as "a coin" instantly.
+- Spin animation: oscillate horizontal draw scale over time
+  (`scale.x = cos(t * TAU * 6.0)`) so the coin appears to flip at ~6 Hz,
+  showing its thin profile twice per rotation. Do not use a full 3D
+  rotation — flat horizontal scaling reads correctly at this resolution
+  and is cheaper.
+- In the last `0.1 s` of lifetime, fade `modulate.a` from `1.0` to `0.0`.
+- `z_index` above blocks but below HUD (a value of `5` works with the
+  z-layering established in §8.6).
+
+Scoring feedback:
+- `GameManager.add_coin()` already emits `coin_collected` and awards 200
+  points on bump. The score popup ("200") is driven by that event in the
+  existing scoring flow and does not need to be re-spawned by this effect.
+- The coin pop effect itself emits no EventBus signals — it is pure
+  visual.
+
+Bloom:
+- The coin pop benefits from the bloom pipeline per §5.3. No additional
+  shader work is required; using the `P.COIN_GOLD` / `P.COIN_SHINE` colors
+  is sufficient once WorldEnvironment bloom is active.
+
+Audio:
+- None from this effect. The coin SFX is triggered by `coin_collected` on
+  the bump frame (same as ground-coin pickup), not by the pop itself.
+
+Non-rules (things this effect does NOT do):
+- It is not collectible. The player walking through it has no effect.
+- It does not interact with enemies, other coins, or terrain.
+- It does not count toward the 1-UP threshold a second time — that coin
+  was already counted at spawn.
+- It does not spawn from ground-pickup coins (those fade on collection via
+  their own logic).
+
+### 9.4 Hidden Block
 
 Root type: `StaticBody2D`
 
@@ -940,7 +1012,7 @@ Rules:
 - On that first head-strike, the block reveals, enables collision, and triggers its contents (coin or 1-UP)
 - After reveal, behaves like an empty brown block (solid, inert)
 
-### 9.4 Flagpole
+### 9.5 Flagpole
 
 Root type: `Area2D` plus visual pole geometry
 
@@ -950,7 +1022,7 @@ Rules:
 - Player enters `FlagpoleState`
 - Slide down, touch ground, walk toward castle, then finish level
 
-### 9.5 Castle
+### 9.6 Castle
 
 Purely decorative for v1, except for level-end walk target and fireworks anchor point.
 
@@ -1655,6 +1727,6 @@ on the first commit. Tuning happens after the refactor is verified.
 All previously open questions have been resolved:
 
 - **Movement feel:** Implemented. See `scripts/player/` — the current physics constants and state machine define the canonical feel for this project.
-- **Hidden blocks:** Classic SMB behavior — no visuals and no collision until hit from below while the player is moving upward. See §9.3.
+- **Hidden blocks:** Classic SMB behavior — no visuals and no collision until hit from below while the player is moving upward. See §9.4.
 - **Title screen:** Static for v1. No attract/demo playback.
 - **World 1-2 scope:** Included in v1 scope (not a stretch goal).
