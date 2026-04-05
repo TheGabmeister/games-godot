@@ -90,6 +90,10 @@ position = Vector2(1272, 144)
 position = Vector2(1288, 144)
 contents = &"fire_flower"
 
+[node name="QBlock_80_9" parent="Blocks" unique_id=2016283225 instance=ExtResource("6_qblock")]
+position = Vector2(446, 144)
+contents = &"fire_flower"
+
 [node name="Brick_81_8" parent="Blocks" unique_id=201134959 instance=ExtResource("7_brick")]
 position = Vector2(1304, 144)
 
