@@ -1326,7 +1326,81 @@ Two validation tools are used throughout:
   - Enemy `queue_free()` during a signal emission can crash — use
     `call_deferred("queue_free")`.
 
-### Phase 6 - Effects and Polish
+### Phase 6 - Effects, Polish, and Tunables Refactor
+
+Phase 6 is split into two concerns: visual polish (particles, shaders, shake)
+and a one-time infrastructure refactor that migrates gameplay tunables from
+scattered `const` declarations into Godot `Resource` files (`.tres`). The
+refactor lands here, not earlier and not later, for three reasons:
+
+1. By the end of Phase 5 every core system exists — player, level, blocks,
+   items, enemies — so we know exactly which categories of config are needed.
+   Migrating earlier risks building resources for systems that don't exist yet.
+2. Phases 7-10 involve heavy tuning (flagpole scoring, timer curves, starman
+   duration, enemy balance, level flow, full-level polish). Having tunables
+   editable from the Godot inspector before entering those phases is a
+   compounding time saver.
+3. Polish work in the rest of Phase 6 (shake decay, flash duration, particle
+   counts, trail spacing) is itself tuning — the new resources cover these
+   knobs immediately.
+
+**Goal:** no gameplay behavior changes. This is a pure infrastructure refactor.
+Every value in every migrated resource must match the previous `const` exactly
+on the first commit. Tuning happens after the refactor is verified.
+
+#### 6.1 Tunables Refactor
+
+- Create `scripts/config/` directory for `Resource` subclass scripts.
+- Create `resources/config/` directory for saved `.tres` instances.
+- Migrate in this order (stop if you run out of time — later items are lower
+  priority):
+
+  1. **`PlayerMovementConfig`** — all constants currently in
+     `player_controller.gd` (walk/run speed, acceleration, jump velocity,
+     gravity, fast fall, coyote time, jump buffer, release multiplier, small
+     and big collision sizes). Also absorb the `1.12` high-speed jump boost
+     magic number from `jump_state.gd`.
+  2. **`CameraConfig`** — look-ahead distance, look-ahead lerp speed, smoothing
+     speed, and the no-backtrack offset (`-256.0`) currently inlined in
+     `player_controller.gd`.
+  3. **`EnemyConfig` (one resource per enemy type)** — patrol speed, stomp
+     reward, contact damage type, activation range. Start with Goomba and
+     Koopa; Piranha Plant can be added in Phase 7 when it lands.
+  4. **`BlockBumpConfig`** — bump amplitude (`-4.0`), bump duration (`0.15`),
+     and the shared visual offsets used by question/brick/hidden blocks.
+     Single shared resource — all three block scripts reference it.
+  5. **`ItemConfig`** — mushroom emerge speed, fall speed, wall-reverse rule,
+     fire flower pulse rate.
+  6. **`LevelTimingConfig`** — level intro duration (~2.5 s), game over hold
+     (~3 s), fade duration, flagpole slide speed.
+  7. **`EffectsConfig`** (do this alongside the polish work below) — screen
+     shake decay rate, damage flash duration, score popup rise speed, motion
+     trail spacing.
+
+- Pattern per resource (see `CLAUDE.md` conventions):
+  ```gdscript
+  # scripts/config/player_movement_config.gd
+  extends Resource
+
+  @export var walk_speed: float = 130.0
+  @export var run_speed: float = 210.0
+  # ... one @export per tunable, with the current const value as the default
+  ```
+  Do **not** use `class_name` (project convention). Scripts that consume the
+  resource declare `@export var movement: Resource` and load the concrete
+  script via `preload()` for type hints in code, matching how the rest of the
+  project handles type references.
+- Keep one canonical `.tres` per config under `resources/config/` (e.g.,
+  `player_movement_default.tres`). Variants (forgiving, debug, low-gravity)
+  can be added later by duplicating the `.tres` — no code changes required.
+- Scripts that currently use the constants should hold an `@export var config`
+  assigned in their scene and read `config.walk_speed` instead of
+  `WALK_SPEED`. The old `const` declarations are deleted, not left as
+  fallbacks.
+- `ProjectSettings` is reserved for truly global flags (difficulty, debug
+  toggles) and is **not** used for gameplay tunables. No god `settings.gd`.
+
+#### 6.2 Visual Polish
 
 - Particles
 - Glow shader
@@ -1337,8 +1411,25 @@ Two validation tools are used throughout:
 
 **Testing & verification:**
 
-- Headless: shader compiles (a broken shader prints to stderr at load).
-- Manual gameplay:
+- Headless: project loads clean after the refactor. Every migrated scene must
+  still open — a missing `@export` assignment or a broken `preload()` path
+  in a config script will surface here.
+- Refactor regression checks (run *before* tuning any values):
+  - Movement feel is byte-identical to pre-refactor. The fastest way to
+    verify: record a short gameplay clip before starting the refactor
+    (standing jump height, running jump distance to a known landmark, skid
+    distance from full run) and re-measure after. Any difference means a
+    value was transcribed wrong.
+  - Every block, enemy, and item scene in the level still references a valid
+    config resource. Open `world_1_1.tscn` in the editor — any node with a
+    missing resource shows a yellow warning triangle.
+  - Reassigning a config `.tres` in the inspector and re-running the game
+    picks up the new values without a code edit. This is the whole point of
+    the migration — if it doesn't work, the `@export` wiring is wrong.
+  - Duplicate a `.tres` to `player_movement_forgiving.tres`, bump
+    `coyote_time` to `0.20`, assign it to the player, and confirm the
+    forgiveness window feels longer. Then revert.
+- Visual polish manual gameplay:
   - Bloom/glow visible on bright sprites against darker backgrounds;
     WorldEnvironment is set and Forward Plus renderer is active.
   - Damage flash plays on hit and does not persist after intangibility ends.
@@ -1350,7 +1441,20 @@ Two validation tools are used throughout:
     slowing down.
   - Particles do not accumulate forever — confirm they free themselves after
     their lifetime.
-- Bug watchlist:
+- Bug watchlist (refactor):
+  - Scene left referencing the old `const` after the script was rewritten
+    to use `config.x` — the scene silently uses default values because the
+    `@export` was never assigned in the inspector. Any sudden "feels wrong"
+    after the refactor is this bug until proven otherwise.
+  - `.tres` file edited outside the Godot editor can desync from its script
+    schema (add/remove/rename an `@export` without the editor re-saving
+    the resource). Keep resource edits inside the Godot inspector.
+  - Two scenes pointing to the same `.tres` — edits propagate to both. If
+    you need per-instance overrides, use **Local to Scene** on the resource
+    or duplicate the `.tres`.
+  - Transcription typos during migration (e.g., `ACCELERATION = 800.0`
+    becoming `800`). The regression clip check is how you catch these.
+- Bug watchlist (polish):
   - Screen shake applied directly to `camera.position` instead of
     `camera.offset` fights with parallax and breaks camera follow.
   - Forward Plus not active → glow silently does nothing. Check project
