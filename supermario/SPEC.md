@@ -1397,9 +1397,12 @@ Two validation tools are used throughout:
     (player is not stopped mid-air). Jump into the tile from below — block
     reveals, becomes solid, spawns contents. Walking or falling into it from
     the side or above does nothing.
-  - Mushroom: Small → Big with brief grow animation; collision shape expands
-    without clipping into ground.
-  - Fire Flower (already Big): Big → Fire, palette changes.
+  - Mushroom: Small → Big. Collision shape expands without clipping into
+    ground, power state is applied, score +1000. The grow *animation*
+    itself (flicker/pause/effect ring) is Phase 6 work — at this phase the
+    transition is allowed to be instantaneous.
+  - Fire Flower (already Big): Big → Fire, palette changes (instantaneous
+    in Phase 4; animated in Phase 6).
   - Fire Flower taken while Small: still upgrades to Big (spec rule).
   - Coin pickup: score +200, coin count +1, `coins_changed` HUD update. 100
     coins grants a 1-UP.
@@ -1532,6 +1535,11 @@ on the first commit. Tuning happens after the refactor is verified.
 - Screen shake
 - Score popups
 - Motion trails
+- Grow / shrink animation (`GrowState`, `ShrinkState`) with the gameplay
+  pause rule from §6.4 of the player-states spec, plus the
+  `power_up_effect.tscn` pickup ring and the `coin_pop.tscn` effect deferred
+  from §9.3. Phase 4 intentionally ships these as instantaneous transitions;
+  Phase 6 is where they become animated.
 
 **Testing & verification:**
 
@@ -1565,6 +1573,24 @@ on the first commit. Tuning happens after the refactor is verified.
     slowing down.
   - Particles do not accumulate forever — confirm they free themselves after
     their lifetime.
+  - Grow animation: grab a mushroom as Small Mario — gameplay freezes, the
+    drawer flickers between Small and Big for roughly 0.8 seconds, the
+    `power_up_effect.tscn` pickup ring spawns at Mario's position, then
+    gameplay resumes with Mario in the Big form. `GrowState` is entered via
+    `Any -> Grow` from the state machine.
+  - Shrink animation: take damage as Big Mario — gameplay freezes, the
+    drawer flickers between Big and Small, then resumes with Mario in the
+    Small form and intangibility active. `ShrinkState` is entered via
+    `Any -> Shrink`.
+  - Pause rule (§6.4 of the player-states spec): UI and transition-critical
+    nodes continue to process during grow/shrink. Verify by triggering the
+    animation and confirming the HUD timer *pauses* while the animation
+    runs (it is gameplay-tier) but the fade/transition overlay, if active,
+    continues animating.
+  - Coin pop (§9.3): bumping a coin question block or multi-coin brick now
+    spawns a visible spinning coin that arcs up from the block, flips at
+    ~6 Hz, and fades out in its final 0.1 s. Coin count and score still
+    update on the bump frame — the pop is visual-only.
 - Bug watchlist (refactor):
   - Scene left referencing the old `const` after the script was rewritten
     to use `config.x` — the scene silently uses default values because the
@@ -1585,6 +1611,20 @@ on the first commit. Tuning happens after the refactor is verified.
     settings after any renderer change.
   - Particles on CanvasLayer inherit the wrong coordinate space and render
     off-screen.
+  - Grow/shrink pause implemented by setting `get_tree().paused = true`
+    without marking the transition overlay's process mode appropriately:
+    the fade/intro overlay will stop animating alongside gameplay. Use
+    `PROCESS_MODE_ALWAYS` on the nodes that must keep running.
+  - `GrowState` that doesn't record and restore the previous state on exit
+    will drop Mario into Idle after grabbing a mushroom mid-jump, losing
+    his airborne momentum. Cache the source state in `enter()` and
+    transition back to it (or to Fall, if the source was Jump and velocity
+    is now downward) in `exit()`.
+  - Collision shape resized mid-animation rather than at the end: if the
+    shape grows while the drawer is still flickering to Small, Big Mario's
+    collision clips into ceilings visually occupied by Small Mario. Resize
+    once, on the final frame of the animation, matching the drawer's
+    final form.
 
 ### Phase 7 - Advanced Gameplay
 
