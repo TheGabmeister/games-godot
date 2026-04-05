@@ -457,7 +457,7 @@ These values are starting points — balance via playtesting.
 
 ### Save Schema
 
-See Phase 2 section 2.7 for the full save/load system, JSON schema, and SaveManager API. The key rule: `schema_version` is required from the first save implementation onward so future changes can migrate old saves.
+See Phase 6 section 6.6 for the full save/load system, JSON schema, and SaveManager API. The key rule: `schema_version` is required from the first save implementation onward so future changes can migrate old saves.
 
 ### Debug Expectations
 
@@ -471,7 +471,7 @@ Every subphase has a **Verification** block with concrete, runnable checks. Bugs
 
 **Three types of verification:**
 
-1. **Unit tests** — pure GDScript logic with no scene dependencies (damage formula, PlayerState acquisition, loot table rolls, save serialization). Uses the [GUT](https://github.com/bitwes/Gut) framework (Godot Unit Testing). Added as an addon in Phase 2 when the first testable logic lands (damage formula, loot tables, save serialization).
+1. **Unit tests** — pure GDScript logic with no scene dependencies (damage formula, PlayerState acquisition, loot table rolls, save serialization). Uses the [GUT](https://github.com/bitwes/Gut) framework (Godot Unit Testing). Added as an addon in Phase 2 when the first testable logic lands (damage formula, loot tables). Save serialization tests are added later in Phase 6 (section 6.6) when the save system itself lands.
 
 2. **Debug scene checks** — load `debug/debug_room.tscn` or a dedicated test scene in the editor and verify gameplay behavior manually against a checklist. The debug room grows over time to expose every system added so far.
 
@@ -572,7 +572,7 @@ Autoload registration order:
 4. `AudioManager`
 5. `SceneManager`
 6. `SaveManager`
-7. `Cutscene` (added in Phase 5, see section 5.4)
+7. `Cutscene` (added in Phase 6, see section 6.3)
 
 **Verification:**
 - Headless smoke check passes (`godot --path . --headless --quit`) — confirms project loads, all autoloads register in order, no parser errors.
@@ -624,7 +624,7 @@ Pure signal hub. Initial signals:
 - `dialog_requested(lines)`
 - `dialog_closed()` — emitted when dialog box dismisses (used by cutscene system to await completion)
 - `screen_shake_requested(intensity, duration)`
-- `cutscene_started()` / `cutscene_finished()` — emitted by Cutscene autoload (see section 5.4)
+- `cutscene_started()` / `cutscene_finished()` — emitted by Cutscene autoload (see section 6.3)
 
 **GameManager**
 
@@ -790,13 +790,15 @@ func get_bottle_contents(slot: int) -> BottleContents
 
 Phase 1 behavior:
 
-- Stub methods may log instead of writing real files
-- Method names and payload shape should already match the final save system
+- Stub autoload registered in the correct load order (after `SceneManager`)
+- Method signatures (`save_game`, `load_game`, `has_save`, `get_slot_metadata`, `delete_save`) exist and match the final save system
+- Stub methods log what they would do instead of writing real files — this lets Phases 2–5 reference `SaveManager` from the Title Screen and Game Over screens without the real system existing yet
 
-Final responsibility:
+Final responsibility (implemented in Phase 6, section 6.6):
 
 - Serialize `GameManager`, `PlayerState`, and player position to `user://save_{slot}.json`
 - Preserve `schema_version`
+- Deserialize and restore on load, trigger room reload via `SceneManager`
 
 **Verification:**
 - `GameManager.set_flag("test/foo", true)` then `get_flag("test/foo")` returns `true`. Flag survives room transitions.
@@ -1228,67 +1230,7 @@ Pickup types:
 - **Debug scene**: killing a test enemy spawns pickups that bob and are collected on player overlap.
 - Pickups update the correct counters (heart restores health, green rupee adds 1, etc.).
 
-### 2.8 Save and Load
-
-The save system is built in Phase 2 so that game state can be persisted during development. The `SaveManager` autoload stub from Phase 1 becomes functional here.
-
-**Save data** (`user://save_{slot}.json`):
-
-```json
-{
-  "schema_version": 1,
-  "slot": 1,
-  "timestamp_utc": "2026-04-04T10:00:00Z",
-  "play_time_seconds": 3600,
-  "player": {
-    "room_id": "light_overworld_2_1",
-    "position": [128, 112],
-    "facing": [0, 1]
-  },
-  "world_type": "light",
-  "player_state": {},
-  "flags": {}
-}
-```
-
-`player_state` is the full serialized state of the `PlayerState` autoload (owned skills, upgrades, resources, bottles, small keys, health, magic, heart pieces). `flags` is the full `GameManager.flags` dictionary (includes per-dungeon booleans for big key, map, compass, pendants, and crystals). Both managers expose `serialize() -> Dictionary` and `deserialize(data: Dictionary)` methods.
-
-**JSON type serialization**: Godot's built-in `JSON.stringify()` / `JSON.parse_string()` only support basic types (strings, numbers, bools, arrays, dicts). Godot-specific types must be converted manually in `serialize()` / `deserialize()`:
-
-| Godot Type | JSON Representation | Example |
-|---|---|---|
-| `Vector2` | `[x, y]` array | `[128, 112]` |
-| `Vector2i` | `[x, y]` array | `[2, 1]` |
-| `Color` | `[r, g, b, a]` array | `[1.0, 0.0, 0.0, 1.0]` |
-| `StringName` | `String` | `"bow"` (auto-converted by JSON) |
-
-Keep all save data in JSON-safe primitives. Do not use `var_to_str()` / `str_to_var()` — they work but produce Godot-specific syntax that is fragile across engine versions and not human-readable.
-
-**Save system requirements:**
-
-- 3 save slots
-- Slot metadata for title screen UI: play time, last save timestamp, player health, heart count
-- `schema_version` field so future changes can migrate old saves
-- Save triggers: save points in the world (beds, statues, dungeon entrance markers). In Phase 2, also expose a debug save hotkey for testing.
-- Load from title screen "Continue" → slot select → load
-
-**SaveManager public methods:**
-
-- `save_game(slot: int) -> void` — serializes GameManager + PlayerState + player state to JSON
-- `load_game(slot: int) -> void` — deserializes and restores all state, triggers room load via SceneManager
-- `get_slot_metadata(slot: int) -> Dictionary` — for title screen display (returns empty dict if slot unused)
-- `has_save(slot: int) -> bool`
-- `delete_save(slot: int) -> void`
-
-As Phases 3–4 add more state (skills, upgrades, dungeon progress, world type), the save system automatically captures it because it serializes the full manager dictionaries. No save code changes needed per feature — just ensure new state lives in `GameManager` flags or `PlayerState`.
-
-**Verification:**
-- **Unit test** (`test_save_serialization.gd`): `PlayerState.serialize()` → `deserialize()` round-trip preserves all fields. Same for `GameManager`. Vector2 values survive as `[x, y]` arrays. StringName keys become strings and convert back.
-- **Debug scene**: save game → close editor → reopen editor → load game → player position, health, and flags all restored.
-- Loading a save with a different `schema_version` logs a warning (migration hook).
-- `has_save(slot)` returns false for an unused slot, true after saving.
-
-### 2.9 Phase 2 Deliverable
+### 2.8 Phase 2 Deliverable
 
 Acceptance criteria:
 
@@ -1296,7 +1238,8 @@ Acceptance criteria:
 2. Player and enemies both use hitbox and hurtbox components with knockback and invincibility frames.
 3. Enemies drop pickups through weighted tables.
 4. Shield-blockable projectiles and non-blockable damage sources are distinguishable in data.
-5. Save and load works: game can be saved, editor restarted, and state fully restored from the title screen.
+
+> **Note**: Persistent save/load is deferred to Phase 6 (section 6.6), because the full set of serializable state is only known after Phases 3–5 add skills, upgrades, dungeon progress, and world type. For mid-development testing in Phases 2–5, use editor reloads and a debug command that seeds `PlayerState` + `GameManager` with a known configuration — not a real save file.
 
 ---
 
@@ -1748,7 +1691,7 @@ Without Moon Pearl:
 - Activating Magic Mirror in a Dark World test room runs a swirl transition and places the player at the mirrored coordinates in the Light World.
 - The Dark World has a visibly different color grading (purple shift, desaturated).
 - Without Moon Pearl: entering Dark World visibly transforms the player shape. With Moon Pearl: player stays normal.
-- World type survives save/load.
+- `GameManager.world_type` transitions correctly on Mirror/portal use. (Save/load round-trip of world type is verified in Phase 6 section 6.6, not here — save system does not exist yet in Phase 4.)
 
 ### 4.5 Phase 4 Deliverable
 
@@ -1761,72 +1704,111 @@ Acceptance criteria:
 
 ---
 
-## Phase 5: Bosses and Advanced Combat
+## Phase 5: First Dungeon Playthrough
 
-**Milestone**: "First Dungeon Complete"
+**Milestone**: "First Dungeon Playable"
 
-### 5.1 Boss Architecture
+Phase 5 is the first time all prior systems converge inside a single dungeon: navigation, locks and keys, push blocks and switches, regular enemies, chests, map/compass/big key, and the dungeon reward. Bosses are deliberately **not** in this phase — boss architecture and individual bosses (Armos Knights, Moldorm, etc.) are deferred to Phase 9, because building a good boss depends on almost every system in the game (including magic, lifting, advanced enemies) and mixing boss construction into a phase that is really about validating dungeon flow would bloat the phase and delay the first end-to-end playthrough.
 
-Bosses are **not extensions of the enemy system**. Each boss is a bespoke scene with its own structure, because boss encounters vary too much to share a base scene (multi-entity formations, segment chains, teleporters, etc.).
+Instead, Phase 5 uses a **placeholder completion trigger** in the room that will eventually become the boss room: a pedestal holding the dungeon's reward (pendant or crystal). Walking up to the pedestal and pressing `interact` grants the reward, sets the completion flag, spawns the warp tile, and closes out the dungeon. Phase 9 replaces the pedestal with a real boss; everything downstream of the completion trigger (flag, heal, warp tile) stays identical.
 
-What bosses share is a **`base_boss.gd` script** (extends `Node2D`, not `CharacterBody2D`) that provides:
+### 5.1 Dungeon Completion Flow
 
-- `phase: int` — current phase, changed by the boss's own logic
-- `total_health: int` / `current_health: int` — aggregate HP (may be split across sub-entities)
-- `_on_phase_change(new_phase)` — virtual. Called automatically when `phase` changes. Triggers brief invulnerability, particle flourish, and screen shake.
-- `start_encounter()` — called when player enters boss room. Locks camera to room bounds, closes boss door, starts BGM.
-- `end_encounter()` — called on defeat. Spawns heart container, warp tile, sets dungeon completion flag.
-- `BossHealthBar` — a `Control` child that draws at the top of the screen. Updated via signal.
+The dungeon built in Phase 5 has no boss yet. Its final room — the future boss room — contains a **reward pedestal**, a simple `Interactable` holding the dungeon's pendant or crystal. Walking up and pressing `interact` triggers the completion flow.
 
-Each boss scene owns its own `StateMachine` with **boss-specific states** (not Patrol/Chase/Attack). The state machine drives phase behavior.
+```gdscript
+# scenes/rooms/components/reward_pedestal.gd
+# Phase 5 placeholder; Phase 9 replaces this with a real boss encounter.
+extends Node2D
+
+@export var dungeon_id: StringName           # e.g., &"dungeon_01"
+@export var reward_flag: StringName          # e.g., &"pendants/courage"
+
+func _on_interact() -> void:
+    GameManager.set_flag(reward_flag, true)
+    GameManager.set_flag(&"%s/complete" % dungeon_id, true)
+    PlayerState.heal(PlayerState.max_health)
+    EventBus.item_get_requested.emit(_build_reward_item())
+    # After ItemGetState closes, spawn warp tile back to dungeon entrance
+```
+
+On pedestal interact:
+
+1. Set the reward flag (`pendants/courage`, `crystals/1`, etc.) via `GameManager.set_flag()`
+2. Set the dungeon completion flag (`dungeon_01/complete`)
+3. Fully heal player via `PlayerState.heal(PlayerState.max_health)`
+4. Emit `EventBus.item_get_requested` with the pendant/crystal as an `ItemData` — runs the standard `ItemGetState` presentation
+5. After `ItemGetState` closes, spawn the warp tile that returns the player to the dungeon entrance
+6. Pedestal marks itself consumed (persist flag under `{room_id}/pedestal`) so it doesn't re-trigger on room re-entry
+
+**Verification** (in the first dungeon):
+- Navigate from dungeon entrance through all rooms to the reward pedestal room (uses keys, blocks, switches, enemies from Phases 2–4).
+- Interact with the pedestal → reward item presentation plays via `ItemGetState`.
+- After dismissal, `GameManager.get_flag("dungeon_01/complete")` returns true and the reward flag is set.
+- Player is fully healed.
+- Warp tile appears and returns player to the dungeon entrance.
+- Re-entering the dungeon: pedestal is already consumed, no re-trigger.
+
+> **Phase 9 retrofit**: when bosses land, `reward_pedestal` is replaced by a boss scene in the same room. The boss's `end_encounter()` runs the same completion steps (flag, heal, reward item, warp tile) plus a heart container drop. Everything downstream of the completion trigger stays identical, so the Phase 5 → Phase 9 swap touches only the boss room's contents.
+
+### 5.2 Phase 5 Deliverable
+
+Acceptance criteria:
+
+1. One dungeon can be entered, navigated end-to-end, and completed via the reward pedestal.
+2. All prior-phase systems are exercised inside the dungeon: locked doors (small keys), BossDoor (big key), push blocks, switches, chests, regular enemies, map, compass, and the pedestal reward.
+3. Completion flagging (`dungeon_NN/complete` and the reward flag), player heal, `ItemGetState` reward presentation, and exit warp all fire in one continuous run.
+4. Re-entering the completed dungeon preserves all persistent state (consumed chests, pushed blocks, flipped switches, consumed pedestal).
+
+> **Not in scope**: bosses (Phase 9), cutscene choreography (Phase 6.3), save/load (Phase 6.6). The Phase 5 dungeon is playable end-to-end without any of these.
+
+---
+
+## Phase 6: HUD, UI, and Polish
+
+**Milestone**: "Feels Like a Game"
+
+### 6.1 HUD Polish Pass
+
+The HUD is built in Phase 1 (section 1.8) and extended in Phases 3–4. Phase 6 is the polish pass:
+
+- Tighten spacing and alignment of all HUD elements
+- Add subtle background panel (semi-transparent dark bar behind hearts/rupees) for readability over bright rooms
+- Heart damage animation: briefly flash the lost heart white before it goes dark
+- Rupee count: number ticks up/down digit by digit (not instant) when gaining/spending
+- Equipped item: brief highlight flash when switching items
+- Ensure all HUD elements look consistent across overworld, dungeon, and dark world color grading
 
 **Verification:**
-- Create a minimal test boss with a scripted phase change at 50% HP. Phase change fires `_on_phase_change()`, triggers the brief invulnerability window, particle flash, and screen shake.
-- `start_encounter()` locks camera and closes the boss door (verify with a test room).
-- BossHealthBar appears on encounter start and updates as HP drops.
+- Take damage — lost heart visibly flashes white before becoming empty.
+- Collect 10 rupees — counter ticks up digit by digit, not instantly.
+- Switch skills via subscreen — equipped skill slot flashes briefly.
+- HUD remains readable over the brightest and darkest rooms in the game.
 
-### 5.2 Armos Knights
+### 6.2 Dialog System
 
-```
-ArmosKnights (Node2D, script: armos_knights.gd extends BaseBoss)
-  ├── StateMachine
-  │     ├── Formation  (phase 1: coordinated hopping)
-  │     └── LastStand  (phase 2: solo aggressive knight)
-  ├── BossHealthBar
-  ├── Knight1 (CharacterBody2D, script: armos_knight_unit.gd)
-  │     ├── CollisionShape2D
-  │     ├── KnightBody (Node2D, _draw())
-  │     ├── HurtboxComponent
-  │     └── ContactHitbox
-  ├── Knight2 ... Knight6
-  └── SpawnPositions (Marker2D nodes)
-```
+Dialog box requirements:
 
-The controller (`armos_knights.gd`) manages all 6 knight units. Individual knights are **not** full enemies — they have hitboxes/hurtboxes but no `StateMachine` of their own. The controller tells them where to hop.
+- Bottom-of-screen panel
+- Typewriter effect
+- `interact` advances or fast-forwards text
+- Supports multi-page line arrays
 
-**Phase 1** (6 alive): Knights hop in a synchronized grid pattern. The controller picks a formation, tweens all knights to target positions, pauses, repeats. Occasionally one knight targets the player's position. Contact damage. Each knight has individual HP. When one dies: death particles, remaining knights speed up slightly. Phase change triggers when 5 are dead.
+Triggered through:
 
-**Phase 2** (1 remaining): Last knight turns red (shader color shift). Hops faster. Jump-attacks the player's position — a shadow indicator (dark circle on ground) telegraphs the landing spot 0.4s before impact. Higher contact damage.
+- `EventBus.dialog_requested(lines)`
 
-**Defeat**: heart container drop + warp tile via `end_encounter()`.
+**Verification:**
+- Place a test sign in `debug_room.tscn`. Pressing `interact` opens the dialog box with typewriter animation.
+- Pressing `interact` during typewriter completes the current page instantly. Pressing again advances to next line.
+- Multi-page text arrays work: `["Page 1", "Page 2", "Page 3"]` shows all three in sequence.
+- Dialog closing emits `EventBus.dialog_closed` exactly once.
 
-**Verification** (playable end-to-end in the dungeon 1 boss room):
-- All 6 knights spawn and hop in formation. Hitting one deals damage (tracked individually).
-- Killing 5 knights triggers the Phase 2 transition: remaining knight flashes red and speeds up.
-- Jump attack telegraphs with shadow indicator before landing.
-- Defeating the last knight spawns heart container and warp tile.
+### 6.3 Cutscene System
 
-### 5.3 Boss Design Guidelines
+Phase 6 introduces a lightweight cutscene sequencer because several scripted sequences need to coordinate camera, movement, dialog, SFX, and effects in a timed order — the opening sequence, the master sword pull, NPC story beats, dungeon entrance flyovers, and (eventually) the boss intros and outros added in Phase 9. Neither `ItemGetState` nor the Dialog System (6.2) can handle this on their own. The Cutscene System is placed in Phase 6 specifically because it depends on the Dialog System — the `Cutscene.dialog()` primitive awaits `EventBus.dialog_closed` to compose text beats into a timed sequence.
 
-Future bosses follow the same pattern — bespoke scene, `base_boss.gd` script, own state machine:
-
-- **Dungeon 2 boss**: Could be a single large entity with projectile-pattern phases. Scene is a `CharacterBody2D` extending `BaseBoss` directly (no sub-entities needed).
-- **Moldorm (Dungeon 3)**: Chain of `CharacterBody2D` segments. Only the tail segment has a `HurtboxComponent`. Controller drives erratic movement, speeds up as health drops.
-- Each boss should have at least 2 phases with a visible transition (flash, shake, color change).
-
-### 5.4 Cutscene System
-
-Phase 5 introduces a lightweight cutscene sequencer because boss encounters need intro/outro choreography (camera pan to boss, boss roar, camera return, etc.) that the existing `ItemGetState` and dialog system can't handle. The system is general-purpose and is used throughout the rest of the project for scripted sequences.
+The Cutscene System ships before bosses (Phase 9) deliberately: when bosses arrive, they use these primitives directly for intro and defeat choreography. No ad-hoc inline sequencing is ever needed on boss controllers because the autoload is already there.
 
 **Design: coroutine-based (not AnimationPlayer).** Each cutscene is a GDScript coroutine using `await`. No timeline UI, no method call tracks — just a readable sequence of steps. This is chosen over AnimationPlayer because cutscenes here are short (5–15 steps) and linear; a script is more maintainable than a timeline with method call tracks and signal wiring.
 
@@ -1889,45 +1871,30 @@ func flash(color: Color, duration: float) -> void: ...
 
 **Player state integration:** when `Cutscene.start()` fires, the player's state machine transitions to a new `CutsceneState`. Input is disabled; the player remains in whatever pose was active. The cutscene script can move the player via `move_entity()` or call custom methods. When `Cutscene.finish()` fires, the player returns to `IdleState`.
 
-**Writing a cutscene:** each cutscene is a `.gd` file under `scenes/cutscenes/` with a `play()` function. The source that triggers it (boss room, chest, NPC) calls the cutscene's `play()` and optionally awaits its completion.
+**Writing a cutscene:** each cutscene is a `.gd` file under `scenes/cutscenes/` with a `play()` function. The source that triggers it (chest, NPC, boss room, room trigger) calls the cutscene's `play()` and optionally awaits its completion.
 
-Example — Armos Knights boss intro (`scenes/cutscenes/armos_intro.gd`):
+Example — a Sahasrahla-style NPC story beat (`scenes/cutscenes/sahasrahla_intro.gd`), exercising camera pan, dialog, and SFX together:
 
 ```gdscript
-class_name ArmosIntroCutscene extends RefCounted
+class_name SahasrahlaIntroCutscene extends RefCounted
 
-static func play(boss: ArmosKnights, player: Player, camera: Camera2D) -> void:
+static func play(npc: NPC, player: Player, camera: Camera2D) -> void:
     Cutscene.start()
+    await Cutscene.wait(0.2)
+    await Cutscene.camera_pan(camera, npc.position, 0.4)
+    Cutscene.sfx(&"npc_appear")
     await Cutscene.wait(0.3)
-    await Cutscene.camera_pan(camera, boss.position, 0.5)
-    await Cutscene.wait(0.4)
-    boss.play_awaken_animation()   # knights rise from ground
-    await Cutscene.wait(0.8)
-    Cutscene.sfx(&"boss_roar")
-    await Cutscene.camera_shake(2.0, 0.3)
-    await Cutscene.camera_pan(camera, player.position, 0.5)
+    await Cutscene.dialog(PackedStringArray([
+        "Ah, you must be the one...",
+        "The legend speaks of a hero clad in green.",
+        "Find the three pendants.",
+    ]))
+    await Cutscene.camera_pan(camera, player.position, 0.4)
     await Cutscene.wait(0.2)
     Cutscene.finish()
-    boss.start_encounter()   # boss takes over, combat begins
 ```
 
-Example — boss defeat sequence (`scenes/cutscenes/boss_defeat.gd`):
-
-```gdscript
-static func play(boss: BaseBoss, player: Player, camera: Camera2D) -> void:
-    Cutscene.start()
-    await Cutscene.camera_shake(3.0, 0.6)
-    Cutscene.sfx(&"boss_explode")
-    await Cutscene.flash(Color.WHITE, 0.4)
-    boss.spawn_death_particles()
-    await Cutscene.wait(0.5)
-    boss.queue_free()
-    await Cutscene.camera_pan(camera, boss.position, 0.3)
-    await Cutscene.wait(0.3)
-    var heart_container := boss.spawn_heart_container()
-    await Cutscene.wait(0.6)
-    Cutscene.finish()
-```
+Boss intro and defeat cutscenes (Armos Knights intro, the shared `boss_defeat.gd` used by every boss) follow the exact same pattern and are documented with their bosses in Phase 9 (section 9.2). Phase 6 only needs the autoload and a non-boss test cutscene to verify the primitives.
 
 **Directory:**
 
@@ -1940,11 +1907,12 @@ res://
       states/
         cutscene_state.gd          # Player state for cutscene lockout
     cutscenes/
-      armos_intro.gd
-      boss_defeat.gd
-      master_sword_pull.gd         # future
+      sahasrahla_intro.gd          # Phase 6 example
+      opening_sequence.gd          # Phase 6
+      master_sword_pull.gd         # Phase 7+
+      armos_intro.gd               # Phase 9 (boss)
+      boss_defeat.gd               # Phase 9 (shared boss outro)
       zelda_telepathy.gd           # future
-      opening_sequence.gd          # future
 ```
 
 **When to use cutscenes vs other systems:**
@@ -1953,10 +1921,11 @@ res://
 |---|---|
 | Player picks up a key item | `ItemGetState` (specific presentation pattern) |
 | NPC says a line | `EventBus.dialog_requested` (just text, no camera/movement) |
-| Boss intro/outro | Cutscene |
+| NPC story beat with camera movement | Cutscene |
 | Chest-triggered story moment | Cutscene |
 | Dungeon entrance flyover | Cutscene |
 | Game opening sequence | Cutscene |
+| Boss intro/outro (Phase 9) | Cutscene |
 | Room-to-room scroll | `SceneManager` (deterministic transition) |
 
 The cutscene system is only used when multiple subsystems (camera, movement, dialog, SFX, effects) need to be coordinated in a timed sequence.
@@ -1967,75 +1936,9 @@ The cutscene system is only used when multiple subsystems (camera, movement, dia
 - `cutscene_started` and `cutscene_finished` signals emit at the right moments.
 - Camera returns to following the player after `camera_pan()` completes.
 - Dialog awaits `EventBus.dialog_closed` before resuming the cutscene.
+- The Sahasrahla test cutscene plays end-to-end (camera pan → dialog → camera return).
 
-### 5.5 Dungeon Completion Flow
-
-On boss defeat:
-
-1. Boss controller calls `BossDefeatCutscene.play(self, player, camera)` — handles shake, flash, explosion, particles, and heart container spawn
-2. Cutscene awaits player picking up the heart container (dispatches `ItemGetState`)
-3. Set dungeon completion flag
-4. Fully heal player
-5. Spawn warp tile back to dungeon entrance
-
-**Verification:**
-- Complete the dungeon 1 boss: defeat cutscene plays, heart container spawns, picking it up triggers ItemGetState.
-- After the cutscene, `GameManager.get_flag("dungeon_01/complete")` returns true.
-- Warp tile is interactable and returns player to dungeon entrance.
-- Max health increased by 2 after collecting the heart container.
-
-### 5.6 Phase 5 Deliverable
-
-Acceptance criteria:
-
-1. One dungeon can be entered, cleared, and exited end to end.
-2. The boss has at least two distinct phases.
-3. Boss intro and defeat sequences play through the cutscene system.
-4. Completion flagging, reward drop, and exit warp all work in one continuous run.
-
----
-
-## Phase 6: HUD, UI, and Polish
-
-**Milestone**: "Feels Like a Game"
-
-### 6.1 HUD Polish Pass
-
-The HUD is built in Phase 1 (section 1.8) and extended in Phases 3–4. Phase 6 is the polish pass:
-
-- Tighten spacing and alignment of all HUD elements
-- Add subtle background panel (semi-transparent dark bar behind hearts/rupees) for readability over bright rooms
-- Heart damage animation: briefly flash the lost heart white before it goes dark
-- Rupee count: number ticks up/down digit by digit (not instant) when gaining/spending
-- Equipped item: brief highlight flash when switching items
-- Ensure all HUD elements look consistent across overworld, dungeon, and dark world color grading
-
-**Verification:**
-- Take damage — lost heart visibly flashes white before becoming empty.
-- Collect 10 rupees — counter ticks up digit by digit, not instantly.
-- Switch skills via subscreen — equipped skill slot flashes briefly.
-- HUD remains readable over the brightest and darkest rooms in the game.
-
-### 6.2 Dialog System
-
-Dialog box requirements:
-
-- Bottom-of-screen panel
-- Typewriter effect
-- `interact` advances or fast-forwards text
-- Supports multi-page line arrays
-
-Triggered through:
-
-- `EventBus.dialog_requested(lines)`
-
-**Verification:**
-- Place a test sign in `debug_room.tscn`. Pressing `interact` opens the dialog box with typewriter animation.
-- Pressing `interact` during typewriter completes the current page instantly. Pressing again advances to next line.
-- Multi-page text arrays work: `["Page 1", "Page 2", "Page 3"]` shows all three in sequence.
-- Dialog closing emits `EventBus.dialog_closed` exactly once.
-
-### 6.3 Shaders, Effects & Juice
+### 6.4 Shaders, Effects & Juice
 
 Phase 6 is when all 5 shaders, all particle types, squash/stretch animation, screen shake, and trail effects described in the **Visual Direction** section are implemented and wired up. These effects are not cosmetic afterthoughts — they are what makes primitive shapes feel like a real game.
 
@@ -2062,7 +1965,7 @@ Note: effects should be added incrementally as systems are built in earlier phas
 - Player squashes on sword swing and landing.
 - Torches in dungeons flicker with random energy.
 
-### 6.4 Title Screen
+### 6.5 Title Screen
 
 Minimum title screen features:
 
@@ -2071,23 +1974,87 @@ Minimum title screen features:
 - Options placeholder
 - Animated background treatment
 
-`Continue` should be disabled or hidden when no save file exists.
+`Continue` should be disabled or hidden when no save file exists. Because the Save and Load system (6.6) lands after the Title Screen in Phase 6, the Title Screen is built first with `Continue` disabled unconditionally, and is wired to the `SaveManager` API in 6.6 once that lands. This ordering keeps the Title Screen implementable against stable `SaveManager` stub methods from Phase 1 and lets both systems be verified end-to-end together in 6.6.
 
 **Verification:**
 - Launching the game boots to the title screen, not straight into gameplay.
-- Delete all saves → Continue is hidden/disabled; New Game works.
-- Save a game → restart → Continue is enabled and loads the correct slot.
+- New Game starts a fresh run (empty `PlayerState`, empty flags, spawn at designated start room).
+- Continue is hidden/disabled in 6.5 (no save system yet); becomes functional after 6.6 lands.
 - Animated background plays smoothly without stuttering.
 
-### 6.5 Phase 6 Deliverable
+### 6.6 Save and Load
+
+The save system lands at the end of Phase 6 because the full set of serializable state is only known after Phases 3–5 have added skills, upgrades, dungeon progress, cutscene flags, and world type. Building it any earlier means revisiting serialization every phase; building it here means writing `serialize()`/`deserialize()` once against the final shape of `PlayerState` and `GameManager`. The `SaveManager` autoload stub from Phase 1 becomes functional here and is wired into the Title Screen's Continue flow.
+
+**Save data** (`user://save_{slot}.json`):
+
+```json
+{
+  "schema_version": 1,
+  "slot": 1,
+  "timestamp_utc": "2026-04-04T10:00:00Z",
+  "play_time_seconds": 3600,
+  "player": {
+    "room_id": "light_overworld_2_1",
+    "position": [128, 112],
+    "facing": [0, 1]
+  },
+  "world_type": "light",
+  "player_state": {},
+  "flags": {}
+}
+```
+
+`player_state` is the full serialized state of the `PlayerState` autoload (owned skills, upgrades, resources, bottles, small keys, health, magic, heart pieces). `flags` is the full `GameManager.flags` dictionary (includes per-dungeon booleans for big key, map, compass, pendants, and crystals). Both managers expose `serialize() -> Dictionary` and `deserialize(data: Dictionary)` methods.
+
+**JSON type serialization**: Godot's built-in `JSON.stringify()` / `JSON.parse_string()` only support basic types (strings, numbers, bools, arrays, dicts). Godot-specific types must be converted manually in `serialize()` / `deserialize()`:
+
+| Godot Type | JSON Representation | Example |
+|---|---|---|
+| `Vector2` | `[x, y]` array | `[128, 112]` |
+| `Vector2i` | `[x, y]` array | `[2, 1]` |
+| `Color` | `[r, g, b, a]` array | `[1.0, 0.0, 0.0, 1.0]` |
+| `StringName` | `String` | `"bow"` (auto-converted by JSON) |
+
+Keep all save data in JSON-safe primitives. Do not use `var_to_str()` / `str_to_var()` — they work but produce Godot-specific syntax that is fragile across engine versions and not human-readable.
+
+**Save system requirements:**
+
+- 3 save slots
+- Slot metadata for title screen UI: play time, last save timestamp, player health, heart count
+- `schema_version` field so future changes can migrate old saves
+- Save triggers: save points in the world (beds, statues, dungeon entrance markers) and the Game Over "Save and Quit" option (see section 8.4).
+- Load from title screen "Continue" → slot select → load (wires into the Title Screen built in 6.5)
+
+**SaveManager public methods:**
+
+- `save_game(slot: int) -> void` — serializes GameManager + PlayerState + player position to JSON
+- `load_game(slot: int) -> void` — deserializes and restores all state, triggers room load via SceneManager
+- `get_slot_metadata(slot: int) -> Dictionary` — for title screen display (returns empty dict if slot unused)
+- `has_save(slot: int) -> bool`
+- `delete_save(slot: int) -> void`
+
+Because `PlayerState` and `GameManager` are the only autoloads holding persistent state, the save system captures everything by serializing their full dictionaries. Phase 7 (additional dungeons, NPCs) and Phase 8 (new mechanics) add no save code — they just need to ensure new state lives in `GameManager` flags or `PlayerState`.
+
+**Verification:**
+- **Unit test** (`test_save_serialization.gd`): `PlayerState.serialize()` → `deserialize()` round-trip preserves all fields. Same for `GameManager`. Vector2 values survive as `[x, y]` arrays. StringName keys become strings and convert back.
+- **Debug scene**: save game → close editor → reopen editor → load game → player position, health, and flags all restored.
+- **Title screen integration**: fresh install → Continue is disabled. Play + save → return to title → Continue is enabled and loads the correct slot.
+- Loading a save with a different `schema_version` logs a warning (migration hook).
+- `has_save(slot)` returns false for an unused slot, true after saving.
+- Full game state — skills, upgrades, resources, bottles, small keys, health, magic, heart pieces, dungeon flags, pendants, crystals, world type, current room — all round-trip through save/load with no loss.
+
+### 6.7 Phase 6 Deliverable
 
 Acceptance criteria:
 
 1. HUD is polished with animations (heart flash, rupee tick, item highlight).
 2. Dialog system works end-to-end (triggered by NPCs, signs, item acquisition).
-3. All shaders, particles, squash/stretch, screen shake, and trails from the Visual Direction section are implemented and consistent.
-4. Title screen with New Game / Continue flow.
-5. The project feels coherent and polished despite using primitive art.
+3. `Cutscene` autoload functional with primitives (wait, camera pan/shake, dialog, fade, flash, move_entity, sfx); verified via a non-boss test cutscene (e.g., the Sahasrahla NPC intro). Boss intros/outros are built on this in Phase 9.
+4. All shaders, particles, squash/stretch, screen shake, and trails from the Visual Direction section are implemented and consistent.
+5. Title screen with New Game / Continue flow.
+6. Save and load fully functional — 3 slots, `schema_version`, round-trip of all `PlayerState` and `GameManager` state, wired into the Title Screen's Continue button.
+7. The project feels coherent and polished despite using primitive art.
 
 ---
 
@@ -2097,8 +2064,8 @@ Acceptance criteria:
 
 ### 7.1 Additional Dungeons
 
-- Dungeon 2: conveyor and pit-heavy spaces, projectile-pattern boss
-- Dungeon 3: dark rooms, moving platform or traversal-heavy spaces, multi-phase boss
+- Dungeon 2: conveyor and pit-heavy spaces
+- Dungeon 3: dark rooms, moving platform or traversal-heavy spaces
 
 Each dungeon should include:
 
@@ -2106,13 +2073,13 @@ Each dungeon should include:
 - 6-10 rooms
 - Map, compass, big key
 - 2-4 small keys
-- Unique boss
-- Heart Container reward
+- Reward pedestal in the final (future boss) room — same pattern as Phase 5 (section 5.1). Phase 9 replaces the pedestal with a real boss (Dungeon 2 boss TBD, Dungeon 3 gets Moldorm).
+- Heart Container reward (granted by the pedestal in Phase 7; by the boss's `end_encounter()` in Phase 9)
 
 **Verification:**
 - Each dungeon can be entered, completed end-to-end, and exited via warp tile.
 - Map/compass/big key work per dungeon (map reveals minimap, compass reveals key chest location).
-- Defeating each boss sets its completion flag and grants a heart container.
+- Interacting with each dungeon's reward pedestal sets its completion flag, grants the reward item via `ItemGetState`, fully heals the player, and spawns the warp tile.
 
 ### 7.2 Heart Pieces
 
@@ -2190,9 +2157,9 @@ Biomes:
 
 Acceptance criteria:
 
-1. Three dungeons are completable.
+1. Three dungeons are completable via their reward pedestals (bosses retrofit in Phase 9).
 2. Overworld includes NPCs, optional rewards, and destructible interactions.
-3. Save/load (built in Phase 2) handles all new state from Phases 3–7 without modification.
+3. Save/load (built in Phase 6) handles all Phase 7 content — new dungeons, NPCs, heart pieces, expanded overworld — without modification to the SaveManager.
 
 ---
 
@@ -2317,24 +2284,11 @@ LikeLike (CharacterBody2D, script: like_like.gd extends BaseEnemy)
 
 On Engulf: player's state machine is forced into a special trapped state. If engulf duration expires before escape, shield tier drops by 1.
 
-**Moldorm** — note: this is a mini-boss, not a regular enemy. Uses the boss architecture:
-
-```
-Moldorm (Node2D, script: moldorm.gd extends BaseBoss)
-  ├── StateMachine
-  │     ├── Erratic  (phase 1: random direction changes)
-  │     └── Frenzy   (phase 2: faster, tighter turns)
-  ├── Head (CharacterBody2D, contact damage, no hurtbox)
-  ├── Segment1 ... Segment3 (follow head, contact damage, no hurtbox)
-  └── Tail (CharacterBody2D, contact damage, HAS hurtbox — only vulnerable point)
-```
-
-Segments follow the head using a position history queue (each segment takes the position the one ahead had N frames ago). Only the tail takes damage. Speed increases as health drops.
+> **Note**: Moldorm (Dungeon 3 mini-boss) was previously listed here because it shares the "chain of segments" architectural flavor with advanced enemies, but it is a boss — its construction, phase behavior, and encounter flow are covered in Phase 9 (section 9.3). Phase 8.5 is strictly regular advanced enemies.
 
 **Verification:**
 - Wizzrobe: cycles through its 5 states correctly, only takes damage during Appear/Telegraph/Fire.
 - Like-Like: engulfs player on contact, mashing `action_sword` escapes, timeout drops shield tier.
-- Moldorm: only tail segment takes damage. Body segments follow the head correctly. Speed visibly increases past 50% HP.
 
 ### 8.6 Audio Hookup Coverage
 
@@ -2362,6 +2316,152 @@ Acceptance criteria:
 1. Swimming, lifting, throwing, magic consumption, and game over all work in normal gameplay.
 2. Advanced enemies meaningfully exercise those systems.
 3. Audio coverage is documented and already wired through gameplay code.
+
+---
+
+## Phase 9: Bosses
+
+**Milestone**: "Bosses Complete"
+
+Bosses land last because a good boss exercises nearly every system in the game: combat, dungeons, skills, upgrades, cutscenes, dialog, advanced enemies, magic, lifting, swimming. Attempting bosses any earlier would either produce shallow placeholder encounters or force the phase to drag in half-built dependencies. Arriving here in Phase 9, bosses can use the full toolkit: the Cutscene system from 6.3 for intros/outros, dialog from 6.2 for any pre-fight text, magic interactions from 8.3, lift mechanics from 8.2, and the advanced enemy behavior patterns from 8.5 as reference points for boss state machines.
+
+Phase 9 also **retrofits** bosses into dungeons already built in Phases 5 and 7. Each dungeon has a reward pedestal placeholder in its boss room (see section 5.1); Phase 9 replaces the pedestal with a real boss scene whose `end_encounter()` runs the same completion steps plus a heart container drop. Everything downstream of the completion trigger (flag, heal, reward, warp tile) stays identical, so the retrofit touches only the boss rooms' contents.
+
+### 9.1 Boss Architecture
+
+Bosses are **not extensions of the enemy system**. Each boss is a bespoke scene with its own structure, because boss encounters vary too much to share a base scene (multi-entity formations, segment chains, teleporters, etc.).
+
+What bosses share is a **`base_boss.gd` script** (extends `Node2D`, not `CharacterBody2D`) that provides:
+
+- `phase: int` — current phase, changed by the boss's own logic
+- `total_health: int` / `current_health: int` — aggregate HP (may be split across sub-entities)
+- `_on_phase_change(new_phase)` — virtual. Called automatically when `phase` changes. Triggers brief invulnerability, particle flourish, and screen shake.
+- `start_encounter()` — called when player enters boss room. Locks camera to room bounds, closes boss door, starts BGM, plays intro cutscene.
+- `end_encounter()` — called on defeat. Plays defeat cutscene, spawns heart container, sets dungeon completion flag and reward flag, fully heals player, spawns warp tile. Replaces the Phase 5 reward pedestal's completion flow for the boss's dungeon.
+- `BossHealthBar` — a `Control` child that draws at the top of the screen. Updated via signal.
+
+Each boss scene owns its own `StateMachine` with **boss-specific states** (not Patrol/Chase/Attack). The state machine drives phase behavior. Because bosses arrive after Phase 6.3 (Cutscene System), intros and outros run through the Cutscene autoload's `await` primitives — no ad-hoc inline sequencing is needed.
+
+**Verification:**
+- Create a minimal test boss with a scripted phase change at 50% HP. Phase change fires `_on_phase_change()`, triggers the brief invulnerability window, particle flash, and screen shake.
+- `start_encounter()` locks camera and closes the boss door (verify with a test room).
+- BossHealthBar appears on encounter start and updates as HP drops.
+- `end_encounter()` runs the same completion flow as the Phase 5 reward pedestal, plus the heart container drop and defeat cutscene.
+
+### 9.2 Armos Knights (Dungeon 1)
+
+```
+ArmosKnights (Node2D, script: armos_knights.gd extends BaseBoss)
+  ├── StateMachine
+  │     ├── Formation  (phase 1: coordinated hopping)
+  │     └── LastStand  (phase 2: solo aggressive knight)
+  ├── BossHealthBar
+  ├── Knight1 (CharacterBody2D, script: armos_knight_unit.gd)
+  │     ├── CollisionShape2D
+  │     ├── KnightBody (Node2D, _draw())
+  │     ├── HurtboxComponent
+  │     └── ContactHitbox
+  ├── Knight2 ... Knight6
+  └── SpawnPositions (Marker2D nodes)
+```
+
+The controller (`armos_knights.gd`) manages all 6 knight units. Individual knights are **not** full enemies — they have hitboxes/hurtboxes but no `StateMachine` of their own. The controller tells them where to hop.
+
+**Phase 1** (6 alive): Knights hop in a synchronized grid pattern. The controller picks a formation, tweens all knights to target positions, pauses, repeats. Occasionally one knight targets the player's position. Contact damage. Each knight has individual HP. When one dies: death particles, remaining knights speed up slightly. Phase change triggers when 5 are dead.
+
+**Phase 2** (1 remaining): Last knight turns red (shader color shift). Hops faster. Jump-attacks the player's position — a shadow indicator (dark circle on ground) telegraphs the landing spot 0.4s before impact. Higher contact damage.
+
+**Intro cutscene** (`scenes/cutscenes/armos_intro.gd`):
+
+```gdscript
+class_name ArmosIntroCutscene extends RefCounted
+
+static func play(boss: ArmosKnights, player: Player, camera: Camera2D) -> void:
+    Cutscene.start()
+    await Cutscene.wait(0.3)
+    await Cutscene.camera_pan(camera, boss.position, 0.5)
+    await Cutscene.wait(0.4)
+    boss.play_awaken_animation()   # knights rise from ground
+    await Cutscene.wait(0.8)
+    Cutscene.sfx(&"boss_roar")
+    await Cutscene.camera_shake(2.0, 0.3)
+    await Cutscene.camera_pan(camera, player.position, 0.5)
+    await Cutscene.wait(0.2)
+    Cutscene.finish()
+    boss.begin_combat()
+```
+
+**Defeat cutscene** (`scenes/cutscenes/boss_defeat.gd`) — reusable across all bosses:
+
+```gdscript
+static func play(boss: BaseBoss, player: Player, camera: Camera2D) -> void:
+    Cutscene.start()
+    await Cutscene.camera_shake(3.0, 0.6)
+    Cutscene.sfx(&"boss_explode")
+    await Cutscene.flash(Color.WHITE, 0.4)
+    boss.spawn_death_particles()
+    await Cutscene.wait(0.5)
+    boss.queue_free()
+    await Cutscene.camera_pan(camera, boss.position, 0.3)
+    await Cutscene.wait(0.3)
+    var heart_container := boss.spawn_heart_container()
+    await Cutscene.wait(0.6)
+    Cutscene.finish()
+```
+
+**Retrofit into Dungeon 1**: in Phase 5 the final room contained a reward pedestal. In Phase 9, the pedestal is removed and the ArmosKnights scene is placed in the same room. The dungeon completion flow is unchanged downstream — same flag keys (`dungeon_01/complete`, `pendants/courage`), same player heal, same warp tile — just triggered by `end_encounter()` instead of pedestal interact.
+
+**Verification** (playable end-to-end in the dungeon 1 boss room):
+- Entering the boss room runs the intro cutscene, locks the camera, closes the boss door, starts boss BGM.
+- All 6 knights spawn and hop in formation. Hitting one deals damage (tracked individually).
+- Killing 5 knights triggers the Phase 2 transition: remaining knight flashes red and speeds up.
+- Jump attack telegraphs with shadow indicator before landing.
+- Defeating the last knight runs the defeat cutscene, spawns heart container, sets `dungeon_01/complete` + `pendants/courage`, heals player, spawns warp tile.
+
+### 9.3 Moldorm (Dungeon 3)
+
+```
+Moldorm (Node2D, script: moldorm.gd extends BaseBoss)
+  ├── StateMachine
+  │     ├── Erratic  (phase 1: random direction changes)
+  │     └── Frenzy   (phase 2: faster, tighter turns)
+  ├── Head (CharacterBody2D, contact damage, no hurtbox)
+  ├── Segment1 ... Segment3 (follow head, contact damage, no hurtbox)
+  └── Tail (CharacterBody2D, contact damage, HAS hurtbox — only vulnerable point)
+```
+
+Segments follow the head using a position history queue (each segment takes the position the one ahead had N frames ago). Only the tail takes damage. Speed increases as health drops.
+
+Moldorm is a good second boss example because it exercises a different architectural pattern from Armos Knights: a chain of segments with a single vulnerable point, rather than a formation of independent units. Its phase 2 transition is a continuous speed ramp rather than a discrete visual change.
+
+**Retrofit into Dungeon 3**: same as Armos — the Dungeon 3 reward pedestal is replaced with the Moldorm scene, `end_encounter()` runs the completion flow that was previously on the pedestal.
+
+**Verification:**
+- Only the tail segment takes damage; hits on body segments clink (no damage).
+- Body segments follow the head correctly via position history queue.
+- Speed visibly increases past 50% HP (phase 2 transition).
+- Defeating Moldorm runs the shared defeat cutscene and completes Dungeon 3.
+
+### 9.4 Boss Design Guidelines
+
+Future bosses follow the same pattern — bespoke scene, `base_boss.gd` script, own state machine, cutscene-driven intro/outro:
+
+- **Dungeon 2 boss**: Could be a single large entity with projectile-pattern phases. Scene is a `CharacterBody2D` extending `BaseBoss` directly (no sub-entities needed). Good showcase for the projectile system built in Phase 2.6.
+- Each boss should have at least 2 phases with a visible transition (flash, shake, color change).
+- Intros and outros always run through the `Cutscene` autoload — never ad-hoc inline sequencing. Shared defeat cutscene (`boss_defeat.gd`) handles the universal steps (shake, flash, explosion, heart container); per-boss intros can be unique.
+- Boss state machines should lean on systems that already exist from Phases 6–8: dialog lines in cutscenes for talking bosses, magic-reactive behavior for bosses that should respond to Fire/Ice Rod, lift-and-throw interactions for bosses with liftable components.
+- Because Phase 9 arrives after all gameplay systems, there is no reason to dodge mechanics — a boss can freely require dashing, swimming, lifting, or magic as part of its solution.
+
+### 9.5 Phase 9 Deliverable
+
+Acceptance criteria:
+
+1. `base_boss.gd` script exists with phase-change, encounter-start, and encounter-end hooks.
+2. Armos Knights boss scene is fully playable: intro cutscene, Phase 1 formation hopping, Phase 2 solo knight, defeat cutscene, heart container drop, dungeon 1 completion flow triggered via `end_encounter()`.
+3. Moldorm boss scene is fully playable: head+segments+tail construction, tail-only vulnerability, speed ramp, defeat cutscene, dungeon 3 completion flow triggered via `end_encounter()`.
+4. Reward pedestals from Phases 5 and 7 are replaced by boss scenes in dungeons that ship with bosses. Remaining dungeons (if any are designed with non-boss reward pedestals as a deliberate choice) still function via the Phase 5 pedestal path.
+5. All bosses use the shared `Cutscene.*` primitives for intros/outros — zero inline ad-hoc sequencing in boss scripts.
+6. All boss persistence works: a defeated boss stays defeated on room re-entry via `{room_id}/{persist_id}` flags.
 
 ---
 
@@ -2521,13 +2621,14 @@ resource_amount = 5
 | Phase | Milestone | Key Systems |
 |---|---|---|
 | 1 | Link Walks Around a Room | Movement, room loading, player, HUD (hearts, rupees, skill slot), autoloads |
-| 2 | Link Fights Enemies | Combat components, enemy archetypes, drops, save/load |
+| 2 | Link Fights Enemies | Combat components, enemy archetypes, drops |
 | 3 | Link Has Equipment | Skills, upgrades, resources, subscreen |
 | 4 | Explorable Overworld | Screen transitions, dungeon structure, world switching |
-| 5 | First Dungeon Complete | Boss architecture, full dungeon completion loop |
-| 6 | Feels Like a Game | HUD polish, dialog, shader/particle polish pass, title screen |
+| 5 | First Dungeon Playable | Dungeon navigation end-to-end, non-boss reward pedestal completion |
+| 6 | Feels Like a Game | HUD polish, dialog, cutscene system, shader/particle polish pass, title screen, save/load |
 | 7 | Full Game Loop | Additional dungeons, NPCs, heart pieces, expanded overworld |
 | 8 | Feature Complete | Swimming, lifting, throwing, magic, game over, advanced enemies |
+| 9 | Bosses Complete | Boss architecture, Armos Knights, Moldorm, boss retrofit into Phases 5 and 7 dungeons |
 
 Rules for phase completion:
 
