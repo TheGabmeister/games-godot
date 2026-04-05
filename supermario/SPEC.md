@@ -883,9 +883,10 @@ Purpose:
 - Stay invisible until hit from below
 
 Rules:
-- Initially has no visible geometry
-- Still collides only once revealed or once hit, depending on desired feel
-- After reveal, behaves like an empty brown block
+- Initially has no visible geometry and no collision
+- Player can pass freely through the tile space until their head strikes it from below while moving upward
+- On that first head-strike, the block reveals, enables collision, and triggers its contents (coin or 1-UP)
+- After reveal, behaves like an empty brown block (solid, inert)
 
 ### 9.4 Flagpole
 
@@ -1242,9 +1243,9 @@ Game over:
 
 ## 17. Open Questions
 
-These do not block early implementation, but they should be decided before polish-heavy work:
+All previously open questions have been resolved:
 
-- Should this project aim for exact SMB movement feel or "SMB-inspired but slightly more forgiving" controls?
-- Should hidden blocks collide before reveal, or only after the first hit?
-- Should the title screen include attract/demo playback later, or remain static for v1?
-- Should World 1-2 be included in scope or remain a post-v1 stretch goal?
+- **Movement feel:** Implemented. See `scripts/player/` — the current physics constants and state machine define the canonical feel for this project.
+- **Hidden blocks:** Classic SMB behavior — no visuals and no collision until hit from below while the player is moving upward. See §9.3.
+- **Title screen:** Static for v1. No attract/demo playback.
+- **World 1-2 scope:** Included in v1 scope (not a stretch goal).

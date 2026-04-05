@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/level/level_base.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/question_block.tscn" id="6_qblock"]
 [ext_resource type="PackedScene" path="res://scenes/objects/brick_block.tscn" id="7_brick"]
 [ext_resource type="PackedScene" path="res://scenes/objects/coin.tscn" id="8_coin"]
+[ext_resource type="PackedScene" path="res://scenes/objects/hidden_block.tscn" id="9_hidden"]
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
@@ -101,6 +102,10 @@ position = Vector2(1304, 144)
 [node name="MultiCoin_130_8" parent="Blocks" instance=ExtResource("7_brick")]
 position = Vector2(2088, 144)
 coin_count = 8
+
+[node name="Hidden_18_4" parent="Blocks" instance=ExtResource("9_hidden")]
+position = Vector2(296, 80)
+contents = &"1up"
 
 [node name="Pipes" type="Node2D" parent="."]
 
