@@ -1142,12 +1142,44 @@ Game over:
 
 ## 15. Implementation Phases
 
+Every phase ends with a **Testing & verification** block. Treat these as the
+gates you must clear before moving on — catching a bug in the phase that
+introduced it is an order of magnitude cheaper than catching it after three
+more systems have been layered on top. If a check fails, fix it before starting
+the next phase rather than adding it to a backlog.
+
+Two validation tools are used throughout:
+
+- `godot --headless --path . --quit` — catches parse errors, broken autoload
+  wiring, missing `res://` paths, and malformed scene files. Fast enough to run
+  after any edit. Note: this command exits before indexing new `class_name`
+  scripts, which is why the project avoids `class_name` entirely.
+- `godot --path .` — runs the game windowed for manual gameplay checks. Use
+  the Godot editor's remote scene tree and debugger when something looks wrong
+  at runtime.
+
 ### Phase 1 - Foundation
 
 - Create repo folders and scene/script skeletons
 - Configure project display and input
 - Add autoloads
 - Implement transition shell and game state shell
+
+**Testing & verification:**
+
+- Headless: `godot --headless --path . --quit` exits with code 0 and prints no
+  script errors or missing-resource warnings.
+- Manual: launch the game — the main scene loads, autoloads are instantiated
+  (temporarily `print()` from each `_ready()` to confirm), input actions
+  respond in the Input Map tester, and `SceneManager.fade_to_scene()` plays a
+  visible fade when called from a debug key.
+- Bug watchlist:
+  - Autoload order matters: `EventBus` must load before `GameManager` or
+    signal connections will fail. Verify via the print order.
+  - Typos in the `res://` paths for autoload scripts silently disable the
+    autoload — check `GameManager` is non-null from any scene.
+  - `project.godot` edits: a single malformed line breaks project loading
+    entirely. If headless exits nonzero, revert the last `project.godot` edit.
 
 ### Phase 2 - Player
 
@@ -1157,6 +1189,33 @@ Game over:
 - Draw small and big Mario
 - Validate movement on flat ground
 
+**Testing & verification:**
+
+- Headless: project loads clean after adding the state machine and all state
+  scripts (a missing `extends` path in any state script breaks the whole
+  player scene).
+- Manual gameplay:
+  - Walk, run (hold run key), and stop — decelerate smoothly without sliding
+    forever.
+  - Skid turnaround: run one way, press opposite — Mario should decelerate
+    quickly and turn around without snapping direction instantly.
+  - Jump: tapped jump is short, held jump is tall — variable height works.
+  - Coyote time: walk off a ledge and press jump ~1 frame late — should still
+    jump. Jump buffer: press jump ~1 frame before landing — should jump on
+    landing.
+  - Crouch (as Big Mario): hold down — collision shape shrinks, drawing
+    matches. Releasing crouch under a low ceiling must not let Mario stand
+    (ceiling clearance check).
+  - `_draw()` walk cycle animates while running and freezes on idle.
+- Bug watchlist:
+  - State machine leaks: transitions not calling `exit()` cause lingering
+    behavior (e.g., run animation stuck during jump). Add temporary state
+    prints if any state feels sticky.
+  - Collision shape not resized on power change → Mario gets stuck in ceilings
+    or falls through floors after a grow/shrink.
+  - `is_on_floor()` flickering on slopes: if jumping feels inconsistent after
+    landing, check `move_and_slide()` is called every physics frame.
+
 ### Phase 3 - Level Basics
 
 - Build `world_1_1.tscn`
@@ -1164,6 +1223,32 @@ Game over:
 - Add camera, bounds, and kill zone
 - Add parallax/background layers
 - Add HUD
+
+**Testing & verification:**
+
+- Headless: level scene loads, `TerrainTileSet` is generated without errors,
+  no missing texture warnings (procedural only, so any texture warning points
+  to an accidental asset reference).
+- Manual gameplay:
+  - Walk the full length of the level — no gaps in terrain, no falling through
+    the ground, no invisible walls.
+  - Camera follows the player with look-ahead; camera does not scroll left
+    once it has advanced (`limit_left` ratchet).
+  - Parallax: clouds, hills, and bushes drift at different speeds than the
+    foreground as the camera moves. They should not snap or tear as the
+    camera starts moving (verifies the lazy camera lookup in `_process`).
+  - Kill zone: fall into a pit — player dies and respawns or triggers game
+    over flow.
+  - HUD: score, coins, world, timer, and lives display. Timer decrements once
+    per second.
+- Bug watchlist:
+  - Parallax reading `camera.global_position` instead of
+    `get_screen_center_position()` causes visible jitter when the camera
+    smooths or offsets.
+  - Kill zone on the wrong collision layer silently never fires.
+  - TileMapLayer collision not enabled → player walks through the ground.
+  - HUD Label uses a default theme font that blurs at low res; confirm pixel
+    font or `LabelSettings` with integer scaling.
 
 ### Phase 4 - Blocks and Items
 
@@ -1174,6 +1259,39 @@ Game over:
 - Mushroom and Fire Flower
 - Power-state transitions
 
+**Testing & verification:**
+
+- Headless: all block and item scenes load; no missing `preload()` paths.
+- Manual gameplay:
+  - Question block: jump into it from below — bump animation plays, contents
+    spawn above, block turns empty brown. Repeated hits do nothing.
+  - Brick block as Small Mario: bumps without breaking. As Big Mario: shatters
+    and awards points.
+  - Multi-coin brick: yields its configured coin count across successive
+    bumps, then becomes empty.
+  - Hidden block: run underneath without hitting it — invisible, no collision
+    (player is not stopped mid-air). Jump into the tile from below — block
+    reveals, becomes solid, spawns contents. Walking or falling into it from
+    the side or above does nothing.
+  - Mushroom: Small → Big with brief grow animation; collision shape expands
+    without clipping into ground.
+  - Fire Flower (already Big): Big → Fire, palette changes.
+  - Fire Flower taken while Small: still upgrades to Big (spec rule).
+  - Coin pickup: score +200, coin count +1, `coins_changed` HUD update. 100
+    coins grants a 1-UP.
+- Bug watchlist:
+  - Any new interactable block that forgets `bump_from_below()` will be hit
+    but do nothing — player's `check_ceiling_bumps()` silently skips it.
+  - Block bump via `Area2D.body_entered` is unreliable on touching contact
+    (see `CLAUDE.md`). Use the slide-collision pattern for solid blocks.
+  - Hidden block: deep head penetration (more than 8 px in a single frame)
+    can flip depenetration direction on reveal, popping Mario up through the
+    block. Watch for any velocity tuning that pushes per-frame motion past
+    that threshold.
+  - Mushroom falling into pits before the player can reach it: items should
+    ride terrain and reverse at walls.
+  - Power-down during intangibility frames must not re-trigger damage.
+
 ### Phase 5 - Enemies
 
 - Enemy base
@@ -1182,6 +1300,31 @@ Game over:
 - Koopa shell
 - Stomp and damage logic
 - Enemy activation/cleanup
+
+**Testing & verification:**
+
+- Headless: all enemy scenes load; enemy base class (via `preload`) is
+  referenced correctly by Goomba/Koopa.
+- Manual gameplay:
+  - Goomba: walks, reverses at walls and ledges (if that rule applies),
+    stomped → dies with squash animation and awards points.
+  - Koopa: stomped once → shell state, stomped again (or kicked) → moving
+    shell. Moving shell kills other enemies on contact and can bounce off
+    walls. Combo chain kills escalate points (100/200/400/...).
+  - Walking into an enemy from the side damages Mario. Small Mario dies, Big
+    Mario shrinks.
+  - Enemies off-screen do not process physics (activation gate). Walk back
+    and forth past an enemy — CPU profile should not ramp with distance.
+  - Falling into a pit destroys the enemy cleanly.
+- Bug watchlist:
+  - Stomp detection vs. side-hit depends on layer masks and vertical
+    velocity. If Mario dies when stomping, the stomp `Area2D` is on the
+    wrong layer or the hurtbox is firing first.
+  - Enemies spawning inside terrain due to off-grid placement.
+  - Shell collision with the player who just kicked it: shell must ignore
+    the player for a few frames post-kick or Mario dies from his own kick.
+  - Enemy `queue_free()` during a signal emission can crash — use
+    `call_deferred("queue_free")`.
 
 ### Phase 6 - Effects and Polish
 
@@ -1192,6 +1335,29 @@ Game over:
 - Score popups
 - Motion trails
 
+**Testing & verification:**
+
+- Headless: shader compiles (a broken shader prints to stderr at load).
+- Manual gameplay:
+  - Bloom/glow visible on bright sprites against darker backgrounds;
+    WorldEnvironment is set and Forward Plus renderer is active.
+  - Damage flash plays on hit and does not persist after intangibility ends.
+  - Screen shake triggers on brick-break, enemy stomp chain, and power-up
+    loss — decay returns the camera precisely to its tracked position (no
+    drift).
+  - Score popups spawn at event positions and rise/fade consistently.
+  - Motion trails draw while running at top speed and cleanly disappear when
+    slowing down.
+  - Particles do not accumulate forever — confirm they free themselves after
+    their lifetime.
+- Bug watchlist:
+  - Screen shake applied directly to `camera.position` instead of
+    `camera.offset` fights with parallax and breaks camera follow.
+  - Forward Plus not active → glow silently does nothing. Check project
+    settings after any renderer change.
+  - Particles on CanvasLayer inherit the wrong coordinate space and render
+    off-screen.
+
 ### Phase 7 - Advanced Gameplay
 
 - Fire Mario and fireballs
@@ -1201,6 +1367,33 @@ Game over:
 - Flagpole sequence
 - Timer countdown
 
+**Testing & verification:**
+
+- Headless: all new scenes and states load; no missing states in the player
+  state machine.
+- Manual gameplay:
+  - Fireball: spawns at Mario's front, arcs with gravity, bounces on floor,
+    dies on wall contact, kills enemies. Max 2 on screen at once.
+  - Starman: invincibility works, palette cycles, enemies killed by contact,
+    runs out with warning flashes, music duck/restore works.
+  - Piranha Plant: retracts when Mario stands on its pipe; emerges otherwise.
+    Damages on contact.
+  - Pipe warp: press down on a warp pipe → pipe-enter state plays, scene
+    transitions, Mario emerges from the destination pipe.
+  - Flagpole: grab at various heights — scoring matches the height table,
+    slide-down plays, walk-to-castle auto-moves Mario, level complete fires.
+  - Timer: decrements visibly, HUD text turns red and pulses below 100,
+    hitting zero triggers death.
+- Bug watchlist:
+  - Flagpole grabbed mid-jump from the back side of the pole doesn't trigger
+    — check the collision area extends to both sides.
+  - Pipe warp triggered while airborne or while carrying momentum creates
+    visual glitches — only accept the warp input while grounded over the
+    pipe.
+  - Fireball passes through thin platforms or block seams due to tunneling —
+    cap its speed or use shape cast.
+  - Timer continuing to run during death or level-complete animations.
+
 ### Phase 8 - Menus and Loop
 
 - Title screen
@@ -1209,17 +1402,77 @@ Game over:
 - Game over
 - Level complete flow
 
+**Testing & verification:**
+
+- Headless: every menu scene loads in isolation.
+- Manual gameplay:
+  - Boot the game — title screen appears, "PRESS START" blinks, any input
+    advances to level intro.
+  - Level intro shows `WORLD 1-1` and lives, lasts ~2.5 s, then gameplay
+    begins.
+  - Pause: press pause → gameplay freezes, menu is interactive (music ducks
+    or pauses), unpause resumes exactly where it left off.
+  - Die all lives → game over screen → return to title after ~3 s.
+  - Complete the flagpole → level complete bonus tally → next level (or back
+    to title if no next level).
+- Bug watchlist:
+  - Pause menu not set to `PROCESS_MODE_WHEN_PAUSED` — the menu freezes with
+    the rest of the game.
+  - Title screen input registering a stale jump press that carries into the
+    first frame of gameplay.
+  - `GameManager` state (score, lives, timer) not reset properly on return
+    to title, causing the next run to start with leftover values.
+
 ### Phase 9 - Audio
 
 - Add placeholder or final assets
 - Wire EventBus-to-audio responses
 - Tune volume mix
 
+**Testing & verification:**
+
+- Headless: audio registry loads without "missing stream" errors for any
+  registered key.
+- Manual gameplay:
+  - Every gameplay event with a wired SFX plays it (jump, stomp, coin,
+    power-up, bump, break, fireball, death, flagpole).
+  - Music plays on level start; crossfade between stages works; Starman
+    music supplants level music and restores afterward.
+  - SFX pool size is sufficient — rapid events (coin pickup, multi-coin
+    brick, enemy chain) do not drop sounds.
+  - Volume mix: no clipping, SFX audible over music.
+- Bug watchlist:
+  - Signal connected twice → SFX plays twice and doubles in volume.
+  - Empty key in audio registry plays nothing silently — log a warning on
+    first use to surface missing assets.
+  - Music player not set to `bus = "Music"` means volume sliders don't
+    affect it.
+
 ### Phase 10 - Expansion
 
 - Fill out the full World 1-1 pass
 - Add hidden 1-UP spots and polish
 - Stretch goal: World 1-2 underground level
+
+**Testing & verification:**
+
+- Headless: both level scenes load.
+- Manual full-playthrough:
+  - Complete World 1-1 from start to flagpole without dying. All blocks,
+    enemies, items, pipes, and the flagpole behave correctly.
+  - Find every hidden 1-UP in the documented positions.
+  - Complete the pipe warp into the coin room (if included) and exit back
+    into the level.
+  - (Stretch) Complete World 1-2: underground palette, pipe exit to 1-3 or
+    loop back to title.
+- Bug watchlist:
+  - Regression: earlier phases' bugs often resurface during level expansion
+    (e.g., new block positions expose a camera limit bug). Re-run all
+    earlier phase manual checks on the expanded level.
+  - Level load time: sudden spikes usually mean a runtime resource is being
+    rebuilt per-instance instead of cached.
+  - Memory leaks across death/respawn cycles — play through the level 10+
+    times in one session and confirm frame time stays stable.
 
 ---
 
