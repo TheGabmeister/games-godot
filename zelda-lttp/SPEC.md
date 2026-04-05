@@ -2485,17 +2485,15 @@ static func play(boss: ArmosKnights, player: Player, camera: Camera2D) -> void:
 **Defeat cutscene** (`scenes/cutscenes/boss_defeat.gd`) — reusable across all bosses:
 
 ```gdscript
-static func play(boss: BaseBoss, player: Player, camera: Camera2D) -> void:
+static func play(boss: BaseBoss, camera: Camera2D) -> void:
     Cutscene.start()
     await Cutscene.camera_shake(3.0, 0.6)
     Cutscene.sfx(&"boss_explode")
     await Cutscene.flash(Color.WHITE, 0.4)
     boss.spawn_death_particles()
+    var heart_container := boss.spawn_heart_container()
     await Cutscene.wait(0.5)
     boss.queue_free()
-    await Cutscene.camera_pan(camera, boss.position, 0.3)
-    await Cutscene.wait(0.3)
-    var heart_container := boss.spawn_heart_container()
     await Cutscene.wait(0.6)
     Cutscene.finish()
 ```
@@ -2537,7 +2535,7 @@ Moldorm is a good second boss example because it exercises a different architect
 
 Future bosses follow the same pattern — bespoke scene, `base_boss.gd` script, own state machine, cutscene-driven intro/outro:
 
-- **Dungeon 2 boss**: Could be a single large entity with projectile-pattern phases. Scene is a `CharacterBody2D` extending `BaseBoss` directly (no sub-entities needed). Good showcase for the projectile system built in Phase 2.6.
+- **Dungeon 2 boss**: Could be a single large entity with projectile-pattern phases. Scene root is a `Node2D` with `BaseBoss` script containing one `CharacterBody2D` child for movement and collision (no additional sub-entities needed). Good showcase for the projectile system built in Phase 2.6.
 - Each boss should have at least 2 phases with a visible transition (flash, shake, color change).
 - Intros and outros always run through the `Cutscene` autoload — never ad-hoc inline sequencing. Shared defeat cutscene (`boss_defeat.gd`) handles the universal steps (shake, flash, explosion, heart container); per-boss intros can be unique.
 - Boss state machines should lean on systems that already exist from Phases 6–8: dialog lines in cutscenes for talking bosses, magic-reactive behavior for bosses that should respond to Fire/Ice Rod, lift-and-throw interactions for bosses with liftable components.
