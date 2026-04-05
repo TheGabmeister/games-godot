@@ -10,11 +10,6 @@ Project pillars:
 - Modern polish through particles, glow, screen shake, transitions, and clean architecture.
 - Audio-ready structure even if placeholder or empty assets are used at first.
 
-Current repository status:
-- The repo is currently a minimal Godot starter project.
-- `project.godot`, `icon.svg`, and a placeholder `new_script.gd` exist.
-- Everything else in this spec describes the intended target architecture, not the current state on disk.
-
 Out of scope for v1:
 - Online play
 - Save files
@@ -826,6 +821,63 @@ Warp sequence:
 6. Reposition at target pipe exit
 7. Tween player out
 8. Return control
+
+**Z-ordering during the tween**
+
+While sliding into a pipe, Mario must render *behind* the pipe rim (so the
+rim visually occludes his head as he descends) but still in front of the
+background and terrain. Conversely, while emerging from the destination pipe
+he must start hidden behind the rim and end in front of it. The rule:
+
+- The pipe scene's root uses a fixed `z_index` (e.g., `5`) that sits above
+  terrain and background but below the player's normal `z_index` (e.g., `10`).
+- On entering `PipeEnterState`, the player's `z_index` is dropped to a value
+  *below* the pipe's (e.g., `0`) for the duration of the slide-in tween.
+- After the fade transition and reposition at the target pipe, the player
+  stays at the lowered `z_index` during the slide-out tween, then restores
+  to its normal `z_index` when control returns.
+- The pipe's `z_as_relative = false` so its `z_index` is absolute and not
+  affected by parent containers.
+
+`PipeEnterState.enter()` caches the player's previous `z_index`, lowers it,
+and `PipeEnterState.exit()` restores the cached value. Do not mutate
+`z_index` from the pipe script itself — the state owns that lifecycle so
+early exits (e.g., death during warp, if that's ever possible) can't leave
+the player stuck behind geometry.
+
+**Collision during the tween**
+
+Mario's `CharacterBody2D` is a physics body, and leaving it live during the
+tween would fight the pipe's own collision shape: `move_and_slide()` would
+depenetrate him out of the pipe sideways, and gravity would keep pulling him
+against the pipe top. The tween must drive position directly with no physics
+interference.
+
+Handling:
+
+- On `PipeEnterState.enter()`, set the player's `CollisionShape2D.disabled`
+  via `set_deferred("disabled", true)`. Do **not** toggle
+  `collision_layer`/`collision_mask` — disabling the shape is cleaner and
+  reverses cleanly on exit.
+- Zero `velocity` and stop calling `apply_gravity()` / `move_and_slide()`
+  from the state's `process_physics()`. The state should only advance the
+  tween and otherwise do nothing physics-related.
+- Position is driven by a `Tween` on the player's `global_position` (or by
+  `Tween`-interpolated `velocity = Vector2.ZERO` plus manual `position`
+  assignment — pick one and stick to it; don't mix).
+- On `PipeEnterState.exit()`, re-enable the collision shape via
+  `set_deferred("disabled", false)` and restore normal state flow. The
+  deferred re-enable avoids a one-frame overlap at the exit pipe if the
+  emerge tween ends with Mario's collision shape still touching the pipe's
+  rim collision.
+- The pipe itself keeps its solid collision on layer 1 throughout — only the
+  player's collision is toggled. Other entities (enemies, shells, items) are
+  unaffected and continue to collide with pipes normally.
+
+Together these two rules mean the pipe warp sequence is "player becomes a
+visual-only puppet tweened by the state, then snaps back to a normal physics
+body when the state exits." This keeps the existing player controller
+untouched — no special cases inside `player_controller.gd`.
 
 ---
 

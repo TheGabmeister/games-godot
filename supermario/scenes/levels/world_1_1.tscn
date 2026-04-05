@@ -1,9 +1,9 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene format=3 uid="uid://wyxy0cynt2mu"]
 
-[ext_resource type="Script" path="res://scripts/level/level_base.gd" id="1_level"]
+[ext_resource type="Script" uid="uid://bmtm45l8dnhcn" path="res://scripts/level/level_base.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
-[ext_resource type="Script" path="res://scripts/level/kill_zone.gd" id="3_killzone"]
-[ext_resource type="Script" path="res://scripts/level/parallax_controller.gd" id="4_parallax"]
+[ext_resource type="Script" uid="uid://b3e14k2o5frpw" path="res://scripts/level/kill_zone.gd" id="3_killzone"]
+[ext_resource type="Script" uid="uid://dwsf60yombs0x" path="res://scripts/level/parallax_controller.gd" id="4_parallax"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://scenes/objects/question_block.tscn" id="6_qblock"]
 [ext_resource type="PackedScene" path="res://scenes/objects/brick_block.tscn" id="7_brick"]
@@ -35,126 +35,123 @@ size = Vector2(16, 448)
 [sub_resource type="Environment" id="Environment_bloom"]
 background_mode = 3
 glow_enabled = true
-glow_intensity = 0.3
 glow_bloom = 0.1
 glow_blend_mode = 0
 
-[node name="World_1_1" type="Node2D"]
+[node name="World_1_1" type="Node2D" unique_id=686316501]
 script = ExtResource("1_level")
-level_width_tiles = 212
-ground_row = 12
 
-[node name="Background" type="CanvasLayer" parent="."]
+[node name="Background" type="CanvasLayer" parent="." unique_id=1206747224]
 layer = -1
 
-[node name="SkyGradient" type="ColorRect" parent="Background"]
+[node name="SkyGradient" type="ColorRect" parent="Background" unique_id=738234967]
 material = SubResource("ShaderMaterial_sky")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 
-[node name="ParallaxDecor" type="Node2D" parent="Background"]
+[node name="ParallaxDecor" type="Node2D" parent="Background" unique_id=354653872]
 script = ExtResource("4_parallax")
 
-[node name="TileMapLayer_Ground" type="TileMapLayer" parent="."]
+[node name="TileMapLayer_Ground" type="TileMapLayer" parent="." unique_id=234901537]
 
-[node name="Blocks" type="Node2D" parent="."]
+[node name="Blocks" type="Node2D" parent="." unique_id=1371528365]
 
-[node name="QBlock_16_8" parent="Blocks" instance=ExtResource("6_qblock")]
+[node name="QBlock_16_8" parent="Blocks" unique_id=146423386 instance=ExtResource("6_qblock")]
 position = Vector2(264, 144)
-contents = &"coin"
 
-[node name="Brick_20_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_20_8" parent="Blocks" unique_id=866970577 instance=ExtResource("7_brick")]
 position = Vector2(328, 144)
 
-[node name="QBlock_21_8" parent="Blocks" instance=ExtResource("6_qblock")]
+[node name="QBlock_21_8" parent="Blocks" unique_id=2013072333 instance=ExtResource("6_qblock")]
 position = Vector2(344, 144)
 contents = &"mushroom"
 
-[node name="Brick_22_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_22_8" parent="Blocks" unique_id=1878387501 instance=ExtResource("7_brick")]
 position = Vector2(360, 144)
 
-[node name="QBlock_23_8" parent="Blocks" instance=ExtResource("6_qblock")]
+[node name="QBlock_23_8" parent="Blocks" unique_id=1872800328 instance=ExtResource("6_qblock")]
 position = Vector2(376, 144)
-contents = &"coin"
 
-[node name="Brick_24_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_24_8" parent="Blocks" unique_id=850586543 instance=ExtResource("7_brick")]
 position = Vector2(392, 144)
 
-[node name="QBlock_22_4" parent="Blocks" instance=ExtResource("6_qblock")]
+[node name="QBlock_22_4" parent="Blocks" unique_id=2002081622 instance=ExtResource("6_qblock")]
 position = Vector2(360, 80)
-contents = &"coin"
 
-[node name="Brick_78_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_78_8" parent="Blocks" unique_id=411711284 instance=ExtResource("7_brick")]
 position = Vector2(1256, 144)
 
-[node name="Brick_79_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_79_8" parent="Blocks" unique_id=1220272543 instance=ExtResource("7_brick")]
 position = Vector2(1272, 144)
 
-[node name="QBlock_80_8" parent="Blocks" instance=ExtResource("6_qblock")]
+[node name="QBlock_80_8" parent="Blocks" unique_id=7225851 instance=ExtResource("6_qblock")]
 position = Vector2(1288, 144)
 contents = &"fire_flower"
 
-[node name="Brick_81_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_81_8" parent="Blocks" unique_id=201134959 instance=ExtResource("7_brick")]
 position = Vector2(1304, 144)
 
-[node name="MultiCoin_130_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="MultiCoin_130_8" parent="Blocks" unique_id=2134825945 instance=ExtResource("7_brick")]
 position = Vector2(2088, 144)
 coin_count = 8
 
-[node name="Hidden_18_4" parent="Blocks" instance=ExtResource("9_hidden")]
+[node name="MultiCoin_130_9" parent="Blocks" unique_id=1624076947 instance=ExtResource("7_brick")]
+position = Vector2(201, 145)
+coin_count = 8
+
+[node name="Hidden_18_4" parent="Blocks" unique_id=1932363205 instance=ExtResource("9_hidden")]
 position = Vector2(296, 80)
 contents = &"1up"
 
-[node name="Pipes" type="Node2D" parent="."]
+[node name="Pipes" type="Node2D" parent="." unique_id=1592643868]
 
-[node name="Coins" type="Node2D" parent="."]
+[node name="Coins" type="Node2D" parent="." unique_id=1534874590]
 
-[node name="Coin_10_11" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_10_11" parent="Coins" unique_id=451277757 instance=ExtResource("8_coin")]
 position = Vector2(168, 184)
 
-[node name="Coin_12_11" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_12_11" parent="Coins" unique_id=459428219 instance=ExtResource("8_coin")]
 position = Vector2(200, 184)
 
-[node name="Coin_30_7" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_30_7" parent="Coins" unique_id=193416687 instance=ExtResource("8_coin")]
 position = Vector2(488, 120)
 
-[node name="Coin_31_7" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_31_7" parent="Coins" unique_id=977279901 instance=ExtResource("8_coin")]
 position = Vector2(504, 120)
 
-[node name="Coin_32_7" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_32_7" parent="Coins" unique_id=1969341902 instance=ExtResource("8_coin")]
 position = Vector2(520, 120)
 
-[node name="Coin_100_8" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_100_8" parent="Coins" unique_id=1729629040 instance=ExtResource("8_coin")]
 position = Vector2(1608, 136)
 
-[node name="Coin_101_8" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_101_8" parent="Coins" unique_id=1461177085 instance=ExtResource("8_coin")]
 position = Vector2(1624, 136)
 
-[node name="Enemies" type="Node2D" parent="."]
+[node name="Enemies" type="Node2D" parent="." unique_id=1496569193]
 
-[node name="Interactables" type="Node2D" parent="."]
+[node name="Interactables" type="Node2D" parent="." unique_id=309133980]
 
-[node name="KillZone" type="Area2D" parent="."]
+[node name="KillZone" type="Area2D" parent="." unique_id=1523659361]
 position = Vector2(1696, 256)
 script = ExtResource("3_killzone")
 
-[node name="KillShape" type="CollisionShape2D" parent="KillZone"]
+[node name="KillShape" type="CollisionShape2D" parent="KillZone" unique_id=766236986]
 shape = SubResource("RectangleShape2D_killzone")
 
-[node name="LevelBounds" type="StaticBody2D" parent="."]
+[node name="LevelBounds" type="StaticBody2D" parent="." unique_id=166527422]
 position = Vector2(-8, 112)
-collision_layer = 1
 collision_mask = 0
 
-[node name="BoundsShape" type="CollisionShape2D" parent="LevelBounds"]
+[node name="BoundsShape" type="CollisionShape2D" parent="LevelBounds" unique_id=430782478]
 shape = SubResource("RectangleShape2D_bounds")
 
-[node name="Player" parent="." instance=ExtResource("2_player")]
+[node name="Player" parent="." unique_id=1309786246 instance=ExtResource("2_player")]
 position = Vector2(48, 192)
 
-[node name="HUD" parent="." instance=ExtResource("5_hud")]
+[node name="HUD" parent="." unique_id=1262654791 instance=ExtResource("5_hud")]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=916214624]
 environment = SubResource("Environment_bloom")
