@@ -1248,18 +1248,22 @@ Rules:
 
 Pickup types:
 
-- Heart: restore 1 health unit
+- Heart: restore 2 health units (1 heart)
 - Green rupee: +1
 - Blue rupee: +5
 - Red rupee: +20
-- Magic jar: restore magic
-- Arrow bundle
-- Bomb bundle
+- Small magic jar: restore 16 magic
+- Large magic jar: restore 128 magic (full refill)
+- Arrow bundle: +5 arrows
+- Bomb bundle: +3 bombs
+- Fairy: rare drop; fully heals health and is caught by an empty bottle if Link owns one (bottle mechanics land in Phase 3)
+
+`max_magic` is fixed at 128 units (set on `PlayerState` at game start) — a "large magic jar" simply sets `current_magic = max_magic`. Half Magic and other future cost modifiers are applied at spend time via `consume_skill_cost()`, not at refill time, so the jar values are stable regardless of upgrade state.
 
 **Verification:**
 - **Unit test** (`test_loot_table.gd`): given a weighted table `[(A, 1.0), (B, 3.0)]`, 10000 rolls produce ~25%/75% distribution. Empty table returns empty. Single-entry table always returns that entry.
 - **Debug scene**: killing a test enemy spawns pickups that bob and are collected on player overlap.
-- Pickups update the correct counters (heart restores health, green rupee adds 1, etc.).
+- Pickups update the correct counters (heart restores health, green rupee adds 1, small magic jar adds 16 magic clamped to `max_magic`, large magic jar fills to `max_magic`).
 
 ### 2.8 Phase 2 Deliverable
 
@@ -1281,7 +1285,7 @@ Acceptance criteria:
 ALTTP has no inventory in the RPG sense. Everything the player can pick up falls into one of three categories:
 
 - **SKILL** — a permanent ability unlock (Bow, Hookshot, Lamp, Hammer, Medallions…). One skill can be equipped at a time via the action button. Acquiring a skill is one-way; skills are never removed.
-- **UPGRADE** — a monotonic stat tier (sword 1–4, armor 1–3, shield 1–3, gloves 1–2, boots 0–1, flippers 0–1, moon pearl 0–1, magic-halver 0–1). Upgrades stack only upward: re-acquiring a lower tier is a no-op.
+- **UPGRADE** — a monotonic stat tier (sword 1–4, armor 1–3, shield 1–3, gloves 0–2, boots 0–1, flippers 0–1, moon_pearl 0–1, magic_halver 0–1). Upgrades stack only upward: re-acquiring a lower tier is a no-op. Upgrades listed as `0–N` have a meaningful default: for gloves, tier 0 means bare-handed lifting of light objects (pots, signs, small bushes — see section 3.6); for boots/flippers/moon_pearl/magic_halver, tier 0 just means "not owned yet" with no gameplay effect.
 - **RESOURCE** — a countable consumable (rupees, arrows, bombs, magic, hearts, small keys, heart pieces) or the fill state of a bottle.
 
 Per-dungeon booleans (big key, map, compass), pendants, crystals, and dungeon completion are **not** categories here — they are `GameManager` flags.
@@ -1539,17 +1543,21 @@ All upgrades are stored in `PlayerState.upgrades: Dictionary` as `{StringName: i
 | `"flippers"` | 0–1 | Swim in water instead of taking damage | Water tile handler checks `has_upgrade("flippers")` |
 | `"boots"` | 0–1 | Enables dash | `IdleState`/`WalkState` check `has_upgrade("boots")` before allowing transition to `DashState` |
 | `"moon_pearl"` | 0–1 | Prevents Dark World transformation | `SceneManager` checks on world switch |
+| `"magic_halver"` | 0–1 | Halves the magic cost of every skill that consumes magic (Lamp, Fire Rod, Ice Rod, Magic Powder, future medallions). Monotonic — re-acquiring has no effect. | `PlayerState.consume_skill_cost(item)` applies `cost = ceil(cost / 2)` if `has_upgrade("magic_halver")` |
 
-Sword beam rule:
+Sword rules:
 
-- At full health, sword swings emit a forward beam projectile (2 damage) if sword tier ≥ 2
-- Sword beam does not consume magic
+- At full health, sword swings emit a forward beam projectile (2 damage) if sword tier ≥ 2.
+- Sword beam does not consume magic.
+- Spin attack (when added) does not consume magic. Only explicit skill activations (`ItemUseState` → `consume_skill_cost()`) draw from the magic pool — sword-based effects are always free.
 
 **Verification** (in `debug_room.tscn`):
 - Without Pegasus Boots: pressing dash button does nothing. Pick up boots from a test chest: dash works immediately, no equip step needed.
 - Without Flippers: walking into water tile damages the player. Pick up flippers: water becomes walkable/swimmable.
 - Armor upgrade visibly reduces incoming damage (take a hit before/after, compare health change).
 - Sword tier upgrade increases damage dealt to enemies (test with an enemy at known HP).
+- Magic Halver upgrade: Lamp costs 4 magic before acquisition, 2 after. Fire Rod costs 8 before, 4 after. Re-acquiring the Half Magic item does not further reduce costs.
+- Magic Halver is monotonic with the other upgrades: acquiring it alongside other upgrades in any order produces the same final state.
 
 ### 3.7 Shield Mechanics
 
@@ -2093,7 +2101,7 @@ Only SKILL items appear in `owned_skills` — UPGRADE and RESOURCE items are con
 - 3 save slots
 - Slot metadata for title screen UI: play time, last save timestamp, player health, heart count
 - `schema_version` field so future changes can migrate old saves
-- Save triggers: save points in the world (beds, statues, dungeon entrance markers) and the Game Over "Save and Quit" option (see section 8.4).
+- Save triggers: save points in the world (beds, statues, dungeon entrance markers) and the Game Over "Save and Quit" option (see section 8.3).
 - Load from title screen "Continue" → slot select → load (wires into the Title Screen built in 6.5)
 
 **SaveManager public methods:**
@@ -2300,33 +2308,7 @@ The baseline lift/carry/throw system was introduced in Phase 7.4. Bare-handed, L
 - After acquiring Titan's Mitt: dark boulder lifts successfully.
 - `PlayerState.get_upgrade("gloves")` returns 2 after Titan's Mitt is acquired; re-acquiring Power Glove leaves it at 2 (monotonic upgrade rule from section 3.3).
 
-### 8.3 Magic System
-
-Max magic: 128 units
-
-Suggested costs:
-
-- Lamp: 4
-- Fire Rod: 8
-- Ice Rod: 8
-- Magic Powder: 4
-- Medallion-class future items: 32-64
-
-Refills:
-
-- Small magic jar: 16
-- Large magic jar: full or large partial refill
-- Half Magic upgrade halves future costs
-
-Spin attack should not consume magic.
-
-**Verification:**
-- Using Fire Rod at 0 magic does nothing. At 8+ magic, fires projectile and deducts 8.
-- Magic jar pickup restores the correct amount (small = 16, large = full).
-- Half Magic upgrade: using Fire Rod costs 4 after upgrade instead of 8.
-- Magic persists across save/load.
-
-### 8.4 Game Over
+### 8.3 Game Over
 
 Flow:
 
@@ -2346,7 +2328,7 @@ Continue behavior:
 - Health restored to 3 hearts, not full max.
 - Save and Quit → writes save, returns to title screen.
 
-### 8.5 Advanced Enemies
+### 8.4 Advanced Enemies
 
 These enemies have unique state sets that don't map to the simple Patrol/Chase/Attack model, reinforcing why per-enemy states are necessary.
 
@@ -2380,13 +2362,13 @@ LikeLike (CharacterBody2D, script: like_like.gd extends BaseEnemy)
 
 On Engulf: player's state machine is forced into a special trapped state. If engulf duration expires before escape, shield tier drops by 1.
 
-> **Note**: Moldorm (Dungeon 3 mini-boss) was previously listed here because it shares the "chain of segments" architectural flavor with advanced enemies, but it is a boss — its construction, phase behavior, and encounter flow are covered in Phase 9 (section 9.3). Phase 8.5 is strictly regular advanced enemies.
+> **Note**: Moldorm (Dungeon 3 mini-boss) was previously listed here because it shares the "chain of segments" architectural flavor with advanced enemies, but it is a boss — its construction, phase behavior, and encounter flow are covered in Phase 9 (section 9.3). Phase 8.4 is strictly regular advanced enemies.
 
 **Verification:**
 - Wizzrobe: cycles through its 5 states correctly, only takes damage during Appear/Telegraph/Fire.
 - Like-Like: engulfs player on contact, mashing `action_sword` escapes, timeout drops shield tier.
 
-### 8.6 Audio Hookup Coverage
+### 8.5 Audio Hookup Coverage
 
 All major systems should already call `AudioManager` even if assets are absent.
 
@@ -2405,13 +2387,14 @@ Asset convention:
 - Dropping a placeholder `.ogg` at the conventional path plays it instead of logging.
 - No crashes occur if the file is missing — it just logs.
 
-### 8.7 Phase 8 Deliverable
+### 8.6 Phase 8 Deliverable
 
 Acceptance criteria:
 
-1. Swimming, lifting, throwing, magic consumption, and game over all work in normal gameplay.
-2. Advanced enemies meaningfully exercise those systems.
-3. Audio coverage is documented and already wired through gameplay code.
+1. Swimming (with Flippers) and glove-upgraded lifting (Power Glove and Titan's Mitt weight tiers) both work in normal gameplay, extending the baseline Phase 7 systems.
+2. Game Over flow ships: death animation, game over screen, Continue (respawn at safe point with 3 hearts) and Save and Quit (writes save, returns to title) both work.
+3. Advanced enemies (Wizzrobe, Like-Like) meaningfully exercise the systems added in Phases 3, 7, and 8 — Wizzrobe's magic projectiles hit the player, Like-Like's engulf drops shield tier on timeout, etc.
+4. Audio coverage is documented and every `AudioManager` call site matches the coverage list.
 
 ---
 
@@ -2419,7 +2402,7 @@ Acceptance criteria:
 
 **Milestone**: "Bosses Complete"
 
-Bosses land last because a good boss exercises nearly every system in the game: combat, dungeons, skills, upgrades, cutscenes, dialog, advanced enemies, magic, lifting, swimming. Attempting bosses any earlier would either produce shallow placeholder encounters or force the phase to drag in half-built dependencies. Arriving here in Phase 9, bosses can use the full toolkit: the Cutscene system from 6.3 for intros/outros, dialog from 6.2 for any pre-fight text, magic interactions from 8.3, lift mechanics from 8.2, and the advanced enemy behavior patterns from 8.5 as reference points for boss state machines.
+Bosses land last because a good boss exercises nearly every system in the game: combat, dungeons, skills, upgrades, cutscenes, dialog, advanced enemies, magic, lifting, swimming. Attempting bosses any earlier would either produce shallow placeholder encounters or force the phase to drag in half-built dependencies. Arriving here in Phase 9, bosses can use the full toolkit: the Cutscene system from 6.3 for intros/outros, dialog from 6.2 for any pre-fight text, magic-consuming skills from Phase 3 (Fire Rod, Ice Rod, Magic Powder, Lamp), glove-upgraded lifting from 8.2, and the advanced enemy behavior patterns from 8.4 as reference points for boss state machines.
 
 Phase 9 also **retrofits** bosses into dungeons already built in Phases 5 and 7. Each dungeon has a reward pedestal placeholder in its boss room (see section 5.1); Phase 9 replaces the pedestal with a real boss scene whose `end_encounter()` runs the same completion steps plus a heart container drop. Everything downstream of the completion trigger (flag, heal, reward, warp tile) stays identical, so the retrofit touches only the boss rooms' contents.
 
@@ -2723,7 +2706,7 @@ resource_amount = 5
 | 5 | First Dungeon Playable | Dungeon navigation end-to-end, non-boss reward pedestal completion |
 | 6 | Feels Like a Game | HUD polish, dialog, cutscene system, shader/particle polish pass, title screen, save/load |
 | 7 | Full Game Loop | Additional dungeons, NPCs, heart pieces, expanded overworld |
-| 8 | Feature Complete | Swimming, lifting, throwing, magic, game over, advanced enemies |
+| 8 | Feature Complete | Swimming, glove upgrades (Power Glove/Titan's Mitt), game over, advanced enemies |
 | 9 | Bosses Complete | Boss architecture, Armos Knights, Moldorm, boss retrofit into Phases 5 and 7 dungeons |
 
 Rules for phase completion:
