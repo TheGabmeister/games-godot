@@ -1540,7 +1540,7 @@ All upgrades are stored in `PlayerState.upgrades: Dictionary` as `{StringName: i
 | `"armor"` | 1–3 | Damage reduction (see Damage Formula) | `player._on_hurtbox_hurt()` reads tier for reduction calc |
 | `"shield"` | 1–3 | Blocks more projectile classes | `ShieldComponent` reads tier to decide block/deflect/reflect |
 | `"gloves"` | 0–2 | Extends the lift weight cap above baseline. 0 = bare hands (light only: pots, signs, small bushes). 1 = Power Glove (adds medium: skull rocks). 2 = Titan's Mitt (adds heavy: dark boulders). | `LiftState.enter()` checks `object.weight <= get_upgrade("gloves")` |
-| `"flippers"` | 0–1 | Swim in water instead of taking damage | Water tile handler checks `has_upgrade("flippers")` |
+| `"flippers"` | 0–1 | Swim in water instead of taking damage. Player enters `SwimState` on contact with a water tile; water no longer triggers `FallState` or environmental damage. | Water tile handler checks `has_upgrade("flippers")`; `WalkState`/`IdleState` transition to `SwimState` when stepping onto a water tile and the check passes |
 | `"boots"` | 0–1 | Enables dash | `IdleState`/`WalkState` check `has_upgrade("boots")` before allowing transition to `DashState` |
 | `"moon_pearl"` | 0–1 | Prevents Dark World transformation | `SceneManager` checks on world switch |
 | `"magic_halver"` | 0–1 | Halves the magic cost of every skill that consumes magic (Lamp, Fire Rod, Ice Rod, Magic Powder, future medallions). Monotonic — re-acquiring has no effect. | `PlayerState.consume_skill_cost(item)` applies `cost = ceil(cost / 2)` if `has_upgrade("magic_halver")` |
@@ -1551,9 +1551,17 @@ Sword rules:
 - Sword beam does not consume magic.
 - Spin attack (when added) does not consume magic. Only explicit skill activations (`ItemUseState` → `consume_skill_cost()`) draw from the magic pool — sword-based effects are always free.
 
+**SwimState** (paired with the `flippers` upgrade):
+
+- Movement speed while swimming is 60% of `speed` (ground speed). Diagonal normalization still applies.
+- `SwimState` is entered from `WalkState`/`IdleState` on first contact with a water tile, provided `PlayerState.has_upgrade("flippers")`. It is exited when the player returns to a non-water tile.
+- Sword use is disabled in `SwimState` (matches ALTTP). Skill use (Fire Rod, Boomerang, etc.) is also disabled — swim is a traversal state, not a combat state.
+- Without flippers, stepping onto a water tile is handled by the hazard rules from section 2.1: water deals 2 units of environmental damage (bypasses armor) and pushes the player back to `last_safe_position`.
+
 **Verification** (in `debug_room.tscn`):
 - Without Pegasus Boots: pressing dash button does nothing. Pick up boots from a test chest: dash works immediately, no equip step needed.
-- Without Flippers: walking into water tile damages the player. Pick up flippers: water becomes walkable/swimmable.
+- Without Flippers: walking into a water tile deals 2 damage, bypasses armor, and pushes the player back (hazard behavior from section 2.1).
+- With Flippers (acquired via test chest): walking into the same water tile transitions to `SwimState`. Movement continues at reduced speed (60% of ground speed). Sword and skill buttons are inert while swimming. Exiting to a non-water tile transitions back to `IdleState`/`WalkState` and restores full speed and ability access.
 - Armor upgrade visibly reduces incoming damage (take a hit before/after, compare health change).
 - Sword tier upgrade increases damage dealt to enemies (test with an enemy at known HP).
 - Magic Halver upgrade: Lamp costs 4 magic before acquisition, 2 after. Fire Rod costs 8 before, 4 after. Re-acquiring the Half Magic item does not further reduce costs.
@@ -1997,7 +2005,8 @@ Specifically, Phase 6 must deliver:
 - Post-process bloom working in dark rooms and on magic/light sources
 - Color grading presets applied per biome with smooth transitions between rooms
 - All particle effects for combat (sword impact, enemy death, bomb explosion, grass cut)
-- All particle effects for environment (ambient per-biome, water splash, chest sparkle)
+- All particle effects for environment (ambient per-biome, water entry/exit splash, continuous ripple behind the player in `SwimState`, chest sparkle)
+- `SwimState` draw tweak: player's `_draw()` renders a smaller body profile (lower half masked by the water tile surface) while swimming
 - Squash/stretch on player attacks, landings, and enemy hit reactions
 - Screen shake hooked up to all triggers (damage, explosions, boss events)
 - Sword arc trail and motion lines on fast-moving entities
@@ -2014,6 +2023,7 @@ Note: effects should be added incrementally as systems are built in earlier phas
 - Damage → screen shake fires; bomb explosion shake is visibly stronger.
 - Player squashes on sword swing and landing.
 - Torches in dungeons flicker with random energy.
+- Entering water with Flippers: splash particle burst on entry, continuous ripple trail behind the player while swimming, smaller body profile visible; exit splash on return to land.
 
 ### 6.5 Title Screen
 
@@ -2101,7 +2111,7 @@ Only SKILL items appear in `owned_skills` — UPGRADE and RESOURCE items are con
 - 3 save slots
 - Slot metadata for title screen UI: play time, last save timestamp, player health, heart count
 - `schema_version` field so future changes can migrate old saves
-- Save triggers: save points in the world (beds, statues, dungeon entrance markers) and the Game Over "Save and Quit" option (see section 8.3).
+- Save triggers: save points in the world (beds, statues, dungeon entrance markers) and the Game Over "Save and Quit" option (see section 8.2).
 - Load from title screen "Continue" → slot select → load (wires into the Title Screen built in 6.5)
 
 **SaveManager public methods:**
@@ -2228,7 +2238,7 @@ Per-object behaviors:
 - Sword destroys bush → particles fire, loot drops per table.
 - Dash destroys bush (Pegasus Boots).
 - `interact` on a pot with no gloves: pot lifts, drawn above player head, player enters `CarryState`. Throw shatters the pot on impact and spawns loot.
-- `interact` on a weight-1 skull rock with no gloves: nothing happens (log or subtle "can't lift" cue). With Power Glove (Phase 8.2): lifts successfully.
+- `interact` on a weight-1 skull rock with no gloves: nothing happens (log or subtle "can't lift" cue). With Power Glove (Phase 8.1): lifts successfully.
 - Entering a room transition or pit while carrying: object is dropped.
 - Destructibles do not respawn on room re-entry if they have a `persist_id`.
 
@@ -2262,30 +2272,13 @@ Acceptance criteria:
 
 ---
 
-## Phase 8: Advanced Mechanics
+## Phase 8: Final Systems and Coverage
 
 **Milestone**: "Feature Complete"
 
-### 8.1 Swimming
+### 8.1 Glove Upgrades (Power Glove and Titan's Mitt)
 
-With Flippers:
-
-- Enter water instead of being rejected or damaged
-- Movement speed reduced from normal ground speed
-- Ripple particles and smaller body profile
-
-Without Flippers:
-
-- Water acts as a hazard or blocked terrain, depending on room design
-
-**Verification:**
-- Without flippers: walking into water deals damage and pushes player back.
-- With flippers (add via debug): player enters water, speed reduced, ripple particles spawn.
-- Exit water back to dry land restores normal movement speed.
-
-### 8.2 Glove Upgrades (Power Glove and Titan's Mitt)
-
-The baseline lift/carry/throw system was introduced in Phase 7.4. Bare-handed, Link can already lift weight-0 objects (pots, signs, small bushes, skulls). Phase 8.2 adds the two `gloves` upgrade tiers that extend the weight cap to previously un-liftable objects in the world.
+The baseline lift/carry/throw system was introduced in Phase 7.4. Bare-handed, Link can already lift weight-0 objects (pots, signs, small bushes, skulls). Phase 8.1 adds the two `gloves` upgrade tiers that extend the weight cap to previously un-liftable objects in the world.
 
 **Tier rules:**
 
@@ -2297,7 +2290,7 @@ The baseline lift/carry/throw system was introduced in Phase 7.4. Bare-handed, L
 
 **Authoring conventions:**
 
-- Weight-1 and weight-2 obstacles authored in Phase 7 become traversable in Phase 8.2 automatically — no scene edits needed, just the `gloves` upgrade acquisition.
+- Weight-1 and weight-2 obstacles authored in Phase 7 become traversable in Phase 8.1 automatically — no scene edits needed, just the `gloves` upgrade acquisition.
 - Do not write special-case code in the player state machine for "after gloves" — all checks go through `get_upgrade("gloves")` against `object.weight`.
 
 **Verification:**
@@ -2308,7 +2301,7 @@ The baseline lift/carry/throw system was introduced in Phase 7.4. Bare-handed, L
 - After acquiring Titan's Mitt: dark boulder lifts successfully.
 - `PlayerState.get_upgrade("gloves")` returns 2 after Titan's Mitt is acquired; re-acquiring Power Glove leaves it at 2 (monotonic upgrade rule from section 3.3).
 
-### 8.3 Game Over
+### 8.2 Game Over
 
 Flow:
 
@@ -2328,7 +2321,7 @@ Continue behavior:
 - Health restored to 3 hearts, not full max.
 - Save and Quit → writes save, returns to title screen.
 
-### 8.4 Advanced Enemies
+### 8.3 Advanced Enemies
 
 These enemies have unique state sets that don't map to the simple Patrol/Chase/Attack model, reinforcing why per-enemy states are necessary.
 
@@ -2362,13 +2355,13 @@ LikeLike (CharacterBody2D, script: like_like.gd extends BaseEnemy)
 
 On Engulf: player's state machine is forced into a special trapped state. If engulf duration expires before escape, shield tier drops by 1.
 
-> **Note**: Moldorm (Dungeon 3 mini-boss) was previously listed here because it shares the "chain of segments" architectural flavor with advanced enemies, but it is a boss — its construction, phase behavior, and encounter flow are covered in Phase 9 (section 9.3). Phase 8.4 is strictly regular advanced enemies.
+> **Note**: Moldorm (Dungeon 3 mini-boss) was previously listed here because it shares the "chain of segments" architectural flavor with advanced enemies, but it is a boss — its construction, phase behavior, and encounter flow are covered in Phase 9 (section 9.3). Phase 8.3 is strictly regular advanced enemies.
 
 **Verification:**
 - Wizzrobe: cycles through its 5 states correctly, only takes damage during Appear/Telegraph/Fire.
 - Like-Like: engulfs player on contact, mashing `action_sword` escapes, timeout drops shield tier.
 
-### 8.5 Audio Hookup Coverage
+### 8.4 Audio Hookup Coverage
 
 All major systems should already call `AudioManager` even if assets are absent.
 
@@ -2387,11 +2380,11 @@ Asset convention:
 - Dropping a placeholder `.ogg` at the conventional path plays it instead of logging.
 - No crashes occur if the file is missing — it just logs.
 
-### 8.6 Phase 8 Deliverable
+### 8.5 Phase 8 Deliverable
 
 Acceptance criteria:
 
-1. Swimming (with Flippers) and glove-upgraded lifting (Power Glove and Titan's Mitt weight tiers) both work in normal gameplay, extending the baseline Phase 7 systems.
+1. Glove-upgraded lifting (Power Glove and Titan's Mitt weight tiers) works in normal gameplay, extending the baseline Phase 7 lift system. Previously-unreachable weight-1 and weight-2 obstacles authored in Phase 7 become traversable without scene edits.
 2. Game Over flow ships: death animation, game over screen, Continue (respawn at safe point with 3 hearts) and Save and Quit (writes save, returns to title) both work.
 3. Advanced enemies (Wizzrobe, Like-Like) meaningfully exercise the systems added in Phases 3, 7, and 8 — Wizzrobe's magic projectiles hit the player, Like-Like's engulf drops shield tier on timeout, etc.
 4. Audio coverage is documented and every `AudioManager` call site matches the coverage list.
@@ -2402,7 +2395,7 @@ Acceptance criteria:
 
 **Milestone**: "Bosses Complete"
 
-Bosses land last because a good boss exercises nearly every system in the game: combat, dungeons, skills, upgrades, cutscenes, dialog, advanced enemies, magic, lifting, swimming. Attempting bosses any earlier would either produce shallow placeholder encounters or force the phase to drag in half-built dependencies. Arriving here in Phase 9, bosses can use the full toolkit: the Cutscene system from 6.3 for intros/outros, dialog from 6.2 for any pre-fight text, magic-consuming skills from Phase 3 (Fire Rod, Ice Rod, Magic Powder, Lamp), glove-upgraded lifting from 8.2, and the advanced enemy behavior patterns from 8.4 as reference points for boss state machines.
+Bosses land last because a good boss exercises nearly every system in the game: combat, dungeons, skills, upgrades, cutscenes, dialog, advanced enemies, magic, lifting, swimming. Attempting bosses any earlier would either produce shallow placeholder encounters or force the phase to drag in half-built dependencies. Arriving here in Phase 9, bosses can use the full toolkit: the Cutscene system from 6.3 for intros/outros, dialog from 6.2 for any pre-fight text, magic-consuming skills from Phase 3 (Fire Rod, Ice Rod, Magic Powder, Lamp), swim traversal from Phase 3 (flippers upgrade), glove-upgraded lifting from 8.1, and the advanced enemy behavior patterns from 8.3 as reference points for boss state machines.
 
 Phase 9 also **retrofits** bosses into dungeons already built in Phases 5 and 7. Each dungeon has a reward pedestal placeholder in its boss room (see section 5.1); Phase 9 replaces the pedestal with a real boss scene whose `end_encounter()` runs the same completion steps plus a heart container drop. Everything downstream of the completion trigger (flag, heal, reward, warp tile) stays identical, so the retrofit touches only the boss rooms' contents.
 
@@ -2706,7 +2699,7 @@ resource_amount = 5
 | 5 | First Dungeon Playable | Dungeon navigation end-to-end, non-boss reward pedestal completion |
 | 6 | Feels Like a Game | HUD polish, dialog, cutscene system, shader/particle polish pass, title screen, save/load |
 | 7 | Full Game Loop | Additional dungeons, NPCs, heart pieces, expanded overworld |
-| 8 | Feature Complete | Swimming, glove upgrades (Power Glove/Titan's Mitt), game over, advanced enemies |
+| 8 | Feature Complete | Glove upgrades (Power Glove/Titan's Mitt), game over, advanced enemies, audio coverage audit |
 | 9 | Bosses Complete | Boss architecture, Armos Knights, Moldorm, boss retrofit into Phases 5 and 7 dungeons |
 
 Rules for phase completion:
