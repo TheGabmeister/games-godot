@@ -1,0 +1,221 @@
+[gd_scene load_steps=22 format=3]
+
+[ext_resource type="Script" path="res://scripts/level/level_1_2.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/level/kill_zone.gd" id="3_killzone"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://scenes/objects/question_block.tscn" id="6_qblock"]
+[ext_resource type="PackedScene" path="res://scenes/objects/brick_block.tscn" id="7_brick"]
+[ext_resource type="PackedScene" path="res://scenes/objects/coin.tscn" id="8_coin"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/goomba.tscn" id="10_goomba"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/koopa.tscn" id="11_koopa"]
+[ext_resource type="Script" path="res://scripts/level/enemy_spawner.gd" id="12_spawner"]
+[ext_resource type="Script" path="res://scripts/effects/effects_manager.gd" id="13_effects"]
+[ext_resource type="Resource" path="res://resources/config/effects_default.tres" id="14_fx_config"]
+[ext_resource type="PackedScene" path="res://scenes/objects/pipe.tscn" id="15_pipe"]
+[ext_resource type="PackedScene" path="res://scenes/objects/flagpole.tscn" id="16_flagpole"]
+[ext_resource type="PackedScene" path="res://scenes/objects/castle.tscn" id="17_castle"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="19_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/game_over.tscn" id="20_gameover"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_complete.tscn" id="21_complete"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_killzone"]
+size = Vector2(2720, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bounds"]
+size = Vector2(16, 448)
+
+[sub_resource type="Environment" id="Environment_bloom"]
+background_mode = 3
+glow_enabled = true
+glow_bloom = 0.1
+glow_blend_mode = 0
+
+[node name="World_1_2" type="Node2D"]
+script = ExtResource("1_level")
+
+[node name="Background" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="SkyRect" type="ColorRect" parent="Background"]
+color = Color(0.05, 0.05, 0.08, 1)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="TileMapLayer_Ground" type="TileMapLayer" parent="."]
+
+[node name="Blocks" type="Node2D" parent="."]
+
+; --- Early section: intro blocks ---
+[node name="Brick_10_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(168, 144)
+
+[node name="QBlock_11_8" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(184, 144)
+contents = &"mushroom"
+
+[node name="Brick_12_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(200, 144)
+
+[node name="Brick_13_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(216, 144)
+
+; --- Platform section blocks ---
+[node name="QBlock_25_7" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(408, 120)
+
+[node name="Brick_35_5" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(568, 88)
+
+[node name="QBlock_36_5" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(584, 88)
+contents = &"fire_flower"
+
+[node name="Brick_37_5" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(600, 88)
+
+; --- Mid section ---
+[node name="Brick_70_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(1128, 144)
+
+[node name="Brick_71_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(1144, 144)
+
+[node name="QBlock_72_8" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(1160, 144)
+
+[node name="Brick_73_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(1176, 144)
+
+[node name="MultiCoin_75_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(1208, 144)
+coin_count = 8
+
+; --- Late section ---
+[node name="QBlock_120_7" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(1928, 120)
+contents = &"mushroom"
+
+[node name="Brick_125_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(2008, 144)
+
+[node name="Brick_126_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(2024, 144)
+
+[node name="Brick_127_8" parent="Blocks" instance=ExtResource("7_brick")]
+position = Vector2(2040, 144)
+
+[node name="Pipes" type="Node2D" parent="."]
+
+[node name="Pipe_entry" parent="Pipes" instance=ExtResource("15_pipe")]
+position = Vector2(48, 192)
+
+[node name="Coins" type="Node2D" parent="."]
+
+[node name="Coin_22_7a" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(360, 120)
+
+[node name="Coin_22_7b" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(376, 120)
+
+[node name="Coin_22_7c" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(392, 120)
+
+[node name="Coin_55_5a" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(888, 88)
+
+[node name="Coin_55_5b" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(904, 88)
+
+[node name="Coin_55_5c" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(920, 88)
+
+[node name="Coin_85_7a" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(1368, 120)
+
+[node name="Coin_85_7b" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(1384, 120)
+
+[node name="Coin_115_5a" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(1848, 88)
+
+[node name="Coin_115_5b" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(1864, 88)
+
+[node name="Coin_115_5c" parent="Coins" instance=ExtResource("8_coin")]
+position = Vector2(1880, 88)
+
+[node name="Enemies" type="Node2D" parent="."]
+script = ExtResource("12_spawner")
+
+[node name="Goomba_15" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(248, 192)
+
+[node name="Goomba_30a" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(488, 192)
+
+[node name="Goomba_30b" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(520, 192)
+
+[node name="Koopa_45" parent="Enemies" instance=ExtResource("11_koopa")]
+position = Vector2(728, 192)
+
+[node name="Goomba_60a" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(968, 192)
+
+[node name="Goomba_60b" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(1000, 192)
+
+[node name="Goomba_90" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(1448, 192)
+
+[node name="Koopa_105" parent="Enemies" instance=ExtResource("11_koopa")]
+position = Vector2(1688, 192)
+
+[node name="Goomba_130a" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(2088, 192)
+
+[node name="Goomba_130b" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(2120, 192)
+
+[node name="Effects" type="Node2D" parent="."]
+script = ExtResource("13_effects")
+effects_config = ExtResource("14_fx_config")
+
+[node name="Interactables" type="Node2D" parent="."]
+
+[node name="Flagpole" parent="Interactables" instance=ExtResource("16_flagpole")]
+position = Vector2(2600, 192)
+
+[node name="Castle" parent="Interactables" instance=ExtResource("17_castle")]
+position = Vector2(2672, 192)
+
+[node name="KillZone" type="Area2D" parent="."]
+position = Vector2(1360, 256)
+script = ExtResource("3_killzone")
+
+[node name="KillShape" type="CollisionShape2D" parent="KillZone"]
+shape = SubResource("RectangleShape2D_killzone")
+
+[node name="LevelBounds" type="StaticBody2D" parent="."]
+position = Vector2(-8, 112)
+collision_mask = 0
+
+[node name="BoundsShape" type="CollisionShape2D" parent="LevelBounds"]
+shape = SubResource("RectangleShape2D_bounds")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(80, 192)
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("19_pause")]
+
+[node name="GameOver" parent="." instance=ExtResource("20_gameover")]
+
+[node name="LevelComplete" parent="." instance=ExtResource("21_complete")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_bloom")

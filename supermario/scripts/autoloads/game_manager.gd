@@ -3,6 +3,13 @@ extends Node
 enum PowerState { SMALL, BIG, FIRE }
 enum GameState { TITLE, PLAYING, PAUSED, GAME_OVER, LEVEL_COMPLETE, TRANSITIONING }
 
+const LEVEL_SCENES: Dictionary = {
+	"1-1": "res://scenes/levels/world_1_1.tscn",
+	"1-2": "res://scenes/levels/world_1_2.tscn",
+}
+
+const LEVEL_ORDER: Array[String] = ["1-1", "1-2"]
+
 var score: int = 0
 var coins: int = 0
 var lives: int = 3
@@ -124,6 +131,23 @@ func _earn_one_up() -> void:
 	lives += 1
 	EventBus.one_up_earned.emit()
 	EventBus.lives_changed.emit(lives)
+
+
+func get_current_level_key() -> String:
+	return "%d-%d" % [current_world, current_level]
+
+
+func get_next_level_scene() -> String:
+	var key := get_current_level_key()
+	var idx := LEVEL_ORDER.find(key)
+	if idx >= 0 and idx + 1 < LEVEL_ORDER.size():
+		var next_key := LEVEL_ORDER[idx + 1]
+		# Parse world-level from key
+		var parts := next_key.split("-")
+		current_world = int(parts[0])
+		current_level = int(parts[1])
+		return LEVEL_SCENES[next_key]
+	return ""  # no next level
 
 
 func _power_state_name(state: PowerState) -> StringName:

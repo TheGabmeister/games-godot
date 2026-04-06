@@ -54,6 +54,11 @@ func _update_label() -> void:
 
 
 func _go_next() -> void:
-	# Return to title (no next level in current scope)
-	GameManager.set_game_state(GameManager.GameState.TITLE)
-	SceneManager.change_scene("res://scenes/ui/title_screen.tscn")
+	var next_scene := GameManager.get_next_level_scene()
+	if next_scene.is_empty():
+		# No more levels — return to title
+		GameManager.set_game_state(GameManager.GameState.TITLE)
+		SceneManager.change_scene("res://scenes/ui/title_screen.tscn")
+	else:
+		GameManager.set_game_state(GameManager.GameState.TRANSITIONING)
+		SceneManager.change_scene(next_scene)

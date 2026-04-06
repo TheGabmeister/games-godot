@@ -148,7 +148,12 @@ func _connect_signals() -> void:
 	EventBus.block_broken.connect(func(pos: Vector2) -> void: play_sfx(&"block_break", pos))
 	EventBus.player_powered_up.connect(func(_type: StringName) -> void: play_sfx(&"powerup"))
 	EventBus.player_damaged.connect(func() -> void: play_sfx(&"powerdown"))
-	EventBus.level_started.connect(func(_w: int, _l: int) -> void: play_music(&"overworld"))
+	EventBus.level_started.connect(func(_w: int, l: int) -> void:
+		if l >= 2:
+			play_music(&"underground")
+		else:
+			play_music(&"overworld")
+	)
 	EventBus.level_completed.connect(func() -> void:
 		stop_music()
 		play_sfx(&"stage_clear")
