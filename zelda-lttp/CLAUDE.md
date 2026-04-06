@@ -133,6 +133,18 @@ Combine with bitwise OR. Example: EnemyAttacks + Hazards = 16 + 64 = 80.
 - In `.tscn` files, `sub_resource` definitions must appear before any node that references them (order matters).
 - `BasePlayerState.player` is typed as `CharacterBody2D`, not `Player`. Use explicit type annotations (e.g., `var x: Vector2 = player.facing_direction`) instead of `:=` inference when accessing `Player`-specific properties to avoid parse errors.
 
+### Combat Components (Phase 2.1)
+
+`components/` contains reusable combat building blocks:
+- **HitboxComponent** (`Area2D`) — deals damage. Exports: damage, damage_type, knockback_force, effect (HitEffect), source_team. Provides `get_hitbox_data()` dict.
+- **HurtboxComponent** (`Area2D`) — receives hits. Tracks i-frames. Emits `hurt(hitbox_data)`. Environmental damage types (PIT, WATER, SPIKE) bypass i-frames.
+- **HealthComponent** — enemy health tracking. `take_damage()`, `heal()`, signals `health_changed`/`died`.
+- **KnockbackComponent** — decelerating knockback. `apply(direction, force, duration)`.
+- **FlashComponent** — white flash via `damage_flash.gdshader`. Auto-finds `*Body*` visual node.
+- **DamageFormula** — static `calculate_damage()` implementing the 4-step pipeline (shield, immunity, armor reduction, minimum 1).
+
+The player does NOT use HealthComponent — player health lives on `PlayerState` autoload since it's persistent and serialized. Enemies use HealthComponent since they're transient per room.
+
 ## Current Phase Status
 
-Phase 1 is implemented. The repo has: project config, all 7 autoloads, generic state machine, player with 6 states (Idle/Walk/Attack/Knockback/Fall/Dash), room system with debug room, HUD (hearts/rupees/item slot), camera with room bounds and screen shake, 6 shaders, and shared resources (ItemData/RoomData/EnemyData/LootTable/DungeonData/DamageType).
+Phase 1 complete, Phase 2.1 (combat components) complete. The repo has: project config, all 7 autoloads, generic state machine, player with 6 states (Idle/Walk/Attack/Knockback/Fall/Dash), room system with debug room, HUD (hearts/rupees/item slot), camera with room bounds and screen shake, 6 shaders, shared resources (ItemData/RoomData/EnemyData/LootTable/DungeonData/DamageType), and combat components (HitboxComponent/HurtboxComponent/HealthComponent/KnockbackComponent/FlashComponent/DamageFormula).
