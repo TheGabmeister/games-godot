@@ -5,6 +5,8 @@ const BrickParticle := preload("res://scripts/effects/brick_particle.gd")
 const StompPuff := preload("res://scripts/effects/stomp_puff.gd")
 const CoinPop := preload("res://scripts/effects/coin_pop.gd")
 
+@export var effects_config: Resource  # EffectsConfig
+
 
 func _ready() -> void:
 	EventBus.score_awarded.connect(_on_score_awarded)
@@ -21,7 +23,7 @@ func _on_score_awarded(points: int, pos: Vector2) -> void:
 	popup.global_position = pos + Vector2(0, -8)
 	popup.z_index = 5
 	add_child(popup)
-	popup.setup(points)
+	popup.setup(points, effects_config)
 
 
 func _on_block_broken(pos: Vector2) -> void:

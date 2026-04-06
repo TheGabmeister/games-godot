@@ -1,8 +1,9 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Resource" path="res://resources/config/player_movement_default.tres" id="10_movement"]
 [ext_resource type="Resource" path="res://resources/config/camera_default.tres" id="11_camera"]
+[ext_resource type="Resource" path="res://resources/config/effects_default.tres" id="16_effects"]
 [ext_resource type="Script" path="res://scripts/player/player_drawer.gd" id="2_drawer"]
 [ext_resource type="Script" path="res://scripts/player/state_machine.gd" id="3_sm"]
 [ext_resource type="Script" path="res://scripts/player/player_states/idle_state.gd" id="4_idle"]
@@ -31,6 +32,7 @@ collision_mask = 1
 script = ExtResource("1_player")
 movement = ExtResource("10_movement")
 cam_config = ExtResource("11_camera")
+effects = ExtResource("16_effects")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -7)

@@ -1,6 +1,6 @@
 extends Node2D
 
-const _effects := preload("res://resources/config/effects_default.tres")
+var _effects: Resource
 
 var _trail_positions: Array[Vector2] = []
 var _trail_alphas: Array[float] = []
@@ -10,9 +10,13 @@ const MAX_TRAIL := 5
 const MIN_SPEED := 180.0
 
 
+func _ready() -> void:
+	_effects = (owner as CharacterBody2D).effects if owner else preload("res://resources/config/effects_default.tres")
+
+
 func _process(delta: float) -> void:
 	var body := get_parent() as CharacterBody2D
-	if not body:
+	if not body or not _effects:
 		return
 
 	var speed := absf(body.velocity.x)

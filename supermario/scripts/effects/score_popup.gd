@@ -1,13 +1,13 @@
 extends Node2D
 
-const _effects := preload("res://resources/config/effects_default.tres")
-
+var _effects: Resource
 var _timer: float = 0.0
 var _points: int = 0
 
 
-func setup(points: int) -> void:
+func setup(points: int, effects_config: Resource) -> void:
 	_points = points
+	_effects = effects_config
 
 
 func _process(delta: float) -> void:

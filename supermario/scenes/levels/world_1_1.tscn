@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/koopa.tscn" id="11_koopa"]
 [ext_resource type="Script" path="res://scripts/level/enemy_spawner.gd" id="12_spawner"]
 [ext_resource type="Script" path="res://scripts/effects/effects_manager.gd" id="13_effects"]
+[ext_resource type="Resource" path="res://resources/config/effects_default.tres" id="14_fx_config"]
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
@@ -170,6 +171,7 @@ position = Vector2(1568, 192)
 
 [node name="Effects" type="Node2D" parent="."]
 script = ExtResource("13_effects")
+effects_config = ExtResource("14_fx_config")
 
 [node name="Interactables" type="Node2D" parent="." unique_id=309133980]
 

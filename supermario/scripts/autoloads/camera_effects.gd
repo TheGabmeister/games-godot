@@ -3,21 +3,26 @@ extends Node
 var _shake_intensity: float = 0.0
 var _shake_duration: float = 0.0
 var _shake_timer: float = 0.0
+var _shake_offset: Vector2 = Vector2.ZERO
 var _camera: Camera2D
+
+
+func get_shake_offset() -> Vector2:
+	return _shake_offset
 
 
 func _process(delta: float) -> void:
 	if _shake_timer > 0.0:
 		_shake_timer -= delta
-		if _camera and is_instance_valid(_camera):
-			var decay := _shake_timer / _shake_duration
-			var offset := Vector2(
-				randf_range(-_shake_intensity, _shake_intensity),
-				randf_range(-_shake_intensity, _shake_intensity),
-			) * decay
-			_camera.offset = offset
-		if _shake_timer <= 0.0 and _camera and is_instance_valid(_camera):
-			_camera.offset = Vector2.ZERO
+		var decay := _shake_timer / _shake_duration
+		_shake_offset = Vector2(
+			randf_range(-_shake_intensity, _shake_intensity),
+			randf_range(-_shake_intensity, _shake_intensity),
+		) * decay
+		if _shake_timer <= 0.0:
+			_shake_offset = Vector2.ZERO
+	else:
+		_shake_offset = Vector2.ZERO
 
 
 func shake(intensity: float, duration: float) -> void:

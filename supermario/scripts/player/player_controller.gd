@@ -4,6 +4,7 @@ const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 80
 
 @export var movement: Resource  # PlayerMovementConfig
 @export var cam_config: Resource  # CameraConfig
+@export var effects: Resource  # EffectsConfig
 
 var coyote_active: bool = false
 var jump_buffered: bool = false
@@ -51,10 +52,12 @@ func _process(delta: float) -> void:
 	# Camera look-ahead and no-backtrack
 	var target_ahead: float = signf(visuals.scale.x) * cam_config.look_ahead_distance
 	_camera_look_ahead = move_toward(_camera_look_ahead, target_ahead, cam_config.look_ahead_speed * delta)
-	camera.offset.x = _camera_look_ahead
+	var shake := CameraEffects.get_shake_offset()
+	camera.offset.x = _camera_look_ahead + shake.x
+	camera.offset.y = shake.y
 
 	# Prevent camera from scrolling left (no backtracking)
-	var cam_left: float = global_position.x + camera.offset.x - cam_config.no_backtrack_offset
+	var cam_left: float = global_position.x + _camera_look_ahead - cam_config.no_backtrack_offset
 	if cam_left > _max_camera_x:
 		_max_camera_x = cam_left
 	camera.limit_left = int(_max_camera_x)

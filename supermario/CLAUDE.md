@@ -26,7 +26,7 @@ No automated test suite. Validate changes by:
 
 ## SPEC.md and Phase Structure
 
-`SPEC.md` is the design authority. The project is **mid-implementation** — currently around Phase 4-5 of 10 phases in §15. Many features described in SPEC.md are **intentionally deferred** to later phases, including grow/shrink animations, coin-pop visuals, pipe warps, fireballs, starman, menus, and audio wiring. Before "fixing" something that looks missing, check §15 to see if it's a deferred feature — introducing it early is scope creep, not a bug fix.
+`SPEC.md` is the design authority. The project is **mid-implementation** — currently through Phase 6 of 10 phases in §15. Many features described in SPEC.md are **intentionally deferred** to later phases, including pipe warps, fireballs, starman, menus, and audio wiring. Before "fixing" something that looks missing, check §15 to see if it's a deferred feature — introducing it early is scope creep, not a bug fix.
 
 When in doubt: read the relevant §9/§14/§15 subsection before touching code. Spec decisions are binding and many gotchas are documented there.
 
@@ -38,13 +38,13 @@ When in doubt: read the relevant §9/§14/§15 subsection before touching code. 
 2. **GameManager** — Persistent game state: score, coins, lives, timer, power state (`SMALL`/`BIG`/`FIRE`), game state (`TITLE`/`PLAYING`/`PAUSED`/`GAME_OVER`/`LEVEL_COMPLETE`/`TRANSITIONING`).
 3. **AudioManager** — Registry-based audio skeleton. SFX/music registries map `StringName` keys to file paths (currently empty — fill paths to add audio). SFX pool of 10+6 players, music crossfade via dual `AudioStreamPlayer`.
 4. **SceneManager** — Fade-to-black scene transitions, level intro overlay.
-5. **CameraEffects** — Screen shake with decay, freeze frame via time scale dip.
+5. **CameraEffects** — Screen shake with decay (exposes `get_shake_offset()` — does NOT write to camera directly), freeze frame via time scale dip. The player controller composes shake offset with its own look-ahead offset each frame.
 
 ### Player System
 
 The player uses a **state machine with child nodes** pattern:
 
-- `player_controller.gd` (CharacterBody2D) — physics constants, movement helpers, collision shape management
+- `player_controller.gd` (CharacterBody2D) — movement helpers, collision shape management, stomp/damage handling. Tunables come from `@export` Resource configs (see Tunables section).
 - `state_machine.gd` — delegates `_process`/`_physics_process`/`_unhandled_input` to the active state
 - States extend `player_state.gd` base via `extends "res://..."` paths. Each state owns its own transition logic.
 - `player_drawer.gd` — procedural `_draw()` rendering for Small/Big/Crouching Mario with walk cycle animation
@@ -92,6 +92,39 @@ See [fire_flower.gd](scripts/objects/fire_flower.gd) and [mushroom.gd](scripts/o
 
 **Testing caveat:** a timing test that extends `SceneTree` and does work in `_initialize()` has different `_ready` ordering than real scene gameplay (`_ready` is deferred there). Always verify frame/tree ordering with a `Node2D`-based test scene, not a `SceneTree` script.
 
+### Enemy System
+
+Enemies use the same state-machine-like pattern as the player but simpler:
+
+- `enemy_base.gd` (CharacterBody2D) — gravity, patrol movement, wall reversal, flip-death animation. Reads speed/gravity from `@export var config: Resource` (EnemyConfig).
+- `goomba.gd` / `koopa.gd` extend enemy_base. Koopa spawns a `koopa_shell.tscn` on stomp.
+- `koopa_shell.gd` — standalone CharacterBody2D with IDLE/MOVING state machine, combo kill tracking.
+- `enemy_spawner.gd` — script on the Enemies container node. Activates children when camera approaches within `activation_distance` pixels. Cleans up enemies far behind camera.
+
+**Stomp vs damage detection:** Player has two Area2D children:
+- `StompDetector` (at feet, masks Layer 5 EnemyHitbox) — `area_entered` checks `velocity.y > 0` for stomps
+- `Hurtbox` (body area, on Layer 4, masks Layer 5) — `area_entered` handles damage
+
+Both may fire for the same enemy in the same frame. The hurtbox handler has a position guard (`velocity.y > 0 and player above enemy → skip`) to avoid double-triggering on stomps. Enemies disable their hitbox `monitorable` on death, which is the primary guard.
+
+**Enemy methods used by duck typing:** `stomp_kill() -> bool`, `is_dangerous() -> bool`, `try_kick(direction) -> bool`, `shell_kill()`, `activate()`, `is_active() -> bool`, `die()`.
+
+### Effects System
+
+`effects_manager.gd` (Node2D in the level scene) listens to EventBus signals and spawns visual effects:
+- `score_popup.gd` — rising/fading point numbers on `score_awarded`
+- `brick_particle.gd` — tumbling fragments on `block_broken`
+- `stomp_puff.gd` — expanding particle ring on `enemy_stomped`
+- `coin_pop.gd` — spinning coin arc on `item_spawned(&"coin")`
+
+Player-attached effects: `damage_flash.gd` (red tint on `player_damaged`), `motion_trail.gd` (afterimages at top speed).
+
+### Grow/Shrink States and Pause Rule
+
+`GrowState` and `ShrinkState` freeze gameplay via `get_tree().paused = true` while the player flickers between forms. The player node is set to `PROCESS_MODE_ALWAYS` so the animation continues. On exit, the tree is unpaused and the player returns to the state it came from (cached via `state_machine.previous_state_name`). The collision shape is resized once at the end, not during the flicker.
+
+**Caution:** Any node that must keep running during grow/shrink needs `PROCESS_MODE_ALWAYS` (e.g., the power-up ring effect). The SceneManager overlay already uses a high CanvasLayer and is unaffected.
+
 ### Color Palette
 
 `color_palette.gd` holds all named color constants. Access via preload: `const P := preload("res://scripts/color_palette.gd")` then `P.MARIO_RED`.
@@ -102,11 +135,20 @@ Layers 1-10 are named in `project.godot`. Key separation: `CharacterBody2D` node
 
 ## Tunables
 
-Physics and gameplay tunables currently live as `const` declarations at the top of the script that uses them (e.g., `WALK_SPEED`, `JUMP_VELOCITY` in `player_controller.gd`; `EMERGE_HEIGHT` in mushroom/fire_flower). This is deliberate: locality, compile-time folding, zero cross-file coupling.
+Gameplay tunables live in Godot `Resource` files (`.tres`) under `resources/config/`, with script definitions in `scripts/config/`. Each script extends `Resource` with `@export` vars. Consuming scripts declare `@export var config: Resource` and are wired to the `.tres` in their scene file.
 
-**Phase 6 migrates tunables to Godot `Resource` files (`.tres`) category-by-category** (`PlayerMovementConfig`, `CameraConfig`, per-enemy `EnemyConfig`, etc.) — see SPEC.md §6.1 for the migration order and pattern. Until then, new tunables go as `const`.
+**Current config resources:**
+- `PlayerMovementConfig` — walk/run speed, gravity, jump, coyote time, collision sizes, stomp bounce, invincibility
+- `CameraConfig` — look-ahead distance/speed, smoothing, no-backtrack offset
+- `EnemyConfig` — patrol speed, gravity (one `.tres` per enemy type: goomba, koopa)
+- `BlockBumpConfig` — bump amplitude/duration, pulse frequency (shared by all block types)
+- `ItemConfig` — mushroom speed/gravity, emerge height/duration
+- `LevelTimingConfig` — intro duration, fade duration, death timing
+- `EffectsConfig` — score popup speed, damage flash duration, trail spacing, grow/shrink rate
 
-**Do not introduce a centralized `settings.gd` god-object.** It's the worst of both worlds: loses locality without gaining the editor-driven tuning that Resources provide. The agreed direction is per-category `Resource` subclasses with `@export` vars, not a single config file. `ProjectSettings` is reserved for truly global flags (difficulty, debug toggles), not gameplay values.
+**Pattern:** Scripts that are scene-instanced (player, enemies, blocks, items) use `@export` wired in the `.tscn`. Autoloads and state nodes that can't use `@export` use `const preload("res://resources/config/...")` as a justified exception.
+
+**Do not introduce a centralized `settings.gd` god-object.** The agreed direction is per-category `Resource` subclasses, not a single config file. `ProjectSettings` is reserved for truly global flags (difficulty, debug toggles), not gameplay values. New tunables go in the appropriate existing config resource, or a new one if no category fits.
 
 ## GDScript Conventions
 

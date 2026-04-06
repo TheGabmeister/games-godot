@@ -1,7 +1,7 @@
 extends Node2D
 
-const ACTIVATION_DISTANCE := 320.0
-const CLEANUP_DISTANCE := 320.0
+@export var activation_distance: float = 320.0
+@export var cleanup_distance: float = 320.0
 
 
 func _process(_delta: float) -> void:
@@ -18,10 +18,8 @@ func _process(_delta: float) -> void:
 			continue
 		if child.has_method("activate") and child.has_method("is_active"):
 			if not child.is_active():
-				# Activate when within range of camera right edge
-				if child.global_position.x < cam_right + ACTIVATION_DISTANCE:
+				if child.global_position.x < cam_right + activation_distance:
 					child.activate()
 			else:
-				# Clean up enemies far behind the camera
-				if child.global_position.x < cam_left - CLEANUP_DISTANCE:
+				if child.global_position.x < cam_left - cleanup_distance:
 					child.queue_free()
