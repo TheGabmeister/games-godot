@@ -1,29 +1,36 @@
-[gd_scene load_steps=5 format=3 uid="uid://c8main0001"]
+[gd_scene format=3 uid="uid://c8main0001"]
 
-[ext_resource type="Script" path="res://scenes/main/main.gd" id="1_main"]
-[ext_resource type="Shader" path="res://shaders/post_process.gdshader" id="2_post"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3_hud"]
+[ext_resource type="Script" uid="uid://cud4tgw3ricam" path="res://scenes/main/main.gd" id="1_main"]
+[ext_resource type="Shader" uid="uid://dgricichs7wfa" path="res://shaders/post_process.gdshader" id="2_post"]
+[ext_resource type="PackedScene" uid="uid://c8hud00001" path="res://scenes/ui/hud.tscn" id="3_hud"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_post"]
 shader = ExtResource("2_post")
+shader_parameter/bloom_strength = 0.3
+shader_parameter/bloom_threshold = 0.7
+shader_parameter/color_shift = Vector3(0, 0, 0)
+shader_parameter/saturation = 1.0
+shader_parameter/brightness = 1.0
+shader_parameter/contrast = 1.0
 
-[node name="Main" type="Node"]
+[node name="Main" type="Node" unique_id=1706451139]
 script = ExtResource("1_main")
 
-[node name="World" type="Node2D" parent="."]
+[node name="World" type="Node2D" parent="." unique_id=491857638]
 
-[node name="HUDLayer" type="CanvasLayer" parent="."]
+[node name="HUDLayer" type="CanvasLayer" parent="." unique_id=1617085300]
 layer = 10
 
-[node name="HUD" parent="HUDLayer" instance=ExtResource("3_hud")]
+[node name="HUD" parent="HUDLayer" unique_id=1251422949 instance=ExtResource("3_hud")]
 
-[node name="DialogLayer" type="CanvasLayer" parent="."]
+[node name="DialogLayer" type="CanvasLayer" parent="." unique_id=337645315]
 layer = 15
 
-[node name="PostProcessLayer" type="CanvasLayer" parent="."]
+[node name="PostProcessLayer" type="CanvasLayer" parent="." unique_id=640527347]
 layer = 19
+visible = false
 
-[node name="ColorRect" type="ColorRect" parent="PostProcessLayer"]
+[node name="ColorRect" type="ColorRect" parent="PostProcessLayer" unique_id=609874778]
 material = SubResource("ShaderMaterial_post")
 anchors_preset = 15
 anchor_right = 1.0
@@ -32,9 +39,9 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="TransitionOverlay" type="CanvasLayer" parent="."]
+[node name="TransitionOverlay" type="CanvasLayer" parent="." unique_id=1642241861]
 layer = 20
 
-[node name="PauseLayer" type="CanvasLayer" parent="."]
-layer = 25
+[node name="PauseLayer" type="CanvasLayer" parent="." unique_id=1965254366]
 process_mode = 3
+layer = 25
