@@ -79,16 +79,11 @@ func try_push(direction: Vector2) -> bool:
 
 
 func _check_pressure_plates() -> void:
-	# Look for pressure plates at current position
-	var space_state := get_world_2d().direct_space_state
-	var query := PhysicsPointQueryParameters2D.new()
-	query.position = global_position
-	query.collision_mask = 128  # Triggers layer
-	var results := space_state.intersect_point(query)
-	for r in results:
-		var collider: Object = r["collider"]
-		if collider and collider.has_method("activate"):
-			collider.call("activate")
+	# PressurePlate is an Area2D, which physics point queries don't detect.
+	# Find nearby plates by distance instead.
+	for node in get_tree().get_nodes_in_group(&"pressure_plates"):
+		if node is PressurePlate and global_position.distance_to(node.global_position) < TILE_SIZE:
+			node.activate()
 
 
 func _get_room_id() -> StringName:

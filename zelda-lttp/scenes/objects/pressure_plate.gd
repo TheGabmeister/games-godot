@@ -23,6 +23,7 @@ func _ready() -> void:
 		shape.shape = rect
 		add_child(shape)
 
+	add_to_group(&"pressure_plates")
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	queue_redraw()
