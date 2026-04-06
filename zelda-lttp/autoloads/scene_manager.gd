@@ -120,6 +120,29 @@ func _perform_room_load(scene_path: String, entry_point: StringName) -> void:
 		if current_room_data and current_room_data.is_safe_respawn_point:
 			GameManager.last_safe_position = spawn_pos
 
+		# Apply camera limits to room bounds
+		_apply_camera_limits(room_instance)
+
+
+func _apply_camera_limits(room: Node) -> void:
+	if not _player or not _player.has_node("Camera2D"):
+		return
+	var cam: Camera2D = _player.get_node("Camera2D")
+
+	# Use room's bounding rect: look for a Floor ColorRect or fall back to viewport size
+	var room_size := Vector2(256, 224)
+	var room_origin := Vector2.ZERO
+
+	var floor_node := room.get_node_or_null("Floor")
+	if floor_node is ColorRect:
+		room_origin = floor_node.global_position
+		room_size = floor_node.size
+
+	cam.limit_left = int(room_origin.x)
+	cam.limit_top = int(room_origin.y)
+	cam.limit_right = int(room_origin.x + room_size.x)
+	cam.limit_bottom = int(room_origin.y + room_size.y)
+
 
 func _find_entities_node(room: Node) -> Node:
 	var entities := room.get_node_or_null("Entities")

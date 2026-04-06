@@ -34,5 +34,3 @@ func handle_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("action_dash"):
 		if PlayerState.has_upgrade(&"boots"):
 			state_machine.transition_to(&"Dash")
-	elif event.is_action_pressed("action_sword"):
-		buffer_action(&"action_sword")
