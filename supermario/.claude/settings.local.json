@@ -20,7 +20,8 @@
       "WebSearch",
       "WebFetch(domain:support.claude.com)",
       "WebFetch(domain:portkey.ai)",
-      "Bash(ls -la /c/dev/games-godot/supermario/scripts/*.gd)"
+      "Bash(ls -la /c/dev/games-godot/supermario/scripts/*.gd)",
+      "Bash(grep -l \"const P := preload\" /c/dev/games-godot/supermario/scripts/**/*.gd)"
     ]
   }
 }
