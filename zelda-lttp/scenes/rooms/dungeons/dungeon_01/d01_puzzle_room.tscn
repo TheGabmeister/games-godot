@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scenes/objects/switch_door.gd" id="7_sdoor"]
 [ext_resource type="Script" path="res://scenes/objects/locked_door.gd" id="8_ldoor"]
 [ext_resource type="Resource" path="res://resources/items/pickups/big_key.tres" id="9_bigkey"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/soldier/soldier.tscn" id="10_soldier"]
 
 [sub_resource type="RectangleShape2D" id="wall_top_left"]
 size = Vector2(112, 16)
@@ -101,6 +102,9 @@ persist_id = &"locked_door_1"
 
 [node name="Shape" type="CollisionShape2D" parent="Entities/LockedDoor"]
 shape = SubResource("ldoor_shape")
+
+[node name="Soldier1" parent="Entities" instance=ExtResource("10_soldier")]
+position = Vector2(160, 140)
 
 [node name="EntryPoints" type="Node2D" parent="."]
 

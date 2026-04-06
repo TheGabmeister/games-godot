@@ -4,6 +4,9 @@
 [ext_resource type="Resource" path="res://resources/room_data/dungeons/d01_boss_room.tres" id="2_rd"]
 [ext_resource type="Script" path="res://scenes/objects/door.gd" id="3_door"]
 [ext_resource type="Script" path="res://scenes/objects/boss_door.gd" id="4_bdoor"]
+[ext_resource type="Script" path="res://scenes/rooms/components/reward_pedestal.gd" id="5_pedestal"]
+[ext_resource type="Resource" path="res://resources/items/rewards/pendant_courage.tres" id="6_pendant"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/stalfos/stalfos.tscn" id="7_stalfos"]
 
 [sub_resource type="RectangleShape2D" id="wall_top"]
 size = Vector2(256, 16)
@@ -46,6 +49,22 @@ persist_id = &"boss_door"
 
 [node name="Shape" type="CollisionShape2D" parent="Entities/BossDoor"]
 shape = SubResource("bdoor_shape")
+
+[node name="Pedestal" type="Node2D" parent="Entities"]
+position = Vector2(176, 80)
+script = ExtResource("5_pedestal")
+dungeon_id = &"dungeon_01"
+reward_flag = &"pendants/courage"
+reward_item = ExtResource("6_pendant")
+persist_id = &"pedestal"
+warp_target_room_id = &"d01_entrance"
+warp_target_entry_point = &"from_overworld"
+
+[node name="Stalfos1" parent="Entities" instance=ExtResource("7_stalfos")]
+position = Vector2(128, 140)
+
+[node name="Stalfos2" parent="Entities" instance=ExtResource("7_stalfos")]
+position = Vector2(200, 160)
 
 [node name="EntryPoints" type="Node2D" parent="."]
 

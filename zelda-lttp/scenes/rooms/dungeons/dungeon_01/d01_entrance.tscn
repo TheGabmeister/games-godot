@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scenes/objects/chest.gd" id="4_chest"]
 [ext_resource type="Resource" path="res://resources/items/pickups/small_key.tres" id="5_key"]
 [ext_resource type="Resource" path="res://resources/items/pickups/dungeon_map.tres" id="6_map"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/soldier/soldier.tscn" id="7_soldier"]
 
 [sub_resource type="RectangleShape2D" id="wall_top"]
 size = Vector2(256, 16)
@@ -56,6 +57,9 @@ collision_layer = 1
 script = ExtResource("4_chest")
 item = ExtResource("6_map")
 persist_id = &"chest_map"
+
+[node name="Soldier1" parent="Entities" instance=ExtResource("7_soldier")]
+position = Vector2(160, 100)
 
 [node name="EntryPoints" type="Node2D" parent="."]
 

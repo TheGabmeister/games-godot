@@ -7,6 +7,8 @@
 [ext_resource type="Script" path="res://scenes/objects/switch.gd" id="5_switch"]
 [ext_resource type="Script" path="res://scenes/objects/switch_door.gd" id="6_sdoor"]
 [ext_resource type="Resource" path="res://resources/items/pickups/compass.tres" id="7_compass"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/keese/keese.tscn" id="8_keese"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/stalfos/stalfos.tscn" id="9_stalfos"]
 
 [sub_resource type="RectangleShape2D" id="wall_top"]
 size = Vector2(256, 16)
@@ -68,6 +70,15 @@ script = ExtResource("6_sdoor")
 
 [node name="Shape" type="CollisionShape2D" parent="Entities/SwitchBarrier"]
 shape = SubResource("sdoor_shape")
+
+[node name="Keese1" parent="Entities" instance=ExtResource("8_keese")]
+position = Vector2(80, 60)
+
+[node name="Keese2" parent="Entities" instance=ExtResource("8_keese")]
+position = Vector2(180, 160)
+
+[node name="Stalfos1" parent="Entities" instance=ExtResource("9_stalfos")]
+position = Vector2(128, 160)
 
 [node name="EntryPoints" type="Node2D" parent="."]
 

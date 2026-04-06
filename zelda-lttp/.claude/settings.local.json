@@ -17,7 +17,10 @@
       "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/zelda-lttp\" --headless --scene res://scenes/main/main.tscn --quit-after 5)",
       "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/zelda-lttp\" --headless --scene res://debug/test_loot_table.tscn --quit-after 3)",
       "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/zelda-lttp\" --headless --scene res://debug/test_player_state.tscn --quit-after 5)",
-      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path /c/dev/games-godot/zelda-lttp --headless --quit)"
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path /c/dev/games-godot/zelda-lttp --headless --quit)",
+      "Bash(ls /c/dev/games-godot/zelda-lttp/scenes/enemies/*/)",
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path /c/dev/games-godot/zelda-lttp --headless --import)",
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path /c/dev/games-godot/zelda-lttp --headless --scene res://scenes/rooms/dungeons/dungeon_01/d01_boss_room.tscn --quit-after 1)"
     ]
   }
 }
