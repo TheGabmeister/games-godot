@@ -259,9 +259,9 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 		if enemy.try_kick(kick_dir):
 			return
 	# Only take damage from things that identify as dangerous
-	if not enemy.has_method("is_dangerous") or not enemy.is_dangerous():
-		return
-	take_damage()
+	if enemy.has_method("is_dangerous") and enemy.is_dangerous():
+		take_damage()
+	
 
 
 func _update_collision_shape() -> void:
