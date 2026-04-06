@@ -42,12 +42,14 @@ static func create_tileset() -> TileSet:
 	tileset.set_physics_layer_collision_layer(0, 1)  # Layer 1: Terrain
 	tileset.set_physics_layer_collision_mask(0, 0)
 
+	var half: int = TILE_SIZE / 2
+
 	# Set collision polygons for both tiles
 	for tile_coord in [Vector2i(0, 0), Vector2i(1, 0)]:
 		var tile_data := source.get_tile_data(tile_coord, 0)
 		var polygon := PackedVector2Array([
-			Vector2(0, 0), Vector2(TILE_SIZE, 0),
-			Vector2(TILE_SIZE, TILE_SIZE), Vector2(0, TILE_SIZE),
+			Vector2(-half, -half), Vector2(TILE_SIZE - half, -half),
+			Vector2(TILE_SIZE - half, TILE_SIZE - half), Vector2(-half , TILE_SIZE - half),
 		])
 		tile_data.add_collision_polygon(0)
 		tile_data.set_collision_polygon_points(0, 0, polygon)
