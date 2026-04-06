@@ -26,7 +26,7 @@ No automated test suite. Validate changes by:
 
 ## SPEC.md and Phase Structure
 
-`SPEC.md` is the design authority. The project is **mid-implementation** — currently through Phase 6 of 10 phases in §15. Many features described in SPEC.md are **intentionally deferred** to later phases, including pipe warps, fireballs, starman, menus, and audio wiring. Before "fixing" something that looks missing, check §15 to see if it's a deferred feature — introducing it early is scope creep, not a bug fix.
+`SPEC.md` is the design authority. All 10 implementation phases (§15) are complete. The project has: full World 1-1 and World 1-2 levels, Fire Mario/fireballs, starman, piranha plants, pipe warps, flagpole sequence, title screen, pause menu, game over, level complete flow, and audio wiring (registry-based, asset paths empty until audio files are added).
 
 When in doubt: read the relevant §9/§14/§15 subsection before touching code. Spec decisions are binding and many gotchas are documented there.
 
@@ -35,25 +35,44 @@ When in doubt: read the relevant §9/§14/§15 subsection before touching code. 
 ### Autoloads (loaded in this order)
 
 1. **EventBus** — Pure signal hub. All cross-system communication goes through here. ~30 signals covering player, scoring, enemies, blocks, game state.
-2. **GameManager** — Persistent game state: score, coins, lives, timer, power state (`SMALL`/`BIG`/`FIRE`), game state (`TITLE`/`PLAYING`/`PAUSED`/`GAME_OVER`/`LEVEL_COMPLETE`/`TRANSITIONING`).
-3. **AudioManager** — Registry-based audio skeleton. SFX/music registries map `StringName` keys to file paths (currently empty — fill paths to add audio). SFX pool of 10+6 players, music crossfade via dual `AudioStreamPlayer`.
+2. **GameManager** — Persistent game state: score, coins, lives, timer, power state (`SMALL`/`BIG`/`FIRE`), game state (`TITLE`/`PLAYING`/`PAUSED`/`GAME_OVER`/`LEVEL_COMPLETE`/`TRANSITIONING`). Level progression via `LEVEL_SCENES` dictionary and `LEVEL_ORDER` array.
+3. **AudioManager** — Registry-based audio. SFX/music registries map `StringName` keys to file paths (currently empty — fill paths to add audio). Unknown keys log a warning. SFX pool of 10+6 players, music crossfade via dual `AudioStreamPlayer`. All EventBus-to-audio wiring is already connected.
 4. **SceneManager** — Fade-to-black scene transitions, level intro overlay.
 5. **CameraEffects** — Screen shake with decay (exposes `get_shake_offset()` — does NOT write to camera directly), freeze frame via time scale dip. The player controller composes shake offset with its own look-ahead offset each frame.
+
+### Game Flow
+
+```
+Title Screen → Level Intro (2.5s) → Gameplay
+  → Flagpole → Level Complete (time bonus tally) → Next Level or Title
+  → Death → Lives > 0 → Reload Scene → Level Intro → Respawn
+  → Death → Lives = 0 → Game Over (3s) → Title
+  → Pause (Escape) → Resume
+```
+
+GameManager tracks the current level key (e.g., `"1-1"`). After level complete, `get_next_level_scene()` looks up the next entry in `LEVEL_ORDER`. Level scenes set `GameState.TRANSITIONING` during the intro overlay so the timer doesn't run, then switch to `PLAYING` afterward.
 
 ### Player System
 
 The player uses a **state machine with child nodes** pattern:
 
-- `player_controller.gd` (CharacterBody2D) — movement helpers, collision shape management, stomp/damage handling. Tunables come from `@export` Resource configs (see Tunables section).
+- `player_controller.gd` (CharacterBody2D) — movement helpers, collision shape management, stomp/damage handling, fireball shooting, star power, pipe entry, flagpole grab. Tunables come from `@export` Resource configs (see Tunables section).
 - `state_machine.gd` — delegates `_process`/`_physics_process`/`_unhandled_input` to the active state
 - States extend `player_state.gd` base via `extends "res://..."` paths. Each state owns its own transition logic.
-- `player_drawer.gd` — procedural `_draw()` rendering for Small/Big/Crouching Mario with walk cycle animation
+- `player_drawer.gd` — procedural `_draw()` rendering for Small/Big/Crouching Mario with walk cycle animation and star power palette cycling
+
+States: `IdleState`, `RunState`, `JumpState`, `FallState`, `CrouchState`, `DeathState`, `GrowState`, `ShrinkState`, `PipeEnterState`, `FlagpoleState`.
 
 States transition themselves (e.g., `state_machine.transition_to(&"JumpState")`). The controller provides helpers but doesn't decide when to switch states.
 
+**Star power:** Managed by `_is_star_powered` flag on the player controller (not a state). 10-second duration, palette cycling in drawer, kills enemies on hurtbox contact, warning flashes in last 2 seconds.
+
+**Fireballs:** Fire Mario shoots on `run` press, max 2 tracked via `_active_fireballs` counter. Fireballs are standalone `CharacterBody2D` scenes that self-destruct on wall/enemy contact. The counter decrements via `tree_exited` callback.
+
 ### Level System
 
-- `level_base.gd` — programmatically creates a `TileSet` at runtime via `terrain_tileset.gd`, paints ground/stairs/pits onto a `TileMapLayer`
+- `level_base.gd` (World 1-1) — programmatically creates a `TileSet` at runtime via `terrain_tileset.gd`, paints ground/stairs/pits onto a `TileMapLayer`. Handles level intro flow and respawn.
+- `level_1_2.gd` (World 1-2) — underground variant with `underground_tileset.gd`, ceiling tiles, raised platforms.
 - Only static terrain uses `TileMapLayer`. Interactive objects (blocks, enemies, items) are individual scene instances placed under container `Node2D` nodes.
 - `parallax_controller.gd` — procedural cloud/hill/bush drawing with parallax offset from camera. Looks up the player camera lazily in `_process` (not `_ready`) because the parallax node is earlier in the scene tree than the player.
 - Camera: child of player, horizontal follow only, look-ahead offset, `limit_left` ratchets forward to prevent backtracking. Parallax reads `camera.get_screen_center_position()` (not `global_position`) so smoothing/offset are honored.
@@ -68,29 +87,7 @@ Instead, the player's `check_ceiling_bumps()` (called from `JumpState` after `mo
 
 ### Item Spawning and `_ready()` Timing
 
-In Godot 4, `_ready()` fires **synchronously inside `add_child()`**, before any subsequent lines in the caller run. This trips up item spawners that set position after `add_child`:
-
-```gdscript
-var item := scene.instantiate() as Node2D
-get_parent().add_child(item)       # _ready() fires HERE, with default position (0, 0)
-item.global_position = spawn_pos   # Too late — anything _ready() snapshotted is already stale
-```
-
-Items that need to know their spawn position (e.g., for emerge animations) must **not** capture it in `_ready()`. The project convention is **lazy-initialization on the first `_process` / `_physics_process` tick** via a boolean flag:
-
-```gdscript
-var _emerge_initialized: bool = false
-
-func _process(delta: float) -> void:
-    if not _emerge_initialized:
-        _emerge_start_y = global_position.y
-        _emerge_initialized = true
-    # ...rest of emerge logic
-```
-
-See [fire_flower.gd](scripts/objects/fire_flower.gd) and [mushroom.gd](scripts/objects/mushroom.gd) for the pattern in use. Both have explanatory comments in `_ready()` warning against "fixing" the code back to the broken form.
-
-**Testing caveat:** a timing test that extends `SceneTree` and does work in `_initialize()` has different `_ready` ordering than real scene gameplay (`_ready` is deferred there). Always verify frame/tree ordering with a `Node2D`-based test scene, not a `SceneTree` script.
+In Godot 4, `_ready()` fires **synchronously inside `add_child()`**, before any subsequent lines in the caller run. Items that need to know their spawn position (e.g., for emerge animations) must **not** capture it in `_ready()`. The project convention is **lazy-initialization on the first `_process` / `_physics_process` tick** via a boolean flag. See `fire_flower.gd` and `mushroom.gd` for the pattern.
 
 ### Enemy System
 
@@ -99,15 +96,24 @@ Enemies use the same state-machine-like pattern as the player but simpler:
 - `enemy_base.gd` (CharacterBody2D) — gravity, patrol movement, wall reversal, flip-death animation. Reads speed/gravity from `@export var config: Resource` (EnemyConfig).
 - `goomba.gd` / `koopa.gd` extend enemy_base. Koopa spawns a `koopa_shell.tscn` on stomp.
 - `koopa_shell.gd` — standalone CharacterBody2D with IDLE/MOVING state machine, combo kill tracking.
+- `piranha_plant.gd` — Node2D (not CharacterBody2D). Tween-based emerge/retract. Not stompable (`is_stompable() -> false`). Vulnerable to fireballs and star power. Hitbox disabled when fully retracted.
 - `enemy_spawner.gd` — script on the Enemies container node. Activates children when camera approaches within `activation_distance` pixels. Cleans up enemies far behind camera.
 
 **Stomp vs damage detection:** Player has two Area2D children:
 - `StompDetector` (at feet, masks Layer 5 EnemyHitbox) — `area_entered` checks `velocity.y > 0` for stomps
 - `Hurtbox` (body area, on Layer 4, masks Layer 5) — `area_entered` handles damage
 
-Both may fire for the same enemy in the same frame. The hurtbox handler has a position guard (`velocity.y > 0 and player above enemy → skip`) to avoid double-triggering on stomps. Enemies disable their hitbox `monitorable` on death, which is the primary guard.
+Both may fire for the same enemy in the same frame. The hurtbox handler skips damage when the player is above the enemy and the enemy is stompable. Enemies that return `is_stompable() -> false` (like piranha plants) bypass this guard and always damage on contact.
 
-**Enemy methods used by duck typing:** `stomp_kill() -> bool`, `is_dangerous() -> bool`, `try_kick(direction) -> bool`, `shell_kill()`, `activate()`, `is_active() -> bool`, `die()`.
+**Enemy methods used by duck typing:** `stomp_kill() -> bool`, `is_stompable() -> bool`, `is_dangerous() -> bool`, `try_kick(direction) -> bool`, `shell_kill()`, `non_stomp_kill()`, `activate()`, `is_active() -> bool`, `die()`.
+
+### Pipe Warp System
+
+`pipe.gd` (StaticBody2D) draws the pipe via `_draw()` and manages a `WarpZone` Area2D on top. When the player is on the zone, grounded, and presses down, `player.enter_pipe(self, target)` is called.
+
+`PipeEnterState` disables collision, drops `z_index` to 0 (below pipe's 5), tweens player down behind the pipe, fades via SceneManager, repositions at target pipe, tweens out, restores `z_index` to 10, re-enables collision.
+
+**Player z_index:** Default is 10 (set in `player.tscn`). Pipes are at 5 (`z_as_relative = false`). During pipe entry, player drops to 0, restored on exit.
 
 ### Effects System
 
@@ -118,6 +124,13 @@ Both may fire for the same enemy in the same frame. The hurtbox handler has a po
 - `coin_pop.gd` — spinning coin arc on `item_spawned(&"coin")`
 
 Player-attached effects: `damage_flash.gd` (red tint on `player_damaged`), `motion_trail.gd` (afterimages at top speed).
+
+### UI Layer
+
+- **Title screen** (`title_screen.gd`) — main scene in `project.godot`. Resets GameManager on load. 0.3s input delay prevents stale presses carrying over.
+- **Pause menu** (`pause_menu.gd`) — `PROCESS_MODE_WHEN_PAUSED` CanvasLayer. Toggles `get_tree().paused` and ducks music.
+- **Game over** (`game_over_screen.gd`) — `PROCESS_MODE_ALWAYS`. Shows 3s on `game_over` signal, returns to title.
+- **Level complete** (`level_complete.gd`) — `PROCESS_MODE_ALWAYS`. Score tally, then advances to next level via `GameManager.get_next_level_scene()`.
 
 ### Grow/Shrink States and Pause Rule
 
@@ -131,7 +144,37 @@ Player-attached effects: `damage_flash.gd` (red tint on `player_damaged`), `moti
 
 ### Collision Layers
 
-Layers 1-10 are named in `project.godot`. Key separation: `CharacterBody2D` nodes only mask layer 1 (Terrain) for physics. `Area2D` nodes handle all overlap detection (stomp, damage, items, killzone) on layers 4-10.
+Layers 1-10 are named in `project.godot`. Key separation: `CharacterBody2D` nodes only mask layer 1 (Terrain) for physics. `Area2D` nodes handle all overlap detection (stomp, damage, items, killzone) on layers 4-10. Layer 7 (Fireballs) is used by fireball hitboxes to detect enemy hitboxes on layer 5.
+
+## Gotchas
+
+### TileSet Collision Polygon Origin
+
+In Godot 4's TileSet, collision polygon coordinates are relative to the **tile center**, not the top-left. A full-tile collision polygon must be offset by half the tile size:
+
+```gdscript
+var half: int = TILE_SIZE / 2
+var polygon := PackedVector2Array([
+    Vector2(-half, -half), Vector2(TILE_SIZE - half, -half),
+    Vector2(TILE_SIZE - half, TILE_SIZE - half), Vector2(-half, TILE_SIZE - half),
+])
+```
+
+Using `(0, 0)` to `(TILE_SIZE, TILE_SIZE)` shifts the collision 8px right and down from the visual.
+
+### Shared Sub-Resources in Instanced Scenes
+
+Scene `.tscn` sub-resources (like `RectangleShape2D`) are **shared across all instances** of that scene. Modifying a shape at runtime (e.g., resizing a pipe's collision based on `pipe_height`) mutates it for every instance. Fix: create a new shape per instance in `_ready()`:
+
+```gdscript
+var body_shape := RectangleShape2D.new()
+body_shape.size = Vector2(32, h)
+_col_shape.shape = body_shape
+```
+
+### One-Shot Guards
+
+Any callback that triggers a scene transition, life loss, or level completion must have a one-shot guard to prevent firing every frame. Examples: `DeathState` has `_life_lost`, `FlagpoleState` advances to `_phase = 3` before emitting `level_completed`.
 
 ## Tunables
 

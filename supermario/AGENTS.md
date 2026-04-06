@@ -10,18 +10,19 @@ Current state:
 - Rendering feature set: `Forward Plus`
 - Physics engine setting: `Jolt Physics` for 3D project settings, while gameplay
   uses normal 2D physics
-- Main scene entry point: `res://scenes/levels/world_1_1.tscn`
+- Main scene entry point: `res://scenes/ui/title_screen.tscn`
 - Visual direction: primitive-shape art and procedural drawing instead of sprite
   sheets or textures
 - Core gameplay currently implemented: player movement/state machine, HUD,
-  autoloaded game systems, procedural terrain, parallax background, kill zone,
-  question blocks, brick blocks, hidden blocks, coins, mushrooms, fire
-  flowers, Goombas, Koopas, Koopa shells, stomp/contact damage, and enemy
-  activation cleanup
-- Phase 6 infrastructure is now present on disk: tunables migrated into
-  `Resource` files under `resources/config/`, plus procedural effects for
-  damage flash, score popups, motion trails, brick particles, stomp puffs,
-  coin pop, and the power-up ring
+  autoloaded game systems, procedural terrain, parallax/underground
+  backgrounds, kill zones, question blocks, brick blocks, hidden blocks,
+  coins, mushrooms, fire flowers, Starman, fireballs, Goombas, Koopas, Koopa
+  shells, Piranha Plants, pipe warps, flagpole/castle sequences, title/pause/
+  game-over/level-complete UI, and the World 1-1 -> World 1-2 loop
+- Phases 6-10 content is now represented on disk: tunables migrated into
+  `Resource` files under `resources/config/`, procedural effects are wired in,
+  advanced gameplay state/objects are present, and `world_1_2.tscn` exists as
+  the follow-up level scene
 
 ## Repository Layout
 
@@ -32,21 +33,32 @@ Current state:
   some sections are still aspirational or deferred. Verify against files on
   disk and the phase notes before treating a missing feature as a bug.
 - `CLAUDE.md`: Another agent guide with repo-specific implementation notes.
-- `scenes/levels/world_1_1.tscn`: Current playable level and real boot scene.
-  This scene now includes background, procedural terrain, placed blocks, placed
-  coins, enemies, an `Effects` node, a kill zone, and the player/HUD.
+- `scenes/ui/title_screen.tscn`: Current boot scene. Starting the game from
+  here transitions into `world_1_1.tscn`.
+- `scenes/levels/world_1_1.tscn`: First overworld level. This scene includes
+  background, procedural terrain, placed blocks/coins, pipes, enemies,
+  interactables, an `Effects` node, kill zone, player, HUD, pause menu,
+  game-over screen, and level-complete overlay.
+- `scenes/levels/world_1_2.tscn`: Second playable level with underground
+  visuals and `scripts/level/level_1_2.gd`.
 - `scenes/levels/test_level.tscn`: Sandbox level scene.
 - `scenes/player/player.tscn`: Player scene with controller, camera, stomp
   detector, hurtbox, damage flash, motion trail, and state machine states as
   child nodes.
 - `scenes/ui/hud.tscn`: In-game HUD scene.
+- `scenes/ui/pause_menu.tscn`, `scenes/ui/game_over.tscn`,
+  `scenes/ui/level_complete.tscn`: Gameplay overlay scenes instanced into
+  playable levels.
 - `scenes/objects/`: Interactive object scenes such as question blocks, brick
-  blocks, hidden blocks, coins, mushrooms, and fire flowers.
-- `scenes/enemies/`: Enemy scenes for Goomba, Koopa, and Koopa shell.
+  blocks, hidden blocks, coins, mushrooms, fire flowers, fireballs, Starman,
+  pipes, flagpoles, and the castle.
+- `scenes/enemies/`: Enemy scenes for Goomba, Koopa, Koopa shell, and Piranha
+  Plant.
 - `scenes/effects/`: Reserved for effect scenes if any are added later, though
   the current repo mostly instantiates effect scripts directly under the level
   `Effects` node.
-- `scenes/main.tscn`: Present, but not the active boot scene right now.
+- `scenes/main.tscn`: Present as a shell scene stub, but not the active boot
+  scene right now.
 - `scripts/autoloads/`: Global singletons for events, game state, audio, scene
   transitions, and camera effects.
 - `scripts/config/`: `Resource` subclasses for inspector-editable gameplay and
@@ -59,7 +71,7 @@ Current state:
 - `scripts/player/`: Player controller, primitive-shape drawing, state machine,
   and per-state scripts.
 - `scripts/level/`: Level bootstrap, terrain tileset generation, parallax
-  drawing, and kill-zone behavior.
+  drawing, underground level setup, and kill-zone behavior.
 - `scripts/enemies/`: Enemy base logic, per-enemy behavior, shell logic, and
   enemy procedural drawing.
 - `scripts/objects/`: Interactive blocks and collectible/power-up behavior.
@@ -74,18 +86,29 @@ Current state:
 
 ## Main Flow
 
-- `project.godot` boots `res://scenes/levels/world_1_1.tscn`.
+- `project.godot` boots `res://scenes/ui/title_screen.tscn`.
+- `scripts/ui/title_screen.gd` resets title-state data, waits briefly to avoid
+  stale input carry-over, then starts a new run by changing to
+  `res://scenes/levels/world_1_1.tscn`.
 - `scripts/level/level_base.gd` expects a `Player` child and a
   `TileMapLayer_Ground` child. On `_ready()` it creates the terrain tileset,
   paints the level floor/stairs, configures the player camera limits, registers
-  the camera with `CameraEffects`, and calls `GameManager.start_new_game()`.
+  the camera with `CameraEffects`, shows the level intro, then starts gameplay
+  and the level timer.
+- `scripts/level/level_1_2.gd` mirrors that pattern for the underground level
+  using `underground_tileset.gd` instead of the overworld terrain tileset.
 - `world_1_1.tscn` uses container nodes like `Blocks`, `Pipes`, `Coins`,
   `Enemies`, `Effects`, and `Interactables`. Interactive objects are scene
   instances under these containers rather than TileMap-authored gameplay
   objects.
+- `world_1_2.tscn` follows the same container-node pattern, but uses a simpler
+  dark background instead of the overworld parallax controller.
 - The `Enemies` node in `world_1_1.tscn` is scripted by
   `scripts/level/enemy_spawner.gd`, which activates enemies near the camera and
   cleans up enemies far behind it.
+- `scripts/autoloads/game_manager.gd` owns level order and currently advances
+  from `1-1` to `1-2`, then returns to the title screen when no next level is
+  configured.
 - The `Effects` node in `world_1_1.tscn` is scripted by
   `scripts/effects/effects_manager.gd`, which listens to `EventBus` and spawns
   procedural visual effects for score, block breaks, stomps, and coin pops.
@@ -95,7 +118,8 @@ Current state:
   also added to the `"player"` group at runtime.
 - `StateMachine` transitions by child node name. Current state nodes include
   `IdleState`, `RunState`, `JumpState`, `FallState`, `CrouchState`,
-  `DeathState`, `GrowState`, and `ShrinkState`.
+  `DeathState`, `GrowState`, `ShrinkState`, `PipeEnterState`, and
+  `FlagpoleState`.
 - `scripts/level/parallax_controller.gd` finds the first node in the `"player"`
   group and expects that node to have a `Camera2D` child. It resolves that
   lazily in `_process()`, not `_ready()`.
@@ -109,6 +133,8 @@ Current state:
 - `scripts/level/terrain_tileset.gd`: Builds the ground `TileSet` and collision
   polygons procedurally. Keep this in sync with any terrain tile assumptions in
   level scripts.
+- `scripts/level/underground_tileset.gd`: Builds the underground floor/ceiling
+  `TileSet` procedurally for World 1-2.
 - `scripts/level/parallax_controller.gd`: Draws clouds, hills, and bushes in
   `_draw()`, driven by camera movement.
 - `scripts/level/enemy_spawner.gd`: Enemy activation and cleanup gate tied to
@@ -137,8 +163,10 @@ Current state:
 - `scripts/enemies/koopa.gd`: Koopa behavior and shell spawning.
 - `scripts/enemies/koopa_shell.gd`: Idle vs moving shell behavior, kick logic,
   shell combo kills, and shell danger checks.
+- `scripts/enemies/piranha_plant.gd`: Pipe enemy emerge/retract behavior and
+  non-stomp death handling.
 - `scripts/objects/question_block.gd`: Bumpable `?` block that can spawn coins,
-  mushrooms, or fire flowers.
+  mushrooms, fire flowers, or Starman.
 - `scripts/objects/brick_block.gd`: Breakable or bumpable brick block, with
   multi-coin support.
 - `scripts/objects/hidden_block.gd`: Hidden block that reveals itself with a
@@ -146,6 +174,14 @@ Current state:
 - `scripts/objects/mushroom.gd`: Moving mushroom pickup with emerge animation.
 - `scripts/objects/fire_flower.gd`: Stationary fire flower pickup with emerge
   animation.
+- `scripts/objects/starman.gd`: Moving invincibility pickup with emerge and
+  bounce behavior.
+- `scripts/objects/fireball.gd`: Player-fired projectile with bounce, wall
+  death, and enemy hit handling.
+- `scripts/objects/pipe.gd`: Pipe collision sizing, warp-zone setup, and warp
+  trigger logic.
+- `scripts/objects/flagpole.gd`: Flagpole grab detection, bonus scoring, and
+  flag animation kickoff.
 - `scripts/objects/coin.gd`: Collectible area-based coin with procedural spin.
 - `scripts/effects/effects_manager.gd`: Event-driven effect spawning hub for
   score popups, brick particles, stomp puffs, and coin pops.
@@ -155,6 +191,11 @@ Current state:
   player scene.
 - `scripts/ui/hud.gd`: Displays score, coins, world, and timer, including the
   low-time warning color change.
+- `scripts/ui/title_screen.gd`: Title boot flow and input gating.
+- `scripts/ui/pause_menu.gd`: Pause/unpause handling while the tree is paused.
+- `scripts/ui/game_over_screen.gd`: Timed game-over return-to-title flow.
+- `scripts/ui/level_complete.gd`: End-of-level overlay and next-level/title
+  transition logic.
 
 ## Autoload Singletons
 
@@ -201,6 +242,8 @@ When adding new tunables:
 - `GameManager.PowerState` currently includes `SMALL`, `BIG`, and `FIRE`.
 - `GameManager.GameState` currently includes `TITLE`, `PLAYING`, `PAUSED`,
   `GAME_OVER`, `LEVEL_COMPLETE`, and `TRANSITIONING`.
+- `GameManager` also owns the current ordered level list and currently maps
+  `1-1` to `world_1_1.tscn` and `1-2` to `world_1_2.tscn`.
 - `EventBus` already exposes signals for block bumps/breaks, item spawning,
   power-state changes, enemy stomps/kills, combo stomps, one-ups, level state,
   and game-over flow. Prefer using those signals instead of direct cross-system
@@ -294,6 +337,10 @@ When making changes in this repo:
   spawned and then positioned by the caller, do not snapshot spawn position in
   `_ready()`. Use the existing lazy-initialization pattern from
   `mushroom.gd` and `fire_flower.gd`.
+- Procedural terrain tiles in `terrain_tileset.gd` and `underground_tileset.gd`
+  currently use full-tile rectangular collision polygons. The painted stripe or
+  cap inside the tile is visual only; do not assume the visible color break is
+  the physics boundary.
 - Question blocks and brick blocks respond to head hits through
   `player_controller.gd`'s `check_ceiling_bumps()` slide-collision iteration.
   New bumpable solid blocks should expose a `bump_from_below()` method.
@@ -323,10 +370,11 @@ For changes, prefer lightweight validation such as:
 - opening the project successfully
 - checking for script parse errors
 - running the project headless when possible
-- verifying the current boot scene is still `res://scenes/levels/world_1_1.tscn`
+- verifying the current boot scene is still `res://scenes/ui/title_screen.tscn`
   unless the task intentionally changes it
 - manually checking the affected gameplay flow in the running game for changes
-  to player movement, block bumps, item spawning, or HUD updates
+  to player movement, block bumps, item spawning, warps, flagpole flow, menu
+  overlays, or HUD updates
 
 Known quirk:
 - `godot --headless --path . --quit` can exit before indexing new `class_name`
@@ -341,10 +389,13 @@ Known quirk:
 
 - `SPEC.md` is useful for direction, but not every section matches the current
   repo state yet.
-- `scenes/main.tscn` is not the active entry point today even though the spec
+- `project.godot` boots the title screen, not a gameplay level, and
+  `scenes/main.tscn` is not the active entry point today even though the spec
   describes a future shell scene.
 - The level setup is partly code-driven. Terrain visuals, collision, pits, and
   stairs are created in scripts rather than authored entirely in the editor.
+- `world_1_2.tscn` is on disk and wired into `GameManager` as the current next
+  level after `world_1_1.tscn`.
 - Most visuals are intentionally drawn with `_draw()`, primitive shapes, color
   constants, and a small amount of shader work. Preserve that style.
 - Phase 6 moved many tunables into config resources, but some behavior may still
