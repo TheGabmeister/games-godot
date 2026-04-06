@@ -8,7 +8,7 @@ This repository is a Godot 4.6 recreation of the mechanics and game feel of *The
 
 ## Current Repository State
 
-- Phase 1 is now implemented as a runnable baseline rather than a blank scaffold.
+- Phases 1-3 are implemented. The repo includes a runnable Phase 3 baseline with skills, upgrades, resources, and a pause subscreen.
 - `SPEC.md` defines the intended architecture, conventions, milestones, and acceptance criteria.
 - `project.godot` currently confirms:
   - Godot `4.6`
@@ -18,12 +18,21 @@ This repository is a Godot 4.6 recreation of the mechanics and game feel of *The
   - `scenes/main/main.tscn` as the root scene with `World`, `HUDLayer`, `DialogLayer`, `PostProcessLayer`, `TransitionOverlay`, and `PauseLayer`
   - Phase 1 autoloads registered in `project.godot`: `EventBus`, `GameManager`, `ItemRegistry`, `PlayerState`, `AudioManager`, `SceneManager`, `SaveManager`
   - A persistent player scene with Phase 1 states present in the scene tree: `Idle`, `Walk`, `Attack`, `Knockback`, `Fall`, and `Dash`
-  - A debug room with `Entities`, `EntryPoints`, walls, a pit hazard, and y-sort verification dummies
-  - A primitive HUD for hearts, rupees, and the equipped item slot
-- Later-phase gameplay content is still incomplete, so new work should extend the Phase 1 baseline toward the spec instead of inventing a parallel structure.
+  - Phase 2 combat components and enemy architecture: shared `HurtboxComponent`, `HitboxComponent`, `HealthComponent`, `KnockbackComponent`, `FlashComponent`, `LootDropComponent`, `EnemyData`, and `base_enemy.gd`
+  - Five Phase 2 enemy archetypes implemented as standalone scenes: Soldier, Octorok, Keese, Stalfos, and Buzz Blob
+  - A reusable projectile baseline in `scenes/projectiles/projectile_base.tscn`
+  - Phase 2 drops/pickups content in `resources/loot_tables/`, `resources/items/pickups/`, and `scenes/pickups/pickup.tscn`
+  - Phase 3 skills (9 SKILL items with effect scripts), upgrades (16 UPGRADE items), item use system (`ItemUseState`, `BaseItemEffect`), acquisition presentation (`ItemGetState`), chest interaction, shield tiers (`ShieldComponent`), swim state, pause subscreen, and HUD magic meter
+  - Debug coverage including `debug/debug_room.tscn`, `debug/damage_formula_test.gd`, `debug/test_loot_table.tscn`, and `debug/test_player_state.tscn`
+  - A debug room with `Entities`, `EntryPoints`, walls, a pit hazard, combat test fixtures, y-sort verification dummies, and 6 Phase 3 test chests
+  - A HUD with hearts display, rupee counter, equipped item slot, and magic meter
+- Later-phase gameplay content is still incomplete, so new work should extend the current Phase 3 baseline toward the spec instead of inventing a parallel structure.
 - Some systems intentionally remain scaffolds:
   - `SaveManager` is still a Phase 1 stub and should not be turned into a real save system before Phase 6 unless the user explicitly wants forward scaffolding
   - Registries/resources for later phases may exist before their full gameplay loops do
+- Some spec-defined combat details may still need alignment work even though the Phase 2 baseline is present:
+  - Shield-block behavior should be treated as migration-sensitive combat logic, not assumed complete unless verified in the current branch
+  - Loot/pickup behavior should stay aligned with the spec's weighted-table and pickup-payload expectations when extending drops to bushes, pots, or other destructibles
 
 ## Read This First
 
@@ -131,7 +140,8 @@ When possible, verify work in one of these ways:
 - Open the project in the Godot editor configured in `.vscode/settings.json`
 - Run Godot headless for smoke checks if the project has enough content to load safely
 - Validate that scene/script/resource references are still consistent
-- Use the debug room to verify room loading, hazards, player insertion under `Entities`, and y-sort behavior before treating a Phase 1 change as done
+- Use the debug room to verify room loading, hazards, player insertion under `Entities`, y-sort behavior, enemy combat behavior, projectile interactions, and pickup drops before treating a Phase 1 or Phase 2 change as done
+- Run the available debug tests when touching combat math or loot behavior, especially `debug/damage_formula_test.gd` and `debug/test_loot_table.tscn`
 
 Useful local context:
 

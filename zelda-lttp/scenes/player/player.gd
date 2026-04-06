@@ -4,6 +4,7 @@ class_name Player extends CharacterBody2D
 @onready var player_body: Node2D = $PlayerBody
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var camera: Camera2D = $Camera2D
+@onready var interaction_probe: Area2D = $InteractionProbe
 
 var facing_direction: Vector2 = Vector2.DOWN
 var move_input: Vector2 = Vector2.ZERO
@@ -20,6 +21,9 @@ var sword_arc_progress: float = 0.0
 # Knockback
 var knockback_velocity: Vector2 = Vector2.ZERO
 
+# Water detection
+var is_in_water: bool = false
+
 
 func _ready() -> void:
 	last_safe_position = global_position
@@ -35,6 +39,62 @@ func _ready() -> void:
 
 	# Connect screen shake
 	EventBus.screen_shake_requested.connect(_on_screen_shake_requested)
+
+	# Connect item get presentation
+	EventBus.item_get_requested.connect(_on_item_get_requested)
+
+	# Set up interaction probe shape
+	_setup_interaction_probe()
+
+
+func _on_item_get_requested(item: ItemData) -> void:
+	var auto_dismiss: bool = (item.item_type == ItemData.ItemType.RESOURCE
+		and item.resource_key not in [&"small_key", &"heart_piece"])
+	state_machine.transition_to(&"ItemGet", {"item": item, "auto_dismiss": auto_dismiss})
+
+
+func set_in_water(value: bool) -> void:
+	if is_in_water == value:
+		return
+	is_in_water = value
+	if is_in_water:
+		if PlayerState.has_upgrade(&"flippers"):
+			if state_machine.current_state.name in [&"Idle", &"Walk"]:
+				state_machine.transition_to(&"Swim")
+		else:
+			# Environmental water damage — bypass armor, push back
+			PlayerState.apply_damage(2)
+			var flash: FlashComponent = get_node_or_null("FlashComponent") as FlashComponent
+			if flash:
+				flash.flash()
+			# Push back to last safe position
+			global_position = last_safe_position
+	else:
+		if state_machine.current_state.name == &"Swim":
+			state_machine.transition_to(&"Idle")
+
+
+func _setup_interaction_probe() -> void:
+	var shape_node: CollisionShape2D = interaction_probe.get_node_or_null("InteractShape")
+	if shape_node and not shape_node.shape:
+		var rect := RectangleShape2D.new()
+		rect.size = Vector2(10, 10)
+		shape_node.shape = rect
+
+
+func try_interact() -> bool:
+	# Update probe position based on facing
+	var probe_shape: CollisionShape2D = interaction_probe.get_node_or_null("InteractShape")
+	if probe_shape:
+		probe_shape.position = facing_direction * 10.0
+
+	var areas: Array[Area2D] = interaction_probe.get_overlapping_areas()
+	for area in areas:
+		var interactable: Node = area.get_parent()
+		if interactable.has_method("interact"):
+			interactable.interact()
+			return true
+	return false
 
 
 func update_facing(direction: Vector2) -> void:

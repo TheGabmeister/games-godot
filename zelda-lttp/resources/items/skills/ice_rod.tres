@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+[ext_resource type="Script" path="res://scenes/items/effects/ice_rod_effect.gd" id="2_effect"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"ice_rod"
+display_name = "Ice Rod"
+description = "Shoots an ice bolt that freezes enemies."
+item_type = 0
+icon_color = Color(0.4, 0.7, 1.0, 1)
+icon_shape = PackedVector2Array(-1, -6, 1, -6, 2, 4, -2, 4)
+magic_cost = 8
+use_script = ExtResource("2_effect")

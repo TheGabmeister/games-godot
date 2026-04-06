@@ -2,6 +2,7 @@ extends Node
 
 @onready var world: Node2D = $World
 @onready var transition_overlay: CanvasLayer = $TransitionOverlay
+@onready var pause_subscreen: Control = $PauseLayer/PauseSubscreen
 
 var _player: Player = null
 
@@ -30,6 +31,21 @@ func _ready() -> void:
 
 	# Connect transition signal
 	EventBus.room_transition_requested.connect(_on_room_transition_requested)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause"):
+		_toggle_pause()
+		get_viewport().set_input_as_handled()
+
+
+func _toggle_pause() -> void:
+	if get_tree().paused:
+		pause_subscreen.close()
+		get_tree().paused = false
+	else:
+		get_tree().paused = true
+		pause_subscreen.open()
 
 
 func _on_room_transition_requested(target_room_id: StringName, entry_point: StringName) -> void:

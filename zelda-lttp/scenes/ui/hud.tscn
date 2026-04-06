@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://c8hud00001"]
+[gd_scene load_steps=6 format=3 uid="uid://c8hud00001"]
 
 [ext_resource type="Script" path="res://scenes/ui/hud.gd" id="1_hud"]
 [ext_resource type="Script" path="res://scenes/ui/hearts_display.gd" id="2_hearts"]
 [ext_resource type="Script" path="res://scenes/ui/rupee_counter.gd" id="3_rupee"]
 [ext_resource type="Script" path="res://scenes/ui/item_slot.gd" id="4_slot"]
+[ext_resource type="Script" path="res://scenes/ui/magic_meter.gd" id="5_magic"]
 
 [node name="HUD" type="Control"]
 layout_mode = 3
@@ -54,3 +55,12 @@ offset_bottom = 24.0
 grow_horizontal = 0
 mouse_filter = 2
 script = ExtResource("4_slot")
+
+[node name="MagicMeter" type="Control" parent="."]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 4.0
+offset_right = 118.0
+offset_bottom = 40.0
+mouse_filter = 2
+script = ExtResource("5_magic")

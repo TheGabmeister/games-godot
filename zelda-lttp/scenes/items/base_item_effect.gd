@@ -1,15 +1,11 @@
 class_name BaseItemEffect extends RefCounted
 
-var player: CharacterBody2D
 
-
-func activate() -> void:
-	pass
-
-
-func deactivate() -> void:
-	pass
-
-
-func can_use() -> bool:
+func can_use(_player: CharacterBody2D) -> bool:
 	return true
+
+
+## Execute the item effect. Returns the duration (seconds) that
+## ItemUseState should lock the player before returning to Idle.
+func activate(_player: CharacterBody2D) -> float:
+	return 0.0

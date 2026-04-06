@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"shield_t2"
+display_name = "Fire Shield"
+description = "Also blocks fireballs and beams."
+item_type = 1
+icon_color = Color(0.9, 0.3, 0.2, 1)
+icon_shape = PackedVector2Array(-4, -5, 4, -5, 4, 3, 0, 5, -4, 3)
+upgrade_key = &"shield"
+tier = 2

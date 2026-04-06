@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"armor_t1"
+display_name = "Green Mail"
+description = "Standard tunic."
+item_type = 1
+icon_color = Color(0.2, 0.65, 0.2, 1)
+icon_shape = PackedVector2Array(-4, -4, 4, -4, 5, 4, -5, 4)
+upgrade_key = &"armor"
+tier = 1

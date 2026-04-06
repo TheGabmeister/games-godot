@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"shield_t1"
+display_name = "Fighter's Shield"
+description = "Blocks rocks and arrows."
+item_type = 1
+icon_color = Color(0.3, 0.5, 0.8, 1)
+icon_shape = PackedVector2Array(-4, -5, 4, -5, 4, 3, 0, 5, -4, 3)
+upgrade_key = &"shield"
+tier = 1

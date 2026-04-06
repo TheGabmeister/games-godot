@@ -12,16 +12,34 @@ func _draw() -> void:
 	if not player:
 		return
 
+	# Item-get pose: arms up, item overhead
+	if player.has_meta("item_get_active") and player.get_meta("item_get_active"):
+		_draw_item_get_pose()
+		return
+
 	var facing := player.facing_direction
+
+	# Swim tint
+	var is_swimming: bool = player.state_machine and player.state_machine.current_state and player.state_machine.current_state.name == &"Swim"
 
 	# Body: green pentagon (simplified as a rectangle with angled top)
 	var body_color := Color(0.2, 0.65, 0.2)
+	if is_swimming:
+		body_color = body_color.darkened(0.3)
 	var body_points := PackedVector2Array([
 		Vector2(-5, -2),
 		Vector2(5, -2),
 		Vector2(6, 6),
 		Vector2(-6, 6),
 	])
+	if is_swimming:
+		# Only draw upper body when swimming
+		body_points = PackedVector2Array([
+			Vector2(-5, -2),
+			Vector2(5, -2),
+			Vector2(5, 2),
+			Vector2(-5, 2),
+		])
 	draw_colored_polygon(body_points, body_color)
 
 	# Head: skin-tone circle
@@ -41,6 +59,11 @@ func _draw() -> void:
 	# Sword arc during attack
 	if player.sword_active:
 		_draw_sword_arc()
+
+	# Water ripple when swimming
+	if is_swimming:
+		var ripple_color := Color(0.3, 0.5, 0.9, 0.4)
+		draw_arc(Vector2(0, 3), 7.0, 0.0, PI, 8, ripple_color, 1.0)
 
 
 func _draw_sword_arc() -> void:
@@ -86,3 +109,38 @@ func _draw_sword_arc() -> void:
 			sword_start - trail_perp * 1.5,
 		])
 		draw_colored_polygon(trail_points, trail_color)
+
+
+func _draw_item_get_pose() -> void:
+	# Body shifted up slightly, arms raised
+	var body_color := Color(0.2, 0.65, 0.2)
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(-5, -1),
+		Vector2(5, -1),
+		Vector2(6, 6),
+		Vector2(-6, 6),
+	]), body_color)
+
+	# Arms up
+	draw_line(Vector2(-5, 0), Vector2(-6, -8), body_color, 2.0)
+	draw_line(Vector2(5, 0), Vector2(6, -8), body_color, 2.0)
+
+	# Head
+	draw_circle(Vector2(0, -4), 4.0, Color(0.95, 0.8, 0.6))
+
+	# Cap facing down (neutral)
+	var cap_color := Color(0.15, 0.5, 0.15)
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(0, 4), Vector2(-3, -1), Vector2(3, -1),
+	]), cap_color)
+
+	# Item above head
+	var item_data: ItemData = player.get_meta("item_get_data", null) as ItemData
+	if item_data and item_data.icon_shape.size() > 0:
+		var item_offset := Vector2(0, -14)
+		var points := PackedVector2Array()
+		for p in item_data.icon_shape:
+			points.append(p + item_offset)
+		draw_colored_polygon(points, item_data.icon_color)
+	elif item_data:
+		draw_circle(Vector2(0, -14), 4.0, item_data.icon_color)

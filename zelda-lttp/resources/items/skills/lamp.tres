@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+[ext_resource type="Script" path="res://scenes/items/effects/lamp_effect.gd" id="2_effect"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"lamp"
+display_name = "Lamp"
+description = "Creates light and ignites torches."
+item_type = 0
+icon_color = Color(1.0, 0.85, 0.3, 1)
+icon_shape = PackedVector2Array(-2, -5, 2, -5, 3, -2, 2, 4, -2, 4, -3, -2)
+magic_cost = 4
+use_script = ExtResource("2_effect")

@@ -77,7 +77,7 @@ func _acquire_upgrade(item: ItemData) -> void:
 func _acquire_resource(item: ItemData) -> void:
 	match item.resource_key:
 		&"rupees":
-			rupees += item.resource_amount
+			rupees = mini(rupees + item.resource_amount, 999)
 			EventBus.player_rupees_changed.emit(rupees)
 		&"arrows":
 			arrows += item.resource_amount
@@ -136,9 +136,9 @@ func has_upgrade(key: StringName) -> bool:
 	return get_upgrade(key) > 0
 
 
-func reduce_upgrade(key: StringName, new_tier: int) -> void:
+func reduce_upgrade(key: StringName, amount: int = 1) -> void:
 	if upgrades.has(key):
-		upgrades[key] = new_tier
+		upgrades[key] = maxi(upgrades[key] - amount, 0)
 
 
 # --- Resources ---
@@ -180,13 +180,16 @@ func spend_ammo(kind: StringName, amount: int) -> bool:
 
 
 func consume_skill_cost(item: ItemData) -> bool:
-	if item.magic_cost > 0 and current_magic < item.magic_cost:
+	var magic_cost: int = item.magic_cost
+	if magic_cost > 0 and has_upgrade(&"magic_halver"):
+		magic_cost = ceili(magic_cost / 2.0)
+	if magic_cost > 0 and current_magic < magic_cost:
 		return false
 	if item.ammo_type != &"" and item.ammo_cost > 0:
 		if not spend_ammo(item.ammo_type, item.ammo_cost):
 			return false
-	if item.magic_cost > 0:
-		current_magic -= item.magic_cost
+	if magic_cost > 0:
+		current_magic -= magic_cost
 		EventBus.player_magic_changed.emit(current_magic, max_magic)
 	return true
 

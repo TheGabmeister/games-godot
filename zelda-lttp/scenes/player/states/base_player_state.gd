@@ -39,3 +39,7 @@ func get_movement_input() -> Vector2:
 	if input.length() > 1.0:
 		input = input.normalized()
 	return input
+
+
+func is_gameplay_paused() -> bool:
+	return player and player.get_tree().paused and state_machine.current_state != state_machine.states.get(&"ItemGet")

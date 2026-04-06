@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://c8debug001"]
+[gd_scene load_steps=23 format=3 uid="uid://c8debug001"]
 
 [ext_resource type="Script" path="res://debug/debug_room.gd" id="1_room"]
 [ext_resource type="Resource" path="res://resources/room_data/debug_room.tres" id="2_rd"]
@@ -9,6 +9,14 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/octorok/octorok.tscn" id="7_octorok"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/stalfos/stalfos.tscn" id="8_stalfos"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/buzz_blob/buzz_blob.tscn" id="9_buzz"]
+[ext_resource type="PackedScene" uid="uid://c8chest001" path="res://scenes/objects/chest.tscn" id="10_chest"]
+[ext_resource type="Resource" path="res://resources/items/skills/bow.tres" id="11_bow"]
+[ext_resource type="Resource" path="res://resources/items/skills/boomerang.tres" id="12_boom"]
+[ext_resource type="Resource" path="res://resources/items/skills/bomb.tres" id="13_bomb"]
+[ext_resource type="Resource" path="res://resources/items/upgrades/pegasus_boots.tres" id="14_boots"]
+[ext_resource type="Resource" path="res://resources/items/upgrades/flippers.tres" id="15_flip"]
+[ext_resource type="Resource" path="res://resources/items/upgrades/half_magic.tres" id="16_hmagic"]
+[ext_resource type="Script" path="res://scenes/objects/water_zone.gd" id="17_water"]
 
 [sub_resource type="RectangleShape2D" id="wall_top"]
 size = Vector2(256, 16)
@@ -17,6 +25,9 @@ size = Vector2(256, 16)
 size = Vector2(16, 224)
 
 [sub_resource type="RectangleShape2D" id="pit_shape"]
+size = Vector2(32, 32)
+
+[sub_resource type="RectangleShape2D" id="water_shape"]
 size = Vector2(32, 32)
 
 [sub_resource type="RectangleShape2D" id="corridor_wall_h"]
@@ -269,6 +280,63 @@ offset_bottom = -12.0
 theme_override_font_sizes/font_size = 7
 text = "Dmg"
 horizontal_alignment = 1
+
+[node name="WaterZone" type="Area2D" parent="Hazards"]
+position = Vector2(230, 100)
+collision_layer = 128
+collision_mask = 2
+script = ExtResource("17_water")
+
+[node name="WaterShape" type="CollisionShape2D" parent="Hazards/WaterZone"]
+shape = SubResource("water_shape")
+
+[node name="WaterVisual" type="ColorRect" parent="Hazards/WaterZone"]
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+color = Color(0.15, 0.3, 0.6, 0.7)
+
+[node name="WaterLabel" type="Label" parent="Hazards/WaterZone"]
+offset_left = -16.0
+offset_top = -28.0
+offset_right = 16.0
+offset_bottom = -18.0
+theme_override_font_sizes/font_size = 7
+text = "Water"
+horizontal_alignment = 1
+
+[node name="TestChests" type="Node2D" parent="."]
+
+[node name="ChestBow" parent="TestChests" instance=ExtResource("10_chest")]
+position = Vector2(32, 32)
+item = ExtResource("11_bow")
+persist_id = &"chest_bow"
+
+[node name="ChestBoomerang" parent="TestChests" instance=ExtResource("10_chest")]
+position = Vector2(56, 32)
+item = ExtResource("12_boom")
+persist_id = &"chest_boomerang"
+
+[node name="ChestBomb" parent="TestChests" instance=ExtResource("10_chest")]
+position = Vector2(80, 32)
+item = ExtResource("13_bomb")
+persist_id = &"chest_bomb"
+
+[node name="ChestBoots" parent="TestChests" instance=ExtResource("10_chest")]
+position = Vector2(104, 32)
+item = ExtResource("14_boots")
+persist_id = &"chest_boots"
+
+[node name="ChestFlippers" parent="TestChests" instance=ExtResource("10_chest")]
+position = Vector2(128, 32)
+item = ExtResource("15_flip")
+persist_id = &"chest_flippers"
+
+[node name="ChestHalfMagic" parent="TestChests" instance=ExtResource("10_chest")]
+position = Vector2(152, 32)
+item = ExtResource("16_hmagic")
+persist_id = &"chest_half_magic"
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
 color = Color(1, 0.98, 0.9, 1)

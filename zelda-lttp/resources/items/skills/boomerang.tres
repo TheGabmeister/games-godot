@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+[ext_resource type="Script" path="res://scenes/items/effects/boomerang_effect.gd" id="2_effect"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"boomerang"
+display_name = "Boomerang"
+description = "Stuns enemies and collects pickups."
+item_type = 0
+icon_color = Color(0.3, 0.5, 0.9, 1)
+icon_shape = PackedVector2Array(0, -5, 3, -2, 5, 0, 3, 2, 0, 0, -3, 2, -5, 0, -3, -2)
+use_script = ExtResource("2_effect")

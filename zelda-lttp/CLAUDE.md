@@ -142,7 +142,7 @@ Combine with bitwise OR. Example: EnemyAttacks + Hazards = 16 + 64 = 80.
 - **KnockbackComponent** — decelerating knockback. `apply(direction, force, duration)`.
 - **FlashComponent** — white flash via `damage_flash.gdshader`. Auto-finds `*Body*` visual node.
 - **DamageFormula** — static `calculate_damage()` implementing the 4-step pipeline (shield, immunity, armor reduction, minimum 1).
-- **LootDropComponent** — reads `drop_table` from parent enemy's `EnemyData`, rolls on death. Pickup spawning deferred to Phase 2.7.
+- **LootDropComponent** — `@export var drop_table: LootTable` for direct use on any object; falls back to `parent.enemy_data.drop_table` for enemies. Spawns Pickup scenes on death/destruction.
 
 The player does NOT use HealthComponent — player health lives on `PlayerState` autoload since it's persistent and serialized. Enemies use HealthComponent since they're transient per room.
 
@@ -159,6 +159,34 @@ Enemy collision setup:
 
 Player's `SwordHitbox`: layer=PlayerAttacks(8), monitorable=true. Sets `source_team` meta so `HurtboxComponent` team check works via the meta path.
 
+### Projectile System (Phase 2.6)
+
+`Projectile` (`scenes/projectiles/projectile_base.gd`) extends `Area2D`. Properties: speed, damage, damage_type, direction, lifetime, pierce, deflectable, source_team. Auto-configures collision layers by team (enemy: layer=EnemyAttacks, mask=World+Player; player: layer=PlayerAttacks, mask=World+Enemies). Destroys on wall collision (`body_entered`) and on opposing hurtbox contact (`area_entered`, unless `pierce`). Sets hitbox metadata for `HurtboxComponent` detection via the meta path.
+
+### Loot and Pickup System (Phase 2.7)
+
+`LootTable` uses `PackedStringArray` item_ids resolved via `ItemRegistry` at roll time — not Resource array references. Supports `quantity_min`/`quantity_max` per entry. `roll()` returns `Array[ItemData]` (zero or more). `Pickup` scene (`scenes/pickups/pickup.gd`): bobs, magnetizes toward player within 16px, collects within 8px, despawns after 10s. Calls `PlayerState.acquire()` on collection. 9 RESOURCE ItemData .tres files in `resources/items/pickups/`.
+
+### Item Use System (Phase 3.4)
+
+`BaseItemEffect` extends `RefCounted`. Virtual methods: `can_use(player) -> bool`, `activate(player) -> float` (returns lock duration for ItemUseState). Each skill has an effect script in `scenes/items/effects/`. `PlayerState` instantiates and caches effects on acquisition.
+
+`ItemUseState`: checks `can_use()`, calls `consume_skill_cost()`, then `activate()`. Lock timer returns to Idle. Hookshot overrides via direct `transition_to("Idle")` when done.
+
+Spawned item scenes in `scenes/items/`: `arrow.tscn` (extends Projectile), `bomb.tscn` (fuse timer + explosion Area2D), `boomerang.tscn` (outbound + return + stun + pickup collection), `hookshot.tscn` (raycast + extend/retract).
+
+### Shield Mechanics (Phase 3.7)
+
+`ShieldComponent` (`components/shield_component.gd`) extends `Area2D`. Reads shield tier from `PlayerState.get_upgrade("shield")`. Tier 1 blocks rocks/arrows, Tier 2 adds fireballs/beams, Tier 3 adds magic + reflects. Checks `projectile_class` metadata or infers from `damage_type`. Facing check uses dot product with configurable threshold (wider when `action_shield` held).
+
+### Pause Subscreen (Phase 3.8)
+
+`PauseSubscreen` (`scenes/ui/pause_subscreen.gd`) on `PauseLayer` (CanvasLayer 25, process_mode=ALWAYS). Opens/closes via `pause` input in `main.gd`. Skill grid with cursor navigation, equipped skill display, upgrade pip displays, resource status. Selecting a skill equips it to the B button.
+
+### Chest System
+
+`Chest` (`scenes/objects/chest.gd`) extends `StaticBody2D`. `@export var item: ItemData`, `@export var persist_id: StringName`. On interact: emits `EventBus.item_get_requested(item)`, sets persist flag via `GameManager`. Player `InteractionProbe` (Area2D, mask=Interactables) detects chests; `try_interact()` called from Idle/Walk states on `interact` input.
+
 ## Current Phase Status
 
-Phase 1 complete, Phase 2.1-2.3 complete. The repo has: project config, all 7 autoloads, generic state machine, player with 6 states (Idle/Walk/Attack/Knockback/Fall/Dash), room system with debug room, HUD (hearts/rupees/item slot), camera with room bounds and screen shake, 6 shaders, shared resources (ItemData/RoomData/EnemyData/LootTable/DungeonData/DamageType), combat components (HitboxComponent/HurtboxComponent/HealthComponent/KnockbackComponent/FlashComponent/DamageFormula/LootDropComponent), enemy architecture (BaseEnemy/BaseEnemyState/StunnedState), 5 EnemyData .tres files (soldier/octorok/keese/stalfos/buzz_blob), and Soldier + Keese scenes with stub states in debug_room.
+Phase 1 complete, Phase 2 complete (2.1-2.7), Phase 3 complete (3.1-3.8). All 5 enemy types implemented with full behavior. Projectile system, pickup/loot system with 9 pickup types, weighted loot tables wired to all enemies. Phase 3 adds: 9 SKILL items (Bow, Bomb, Boomerang, Hookshot, Lamp, Fire Rod, Ice Rod, Hammer, Magic Powder) with effect scripts and spawned scenes. 16 UPGRADE items (Sword t1-t4, Armor t1-t3, Shield t1-t3, Pegasus Boots, Flippers, Power Glove, Titan's Mitt, Moon Pearl, Half Magic). ItemGetState presentation, ItemUseState with lock timers, SwimState, ShieldComponent with 3 tiers, pause subscreen with skill grid. HUD magic meter. Debug room has 6 test chests. Three test scenes: `debug/damage_formula_test.tscn` (38 tests), `debug/test_loot_table.tscn` (10 tests), `debug/test_player_state.tscn` (37 tests).

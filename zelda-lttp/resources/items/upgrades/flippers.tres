@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"flippers"
+display_name = "Zora's Flippers"
+description = "Allows swimming in deep water."
+item_type = 1
+icon_color = Color(0.2, 0.6, 0.9, 1)
+icon_shape = PackedVector2Array(-5, 0, -2, -3, 0, 0, 2, -3, 5, 0, 2, 3, -2, 3)
+upgrade_key = &"flippers"
+tier = 1

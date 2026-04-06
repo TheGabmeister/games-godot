@@ -1,8 +1,10 @@
-[gd_scene format=3 uid="uid://c8main0001"]
+[gd_scene load_steps=6 format=3 uid="uid://c8main0001"]
 
 [ext_resource type="Script" uid="uid://cud4tgw3ricam" path="res://scenes/main/main.gd" id="1_main"]
 [ext_resource type="Shader" uid="uid://dgricichs7wfa" path="res://shaders/post_process.gdshader" id="2_post"]
 [ext_resource type="PackedScene" uid="uid://c8hud00001" path="res://scenes/ui/hud.tscn" id="3_hud"]
+[ext_resource type="Script" path="res://scenes/ui/pause_subscreen.gd" id="4_pause"]
+[ext_resource type="Script" path="res://scenes/ui/dialog_box.gd" id="5_dialog"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_post"]
 shader = ExtResource("2_post")
@@ -26,6 +28,17 @@ layer = 10
 [node name="DialogLayer" type="CanvasLayer" parent="." unique_id=337645315]
 layer = 15
 
+[node name="DialogBox" type="Control" parent="DialogLayer"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5_dialog")
+
 [node name="PostProcessLayer" type="CanvasLayer" parent="." unique_id=640527347]
 layer = 19
 
@@ -44,3 +57,13 @@ layer = 20
 [node name="PauseLayer" type="CanvasLayer" parent="." unique_id=1965254366]
 process_mode = 3
 layer = 25
+
+[node name="PauseSubscreen" type="Control" parent="PauseLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("4_pause")

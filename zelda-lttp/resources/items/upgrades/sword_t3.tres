@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"sword_t3"
+display_name = "Tempered Sword"
+description = "A blade forged in sacred fire."
+item_type = 1
+icon_color = Color(0.9, 0.3, 0.2, 1)
+icon_shape = PackedVector2Array(-1, -6, 1, -6, 1, 2, 3, 4, -3, 4, -1, 2)
+upgrade_key = &"sword"
+tier = 3

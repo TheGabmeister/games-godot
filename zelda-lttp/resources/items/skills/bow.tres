@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+[ext_resource type="Script" path="res://scenes/items/effects/bow_effect.gd" id="2_effect"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"bow"
+display_name = "Bow"
+description = "Shoots arrows at enemies."
+item_type = 0
+icon_color = Color(0.6, 0.4, 0.2, 1)
+icon_shape = PackedVector2Array(0, -6, 2, -4, 2, 4, 0, 6, -1, 4, -1, -4)
+ammo_type = &"arrows"
+ammo_cost = 1
+use_script = ExtResource("2_effect")

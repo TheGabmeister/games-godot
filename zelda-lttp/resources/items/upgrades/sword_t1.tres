@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"sword_t1"
+display_name = "Fighter's Sword"
+description = "A basic sword."
+item_type = 1
+icon_color = Color(0.7, 0.7, 0.8, 1)
+icon_shape = PackedVector2Array(-1, -6, 1, -6, 1, 2, 3, 4, -3, 4, -1, 2)
+upgrade_key = &"sword"
+tier = 1

@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://c8testloot1"]
+[gd_scene format=3 uid="uid://c8testloot1"]
 
 [ext_resource type="Script" path="res://debug/test_loot_table.gd" id="1_test"]
 

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+[ext_resource type="Script" path="res://scenes/items/effects/hammer_effect.gd" id="2_effect"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"hammer"
+display_name = "Hammer"
+description = "Pounds pegs and flips enemies."
+item_type = 0
+icon_color = Color(0.5, 0.35, 0.2, 1)
+icon_shape = PackedVector2Array(-4, -6, 4, -6, 5, -2, -5, -2, -1, -2, -1, 5, 1, 5, 1, -2)
+use_script = ExtResource("2_effect")

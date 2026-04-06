@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://c8player001"]
+[gd_scene load_steps=21 format=3 uid="uid://c8player001"]
 
 [ext_resource type="Script" path="res://scenes/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scenes/player/player_body.gd" id="2_body"]
@@ -13,9 +13,16 @@
 [ext_resource type="Script" path="res://components/hurtbox_component.gd" id="11_hurtbox"]
 [ext_resource type="Script" path="res://components/flash_component.gd" id="12_flash"]
 [ext_resource type="Script" path="res://components/knockback_component.gd" id="13_knockback"]
+[ext_resource type="Script" path="res://scenes/player/states/item_get_state.gd" id="14_item_get"]
+[ext_resource type="Script" path="res://scenes/player/states/item_use_state.gd" id="15_item_use"]
+[ext_resource type="Script" path="res://scenes/player/states/swim_state.gd" id="16_swim"]
+[ext_resource type="Script" path="res://components/shield_component.gd" id="17_shield"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(12, 14)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_shield"]
+size = Vector2(14, 10)
 
 [sub_resource type="Gradient" id="Gradient_light"]
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
@@ -29,6 +36,7 @@ fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(0.5, 0)
 
 [node name="Player" type="CharacterBody2D"]
+process_mode = 3
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1_player")
@@ -53,6 +61,11 @@ disabled = true
 [node name="ShieldComponent" type="Area2D" parent="."]
 collision_layer = 2
 collision_mask = 16
+script = ExtResource("17_shield")
+
+[node name="ShieldShape" type="CollisionShape2D" parent="ShieldComponent"]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_shield")
 
 [node name="HurtboxComponent" type="Area2D" parent="."]
 collision_layer = 2
@@ -73,7 +86,9 @@ script = ExtResource("13_knockback")
 
 [node name="InteractionProbe" type="Area2D" parent="."]
 collision_layer = 0
-collision_mask = 6
+collision_mask = 32
+
+[node name="InteractShape" type="CollisionShape2D" parent="InteractionProbe"]
 
 [node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
 script = ExtResource("3_sm")
@@ -96,6 +111,16 @@ script = ExtResource("8_fall")
 
 [node name="Dash" type="Node" parent="StateMachine"]
 script = ExtResource("9_dash")
+
+[node name="ItemGet" type="Node" parent="StateMachine"]
+process_mode = 3
+script = ExtResource("14_item_get")
+
+[node name="ItemUse" type="Node" parent="StateMachine"]
+script = ExtResource("15_item_use")
+
+[node name="Swim" type="Node" parent="StateMachine"]
+script = ExtResource("16_swim")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 

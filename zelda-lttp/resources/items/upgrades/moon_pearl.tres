@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"moon_pearl"
+display_name = "Moon Pearl"
+description = "Prevents Dark World transformation."
+item_type = 1
+icon_color = Color(1.0, 0.95, 0.7, 1)
+icon_shape = PackedVector2Array(-4, 0, -2, -4, 2, -4, 4, 0, 2, 4, -2, 4)
+upgrade_key = &"moon_pearl"
+tier = 1
