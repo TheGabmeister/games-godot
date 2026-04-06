@@ -2,10 +2,7 @@ extends CharacterBody2D
 
 const P := preload("res://scripts/color_palette.gd")
 
-const SPEED := 60.0
-const GRAVITY := 600.0
-const EMERGE_HEIGHT := 16.0
-const EMERGE_DURATION := 0.4
+@export var item_config: Resource  # ItemConfig
 
 var _direction: float = 1.0
 var _emerging: bool = true
@@ -21,9 +18,7 @@ var _collected: bool = false
 func _ready() -> void:
 	# _emerge_start_y is captured lazily on the first physics tick, not
 	# here. _ready() fires synchronously inside the spawner's add_child(),
-	# BEFORE the spawner sets global_position. See fire_flower.gd for the
-	# full write-up.
-	# Disable physics collision during emergence
+	# BEFORE the spawner sets global_position.
 	set_collision_layer_value(1, false)
 	set_collision_mask_value(1, false)
 	hurtbox.body_entered.connect(_on_body_entered)
@@ -38,19 +33,17 @@ func _physics_process(delta: float) -> void:
 			_emerge_start_y = global_position.y
 			_emerge_initialized = true
 		_emerge_timer += delta
-		var t: float = minf(_emerge_timer / EMERGE_DURATION, 1.0)
-		global_position.y = _emerge_start_y - EMERGE_HEIGHT * t
+		var t: float = minf(_emerge_timer / item_config.emerge_duration, 1.0)
+		global_position.y = _emerge_start_y - item_config.emerge_height * t
 		if t >= 1.0:
 			_emerging = false
-			# Re-enable physics collision with terrain
 			collision_mask = 1
 		return
 
-	velocity.y += GRAVITY * delta
-	velocity.x = _direction * SPEED
+	velocity.y += item_config.mushroom_gravity * delta
+	velocity.x = _direction * item_config.mushroom_speed
 	move_and_slide()
 
-	# Reverse on wall
 	if is_on_wall():
 		_direction = -_direction
 

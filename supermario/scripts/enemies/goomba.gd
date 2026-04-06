@@ -9,7 +9,6 @@ const SQUISH_DURATION := 0.5
 
 func _ready() -> void:
 	super()
-	speed = 40.0
 	_enemy_type = &"goomba"
 
 

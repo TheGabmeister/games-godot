@@ -5,7 +5,6 @@ const KoopaShellScene := preload("res://scenes/enemies/koopa_shell.tscn")
 
 func _ready() -> void:
 	super()
-	speed = 35.0
 	_enemy_type = &"koopa"
 
 

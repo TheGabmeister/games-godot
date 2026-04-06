@@ -1,5 +1,7 @@
 extends Node
 
+const _timing := preload("res://resources/config/level_timing_default.tres")
+
 var _is_transitioning: bool = false
 
 @onready var _overlay: CanvasLayer = CanvasLayer.new()
@@ -50,7 +52,7 @@ func show_level_intro(world: int, level: int, lives: int) -> void:
 	_intro_label.text = "WORLD %d-%d\n\nMARIO x %d" % [world, level, lives]
 	_intro_label.visible = true
 
-	await get_tree().create_timer(2.5).timeout
+	await get_tree().create_timer(_timing.level_intro_duration).timeout
 
 	_intro_label.visible = false
 	await _fade_in()
@@ -58,11 +60,11 @@ func show_level_intro(world: int, level: int, lives: int) -> void:
 
 func _fade_out() -> void:
 	var tween := create_tween()
-	tween.tween_property(_fade_rect, "modulate:a", 1.0, 0.5)
+	tween.tween_property(_fade_rect, "modulate:a", 1.0, _timing.fade_duration)
 	await tween.finished
 
 
 func _fade_in() -> void:
 	var tween := create_tween()
-	tween.tween_property(_fade_rect, "modulate:a", 0.0, 0.5)
+	tween.tween_property(_fade_rect, "modulate:a", 0.0, _timing.fade_duration)
 	await tween.finished

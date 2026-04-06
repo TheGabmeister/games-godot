@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-const GRAVITY := 900.0
+@export var config: Resource  # EnemyConfig
 
 var speed: float = 40.0
 var direction: float = -1.0
@@ -23,6 +23,8 @@ func activate() -> void:
 	if _is_active:
 		return
 	_is_active = true
+	if config:
+		speed = config.patrol_speed
 	set_physics_process(true)
 	visible = true
 
@@ -46,7 +48,7 @@ func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
 
-	velocity.y += GRAVITY * delta
+	velocity.y += config.gravity * delta
 	velocity.x = direction * speed
 	move_and_slide()
 
@@ -88,7 +90,7 @@ func _start_flip_death() -> void:
 
 
 func _process_flip_death(delta: float) -> void:
-	velocity.y += GRAVITY * delta
+	velocity.y += config.gravity * delta
 	global_position += velocity * delta
 	if global_position.y > 500.0:
 		queue_free()

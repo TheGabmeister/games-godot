@@ -1,0 +1,10 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/item_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+mushroom_speed = 60.0
+mushroom_gravity = 600.0
+emerge_height = 16.0
+emerge_duration = 0.4

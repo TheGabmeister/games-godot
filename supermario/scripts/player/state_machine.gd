@@ -1,6 +1,7 @@
 extends Node
 
 var current_state: Node
+var previous_state_name: StringName = &""
 var player: CharacterBody2D
 
 
@@ -31,6 +32,7 @@ func transition_to(state_name: StringName) -> void:
 	var new_state := get_node(NodePath(state_name))
 	if new_state == null or new_state == current_state:
 		return
+	previous_state_name = current_state.name
 	current_state.exit()
 	current_state = new_state
 	current_state.enter()

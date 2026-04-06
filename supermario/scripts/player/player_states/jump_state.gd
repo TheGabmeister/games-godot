@@ -2,16 +2,16 @@ extends "res://scripts/player/player_states/player_state.gd"
 
 
 func enter() -> void:
-	var speed_ratio: float = absf(player.velocity.x) / player.RUN_SPEED
-	var jump_boost: float = lerpf(1.0, 1.12, speed_ratio)
-	player.velocity.y = player.JUMP_VELOCITY * jump_boost
+	var speed_ratio: float = absf(player.velocity.x) / player.movement.run_speed
+	var jump_boost: float = lerpf(1.0, player.movement.high_speed_jump_boost, speed_ratio)
+	player.velocity.y = player.movement.jump_velocity * jump_boost
 	AudioManager.play_sfx(&"jump")
 
 
 func process_physics(delta: float) -> void:
 	# Variable-height jump: cut velocity on release
 	if not Input.is_action_pressed(&"jump") and player.velocity.y < 0.0:
-		player.velocity.y *= player.JUMP_RELEASE_MULT
+		player.velocity.y *= player.movement.jump_release_mult
 		state_machine.transition_to(&"FallState")
 		return
 

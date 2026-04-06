@@ -1,0 +1,10 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/camera_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+look_ahead_distance = 24.0
+look_ahead_speed = 80.0
+smoothing_speed = 10.0
+no_backtrack_offset = 256.0

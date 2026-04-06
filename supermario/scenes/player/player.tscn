@@ -1,6 +1,8 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
+[ext_resource type="Resource" path="res://resources/config/player_movement_default.tres" id="10_movement"]
+[ext_resource type="Resource" path="res://resources/config/camera_default.tres" id="11_camera"]
 [ext_resource type="Script" path="res://scripts/player/player_drawer.gd" id="2_drawer"]
 [ext_resource type="Script" path="res://scripts/player/state_machine.gd" id="3_sm"]
 [ext_resource type="Script" path="res://scripts/player/player_states/idle_state.gd" id="4_idle"]
@@ -9,6 +11,10 @@
 [ext_resource type="Script" path="res://scripts/player/player_states/fall_state.gd" id="7_fall"]
 [ext_resource type="Script" path="res://scripts/player/player_states/crouch_state.gd" id="8_crouch"]
 [ext_resource type="Script" path="res://scripts/player/player_states/death_state.gd" id="9_death"]
+[ext_resource type="Script" path="res://scripts/player/player_states/grow_state.gd" id="12_grow"]
+[ext_resource type="Script" path="res://scripts/player/player_states/shrink_state.gd" id="13_shrink"]
+[ext_resource type="Script" path="res://scripts/effects/damage_flash.gd" id="14_flash"]
+[ext_resource type="Script" path="res://scripts/effects/motion_trail.gd" id="15_trail"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
 size = Vector2(12, 14)
@@ -23,6 +29,8 @@ size = Vector2(10, 12)
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1_player")
+movement = ExtResource("10_movement")
+cam_config = ExtResource("11_camera")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -7)
@@ -54,6 +62,12 @@ script = ExtResource("8_crouch")
 [node name="DeathState" type="Node" parent="StateMachine"]
 script = ExtResource("9_death")
 
+[node name="GrowState" type="Node" parent="StateMachine"]
+script = ExtResource("12_grow")
+
+[node name="ShrinkState" type="Node" parent="StateMachine"]
+script = ExtResource("13_shrink")
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true
 position_smoothing_speed = 10.0
@@ -73,3 +87,9 @@ collision_mask = 48
 [node name="HurtShape" type="CollisionShape2D" parent="Hurtbox"]
 position = Vector2(0, -7)
 shape = SubResource("RectangleShape2D_hurt")
+
+[node name="DamageFlash" type="Node" parent="."]
+script = ExtResource("14_flash")
+
+[node name="MotionTrail" type="Node2D" parent="."]
+script = ExtResource("15_trail")

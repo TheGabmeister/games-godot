@@ -1,25 +1,9 @@
 extends CharacterBody2D
 
-# Physics constants
-const WALK_SPEED        := 130.0
-const RUN_SPEED         := 210.0
-const ACCELERATION      := 800.0
-const DECELERATION      := 1200.0
-const AIR_ACCELERATION  := 600.0
-const TURN_ACCELERATION := 1600.0
-const JUMP_VELOCITY     := -430.0
-const JUMP_RELEASE_MULT := 0.5
-const GRAVITY           := 900.0
-const FAST_FALL_GRAVITY := 1400.0
-const MAX_FALL_SPEED    := 500.0
-const COYOTE_TIME       := 0.08
-const JUMP_BUFFER_TIME  := 0.10
-
-const SMALL_COLLISION := Vector2(12.0, 14.0)
-const BIG_COLLISION   := Vector2(12.0, 28.0)
-const STOMP_BOUNCE_VELOCITY := -250.0
-const INVINCIBILITY_DURATION := 2.0
 const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000]
+
+@export var movement: Resource  # PlayerMovementConfig
+@export var cam_config: Resource  # CameraConfig
 
 var coyote_active: bool = false
 var jump_buffered: bool = false
@@ -65,12 +49,12 @@ func _process(delta: float) -> void:
 			jump_buffered = false
 
 	# Camera look-ahead and no-backtrack
-	var target_ahead := signf(visuals.scale.x) * 24.0
-	_camera_look_ahead = move_toward(_camera_look_ahead, target_ahead, 80.0 * delta)
+	var target_ahead: float = signf(visuals.scale.x) * cam_config.look_ahead_distance
+	_camera_look_ahead = move_toward(_camera_look_ahead, target_ahead, cam_config.look_ahead_speed * delta)
 	camera.offset.x = _camera_look_ahead
 
 	# Prevent camera from scrolling left (no backtracking)
-	var cam_left := global_position.x + camera.offset.x - 256.0
+	var cam_left: float = global_position.x + camera.offset.x - cam_config.no_backtrack_offset
 	if cam_left > _max_camera_x:
 		_max_camera_x = cam_left
 	camera.limit_left = int(_max_camera_x)
@@ -91,18 +75,16 @@ func _process(delta: float) -> void:
 
 func apply_gravity(delta: float) -> void:
 	if not is_on_floor():
-		var grav := GRAVITY
+		var grav: float = movement.gravity
 		if velocity.y > 0.0:
-			grav = FAST_FALL_GRAVITY
-		velocity.y = minf(velocity.y + grav * delta, MAX_FALL_SPEED)
+			grav = movement.fast_fall_gravity
+		velocity.y = minf(velocity.y + grav * delta, movement.max_fall_speed)
 
 
 func check_ceiling_bumps() -> void:
-	# Iterate slide collisions from the last move_and_slide and bump any
-	# blocks whose underside we hit with our head.
 	for i in get_slide_collision_count():
 		var col := get_slide_collision(i)
-		if col.get_normal().y > 0.5:  # normal points down → we hit a ceiling
+		if col.get_normal().y > 0.5:
 			var collider := col.get_collider()
 			if collider and collider.has_method("bump_from_below"):
 				collider.bump_from_below()
@@ -110,11 +92,10 @@ func check_ceiling_bumps() -> void:
 
 func apply_movement(direction: float, delta: float) -> void:
 	var is_running := Input.is_action_pressed(&"run")
-	var max_speed := RUN_SPEED if is_running else WALK_SPEED
+	var max_speed: float = movement.run_speed if is_running else movement.walk_speed
 
-	# Check if turning (skid)
 	var is_turning := direction * velocity.x < 0.0 and absf(velocity.x) > 30.0
-	var accel := TURN_ACCELERATION if is_turning else ACCELERATION
+	var accel: float = movement.turn_acceleration if is_turning else movement.acceleration
 
 	velocity.x = move_toward(velocity.x, direction * max_speed, accel * delta)
 	move_and_slide()
@@ -122,12 +103,12 @@ func apply_movement(direction: float, delta: float) -> void:
 
 func apply_air_movement(direction: float, delta: float) -> void:
 	var is_running := Input.is_action_pressed(&"run")
-	var max_speed := RUN_SPEED if is_running else WALK_SPEED
-	velocity.x = move_toward(velocity.x, direction * max_speed, AIR_ACCELERATION * delta)
+	var max_speed: float = movement.run_speed if is_running else movement.walk_speed
+	velocity.x = move_toward(velocity.x, direction * max_speed, movement.air_acceleration * delta)
 
 
 func apply_deceleration(delta: float) -> void:
-	velocity.x = move_toward(velocity.x, 0.0, DECELERATION * delta)
+	velocity.x = move_toward(velocity.x, 0.0, movement.deceleration * delta)
 	move_and_slide()
 
 
@@ -140,12 +121,12 @@ func update_facing(direction: float) -> void:
 
 func start_coyote_timer() -> void:
 	coyote_active = true
-	_coyote_timer = COYOTE_TIME
+	_coyote_timer = movement.coyote_time
 
 
 func buffer_jump() -> void:
 	jump_buffered = true
-	_jump_buffer_timer = JUMP_BUFFER_TIME
+	_jump_buffer_timer = movement.jump_buffer_time
 
 
 func can_crouch() -> bool:
@@ -161,11 +142,10 @@ func set_crouching(crouching: bool) -> void:
 func has_ceiling_clearance() -> bool:
 	if GameManager.current_power_state == GameManager.PowerState.SMALL:
 		return true
-	# Cast upward to check for ceiling
 	var space := get_world_2d().direct_space_state
 	var query := PhysicsRayQueryParameters2D.create(
-		global_position + Vector2(0, -SMALL_COLLISION.y),
-		global_position + Vector2(0, -BIG_COLLISION.y - 2.0),
+		global_position + Vector2(0, -movement.small_collision.y),
+		global_position + Vector2(0, -movement.big_collision.y - 2.0),
 		collision_mask,
 	)
 	query.exclude = [get_rid()]
@@ -195,15 +175,12 @@ func power_up(item_type: StringName, _position: Vector2 = Vector2.ZERO) -> void:
 				new_state = GameManager.PowerState.FIRE
 
 	if new_state == current:
-		# Already at max — just award points
 		GameManager.add_score(1000, global_position)
 		return
 
 	GameManager.set_power_state(new_state)
 	GameManager.add_score(1000, global_position)
-	_update_collision_shape()
-	# Small upward nudge so the bigger collision shape doesn't clip into ground
-	global_position.y -= 1.0
+	state_machine.transition_to(&"GrowState")
 
 
 func take_damage() -> void:
@@ -213,13 +190,12 @@ func take_damage() -> void:
 		die()
 	else:
 		GameManager.set_power_state(GameManager.PowerState.SMALL)
-		_update_collision_shape()
-		_start_invincibility()
+		state_machine.transition_to(&"ShrinkState")
 
 
 func _start_invincibility() -> void:
 	_is_invincible = true
-	_invincibility_timer = INVINCIBILITY_DURATION
+	_invincibility_timer = movement.invincibility_duration
 
 
 func _on_stomp_area_entered(area: Area2D) -> void:
@@ -230,7 +206,6 @@ func _on_stomp_area_entered(area: Area2D) -> void:
 		return
 	var was_killed: bool = enemy.stomp_kill()
 	if was_killed:
-		# Award combo points
 		var points: int
 		if _stomp_combo < STOMP_COMBO_POINTS.size():
 			points = STOMP_COMBO_POINTS[_stomp_combo]
@@ -242,7 +217,7 @@ func _on_stomp_area_entered(area: Area2D) -> void:
 		if points > 0:
 			GameManager.add_score(points, enemy.global_position)
 		_stomp_combo += 1
-	velocity.y = STOMP_BOUNCE_VELOCITY
+	velocity.y = movement.stomp_bounce_velocity
 
 
 func _on_hurtbox_area_entered(area: Area2D) -> void:
@@ -251,28 +226,24 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	var enemy := area.get_parent()
 	if not is_instance_valid(enemy):
 		return
-	# If moving downward and above the enemy, this is a stomp handled elsewhere
 	if velocity.y > 0.0 and global_position.y + 2.0 < enemy.global_position.y:
 		return
-	# Shell kick interaction
 	if enemy.has_method("try_kick"):
 		var kick_dir := signf(enemy.global_position.x - global_position.x)
 		if kick_dir == 0.0:
 			kick_dir = signf(visuals.scale.x)
 		if enemy.try_kick(kick_dir):
 			return
-	# Only take damage from things that identify as dangerous
 	if enemy.has_method("is_dangerous") and enemy.is_dangerous():
 		take_damage()
-	
 
 
 func _update_collision_shape() -> void:
 	var shape := collision_shape.shape as RectangleShape2D
 	if _is_crouching or GameManager.current_power_state == GameManager.PowerState.SMALL:
-		shape.size = SMALL_COLLISION
-		collision_shape.position.y = -SMALL_COLLISION.y / 2.0
+		shape.size = movement.small_collision
+		collision_shape.position.y = -movement.small_collision.y / 2.0
 	else:
-		shape.size = BIG_COLLISION
-		collision_shape.position.y = -BIG_COLLISION.y / 2.0
+		shape.size = movement.big_collision
+		collision_shape.position.y = -movement.big_collision.y / 2.0
 	drawer.power_state = GameManager.current_power_state

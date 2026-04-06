@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/hidden_block.gd" id="1_hidden"]
+[ext_resource type="Resource" path="res://resources/config/block_bump_default.tres" id="2_bump"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_block"]
 size = Vector2(16, 16)
@@ -10,6 +11,7 @@ size = Vector2(16, 16)
 
 [node name="HiddenBlock" type="StaticBody2D"]
 script = ExtResource("1_hidden")
+bump_config = ExtResource("2_bump")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -8)

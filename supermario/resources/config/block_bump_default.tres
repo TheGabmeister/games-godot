@@ -1,0 +1,11 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/block_bump_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+bump_amplitude = 4.0
+bump_duration = 0.15
+pulse_frequency = 0.8
+pulse_min = 0.85
+pulse_range = 0.15
