@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"big_key"
+display_name = "Big Key"
+description = "Opens the boss door."
+item_type = 2
+icon_color = Color(1, 0.85, 0.2, 1)
+icon_shape = PackedVector2Array(-3, -5, 3, -5, 3, 0, 5, 0, 5, 3, 3, 3, 3, 5, -3, 5, -3, 3, -3, 0)
+resource_key = &"big_key"
+resource_amount = 1

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"compass"
+display_name = "Compass"
+description = "Shows the boss location."
+item_type = 2
+icon_color = Color(0.8, 0.2, 0.2, 1)
+icon_shape = PackedVector2Array(0, -4, 3, 0, 0, 4, -3, 0)
+resource_key = &"compass"
+resource_amount = 1

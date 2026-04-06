@@ -24,6 +24,9 @@ var knockback_velocity: Vector2 = Vector2.ZERO
 # Water detection
 var is_in_water: bool = false
 
+# Dark World bunny transform
+var is_bunny: bool = false
+
 
 func _ready() -> void:
 	last_safe_position = global_position

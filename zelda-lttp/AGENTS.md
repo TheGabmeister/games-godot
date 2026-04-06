@@ -8,7 +8,7 @@ This repository is a Godot 4.6 recreation of the mechanics and game feel of *The
 
 ## Current Repository State
 
-- Phases 1-3 are implemented. The repo includes a runnable Phase 3 baseline with skills, upgrades, resources, and a pause subscreen.
+- Phases 1-4 are implemented. The repo includes a runnable Phase 4 baseline with overworld grid, transitions, dungeon structure, and light/dark world switching.
 - `SPEC.md` defines the intended architecture, conventions, milestones, and acceptance criteria.
 - `project.godot` currently confirms:
   - Godot `4.6`
@@ -22,11 +22,15 @@ This repository is a Godot 4.6 recreation of the mechanics and game feel of *The
   - Five Phase 2 enemy archetypes implemented as standalone scenes: Soldier, Octorok, Keese, Stalfos, and Buzz Blob
   - A reusable projectile baseline in `scenes/projectiles/projectile_base.tscn`
   - Phase 2 drops/pickups content in `resources/loot_tables/`, `resources/items/pickups/`, and `scenes/pickups/pickup.tscn`
-  - Phase 3 skills (9 SKILL items with effect scripts), upgrades (16 UPGRADE items), item use system (`ItemUseState`, `BaseItemEffect`), acquisition presentation (`ItemGetState`), chest interaction, shield tiers (`ShieldComponent`), swim state, pause subscreen, and HUD magic meter
+  - Phase 3 skills (10 SKILL items with effect scripts including Magic Mirror), upgrades (16 UPGRADE items), item use system (`ItemUseState`, `BaseItemEffect`), acquisition presentation (`ItemGetState`), chest interaction, shield tiers (`ShieldComponent`), swim state, pause subscreen, and HUD magic meter
+  - Phase 4 world structure: 4x4 light world overworld grid (`scenes/rooms/overworld/`), 2 interiors (`cave_01`, `house_01`), 4-room dungeon (`dungeon_01`), 2x2 dark world subset (`scenes/rooms/dark_overworld/`)
+  - Phase 4 transition system: `TransitionOverlay` with fade/iris effects, screen-edge scroll transitions, `Door` scene with walk-in/interact triggers
+  - Phase 4 dungeon elements: `LockedDoor`, `BossDoor`, `PushBlock`, `DungeonSwitch`, `PressurePlate`, `SwitchDoor`, `ConveyorBelt`
+  - Phase 4 world switching: `WorldPortal`, `SceneManager.switch_world()`, bunny transform without Moon Pearl
   - Debug coverage including `debug/debug_room.tscn`, `debug/damage_formula_test.gd`, `debug/test_loot_table.tscn`, and `debug/test_player_state.tscn`
   - A debug room with `Entities`, `EntryPoints`, walls, a pit hazard, combat test fixtures, y-sort verification dummies, and 6 Phase 3 test chests
   - A HUD with hearts display, rupee counter, equipped item slot, and magic meter
-- Later-phase gameplay content is still incomplete, so new work should extend the current Phase 3 baseline toward the spec instead of inventing a parallel structure.
+- Later-phase gameplay content is still incomplete, so new work should extend the current Phase 4 baseline toward the spec instead of inventing a parallel structure.
 - Some systems intentionally remain scaffolds:
   - `SaveManager` is still a Phase 1 stub and should not be turned into a real save system before Phase 6 unless the user explicitly wants forward scaffolding
   - Registries/resources for later phases may exist before their full gameplay loops do

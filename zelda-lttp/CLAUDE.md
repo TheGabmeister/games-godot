@@ -187,6 +187,32 @@ Spawned item scenes in `scenes/items/`: `arrow.tscn` (extends Projectile), `bomb
 
 `Chest` (`scenes/objects/chest.gd`) extends `StaticBody2D`. `@export var item: ItemData`, `@export var persist_id: StringName`. On interact: emits `EventBus.item_get_requested(item)`, sets persist flag via `GameManager`. Player `InteractionProbe` (Area2D, mask=Interactables) detects chests; `try_interact()` called from Idle/Walk states on `interact` input.
 
+### Transition System (Phase 4)
+
+`TransitionOverlay` (`scenes/main/transition_overlay.gd`) on CanvasLayer 20. Provides `fade_out()`, `fade_in()`, `iris_out(center)`, `iris_in(center)`, `instant_black()`, `clear()`. Uses `screen_transition.gdshader` for iris effect. All methods are awaitable.
+
+### Room Transitions (Phase 4.1-4.2)
+
+Screen-edge scroll transitions for overworld: player walks past screen boundary, `SceneManager.scroll_to_room()` loads adjacent room, tweens both rooms + player over 0.5s, then frees old room. `RoomData.neighbor_ids` maps directions to room_ids.
+
+`Door` (`scenes/objects/door.gd`) extends `Area2D`. Walk-in or interact trigger. Exports: `target_room_id`, `target_entry_point`, `transition_style` (fade/iris/instant). Emits `EventBus.room_transition_requested`.
+
+`SceneManager.load_room_with_transition()` handles fade/iris/instant styles with the TransitionOverlay.
+
+### Dungeon Elements (Phase 4.3)
+
+- **LockedDoor** (`scenes/objects/locked_door.gd`) — consumes one small key scoped to dungeon_id from parent Room. Persists via GameManager flag.
+- **BossDoor** (`scenes/objects/boss_door.gd`) — gates on big key (`GameManager.get_flag("{dungeon_id}/has_big_key")`). Does not consume.
+- **PushBlock** (`scenes/objects/push_block.gd`) — pushes 1 tile in facing direction. Persists position. Checks pressure plates after push.
+- **DungeonSwitch** (`scenes/objects/switch.gd`) — sword-activated toggle. Links to SwitchDoor nodes.
+- **PressurePlate** (`scenes/objects/pressure_plate.gd`) — activates with player/block weight. Optional sticky mode.
+- **SwitchDoor** (`scenes/objects/switch_door.gd`) — barrier controlled by Switch or PressurePlate via `set_switch_state()`.
+- **ConveyorBelt** (`scenes/objects/conveyor_belt.gd`) — continuous directional push on CharacterBody2D entities.
+
+### Light/Dark World (Phase 4.4)
+
+`WorldPortal` (`scenes/objects/world_portal.gd`) — walk-in trigger that emits `EventBus.world_switch_requested`. `SceneManager.switch_world()` finds mirrored room by convention (`overworld_X_Y` ↔ `dark_overworld_X_Y`), fades, loads, preserves player position. Without Moon Pearl upgrade, player `is_bunny = true` (pink bunny form, limited actions). Magic Mirror skill returns to Light World from Dark World.
+
 ## Current Phase Status
 
-Phase 1 complete, Phase 2 complete (2.1-2.7), Phase 3 complete (3.1-3.8). All 5 enemy types implemented with full behavior. Projectile system, pickup/loot system with 9 pickup types, weighted loot tables wired to all enemies. Phase 3 adds: 9 SKILL items (Bow, Bomb, Boomerang, Hookshot, Lamp, Fire Rod, Ice Rod, Hammer, Magic Powder) with effect scripts and spawned scenes. 16 UPGRADE items (Sword t1-t4, Armor t1-t3, Shield t1-t3, Pegasus Boots, Flippers, Power Glove, Titan's Mitt, Moon Pearl, Half Magic). ItemGetState presentation, ItemUseState with lock timers, SwimState, ShieldComponent with 3 tiers, pause subscreen with skill grid. HUD magic meter. Debug room has 6 test chests. Three test scenes: `debug/damage_formula_test.tscn` (38 tests), `debug/test_loot_table.tscn` (10 tests), `debug/test_player_state.tscn` (37 tests).
+Phase 1 complete, Phase 2 complete (2.1-2.7), Phase 3 complete (3.1-3.8), Phase 4 complete (4.1-4.4). All 5 enemy types implemented with full behavior. Projectile system, pickup/loot system with 13 pickup types (9 original + small_key, big_key, map, compass), weighted loot tables wired to all enemies. Phase 3: 10 SKILL items (Bow, Bomb, Boomerang, Hookshot, Lamp, Fire Rod, Ice Rod, Hammer, Magic Powder, Magic Mirror) with effect scripts. 16 UPGRADE items. Phase 4: 4x4 light world overworld grid with screen-edge scroll transitions, 2 interiors (cave + house) with iris/fade transitions, 4-room dungeon (Eastern Palace) with locked door, boss door, push block, switch, pressure plate, and chests. 2x2 dark world subset with world portal and bunny transform. TransitionOverlay with fade and iris effects. Door, LockedDoor, BossDoor, PushBlock, DungeonSwitch, PressurePlate, SwitchDoor, ConveyorBelt, WorldPortal scene components. Three test scenes: `debug/damage_formula_test.tscn` (38 tests), `debug/test_loot_table.tscn` (10 tests), `debug/test_player_state.tscn` (37 tests).
