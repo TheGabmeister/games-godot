@@ -111,9 +111,10 @@ func _physics_process(delta: float) -> void:
 				_state = State.WAITING_BOTTOM
 				_timer = 0.0
 
-	# Update hitbox position
+	# Update hitbox — disable when fully retracted
+	var is_visible: bool = _state != State.WAITING_BOTTOM
+	_hitbox_shape.set_deferred("disabled", not is_visible)
 	_hitbox_shape.position.y = _offset_y - 8.0
-	_hitbox.position.y = 0.0
 
 	queue_redraw()
 
