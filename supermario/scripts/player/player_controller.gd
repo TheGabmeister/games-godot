@@ -225,8 +225,6 @@ func _on_stomp_area_entered(area: Area2D) -> void:
 	var enemy := area.get_parent()
 	if not is_instance_valid(enemy) or not enemy.has_method("stomp_kill"):
 		return
-	if enemy.has_method("is_dead") and enemy.is_dead():
-		return
 	var was_killed: bool = enemy.stomp_kill()
 	if was_killed:
 		# Award combo points
@@ -250,8 +248,6 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	var enemy := area.get_parent()
 	if not is_instance_valid(enemy):
 		return
-	if enemy.has_method("is_dead") and enemy.is_dead():
-		return
 	# If moving downward and above the enemy, this is a stomp handled elsewhere
 	if velocity.y > 0.0 and global_position.y + 2.0 < enemy.global_position.y:
 		return
@@ -262,8 +258,8 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 			kick_dir = signf(visuals.scale.x)
 		if enemy.try_kick(kick_dir):
 			return
-	# Check if the enemy is actually dangerous
-	if enemy.has_method("is_dangerous") and not enemy.is_dangerous():
+	# Only take damage from things that identify as dangerous
+	if not enemy.has_method("is_dangerous") or not enemy.is_dangerous():
 		return
 	take_damage()
 
