@@ -270,7 +270,9 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 		return
 	if _is_invincible:
 		return
-	if velocity.y > 0.0 and global_position.y + 2.0 < enemy.global_position.y:
+	# Skip damage if this looks like a stomp — unless the enemy can't be stomped
+	var stompable: bool = not (enemy.has_method("is_stompable") and not enemy.is_stompable())
+	if stompable and velocity.y > 0.0 and global_position.y + 2.0 < enemy.global_position.y:
 		return
 	if enemy.has_method("try_kick"):
 		var kick_dir := signf(enemy.global_position.x - global_position.x)

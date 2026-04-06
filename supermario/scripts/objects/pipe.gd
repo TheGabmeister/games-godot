@@ -19,13 +19,18 @@ func _ready() -> void:
 	z_index = 5
 	z_as_relative = false
 
-	# Resize collision to match actual pipe_height
+	# Each instance needs its own shape — scene sub-resources are shared across
+	# instances, so modifying one pipe's shape would resize all of them.
 	var h: float = pipe_height * 16.0
-	var body_shape := _col_shape.shape as RectangleShape2D
+	var body_shape := RectangleShape2D.new()
 	body_shape.size = Vector2(32, h)
+	_col_shape.shape = body_shape
 	_col_shape.position = Vector2(0, -h / 2.0)
 
 	# Position warp zone on top of the pipe
+	var warp_shape := RectangleShape2D.new()
+	warp_shape.size = Vector2(24, 8)
+	_warp_shape.shape = warp_shape
 	_warp_shape.position = Vector2(0, -h - 4.0)
 
 	_warp_zone.body_entered.connect(_on_warp_zone_body_entered)

@@ -47,8 +47,11 @@ func is_dangerous() -> bool:
 	return _is_active and not _is_dead
 
 
+func is_stompable() -> bool:
+	return false
+
+
 func stomp_kill() -> bool:
-	# Not stompable
 	return false
 
 
