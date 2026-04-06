@@ -19,7 +19,6 @@ func _ready() -> void:
 	if enemy_data:
 		health_component.max_health = enemy_data.max_health
 		health_component.current_health = enemy_data.max_health
-
 		var contact: HitboxComponent = get_node_or_null("ContactHitbox") as HitboxComponent
 		if contact:
 			contact.damage = enemy_data.contact_damage
@@ -27,10 +26,20 @@ func _ready() -> void:
 	hurtbox.hurt.connect(_on_hurt)
 	health_component.died.connect(_on_died)
 
-	# Initialize enemy states with reference to this actor
 	for state in state_machine.states.values():
 		if state is BaseEnemyState:
 			state.actor = self
+
+
+func update_facing(direction: Vector2) -> void:
+	if direction != Vector2.ZERO:
+		if absf(direction.x) > absf(direction.y):
+			facing_direction = Vector2(signf(direction.x), 0)
+		else:
+			facing_direction = Vector2(0, signf(direction.y))
+		var body: Node2D = get_node_or_null("EnemyBody") as Node2D
+		if body:
+			body.queue_redraw()
 
 
 func _on_hurt(hitbox_data: Dictionary) -> void:

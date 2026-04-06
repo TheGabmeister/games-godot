@@ -1,0 +1,75 @@
+[gd_scene load_steps=13 format=3 uid="uid://c8buzzblo01"]
+
+[ext_resource type="Script" path="res://scenes/enemies/buzz_blob/buzz_blob.gd" id="1_bb"]
+[ext_resource type="Script" path="res://scenes/enemies/buzz_blob/buzz_blob_body.gd" id="2_body"]
+[ext_resource type="Script" path="res://components/state_machine.gd" id="3_sm"]
+[ext_resource type="Script" path="res://scenes/enemies/buzz_blob/buzz_blob_wander.gd" id="4_wander"]
+[ext_resource type="Script" path="res://scenes/enemies/shared/stunned_state.gd" id="5_stun"]
+[ext_resource type="Script" path="res://components/hurtbox_component.gd" id="6_hurtbox"]
+[ext_resource type="Script" path="res://components/hitbox_component.gd" id="7_hitbox"]
+[ext_resource type="Script" path="res://components/health_component.gd" id="8_health"]
+[ext_resource type="Script" path="res://components/knockback_component.gd" id="9_kb"]
+[ext_resource type="Script" path="res://components/flash_component.gd" id="10_flash"]
+[ext_resource type="Script" path="res://components/loot_drop_component.gd" id="11_loot"]
+[ext_resource type="Resource" path="res://resources/enemies/buzz_blob.tres" id="12_data"]
+
+[sub_resource type="CircleShape2D" id="body_shape"]
+radius = 7.0
+
+[node name="BuzzBlob" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_bb")
+enemy_data = ExtResource("12_data")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("body_shape")
+
+[node name="EnemyBody" type="Node2D" parent="."]
+script = ExtResource("2_body")
+
+[node name="HurtboxComponent" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 8
+script = ExtResource("6_hurtbox")
+team = &"enemy"
+invincibility_duration = 0.3
+
+[node name="HurtboxShape" type="CollisionShape2D" parent="HurtboxComponent"]
+shape = SubResource("body_shape")
+
+[node name="ContactHitbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("7_hitbox")
+damage = 2
+damage_type = 0
+knockback_force = 100.0
+source_team = &"enemy"
+
+[node name="ContactShape" type="CollisionShape2D" parent="ContactHitbox"]
+shape = SubResource("body_shape")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("8_health")
+
+[node name="KnockbackComponent" type="Node" parent="."]
+script = ExtResource("9_kb")
+
+[node name="FlashComponent" type="Node" parent="."]
+script = ExtResource("10_flash")
+
+[node name="LootDropComponent" type="Node" parent="."]
+script = ExtResource("11_loot")
+
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("3_sm")
+initial_state = NodePath("Wander")
+
+[node name="Wander" type="Node" parent="StateMachine"]
+script = ExtResource("4_wander")
+
+[node name="Stunned" type="Node" parent="StateMachine"]
+script = ExtResource("5_stun")

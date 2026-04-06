@@ -1,0 +1,92 @@
+[gd_scene load_steps=15 format=3 uid="uid://c8stalfos01"]
+
+[ext_resource type="Script" path="res://scenes/enemies/stalfos/stalfos.gd" id="1_stalfos"]
+[ext_resource type="Script" path="res://scenes/enemies/stalfos/stalfos_body.gd" id="2_body"]
+[ext_resource type="Script" path="res://components/state_machine.gd" id="3_sm"]
+[ext_resource type="Script" path="res://scenes/enemies/stalfos/stalfos_wander.gd" id="4_wander"]
+[ext_resource type="Script" path="res://scenes/enemies/stalfos/stalfos_throw.gd" id="5_throw"]
+[ext_resource type="Script" path="res://scenes/enemies/shared/stunned_state.gd" id="6_stun"]
+[ext_resource type="Script" path="res://components/hurtbox_component.gd" id="7_hurtbox"]
+[ext_resource type="Script" path="res://components/hitbox_component.gd" id="8_hitbox"]
+[ext_resource type="Script" path="res://components/health_component.gd" id="9_health"]
+[ext_resource type="Script" path="res://components/knockback_component.gd" id="10_kb"]
+[ext_resource type="Script" path="res://components/flash_component.gd" id="11_flash"]
+[ext_resource type="Script" path="res://components/loot_drop_component.gd" id="12_loot"]
+[ext_resource type="Resource" path="res://resources/enemies/stalfos.tres" id="13_data"]
+
+[sub_resource type="RectangleShape2D" id="body_shape"]
+size = Vector2(12, 14)
+
+[sub_resource type="CircleShape2D" id="detection_shape"]
+radius = 80.0
+
+[node name="Stalfos" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_stalfos")
+enemy_data = ExtResource("13_data")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 2)
+shape = SubResource("body_shape")
+
+[node name="EnemyBody" type="Node2D" parent="."]
+script = ExtResource("2_body")
+
+[node name="HurtboxComponent" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 8
+script = ExtResource("7_hurtbox")
+team = &"enemy"
+invincibility_duration = 0.3
+
+[node name="HurtboxShape" type="CollisionShape2D" parent="HurtboxComponent"]
+position = Vector2(0, 2)
+shape = SubResource("body_shape")
+
+[node name="ContactHitbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("8_hitbox")
+damage = 2
+damage_type = 0
+knockback_force = 110.0
+source_team = &"enemy"
+
+[node name="ContactShape" type="CollisionShape2D" parent="ContactHitbox"]
+position = Vector2(0, 2)
+shape = SubResource("body_shape")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("9_health")
+
+[node name="KnockbackComponent" type="Node" parent="."]
+script = ExtResource("10_kb")
+
+[node name="FlashComponent" type="Node" parent="."]
+script = ExtResource("11_flash")
+
+[node name="LootDropComponent" type="Node" parent="."]
+script = ExtResource("12_loot")
+
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("3_sm")
+initial_state = NodePath("Wander")
+
+[node name="Wander" type="Node" parent="StateMachine"]
+script = ExtResource("4_wander")
+
+[node name="Throw" type="Node" parent="StateMachine"]
+script = ExtResource("5_throw")
+
+[node name="Stunned" type="Node" parent="StateMachine"]
+script = ExtResource("6_stun")
+
+[node name="DetectionZone" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="DetectionShape" type="CollisionShape2D" parent="DetectionZone"]
+shape = SubResource("detection_shape")

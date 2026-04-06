@@ -12,7 +12,9 @@
       "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/zelda-lttp\" --headless --import)",
       "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/zelda-lttp\" --headless --quit)",
       "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/zelda-lttp\" --headless --scene res://debug/damage_formula_test.tscn --quit-after 2)",
-      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/zelda-lttp\" --headless --scene res://scenes/main/main.tscn --quit-after 3)"
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/zelda-lttp\" --headless --scene res://scenes/main/main.tscn --quit-after 3)",
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/zelda-lttp\" --headless --scene res://scenes/main/main.tscn --quit-after 4)",
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/zelda-lttp\" --headless --scene res://scenes/main/main.tscn --quit-after 5)"
     ]
   }
 }
