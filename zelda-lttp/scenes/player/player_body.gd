@@ -8,6 +8,11 @@ extends Node2D
 var _sword_arc_alpha: float = 0.0
 
 
+func _process(_delta: float) -> void:
+	if PlayerState.has_upgrade(&"shield"):
+		queue_redraw()
+
+
 func _draw() -> void:
 	if not player:
 		return
@@ -55,6 +60,10 @@ func _draw() -> void:
 	var cap_left := cap_center + cap_perp * 3.0
 	var cap_right := cap_center - cap_perp * 3.0
 	draw_colored_polygon(PackedVector2Array([cap_tip, cap_left, cap_right]), cap_color)
+
+	# Shield always visible when owned (passive protection)
+	if not is_swimming and PlayerState.has_upgrade(&"shield"):
+		_draw_shield(facing)
 
 	# Sword arc during attack
 	if player.sword_active:
@@ -144,3 +153,28 @@ func _draw_item_get_pose() -> void:
 		draw_colored_polygon(points, item_data.icon_color)
 	elif item_data:
 		draw_circle(Vector2(0, -14), 4.0, item_data.icon_color)
+
+
+func _draw_shield(facing: Vector2) -> void:
+	var tier: int = PlayerState.get_upgrade(&"shield")
+	var shield_color: Color
+	match tier:
+		1: shield_color = Color(0.3, 0.5, 0.8)
+		2: shield_color = Color(0.9, 0.3, 0.2)
+		3: shield_color = Color(0.9, 0.85, 0.3)
+		_: return
+
+	# Position shield in front of player
+	var offset: Vector2 = facing.normalized() * 7.0
+	var perp: Vector2 = Vector2(-facing.y, facing.x).normalized()
+	var center: Vector2 = offset
+
+	# Shield shape: pointed kite
+	var points := PackedVector2Array([
+		center - perp * 4.0,
+		center + facing.normalized() * 3.0,
+		center + perp * 4.0,
+		center - facing.normalized() * 5.0,
+	])
+	draw_colored_polygon(points, shield_color)
+	draw_polyline(points, shield_color.lightened(0.3), 1.0)

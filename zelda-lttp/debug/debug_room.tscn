@@ -1,14 +1,14 @@
-[gd_scene load_steps=23 format=3 uid="uid://c8debug001"]
+[gd_scene format=3 uid="uid://c8debug001"]
 
-[ext_resource type="Script" path="res://debug/debug_room.gd" id="1_room"]
+[ext_resource type="Script" uid="uid://cb0oqhwa6k6uc" path="res://debug/debug_room.gd" id="1_room"]
 [ext_resource type="Resource" path="res://resources/room_data/debug_room.tres" id="2_rd"]
-[ext_resource type="Script" path="res://components/hitbox_component.gd" id="3_hitbox"]
-[ext_resource type="Script" path="res://debug/pit_hazard.gd" id="4_pit"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/soldier/soldier.tscn" id="5_soldier"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/keese/keese.tscn" id="6_keese"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/octorok/octorok.tscn" id="7_octorok"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/stalfos/stalfos.tscn" id="8_stalfos"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/buzz_blob/buzz_blob.tscn" id="9_buzz"]
+[ext_resource type="Script" uid="uid://bkoxfdrb4rf0x" path="res://components/hitbox_component.gd" id="3_hitbox"]
+[ext_resource type="Script" uid="uid://j7vnd40m45qa" path="res://debug/pit_hazard.gd" id="4_pit"]
+[ext_resource type="PackedScene" uid="uid://c8soldier01" path="res://scenes/enemies/soldier/soldier.tscn" id="5_soldier"]
+[ext_resource type="PackedScene" uid="uid://c8keese0001" path="res://scenes/enemies/keese/keese.tscn" id="6_keese"]
+[ext_resource type="PackedScene" uid="uid://c8octorok01" path="res://scenes/enemies/octorok/octorok.tscn" id="7_octorok"]
+[ext_resource type="PackedScene" uid="uid://c8stalfos01" path="res://scenes/enemies/stalfos/stalfos.tscn" id="8_stalfos"]
+[ext_resource type="PackedScene" uid="uid://c8bu00blo01" path="res://scenes/enemies/buzz_blob/buzz_blob.tscn" id="9_buzz"]
 [ext_resource type="PackedScene" uid="uid://c8chest001" path="res://scenes/objects/chest.tscn" id="10_chest"]
 [ext_resource type="Resource" path="res://resources/items/skills/bow.tres" id="11_bow"]
 [ext_resource type="Resource" path="res://resources/items/skills/boomerang.tres" id="12_boom"]
@@ -16,7 +16,7 @@
 [ext_resource type="Resource" path="res://resources/items/upgrades/pegasus_boots.tres" id="14_boots"]
 [ext_resource type="Resource" path="res://resources/items/upgrades/flippers.tres" id="15_flip"]
 [ext_resource type="Resource" path="res://resources/items/upgrades/half_magic.tres" id="16_hmagic"]
-[ext_resource type="Script" path="res://scenes/objects/water_zone.gd" id="17_water"]
+[ext_resource type="Script" uid="uid://8uv7wfri5ww2" path="res://scenes/objects/water_zone.gd" id="17_water"]
 
 [sub_resource type="RectangleShape2D" id="wall_top"]
 size = Vector2(256, 16)
@@ -27,9 +27,6 @@ size = Vector2(16, 224)
 [sub_resource type="RectangleShape2D" id="pit_shape"]
 size = Vector2(32, 32)
 
-[sub_resource type="RectangleShape2D" id="water_shape"]
-size = Vector2(32, 32)
-
 [sub_resource type="RectangleShape2D" id="corridor_wall_h"]
 size = Vector2(64, 16)
 
@@ -37,125 +34,122 @@ size = Vector2(64, 16)
 size = Vector2(16, 48)
 
 [sub_resource type="RectangleShape2D" id="hitbox_shape"]
-size = Vector2(20, 20)
 
-[node name="DebugRoom" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="water_shape"]
+size = Vector2(32, 32)
+
+[node name="DebugRoom" type="Node2D" unique_id=1051077061]
 script = ExtResource("1_room")
 room_data = ExtResource("2_rd")
 
-[node name="Floor" type="ColorRect" parent="."]
+[node name="Floor" type="ColorRect" parent="." unique_id=1963246342]
 offset_right = 256.0
 offset_bottom = 224.0
 color = Color(0.35, 0.55, 0.3, 1)
 
-[node name="Entities" type="Node2D" parent="."]
+[node name="Entities" type="Node2D" parent="." unique_id=1749763958]
 y_sort_enabled = true
 
-[node name="Soldier1" parent="Entities" instance=ExtResource("5_soldier")]
+[node name="Soldier1" parent="Entities" unique_id=1280115078 instance=ExtResource("5_soldier")]
 position = Vector2(200, 160)
 patrol_points = PackedVector2Array(0, 0, 0, -40)
 
-[node name="Soldier2" parent="Entities" instance=ExtResource("5_soldier")]
+[node name="Soldier2" parent="Entities" unique_id=1133977209 instance=ExtResource("5_soldier")]
 position = Vector2(40, 90)
 patrol_points = PackedVector2Array(0, 0, 30, 0)
 
-[node name="Keese" parent="Entities" instance=ExtResource("6_keese")]
+[node name="Keese" parent="Entities" unique_id=2108029939 instance=ExtResource("6_keese")]
 position = Vector2(150, 40)
 
-[node name="Octorok" parent="Entities" instance=ExtResource("7_octorok")]
+[node name="Octorok" parent="Entities" unique_id=1225736880 instance=ExtResource("7_octorok")]
 position = Vector2(220, 130)
 
-[node name="Stalfos" parent="Entities" instance=ExtResource("8_stalfos")]
+[node name="Stalfos" parent="Entities" unique_id=1003273985 instance=ExtResource("8_stalfos")]
 position = Vector2(150, 180)
 
-[node name="BuzzBlob" parent="Entities" instance=ExtResource("9_buzz")]
+[node name="BuzzBlob" parent="Entities" unique_id=817324927 instance=ExtResource("9_buzz")]
 position = Vector2(110, 140)
 
-[node name="Transitions" type="Node2D" parent="."]
+[node name="Transitions" type="Node2D" parent="." unique_id=249423221]
 
-[node name="EntryPoints" type="Node2D" parent="."]
+[node name="EntryPoints" type="Node2D" parent="." unique_id=934012449]
 
-[node name="PlayerSpawn" type="Marker2D" parent="EntryPoints"]
+[node name="PlayerSpawn" type="Marker2D" parent="EntryPoints" unique_id=2050982001]
 position = Vector2(128, 112)
 
-[node name="Walls" type="Node2D" parent="."]
+[node name="Walls" type="Node2D" parent="." unique_id=28901998]
 
-[node name="WallTop" type="StaticBody2D" parent="Walls"]
+[node name="WallTop" type="StaticBody2D" parent="Walls" unique_id=2047741418]
 position = Vector2(128, 8)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/WallTop"]
+[node name="Shape" type="CollisionShape2D" parent="Walls/WallTop" unique_id=508283765]
 shape = SubResource("wall_top")
 
-[node name="WallTopVisual" type="ColorRect" parent="Walls/WallTop"]
+[node name="WallTopVisual" type="ColorRect" parent="Walls/WallTop" unique_id=2121562568]
 offset_left = -128.0
 offset_top = -8.0
 offset_right = 128.0
 offset_bottom = 8.0
 color = Color(0.3, 0.3, 0.35, 1)
 
-[node name="WallBottom" type="StaticBody2D" parent="Walls"]
+[node name="WallBottom" type="StaticBody2D" parent="Walls" unique_id=955714868]
 position = Vector2(128, 216)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/WallBottom"]
+[node name="Shape" type="CollisionShape2D" parent="Walls/WallBottom" unique_id=1324380520]
 shape = SubResource("wall_top")
 
-[node name="WallBottomVisual" type="ColorRect" parent="Walls/WallBottom"]
+[node name="WallBottomVisual" type="ColorRect" parent="Walls/WallBottom" unique_id=986883697]
 offset_left = -128.0
 offset_top = -8.0
 offset_right = 128.0
 offset_bottom = 8.0
 color = Color(0.3, 0.3, 0.35, 1)
 
-[node name="WallLeft" type="StaticBody2D" parent="Walls"]
+[node name="WallLeft" type="StaticBody2D" parent="Walls" unique_id=1563060124]
 position = Vector2(8, 112)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/WallLeft"]
+[node name="Shape" type="CollisionShape2D" parent="Walls/WallLeft" unique_id=2024945784]
 shape = SubResource("wall_side")
 
-[node name="WallLeftVisual" type="ColorRect" parent="Walls/WallLeft"]
+[node name="WallLeftVisual" type="ColorRect" parent="Walls/WallLeft" unique_id=1542447014]
 offset_left = -8.0
 offset_top = -112.0
 offset_right = 8.0
 offset_bottom = 112.0
 color = Color(0.3, 0.3, 0.35, 1)
 
-[node name="WallRight" type="StaticBody2D" parent="Walls"]
+[node name="WallRight" type="StaticBody2D" parent="Walls" unique_id=294111169]
 position = Vector2(248, 112)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/WallRight"]
+[node name="Shape" type="CollisionShape2D" parent="Walls/WallRight" unique_id=1766074621]
 shape = SubResource("wall_side")
 
-[node name="WallRightVisual" type="ColorRect" parent="Walls/WallRight"]
+[node name="WallRightVisual" type="ColorRect" parent="Walls/WallRight" unique_id=20496464]
 offset_left = -8.0
 offset_top = -112.0
 offset_right = 8.0
 offset_bottom = 112.0
 color = Color(0.3, 0.3, 0.35, 1)
 
-[node name="InnerWall" type="StaticBody2D" parent="Walls"]
-position = Vector2(64, 56)
-collision_layer = 1
+[node name="InnerWall" type="StaticBody2D" parent="Walls" unique_id=1740885922]
+position = Vector2(78, 83)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/InnerWall"]
+[node name="Shape" type="CollisionShape2D" parent="Walls/InnerWall" unique_id=850734960]
 shape = SubResource("pit_shape")
 
-[node name="Visual" type="ColorRect" parent="Walls/InnerWall"]
+[node name="Visual" type="ColorRect" parent="Walls/InnerWall" unique_id=731596974]
 offset_left = -16.0
 offset_top = -16.0
 offset_right = 16.0
 offset_bottom = 16.0
 color = Color(0.3, 0.3, 0.35, 1)
 
-[node name="CorridorLabel" type="Label" parent="Walls"]
+[node name="CorridorLabel" type="Label" parent="Walls" unique_id=1113212340]
 offset_left = 20.0
 offset_top = 136.0
 offset_right = 108.0
@@ -164,85 +158,81 @@ theme_override_font_sizes/font_size = 7
 text = "16px corridor test"
 horizontal_alignment = 1
 
-[node name="CorridorTop" type="StaticBody2D" parent="Walls"]
+[node name="CorridorTop" type="StaticBody2D" parent="Walls" unique_id=560029465]
 position = Vector2(64, 152)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorTop"]
+[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorTop" unique_id=965907640]
 shape = SubResource("corridor_wall_h")
 
-[node name="Visual" type="ColorRect" parent="Walls/CorridorTop"]
+[node name="Visual" type="ColorRect" parent="Walls/CorridorTop" unique_id=1753233143]
 offset_left = -32.0
 offset_top = -8.0
 offset_right = 32.0
 offset_bottom = 8.0
 color = Color(0.4, 0.3, 0.3, 1)
 
-[node name="CorridorBottom" type="StaticBody2D" parent="Walls"]
+[node name="CorridorBottom" type="StaticBody2D" parent="Walls" unique_id=1336471757]
 position = Vector2(64, 184)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorBottom"]
+[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorBottom" unique_id=1582180260]
 shape = SubResource("corridor_wall_h")
 
-[node name="Visual" type="ColorRect" parent="Walls/CorridorBottom"]
+[node name="Visual" type="ColorRect" parent="Walls/CorridorBottom" unique_id=1970592692]
 offset_left = -32.0
 offset_top = -8.0
 offset_right = 32.0
 offset_bottom = 8.0
 color = Color(0.4, 0.3, 0.3, 1)
 
-[node name="CorridorRight" type="StaticBody2D" parent="Walls"]
+[node name="CorridorRight" type="StaticBody2D" parent="Walls" unique_id=2105741737]
 position = Vector2(168, 168)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorRight"]
+[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorRight" unique_id=1732527809]
 shape = SubResource("corridor_wall_v")
 
-[node name="Visual" type="ColorRect" parent="Walls/CorridorRight"]
+[node name="Visual" type="ColorRect" parent="Walls/CorridorRight" unique_id=212911511]
 offset_left = -8.0
 offset_top = -24.0
 offset_right = 8.0
 offset_bottom = 24.0
 color = Color(0.4, 0.3, 0.3, 1)
 
-[node name="CorridorRightOpen" type="StaticBody2D" parent="Walls"]
+[node name="CorridorRightOpen" type="StaticBody2D" parent="Walls" unique_id=2092155858]
 position = Vector2(200, 168)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorRightOpen"]
+[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorRightOpen" unique_id=332838750]
 shape = SubResource("corridor_wall_v")
 
-[node name="Visual" type="ColorRect" parent="Walls/CorridorRightOpen"]
+[node name="Visual" type="ColorRect" parent="Walls/CorridorRightOpen" unique_id=2031145249]
 offset_left = -8.0
 offset_top = -24.0
 offset_right = 8.0
 offset_bottom = 24.0
 color = Color(0.4, 0.3, 0.3, 1)
 
-[node name="Hazards" type="Node2D" parent="."]
+[node name="Hazards" type="Node2D" parent="." unique_id=1006497715]
 
-[node name="PitArea" type="Area2D" parent="Hazards"]
+[node name="PitArea" type="Area2D" parent="Hazards" unique_id=1254927949]
 position = Vector2(200, 56)
 collision_layer = 64
 collision_mask = 2
 script = ExtResource("4_pit")
 
-[node name="PitShape" type="CollisionShape2D" parent="Hazards/PitArea"]
+[node name="PitShape" type="CollisionShape2D" parent="Hazards/PitArea" unique_id=72906122]
 shape = SubResource("pit_shape")
 
-[node name="PitVisual" type="ColorRect" parent="Hazards/PitArea"]
+[node name="PitVisual" type="ColorRect" parent="Hazards/PitArea" unique_id=1861716568]
 offset_left = -16.0
 offset_top = -16.0
 offset_right = 16.0
 offset_bottom = 16.0
 color = Color(0.05, 0.05, 0.08, 1)
 
-[node name="PitLabel" type="Label" parent="Hazards"]
+[node name="PitLabel" type="Label" parent="Hazards" unique_id=1299922127]
 offset_left = 184.0
 offset_top = 78.0
 offset_right = 220.0
@@ -251,28 +241,25 @@ theme_override_font_sizes/font_size = 7
 text = "Pit"
 horizontal_alignment = 1
 
-[node name="TestHitbox" type="Area2D" parent="Hazards"]
+[node name="TestHitbox" type="Area2D" parent="Hazards" unique_id=448266350]
 position = Vector2(128, 56)
 collision_layer = 16
 collision_mask = 2
-monitorable = true
 script = ExtResource("3_hitbox")
 damage = 4
-damage_type = 0
 knockback_force = 150.0
-source_team = &"enemy"
 
-[node name="HitboxShape" type="CollisionShape2D" parent="Hazards/TestHitbox"]
+[node name="HitboxShape" type="CollisionShape2D" parent="Hazards/TestHitbox" unique_id=309780910]
 shape = SubResource("hitbox_shape")
 
-[node name="HitboxVisual" type="ColorRect" parent="Hazards/TestHitbox"]
+[node name="HitboxVisual" type="ColorRect" parent="Hazards/TestHitbox" unique_id=960389549]
 offset_left = -10.0
 offset_top = -10.0
 offset_right = 10.0
 offset_bottom = 10.0
 color = Color(0.8, 0.15, 0.1, 0.7)
 
-[node name="HitboxLabel" type="Label" parent="Hazards/TestHitbox"]
+[node name="HitboxLabel" type="Label" parent="Hazards/TestHitbox" unique_id=762131677]
 offset_left = -14.0
 offset_top = -22.0
 offset_right = 14.0
@@ -281,23 +268,23 @@ theme_override_font_sizes/font_size = 7
 text = "Dmg"
 horizontal_alignment = 1
 
-[node name="WaterZone" type="Area2D" parent="Hazards"]
+[node name="WaterZone" type="Area2D" parent="Hazards" unique_id=2078384521]
 position = Vector2(230, 100)
 collision_layer = 128
 collision_mask = 2
 script = ExtResource("17_water")
 
-[node name="WaterShape" type="CollisionShape2D" parent="Hazards/WaterZone"]
+[node name="WaterShape" type="CollisionShape2D" parent="Hazards/WaterZone" unique_id=297951422]
 shape = SubResource("water_shape")
 
-[node name="WaterVisual" type="ColorRect" parent="Hazards/WaterZone"]
+[node name="WaterVisual" type="ColorRect" parent="Hazards/WaterZone" unique_id=1195554597]
 offset_left = -16.0
 offset_top = -16.0
 offset_right = 16.0
 offset_bottom = 16.0
 color = Color(0.15, 0.3, 0.6, 0.7)
 
-[node name="WaterLabel" type="Label" parent="Hazards/WaterZone"]
+[node name="WaterLabel" type="Label" parent="Hazards/WaterZone" unique_id=2117304517]
 offset_left = -16.0
 offset_top = -28.0
 offset_right = 16.0
@@ -306,37 +293,37 @@ theme_override_font_sizes/font_size = 7
 text = "Water"
 horizontal_alignment = 1
 
-[node name="TestChests" type="Node2D" parent="."]
+[node name="TestChests" type="Node2D" parent="." unique_id=1421183077]
 
-[node name="ChestBow" parent="TestChests" instance=ExtResource("10_chest")]
+[node name="ChestBow" parent="TestChests" unique_id=1501214475 instance=ExtResource("10_chest")]
 position = Vector2(32, 32)
 item = ExtResource("11_bow")
 persist_id = &"chest_bow"
 
-[node name="ChestBoomerang" parent="TestChests" instance=ExtResource("10_chest")]
+[node name="ChestBoomerang" parent="TestChests" unique_id=1697358904 instance=ExtResource("10_chest")]
 position = Vector2(56, 32)
 item = ExtResource("12_boom")
 persist_id = &"chest_boomerang"
 
-[node name="ChestBomb" parent="TestChests" instance=ExtResource("10_chest")]
+[node name="ChestBomb" parent="TestChests" unique_id=472026474 instance=ExtResource("10_chest")]
 position = Vector2(80, 32)
 item = ExtResource("13_bomb")
 persist_id = &"chest_bomb"
 
-[node name="ChestBoots" parent="TestChests" instance=ExtResource("10_chest")]
+[node name="ChestBoots" parent="TestChests" unique_id=1226313152 instance=ExtResource("10_chest")]
 position = Vector2(104, 32)
 item = ExtResource("14_boots")
 persist_id = &"chest_boots"
 
-[node name="ChestFlippers" parent="TestChests" instance=ExtResource("10_chest")]
+[node name="ChestFlippers" parent="TestChests" unique_id=1133110736 instance=ExtResource("10_chest")]
 position = Vector2(128, 32)
 item = ExtResource("15_flip")
 persist_id = &"chest_flippers"
 
-[node name="ChestHalfMagic" parent="TestChests" instance=ExtResource("10_chest")]
+[node name="ChestHalfMagic" parent="TestChests" unique_id=1256351934 instance=ExtResource("10_chest")]
 position = Vector2(152, 32)
 item = ExtResource("16_hmagic")
 persist_id = &"chest_half_magic"
 
-[node name="CanvasModulate" type="CanvasModulate" parent="."]
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=2115867721]
 color = Color(1, 0.98, 0.9, 1)

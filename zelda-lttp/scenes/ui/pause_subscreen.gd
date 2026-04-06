@@ -12,6 +12,7 @@ const RESOURCE_ORIGIN := Vector2(20, 160)
 func _ready() -> void:
 	visible = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	focus_mode = Control.FOCUS_NONE
 
 
 func open() -> void:

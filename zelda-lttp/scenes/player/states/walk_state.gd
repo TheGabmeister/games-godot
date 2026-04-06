@@ -17,9 +17,13 @@ func physics_update(delta: float) -> void:
 		state_machine.transition_to(&"Idle")
 		return
 
-	player.update_facing(input)
+	# Shield stance: lock facing, slow movement
+	var holding_shield: bool = Input.is_action_pressed("action_shield")
+	if not holding_shield:
+		player.update_facing(input)
 	player.move_input = input
-	player.velocity = input * player.speed
+	var move_speed: float = player.speed * (0.5 if holding_shield else 1.0)
+	player.velocity = input * move_speed
 	player.move_and_slide()
 
 	# Track safe position periodically
