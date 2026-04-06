@@ -14,6 +14,13 @@
 [ext_resource type="Script" path="res://scripts/level/enemy_spawner.gd" id="12_spawner"]
 [ext_resource type="Script" path="res://scripts/effects/effects_manager.gd" id="13_effects"]
 [ext_resource type="Resource" path="res://resources/config/effects_default.tres" id="14_fx_config"]
+[ext_resource type="PackedScene" path="res://scenes/objects/pipe.tscn" id="15_pipe"]
+[ext_resource type="PackedScene" path="res://scenes/objects/flagpole.tscn" id="16_flagpole"]
+[ext_resource type="PackedScene" path="res://scenes/objects/castle.tscn" id="17_castle"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/piranha_plant.tscn" id="18_piranha"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="19_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/game_over.tscn" id="20_gameover"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_complete.tscn" id="21_complete"]
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
@@ -114,7 +121,26 @@ coin_count = 8
 position = Vector2(296, 80)
 contents = &"1up"
 
+[node name="QBlock_Star_64" parent="Blocks" instance=ExtResource("6_qblock")]
+position = Vector2(1032, 144)
+contents = &"starman"
+
 [node name="Pipes" type="Node2D" parent="." unique_id=1592643868]
+
+[node name="Pipe_28" parent="Pipes" instance=ExtResource("15_pipe")]
+position = Vector2(464, 192)
+
+[node name="Pipe_38" parent="Pipes" instance=ExtResource("15_pipe")]
+position = Vector2(624, 192)
+pipe_height = 3
+
+[node name="Pipe_46" parent="Pipes" instance=ExtResource("15_pipe")]
+position = Vector2(752, 192)
+pipe_height = 4
+
+[node name="Pipe_57" parent="Pipes" instance=ExtResource("15_pipe")]
+position = Vector2(928, 192)
+pipe_height = 4
 
 [node name="Coins" type="Node2D" parent="." unique_id=1534874590]
 
@@ -169,11 +195,23 @@ position = Vector2(1536, 192)
 [node name="Goomba_96b" parent="Enemies" instance=ExtResource("10_goomba")]
 position = Vector2(1568, 192)
 
+[node name="PiranhaPlant_38" parent="Enemies" instance=ExtResource("18_piranha")]
+position = Vector2(624, 144)
+
+[node name="PiranhaPlant_46" parent="Enemies" instance=ExtResource("18_piranha")]
+position = Vector2(752, 128)
+
 [node name="Effects" type="Node2D" parent="."]
 script = ExtResource("13_effects")
 effects_config = ExtResource("14_fx_config")
 
 [node name="Interactables" type="Node2D" parent="." unique_id=309133980]
+
+[node name="Flagpole" parent="Interactables" instance=ExtResource("16_flagpole")]
+position = Vector2(3208, 192)
+
+[node name="Castle" parent="Interactables" instance=ExtResource("17_castle")]
+position = Vector2(3304, 192)
 
 [node name="KillZone" type="Area2D" parent="." unique_id=1523659361]
 position = Vector2(1696, 256)
@@ -193,6 +231,12 @@ shape = SubResource("RectangleShape2D_bounds")
 position = Vector2(48, 192)
 
 [node name="HUD" parent="." unique_id=1262654791 instance=ExtResource("5_hud")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("19_pause")]
+
+[node name="GameOver" parent="." instance=ExtResource("20_gameover")]
+
+[node name="LevelComplete" parent="." instance=ExtResource("21_complete")]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=916214624]
 environment = SubResource("Environment_bloom")

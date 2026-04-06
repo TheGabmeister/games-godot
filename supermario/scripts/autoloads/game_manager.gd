@@ -45,6 +45,17 @@ func start_new_game() -> void:
 	_start_level_timer()
 
 
+func reset_for_title() -> void:
+	score = 0
+	coins = 0
+	lives = 3
+	current_world = 1
+	current_level = 1
+	current_power_state = PowerState.SMALL
+	_timer_active = false
+	game_state = GameState.TITLE
+
+
 func add_score(points: int, position: Vector2 = Vector2.ZERO) -> void:
 	score += points
 	EventBus.score_awarded.emit(points, position)

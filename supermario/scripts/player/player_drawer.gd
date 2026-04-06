@@ -4,10 +4,12 @@ const P := preload("res://scripts/color_palette.gd")
 
 var power_state: int = 0  # GameManager.PowerState
 var is_crouching: bool = false
+var star_power_active: bool = false
 
 # Animation state
 var _walk_cycle: float = 0.0
 var _is_moving: bool = false
+var _star_cycle: float = 0.0
 
 
 func _process(delta: float) -> void:
@@ -18,6 +20,8 @@ func _process(delta: float) -> void:
 			_walk_cycle += absf(parent_body.velocity.x) * delta * 0.05
 		else:
 			_walk_cycle = 0.0
+	if star_power_active:
+		_star_cycle += delta * 8.0
 	queue_redraw()
 
 
@@ -117,6 +121,14 @@ func _draw_crouching_mario() -> void:
 
 
 func _hat_color() -> Color:
+	if star_power_active:
+		var idx := int(_star_cycle) % 4
+		match idx:
+			0: return P.STAR_YELLOW
+			1: return P.MARIO_RED
+			2: return Color(0.2, 0.8, 0.3)
+			3: return P.MARIO_FIRE_WHITE
+		return P.STAR_YELLOW
 	if power_state == 2:  # FIRE
 		return P.MARIO_FIRE_WHITE
 	return P.MARIO_RED

@@ -153,3 +153,4 @@ func _connect_signals() -> void:
 		play_sfx(&"game_over")
 	)
 	EventBus.one_up_earned.connect(func() -> void: play_sfx(&"1up"))
+	EventBus.flagpole_reached.connect(func(_h: float) -> void: play_sfx(&"flagpole"))

@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Resource" path="res://resources/config/player_movement_default.tres" id="10_movement"]
@@ -16,6 +16,8 @@
 [ext_resource type="Script" path="res://scripts/player/player_states/shrink_state.gd" id="13_shrink"]
 [ext_resource type="Script" path="res://scripts/effects/damage_flash.gd" id="14_flash"]
 [ext_resource type="Script" path="res://scripts/effects/motion_trail.gd" id="15_trail"]
+[ext_resource type="Script" path="res://scripts/player/player_states/pipe_enter_state.gd" id="17_pipe"]
+[ext_resource type="Script" path="res://scripts/player/player_states/flagpole_state.gd" id="18_flagpole"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
 size = Vector2(12, 14)
@@ -69,6 +71,12 @@ script = ExtResource("12_grow")
 
 [node name="ShrinkState" type="Node" parent="StateMachine"]
 script = ExtResource("13_shrink")
+
+[node name="PipeEnterState" type="Node" parent="StateMachine"]
+script = ExtResource("17_pipe")
+
+[node name="FlagpoleState" type="Node" parent="StateMachine"]
+script = ExtResource("18_flagpole")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true

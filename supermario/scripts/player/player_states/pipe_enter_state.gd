@@ -1,0 +1,80 @@
+extends "res://scripts/player/player_states/player_state.gd"
+
+var _pipe: Node2D
+var _target_pipe: Node2D
+var _phase: int = 0  # 0=slide_in, 1=fade, 2=slide_out, 3=done
+
+
+func enter() -> void:
+	_phase = 0
+	player.velocity = Vector2.ZERO
+	player.set_physics_process(false)
+
+	# Disable collision during pipe transition
+	player.collision_shape.set_deferred("disabled", true)
+	player.stomp_detector.set_deferred("monitoring", false)
+	player.hurtbox.set_deferred("monitoring", false)
+	player.hurtbox.set_deferred("monitorable", false)
+
+	# Drop z_index below pipe so Mario slides behind it
+	player.z_index = 0
+
+	AudioManager.play_sfx(&"pipe")
+
+	# Center on pipe and slide down
+	var entry_x: float = _pipe.global_position.x
+	player.global_position.x = entry_x
+
+	var slide_target := player.global_position + Vector2(0, 32)
+	var tween := player.create_tween()
+	tween.tween_property(player, "global_position", slide_target, 0.5)
+	tween.tween_callback(_start_fade)
+
+
+func exit() -> void:
+	player.z_index = 0
+	player.set_physics_process(true)
+	player.collision_shape.set_deferred("disabled", false)
+	player.stomp_detector.set_deferred("monitoring", true)
+	player.hurtbox.set_deferred("monitoring", true)
+	player.hurtbox.set_deferred("monitorable", true)
+
+
+func setup(pipe: Node2D, target: Node2D) -> void:
+	_pipe = pipe
+	_target_pipe = target
+
+
+func _start_fade() -> void:
+	_phase = 1
+	# Use SceneManager's fade
+	SceneManager._fade_rect.modulate.a = 0.0
+	var tween := player.create_tween()
+	tween.tween_property(SceneManager._fade_rect, "modulate:a", 1.0, 0.3)
+	tween.tween_callback(_reposition)
+
+
+func _reposition() -> void:
+	_phase = 2
+	# Move to target pipe exit
+	var exit_pos: Vector2
+	if _target_pipe.has_method("get_exit_position"):
+		exit_pos = _target_pipe.get_exit_position()
+	else:
+		exit_pos = _target_pipe.global_position + Vector2(0, -32)
+	player.global_position = exit_pos + Vector2(0, 32)
+
+	# Reset camera position to prevent jarring snap
+	player.camera.reset_smoothing()
+	player._max_camera_x = 0.0
+
+	# Fade in then slide out
+	var tween := player.create_tween()
+	tween.tween_property(SceneManager._fade_rect, "modulate:a", 0.0, 0.3)
+	tween.tween_property(player, "global_position", exit_pos, 0.5)
+	tween.tween_callback(_finish)
+
+
+func _finish() -> void:
+	_phase = 3
+	state_machine.transition_to(&"IdleState")

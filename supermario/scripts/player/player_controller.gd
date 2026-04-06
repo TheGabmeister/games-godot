@@ -1,6 +1,11 @@
 extends CharacterBody2D
 
 const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000]
+const FireballScene := preload("res://scenes/objects/fireball.tscn")
+
+const STAR_POWER_DURATION: float = 10.0
+const STAR_WARNING_TIME: float = 2.0
+const MAX_FIREBALLS: int = 2
 
 @export var movement: Resource  # PlayerMovementConfig
 @export var cam_config: Resource  # CameraConfig
@@ -15,6 +20,13 @@ var _is_crouching: bool = false
 var _is_invincible: bool = false
 var _invincibility_timer: float = 0.0
 var _stomp_combo: int = 0
+
+# Star power
+var _is_star_powered: bool = false
+var _star_timer: float = 0.0
+
+# Fireball tracking
+var _active_fireballs: int = 0
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var visuals: Node2D = $Visuals
@@ -66,14 +78,28 @@ func _process(delta: float) -> void:
 	if is_on_floor():
 		_stomp_combo = 0
 
-	# Invincibility flash
-	if _is_invincible:
+	# Invincibility flash (damage-based)
+	if _is_invincible and not _is_star_powered:
 		_invincibility_timer -= delta
 		if _invincibility_timer <= 0.0:
 			_is_invincible = false
 			modulate.a = 1.0
 		else:
 			modulate.a = 0.3 if fmod(_invincibility_timer, 0.15) < 0.075 else 1.0
+
+	# Star power
+	if _is_star_powered:
+		_star_timer -= delta
+		# Palette cycling
+		drawer.star_power_active = true
+		# Warning flashes in last 2 seconds
+		if _star_timer <= STAR_WARNING_TIME:
+			modulate.a = 0.5 if fmod(_star_timer, 0.2) < 0.1 else 1.0
+		if _star_timer <= 0.0:
+			_end_star_power()
+
+	# Fireball input (Fire Mario, run button, any normal gameplay state)
+	_check_fireball_input()
 
 
 func apply_gravity(delta: float) -> void:
@@ -157,6 +183,8 @@ func has_ceiling_clearance() -> bool:
 
 
 func die() -> void:
+	if _is_star_powered:
+		_end_star_power()
 	stomp_detector.set_deferred("monitoring", false)
 	hurtbox.set_deferred("monitoring", false)
 	hurtbox.set_deferred("monitorable", false)
@@ -165,6 +193,11 @@ func die() -> void:
 
 
 func power_up(item_type: StringName, _position: Vector2 = Vector2.ZERO) -> void:
+	if item_type == &"starman":
+		GameManager.add_score(1000, global_position)
+		_start_star_power()
+		return
+
 	var current := GameManager.current_power_state
 	var new_state: int = current
 	match item_type:
@@ -224,10 +257,18 @@ func _on_stomp_area_entered(area: Area2D) -> void:
 
 
 func _on_hurtbox_area_entered(area: Area2D) -> void:
-	if _is_invincible:
-		return
 	var enemy := area.get_parent()
 	if not is_instance_valid(enemy):
+		return
+	# Star power kills enemies on contact
+	if _is_star_powered:
+		if enemy.has_method("is_dangerous") and enemy.is_dangerous():
+			if enemy.has_method("non_stomp_kill"):
+				enemy.non_stomp_kill()
+			elif enemy.has_method("shell_kill"):
+				enemy.shell_kill()
+		return
+	if _is_invincible:
 		return
 	if velocity.y > 0.0 and global_position.y + 2.0 < enemy.global_position.y:
 		return
@@ -250,3 +291,72 @@ func _update_collision_shape() -> void:
 		shape.size = movement.big_collision
 		collision_shape.position.y = -movement.big_collision.y / 2.0
 	drawer.power_state = GameManager.current_power_state
+
+
+# --- Star Power ---
+
+func _start_star_power() -> void:
+	_is_star_powered = true
+	_is_invincible = true
+	_star_timer = STAR_POWER_DURATION
+	drawer.star_power_active = true
+	EventBus.player_star_power_started.emit()
+	AudioManager.play_music(&"star")
+
+
+func _end_star_power() -> void:
+	_is_star_powered = false
+	_star_timer = 0.0
+	modulate.a = 1.0
+	drawer.star_power_active = false
+	# Restore damage invincibility if not already expired
+	if _invincibility_timer <= 0.0:
+		_is_invincible = false
+	EventBus.player_star_power_ended.emit()
+	AudioManager.play_music(&"overworld")
+
+
+# --- Fireballs ---
+
+func _check_fireball_input() -> void:
+	if GameManager.current_power_state != GameManager.PowerState.FIRE:
+		return
+	if _active_fireballs >= MAX_FIREBALLS:
+		return
+	# Don't shoot during special states
+	var current_state_name: StringName = state_machine.current_state.name
+	if current_state_name in [&"DeathState", &"GrowState", &"ShrinkState", &"PipeEnterState", &"FlagpoleState"]:
+		return
+	if Input.is_action_just_pressed(&"run"):
+		_spawn_fireball()
+
+
+func _spawn_fireball() -> void:
+	var fireball := FireballScene.instantiate() as CharacterBody2D
+	var dir: float = signf(visuals.scale.x)
+	if dir == 0.0:
+		dir = 1.0
+	fireball.setup(dir)
+	get_parent().add_child(fireball)
+	fireball.global_position = global_position + Vector2(dir * 10.0, -10.0)
+	_active_fireballs += 1
+	fireball.tree_exited.connect(func() -> void: _active_fireballs -= 1)
+	AudioManager.play_sfx(&"fireball")
+
+
+# --- Pipe Entry ---
+
+func enter_pipe(pipe: Node2D, target: Node2D) -> void:
+	var pipe_state := state_machine.get_node(NodePath("PipeEnterState"))
+	if pipe_state and pipe_state.has_method("setup"):
+		pipe_state.setup(pipe, target)
+		state_machine.transition_to(&"PipeEnterState")
+
+
+# --- Flagpole ---
+
+func start_flagpole(flagpole: Node2D) -> void:
+	var fp_state := state_machine.get_node(NodePath("FlagpoleState"))
+	if fp_state and fp_state.has_method("setup"):
+		fp_state.setup(flagpole)
+		state_machine.transition_to(&"FlagpoleState")

@@ -13,12 +13,35 @@ const LEVEL_HEIGHT := 14  # tiles
 @onready var camera: Camera2D
 
 
+var _player_spawn: Vector2
+
+
 func _ready() -> void:
 	camera = player.get_node("Camera2D") as Camera2D
 	tilemap.tile_set = TerrainTileset.create_tileset()
 	_setup_camera()
 	_paint_terrain()
-	GameManager.start_new_game()
+	_player_spawn = player.global_position
+
+	EventBus.player_respawned.connect(_on_player_respawned)
+
+	# Show level intro then start
+	_start_level()
+
+
+func _start_level() -> void:
+	# Only reset full game state if coming from title; otherwise just restart timer
+	if GameManager.game_state == GameManager.GameState.TITLE:
+		GameManager.start_new_game()
+	else:
+		GameManager.current_power_state = GameManager.PowerState.SMALL
+		GameManager.set_game_state(GameManager.GameState.PLAYING)
+		GameManager._start_level_timer()
+	await SceneManager.show_level_intro(
+		GameManager.current_world,
+		GameManager.current_level,
+		GameManager.lives
+	)
 
 
 func _setup_camera() -> void:
@@ -78,3 +101,8 @@ func _paint_stairs() -> void:
 	for i in 8:
 		for row in range(ground_row - 1 - i, ground_row):
 			tilemap.set_cell(Vector2i(198 + i, row), 0, Vector2i(1, 0))
+
+
+func _on_player_respawned() -> void:
+	# Reload the level scene for a clean respawn
+	SceneManager.reload_current_scene()
