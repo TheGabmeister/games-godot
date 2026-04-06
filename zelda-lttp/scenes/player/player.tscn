@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://c8player001"]
+[gd_scene load_steps=14 format=3 uid="uid://c8player001"]
 
 [ext_resource type="Script" path="res://scenes/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scenes/player/player_body.gd" id="2_body"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://scenes/player/states/attack_state.gd" id="6_attack"]
 [ext_resource type="Script" path="res://scenes/player/states/knockback_state.gd" id="7_knockback"]
 [ext_resource type="Script" path="res://scenes/player/states/fall_state.gd" id="8_fall"]
+[ext_resource type="Script" path="res://scenes/player/states/dash_state.gd" id="9_dash"]
+[ext_resource type="Script" path="res://scenes/items/sword_hitbox.gd" id="10_sword"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(12, 14)
@@ -40,6 +42,7 @@ collision_layer = 4
 collision_mask = 3
 monitoring = true
 monitorable = false
+script = ExtResource("10_sword")
 
 [node name="SwordShape" type="CollisionShape2D" parent="SwordHitbox"]
 disabled = true
@@ -78,6 +81,9 @@ script = ExtResource("7_knockback")
 
 [node name="Fall" type="Node" parent="StateMachine"]
 script = ExtResource("8_fall")
+
+[node name="Dash" type="Node" parent="StateMachine"]
+script = ExtResource("9_dash")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 
