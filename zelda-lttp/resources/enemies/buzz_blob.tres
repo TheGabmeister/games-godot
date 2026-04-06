@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://resources/enemy_data.gd" id="1_ed"]
+[ext_resource type="Resource" path="res://resources/loot_tables/common_loot.tres" id="2_lt"]
 
 [resource]
 script = ExtResource("1_ed")
@@ -9,5 +10,6 @@ display_name = "Buzz Blob"
 max_health = 2
 contact_damage = 2
 knockback_resistance = 0.0
+drop_table = ExtResource("2_lt")
 color = Color(0.9, 0.85, 0.2, 1)
 damage_immunities = Array[int]([1])

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"magic_jar_small"
+display_name = "Small Magic Jar"
+description = "Restores some magic"
+item_type = 2
+icon_color = Color(0.3, 0.5, 0.9, 1)
+resource_key = &"magic"
+resource_amount = 16

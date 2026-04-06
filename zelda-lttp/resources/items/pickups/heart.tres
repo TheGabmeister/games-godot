@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"heart"
+display_name = "Heart"
+description = "Restores 1 heart"
+item_type = 2
+icon_color = Color(1, 0.2, 0.2, 1)
+resource_key = &"hearts"
+resource_amount = 2

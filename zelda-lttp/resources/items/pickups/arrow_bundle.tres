@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"arrow_bundle"
+display_name = "Arrows"
+description = "+5 Arrows"
+item_type = 2
+icon_color = Color(0.7, 0.5, 0.2, 1)
+resource_key = &"arrows"
+resource_amount = 5

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"rupee_blue"
+display_name = "Blue Rupee"
+description = "+5 Rupees"
+item_type = 2
+icon_color = Color(0.2, 0.4, 0.9, 1)
+resource_key = &"rupees"
+resource_amount = 5

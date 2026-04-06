@@ -1,5 +1,7 @@
 class_name LootDropComponent extends Node
 
+const PICKUP_SCENE := preload("res://scenes/pickups/pickup.tscn")
+
 
 func drop(pos: Vector2) -> void:
 	var parent := get_parent()
@@ -10,5 +12,14 @@ func drop(pos: Vector2) -> void:
 		return
 	var item: ItemData = table.roll()
 	if item:
-		# TODO: Phase 2.7 — spawn actual pickup scene
-		print("[LootDrop] Would drop: %s at %s" % [item.display_name, pos])
+		_spawn_pickup(pos, item)
+
+
+func _spawn_pickup(pos: Vector2, item: ItemData) -> void:
+	var pickup: Pickup = PICKUP_SCENE.instantiate()
+	pickup.item = item
+	pickup.global_position = pos
+	# Add to the same parent as the enemy (Entities node)
+	var spawn_parent := get_parent().get_parent()
+	if spawn_parent:
+		spawn_parent.add_child(pickup)
