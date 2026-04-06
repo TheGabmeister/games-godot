@@ -49,7 +49,10 @@ func _ready() -> void:
 
 
 func play_sfx(sound_name: StringName, position: Vector2 = Vector2.ZERO) -> void:
-	var path := _sfx_registry.get(sound_name, "") as String
+	if not _sfx_registry.has(sound_name):
+		push_warning("AudioManager: unknown SFX key '%s'" % sound_name)
+		return
+	var path := _sfx_registry[sound_name] as String
 	if path.is_empty():
 		return
 	var stream := load(path) as AudioStream
@@ -71,9 +74,11 @@ func play_sfx(sound_name: StringName, position: Vector2 = Vector2.ZERO) -> void:
 func play_music(music_name: StringName) -> void:
 	if music_name == _current_music_name:
 		return
-	var path := _music_registry.get(music_name, "") as String
+	if not _music_registry.has(music_name):
+		push_warning("AudioManager: unknown music key '%s'" % music_name)
+		return
+	var path := _music_registry[music_name] as String
 	if path.is_empty():
-		stop_music()
 		return
 	var stream := load(path) as AudioStream
 	if stream == null:
