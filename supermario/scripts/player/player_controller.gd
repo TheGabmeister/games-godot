@@ -174,6 +174,9 @@ func has_ceiling_clearance() -> bool:
 
 
 func die() -> void:
+	stomp_detector.set_deferred("monitoring", false)
+	hurtbox.set_deferred("monitoring", false)
+	hurtbox.set_deferred("monitorable", false)
 	state_machine.transition_to(&"DeathState")
 	EventBus.player_died.emit()
 
