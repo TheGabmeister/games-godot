@@ -21,6 +21,21 @@ func _process(delta: float) -> void:
 
 
 func _on_area_entered(area: Area2D) -> void:
+	# Check for environmental hazards first — pits always trigger regardless of i-frames
+	if area.has_meta("damage"):
+		var dmg_type: int = area.get_meta("damage_type") if area.has_meta("damage_type") else DamageType.Type.CONTACT
+		if dmg_type in DamageType.ENVIRONMENTAL_TYPES:
+			var data := {
+				"damage": area.get_meta("damage") as int,
+				"damage_type": dmg_type,
+				"knockback_force": area.get_meta("knockback_force") if area.has_meta("knockback_force") else 120.0,
+				"effect": DamageType.HitEffect.NONE,
+				"source_team": &"environment",
+				"source_position": area.global_position,
+			}
+			hurt.emit(data)
+			return
+
 	if is_invincible:
 		return
 
@@ -33,7 +48,7 @@ func _on_area_entered(area: Area2D) -> void:
 		_start_invincibility()
 		hurt.emit(data)
 	elif area.has_meta("damage"):
-		# Fallback for simple hazard areas (pits, spikes)
+		# Non-environmental hazards with metadata (still respect i-frames)
 		var data := {
 			"damage": area.get_meta("damage") as int,
 			"damage_type": area.get_meta("damage_type") if area.has_meta("damage_type") else DamageType.Type.CONTACT,
