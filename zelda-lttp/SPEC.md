@@ -93,12 +93,17 @@ res://
 |   |   |   |-- item_use_state.gd
 |   |   |   |-- item_get_state.gd
 |   |   |   |-- cutscene_state.gd
-|   |   |   `-- swim_state.gd
+|   |   |   |-- swim_state.gd
+|   |   |   |-- lift_state.gd         # Phase 7.4
+|   |   |   |-- carry_state.gd        # Phase 7.4
+|   |   |   |-- throw_state.gd        # Phase 7.4
+|   |   |   `-- trapped_state.gd      # Phase 8.3 (Like-Like engulf)
 |   |   `-- components/
 |   |       `-- shield_component.tscn/.gd
 |   |-- enemies/
 |   |   |-- base_enemy.gd          # Script base class only, no base .tscn
 |   |   |-- base_enemy_state.gd    # Base BaseEnemyState class
+|   |   |-- stunned_state.gd       # Shared across all enemy types (immobile, blue tint, timer)
 |   |   |-- soldier/
 |   |   |   |-- soldier.tscn/.gd
 |   |   |   `-- states/            # States unique to this enemy
@@ -377,7 +382,7 @@ Each room scene should have a companion `RoomData` resource or exported fields o
 - `music_track: StringName`
 - `ambient_color: Color`
 - `is_dark_room: bool`
-- `neighbor_paths: Dictionary` keyed by `up`, `down`, `left`, `right`
+- `neighbor_ids: Dictionary` keyed by `up`, `down`, `left`, `right` — values are `room_id` StringNames, not scene paths
 
 This keeps transitions, music, save flags, and debug reporting consistent.
 
@@ -408,7 +413,7 @@ All damage values are in **half-heart units** (1 unit = half heart, 2 units = fu
 
 **Step 1 — Shield check** (before any damage is applied):
 - If the hit is a projectile, it came from the front, and it hit the `ShieldArea`:
-  - Check `projectile_class` against shield tier blocking table (see section 3.4)
+  - Check `projectile_class` against shield tier blocking table (see section 3.7)
   - If blockable: deflect (tier 1–2, projectile vanishes) or reflect (tier 3, projectile reverses). **No damage taken. Skip all remaining steps.**
   - If not blockable: proceed to Step 2.
 - Non-projectile damage (CONTACT, SWORD, SPIKE, PIT) is never blocked by shield.
@@ -591,6 +596,7 @@ Node layout:
   - `World` (`Node2D`)
   - `HUDLayer` (`CanvasLayer`, layer 10)
   - `DialogLayer` (`CanvasLayer`, layer 15)
+  - `PostProcessLayer` (`CanvasLayer`, layer 19) — `ColorRect` child with `post_process.gdshader` for bloom/color-grade
   - `TransitionOverlay` (`CanvasLayer`, layer 20)
   - `PauseLayer` (`CanvasLayer`, layer 25, `process_mode = ALWAYS`)
   - `DebugLayer` (`CanvasLayer`, optional, editor/debug only)
@@ -626,7 +632,7 @@ Pure signal hub. Initial signals:
 - `dialog_requested(lines)`
 - `dialog_closed()` — emitted when dialog box dismisses (used by cutscene system to await completion)
 - `screen_shake_requested(intensity, duration)`
-- `cutscene_started()` / `cutscene_finished()` — emitted by Cutscene autoload (see section 6.3)
+- *(cutscene lifecycle signals live on the `Cutscene` autoload itself — `Cutscene.cutscene_started` / `Cutscene.cutscene_finished` — not on EventBus; see section 6.3)*
 
 **GameManager**
 
@@ -636,7 +642,8 @@ Owns run-level state:
 - Current dungeon id and room id
 - Global flags dictionary
 - Pause state
-- Last safe player position
+- Last safe player position (`last_safe_position: Vector2`)
+- Last safe room id (`last_safe_room_id: StringName`) — updated whenever the player enters a dungeon entrance room or a designated overworld safe room
 - Current save slot
 
 Public methods:
@@ -676,6 +683,13 @@ Owns:
 - Reparenting the persistent player into the new room
 - Applying room camera limits
 - Starting room music from room metadata
+
+**Spawn authority:**
+
+- Every room scene has a `PlayerSpawn` `Marker2D` that marks the default entry position. `SceneManager` places the player at the matching entry-point marker when loading a room.
+- **New Game**: always loads `room_id = &"start_house"` (Link's house intro room) and places the player at `PlayerSpawn`.
+- **Continue (save load)**: `SaveManager.load_game()` restores the serialized `current_room_id` and `player_position` directly — no marker lookup needed since the exact position is saved.
+- **Respawn after death**: `SceneManager` loads `GameManager.last_safe_room_id` and places the player at `PlayerSpawn`. `GameManager` updates `last_safe_room_id` whenever the player passes through a dungeon entrance room (`@export var is_safe_respawn_point: bool` on the room script) or uses a save point.
 
 Implementation notes:
 
@@ -1351,8 +1365,8 @@ Each `ItemData` instance is authored as a `.tres` file under `res://resources/it
 
 **Verification:**
 - Create three test `.tres` files (one SKILL, one UPGRADE, one RESOURCE). Each loads cleanly in the editor and at runtime.
-- `item_type` switches correctly in the inspector — SKILL items show `use_script` field, UPGRADE shows `upgrade_key`, RESOURCE shows `resource_key`.
-- `ItemRegistry.get(test_item.id)` returns the same `ItemData` instance after a project reload — confirms scan-at-boot picks up the new file.
+- `item_type` switches correctly in the inspector — SKILL items show `use_script` field, UPGRADE shows `upgrade_key`, RESOURCE shows `resource_key`. This requires `item_data.gd` to be a `@tool` script and implement `_validate_property(property)` to call `property.usage = PROPERTY_USAGE_NO_EDITOR` on fields that don't apply to the current `item_type`.
+- `ItemRegistry.get(test_item.id)` returns a valid `ItemData` with matching `id` after a project reload — confirms scan-at-boot picks up the new file. (Object identity across reloads is not a meaningful guarantee; equality is confirmed by matching `id`.)
 - Moving a test `.tres` to a subdirectory and reloading the project: `ItemRegistry.get(id)` still returns the item (path-independent lookup).
 
 ### 3.2 Acquisition Presentation
@@ -1408,12 +1422,17 @@ For the "Yes" cases, the source emits `EventBus.item_get_requested` and the play
 3. Emit `EventBus.item_acquired(item.id)`
 
 **RESOURCE path:**
-1. Add `item.resource_amount` to the counter keyed by `item.resource_key`: rupees, arrows, bombs, heart pieces, small keys (scoped per dungeon), etc.
+1. Branch on `item.resource_key`:
+   - `"big_key"`, `"map"`, `"compass"`: call `GameManager.set_flag(&"%s/has_%s" % [GameManager.current_dungeon_id, item.resource_key], true)`. No PlayerState counter is incremented. Requires `GameManager.current_dungeon_id` to be set (always true when inside a dungeon room).
+   - `"small_key"`: call `add_small_key(GameManager.current_dungeon_id, item.resource_amount)`. Dungeon context is read from `GameManager` at acquisition time, not stored on `ItemData`.
+   - All other keys (rupees, arrows, bombs, heart pieces, magic, etc.): add `item.resource_amount` to the counter keyed by `item.resource_key`.
 2. Heart pieces: if count reaches 4, reset to 0 and increase `max_health` by 2 (1 full heart)
 3. Clamp to max capacity (e.g., max 999 rupees, max ammo based on quiver/bomb-bag upgrade tier)
 4. Emit the relevant EventBus signal (e.g., `player_rupees_changed`, `player_health_changed`)
 
-No GameManager flags are set for skill or upgrade ownership. `PlayerState` is the single source of truth for everything on the character sheet. Rooms/NPCs that need to check skill ownership call `PlayerState.has_skill()`; to check stat tiers, `PlayerState.get_upgrade()`. Per-dungeon booleans (big key, map, compass, pendants, crystals) are `GameManager` flags instead, queried with `GameManager.get_flag(&"dungeon_02/has_big_key")` etc.
+No GameManager flags are set for skill or upgrade ownership. `PlayerState` is the single source of truth for everything on the character sheet.
+
+**Monotonicity and forced downgrades:** The `acquire()` path is monotonic — upgrades only ever go up via `max(current, tier)`. This guarantee applies to acquisition only. Gameplay effects (Like-Like engulf timeout, future curses) may directly reduce a tier via `reduce_upgrade(key, amount)`. This is a separate code path, not a bypass of `acquire()` — see `reduce_upgrade()` in the public API below. Rooms/NPCs that need to check skill ownership call `PlayerState.has_skill()`; to check stat tiers, `PlayerState.get_upgrade()`. Per-dungeon booleans (big key, map, compass, pendants, crystals) are `GameManager` flags instead, queried with `GameManager.get_flag(&"dungeon_02/has_big_key")` etc.
 
 ```gdscript
 # PlayerState public methods:
@@ -1431,6 +1450,7 @@ func get_owned_skills() -> Dictionary           # id → ItemData
 # Upgrades — the player script uses these to gate abilities
 func get_upgrade(key: StringName) -> int        # 0 if not owned
 func has_upgrade(key: StringName) -> bool       # shorthand for get_upgrade() > 0
+func reduce_upgrade(key: StringName, amount: int = 1) -> void  # clamps to 0; used by Like-Like and similar effects
 
 # Resources
 func apply_damage(amount: int) -> void          # mutates current_health, emits player_health_changed
@@ -1682,9 +1702,11 @@ Initial content target:
 
 - Trigger method: walk-in or `interact`, depending on door type
 - Exported fields:
-  - `target_scene`
-  - `target_entry_point`
-  - `transition_style`
+  - `target_room_id: StringName` — stable room identifier, never a raw scene path
+  - `target_entry_point: StringName`
+  - `transition_style: StringName`
+
+`Door` emits `EventBus.room_transition_requested(target_room_id, target_entry_point)`. `SceneManager` is the canonical resolver: it maintains a `room_registry: Dictionary[StringName, String]` (room_id → scene path) built by scanning all `RoomData` resources at startup. All transitions — scroll-edge, door, and warp — go through `room_id`; never hardcode scene paths in gameplay code.
 
 Transition styles:
 
@@ -2053,6 +2075,13 @@ Minimum title screen features:
 - Options placeholder
 - Animated background treatment
 
+**Slot-select screen** (shared by New Game and Continue):
+
+- Displays 3 slots vertically. Each slot shows: play time, heart count, last save timestamp, or "Empty" if unused.
+- **New Game**: selecting an occupied slot prompts "Overwrite? Yes / No" before clearing it. Selecting an empty slot starts immediately.
+- **Continue**: selecting an occupied slot loads it. Empty slots are grayed out and unselectable. Each occupied slot has a secondary "Delete" option (e.g., hold interact or a dedicated button) that prompts "Delete save? Yes / No" before calling `SaveManager.delete_save(slot)`.
+- After slot select, the screen transitions out and gameplay begins (New Game) or restores (Continue).
+
 `Continue` should be disabled or hidden when no save file exists. Because the Save and Load system (6.6) lands after the Title Screen in Phase 6, the Title Screen is built first with `Continue` disabled unconditionally, and is wired to the `SaveManager` API in 6.6 once that lands. This ordering keeps the Title Screen implementable against stable `SaveManager` stub methods from Phase 1 and lets both systems be verified end-to-end together in 6.6.
 
 **Verification:**
@@ -2110,7 +2139,7 @@ Concretely, `PlayerState.serialize()` produces something like:
   "current_health": 8,
   "max_health": 12,
   "current_magic": 16,
-  "max_magic": 32,
+  "max_magic": 128,
   "heart_pieces": 2,
   "rupees": 145,
   "arrows": 20,
@@ -2226,7 +2255,7 @@ NPC scene expectations:
 
 ### 7.4 Destructible Objects and Baseline Lifting
 
-Phase 7 introduces the destructibles the player can interact with in the overworld and dungeons, along with the baseline lift/carry/throw system that lets Link pick up light objects bare-handed — matching ALTTP, where pots, signs, and small bushes are liftable from the start of the game. The `gloves` upgrade (Phase 8.2) extends the weight cap but is **not** required for any of the baseline behavior below.
+Phase 7 introduces the destructibles the player can interact with in the overworld and dungeons, along with the baseline lift/carry/throw system that lets Link pick up light objects bare-handed — matching ALTTP, where pots, signs, and small bushes are liftable from the start of the game. The `gloves` upgrade (Phase 8.1) extends the weight cap but is **not** required for any of the baseline behavior below.
 
 **Object weight categories:**
 
@@ -2238,7 +2267,7 @@ Each destructible/liftable declares an `@export var weight: int` matching the `g
 | 1 (MEDIUM) | Skull rocks, light grey stones | 1 — Power Glove |
 | 2 (HEAVY) | Dark boulders, large statues | 2 — Titan's Mitt |
 
-Phase 7 ships weight-0 objects only. Weight-1 and weight-2 objects can be authored in Phase 7 but will be un-liftable until Phase 8.2 grants gloves; design-wise, place them as future-gated obstacles.
+Phase 7 ships weight-0 objects only. Weight-1 and weight-2 objects can be authored in Phase 7 but will be un-liftable until Phase 8.1 grants gloves; design-wise, place them as future-gated obstacles.
 
 **Baseline lift/carry/throw flow** (`LiftState` → `CarryState` → `ThrowState`):
 
@@ -2372,7 +2401,7 @@ LikeLike (CharacterBody2D, script: like_like.gd extends BaseEnemy)
         └── Stunned
 ```
 
-On Engulf: player's state machine is forced into a special trapped state. If engulf duration expires before escape, shield tier drops by 1.
+On Engulf: player's state machine is forced into a special trapped state (`TrappedState`). If engulf duration expires before escape, calls `PlayerState.reduce_upgrade(&"shield", 1)` — this is one of the few cases where an upgrade tier decreases (see section 3.3 monotonicity note).
 
 > **Note**: Moldorm (Dungeon 3 mini-boss) was previously listed here because it shares the "chain of segments" architectural flavor with advanced enemies, but it is a boss — its construction, phase behavior, and encounter flow are covered in Phase 9 (section 9.3). Phase 8.3 is strictly regular advanced enemies.
 
