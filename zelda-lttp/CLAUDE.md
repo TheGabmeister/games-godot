@@ -4,13 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Godot 4.6 recreation of Zelda: A Link to the Past mechanics using primitive shapes (no sprites). GDScript only. The game is 2D at 256×224 logical resolution on a 16×16 tile grid, rendered with Forward Plus.
+Godot 4.6 recreation of Zelda: A Link to the Past mechanics using primitive shapes (no sprites). GDScript only. The game is 2D at 256x224 logical resolution on a 16x16 tile grid, rendered with Forward Plus.
+
+No original Nintendo sprites, tiles, or audio assets. All visuals use `_draw()`, `Polygon2D`, shaders, particles, and `PointLight2D`.
 
 ## Key Files
 
 - **SPEC.md** — primary source of truth. Read the relevant section before making changes.
 - **AGENTS.md** — architecture guardrails and non-negotiable rules.
 - **project.godot** — engine configuration (4.6, Forward Plus, d3d12).
+
+If implementation pressure conflicts with the spec, favor the spec and document any deliberate deviation.
 
 ## Running the Project
 
@@ -28,52 +32,84 @@ Editor path: `d:\Godot_v4.6.2-stable_win64.exe`
 
 ## Testing
 
-Every subphase in SPEC.md has a **Verification** block with concrete checks. A subphase is not done until its Verification passes — the end-of-phase deliverable is not the only gate.
+Every subphase in SPEC.md has a **Verification** block with concrete checks. A subphase is not done until its Verification passes.
 
 Three verification types:
-1. **Unit tests** — GUT framework (`res://tests/unit/`) for pure logic: damage formula, `PlayerState` acquisition (`acquire()` branches for SKILL / UPGRADE / RESOURCE), loot tables, save serialization.
-2. **Debug scene checks** — load `debug/debug_room.tscn` or a dedicated `tests/scenes/*.tscn` and verify behavior manually against the Verification checklist.
+1. **Unit tests** — GUT framework (`res://tests/unit/`) for pure logic: damage formula, `PlayerState` acquisition, loot tables, save serialization.
+2. **Debug scene checks** — load `debug/debug_room.tscn` or a dedicated `tests/scenes/*.tscn` and verify behavior manually.
 3. **Headless smoke checks** — `godot --path . --headless --quit` after any change.
 
 ## Architecture
 
-The project follows a phase-based implementation plan (see SPEC.md). Each phase produces a playable build.
+The project follows a phase-based implementation plan (SPEC.md Phases 1-9). Each phase produces a playable build. If the repo doesn't yet support a feature's prerequisite phase, implement the prerequisite first or note the forward scaffolding.
 
 **Scene tree at runtime:**
 ```
 Main (Node)
-  ├── World (Node2D)           — SceneManager swaps room scenes here
-  ├── HUDLayer (CanvasLayer 10)
-  ├── DialogLayer (CanvasLayer 15)
-  ├── PostProcessLayer (CanvasLayer 19)
-  ├── TransitionOverlay (CanvasLayer 20)
-  └── PauseLayer (CanvasLayer 25, process_mode=ALWAYS)
+  +-- World (Node2D)              -- SceneManager swaps room scenes here
+  +-- HUDLayer (CanvasLayer 10)
+  +-- DialogLayer (CanvasLayer 15)
+  +-- PostProcessLayer (CanvasLayer 19) -- bloom/color-grade shader
+  +-- TransitionOverlay (CanvasLayer 20)
+  +-- PauseLayer (CanvasLayer 25, process_mode=ALWAYS)
 ```
 
-**Autoload order matters:** EventBus → GameManager → ItemRegistry → PlayerState → AudioManager → SceneManager → SaveManager → Cutscene (Phase 6+)
+**Autoload order matters:** EventBus -> GameManager -> ItemRegistry -> PlayerState -> AudioManager -> SceneManager -> SaveManager -> Cutscene (Phase 6+)
 
-`ItemRegistry` scans `res://resources/items/*.tres` at `_ready()` and builds a `Dictionary[StringName, ItemData]` keyed by each item's `id` field. It must register before `PlayerState` because `PlayerState.deserialize()` calls `ItemRegistry.get(id)` to rehydrate `owned_skills` from save files (only the id string is serialized, not the full `ItemData`).
+### Ownership Split: SceneManager vs GameManager
 
-**Player is persistent** — created once per run, reparented into each room's `Entities` node during transitions. Never duplicated or recreated.
+**SceneManager** owns all transient navigation state:
+- `current_room`, `current_room_data: RoomData`, `current_screen_coords`
+- `room_registry: Dictionary[StringName, String]` (room_id -> scene_path, built from RoomData scans at startup)
 
-**State machines** are generic (`components/state_machine.gd`). Player, enemies, and bosses all use the same StateMachine node with type-specific State subclasses. States are per-entity-type (not shared across enemy types, except StunnedState). Player states extend `BasePlayerState` (types `actor` as `Player`); enemy states extend `BaseEnemyState`. **Watch the naming collision**: `BasePlayerState` is the state-machine base class, `PlayerState` is the autoload holding the character sheet (health, skills, upgrades, resources). They are unrelated — do not conflate.
+**GameManager** owns persistent run-level state only:
+- Global flags dictionary, pause state, last_safe_room_id, last_safe_position, current save slot
+- Does NOT track current room/dungeon/world -- reads from `SceneManager.current_room_data` when needed
 
-**Enemies use composition, not scene inheritance.** There is no `base_enemy.tscn`. Each enemy is a standalone scene using `base_enemy.gd` as its script base class, including only the components it needs.
+Other autoloads (PlayerState, SaveManager) read `SceneManager.current_room_data` for dungeon_id, world_type, room_id.
+
+### Room System
+
+Every room must have a `RoomData` resource (`@export var room_data: RoomData` on `room.gd`). RoomData is the single source of truth for room metadata (room_id, scene_path, dungeon_id, world_type, music, neighbors). Rooms without a RoomData are undiscoverable by transitions. The room script's `dungeon_id` is a read-only property delegating to `room_data.dungeon_id` -- no separate export.
+
+All transitions use `room_id` StringNames, never raw scene paths. SceneManager resolves ids via its registry.
+
+### Player and State Machines
+
+**Player is persistent** -- created once per run, reparented into each room's `Entities` node during transitions. Never duplicated or recreated.
+
+**State machines** are generic (`components/state_machine.gd`). Player, enemies, and bosses all use the same StateMachine node with type-specific State subclasses. **Watch the naming collision**: `BasePlayerState` is the state-machine base class; `PlayerState` is the autoload holding the character sheet. They are unrelated.
+
+### Enemy and Boss Systems
+
+**Enemies use composition, not scene inheritance.** No `base_enemy.tscn`. Each enemy is a standalone scene using `base_enemy.gd` as its script base class. States are per-enemy-type (only `StunnedState` is shared).
 
 **Bosses are NOT enemies.** `base_boss.gd` extends `Node2D` (not `CharacterBody2D`). Each boss is a bespoke scene with its own state machine and sub-entities.
 
-**Items are not an inventory.** ALTTP has no slot capacity, trading, stacking, or storage. Everything the player can acquire falls into exactly one of three categories: **SKILL** (permanent ability unlock, equippable to the B button — Bow, Hookshot, Lamp, bombs-as-usable…), **UPGRADE** (monotonic stat tier — sword 1–4, armor 1–3, gloves 0–2, boots, flippers, moon_pearl, magic_halver), or **RESOURCE** (countable consumable — rupees, arrows, bombs-as-ammo, hearts, small keys, heart pieces, magic). `PlayerState.acquire(item)` is the single entry point; it branches on `item.item_type`. Only SKILL items live on as `ItemData` references (in `owned_skills`); UPGRADE and RESOURCE items are consumed at acquisition and only their effect is retained. Do not reach for RPG inventory metaphors when implementing new item-like features.
+### Item Acquisition Pipeline
 
-**Item effects** use `BaseItemEffect` (RefCounted) scripts cached by `PlayerState`. `ItemUseState` calls `effect.activate(player)` which spawns scenes (arrows, bombs, etc.) and returns a lock duration.
+Items are not an inventory. Three categories only: **SKILL** (equippable ability), **UPGRADE** (monotonic stat tier), **RESOURCE** (countable consumable). `PlayerState.acquire(item)` is the single entry point.
 
-**Persistence** uses `@export var persist_id: StringName` on entities and `@export var room_id: StringName` on rooms. Flag keys: `{room_id}/{persist_id}`. Never derive IDs from node names or scene paths.
+The RESOURCE path has special routing for dungeon-scoped items:
+- `big_key`/`map`/`compass` -> `GameManager.set_flag()` using `SceneManager.current_room_data.dungeon_id`
+- `small_key` -> `PlayerState.add_small_key()` with dungeon_id from SceneManager
+- All others -> increment PlayerState counters directly
+
+Upgrade acquisition is monotonic (`max(current, tier)`). Gameplay-driven downgrades (Like-Like) use the separate `reduce_upgrade()` method.
+
+Only SKILL items persist as `ItemData` references. UPGRADE and RESOURCE items are consumed at acquisition.
+
+### Persistence
+
+`@export var persist_id: StringName` on entities, `room_id` from `RoomData`. Flag keys: `{room_id}/{persist_id}`. Never derive IDs from node names or scene paths. Treat room IDs, item IDs, and flag keys as save-migration-sensitive.
 
 ## Conventions
 
-- Health unit = half heart. Starting health = 6 (3 hearts).
-- All visuals drawn via `_draw()`, `Polygon2D`, shaders, particles, `PointLight2D`. No sprite textures.
-- Audio system logs events when assets are missing. Adding audio = drop files at `res://audio/bgm/{name}.ogg` or `res://audio/sfx/{name}.ogg`.
+- Health unit = half heart. Starting health = 6 (3 hearts). Magic = 0-128 units (fixed max).
 - Physics layers: 1=World, 2=Player, 3=Enemies, 4=PlayerAttacks, 5=EnemyAttacks, 6=Interactables, 7=Hazards, 8=Triggers.
 - Rooms use `y_sort_enabled = true` on the `Entities` node.
-- JSON saves use basic types only. Convert `Vector2` to `[x, y]` arrays. Include `schema_version` in every save file.
+- JSON saves use basic types only. Convert `Vector2` to `[x, y]` arrays. Include `schema_version`.
 - Enemies respawn on room re-entry. Chests/blocks/switches persist via GameManager flags.
+- Audio: drop files at `res://audio/bgm/{name}.ogg` or `res://audio/sfx/{name}.ogg`. System logs when assets are missing.
+- Cutscene lifecycle signals live on the `Cutscene` autoload (not EventBus).
+- `ItemRegistry` lookup by stable id; never hardcode `.tres` paths in gameplay code.

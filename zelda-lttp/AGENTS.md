@@ -41,13 +41,15 @@ Follow these conventions from the spec unless the user asks to change them:
 - The player is a persistent scene instance created once per run and reparented into each room's `Entities` node during transitions.
 - The sword is always available.
 - There is one equipped skill slot on the action button, not two active item slots.
-- Every room script must expose `@export var room_id: StringName`.
+- Every room script must expose `@export var room_data: RoomData`; `RoomData` is the single source of truth for room metadata.
 - Persistent objects must expose `@export var persist_id: StringName`.
 - Persistence keys are built as `{room_id}/{persist_id}`.
 - Persistent entities should warn in `_get_configuration_warnings()` when `persist_id` is empty.
 - Save data must include a schema version.
 - Character-sheet state belongs on the `PlayerState` autoload.
 - World/story/per-dungeon boolean progression belongs in `GameManager` flags.
+- Transient navigation state belongs in `SceneManager`, not `GameManager`.
+- Room transitions should go through stable `room_id` values resolved by `SceneManager.room_registry`; do not hardcode room scene paths in gameplay code.
 - Item lookup by stable id belongs through `ItemRegistry`; do not hardcode `.tres` paths in gameplay code.
 - The player does not use a `HealthComponent`; enemy actors do.
 - New systems should fit the spec's directory structure unless there is a strong, documented reason not to.
@@ -79,6 +81,7 @@ If the user asks for a new feature and the repo does not yet support its prerequ
 - Keep scenes and scripts paired and organized by feature domain as described in `SPEC.md`.
 - Reuse shared components for health, hurtboxes, hitboxes, flashing, knockback, loot drops, and state machines instead of duplicating logic.
 - Use the current spec terminology consistently: `skills`, `upgrades`, and `resources`, not an RPG-style inventory model.
+- Keep `PlayerState` as a character-sheet facade, not a god object. If its logic grows, split internals into small helper/domain scripts while preserving `PlayerState` as the stable public entry point.
 - Enemy behavior is per-enemy-state driven; do not collapse all enemies into a single generic AI script.
 - Bosses are bespoke scenes that may share `base_boss.gd`, but they are not just regular enemies with more HP.
 
@@ -97,7 +100,7 @@ When creating content with save-state implications:
 
 - Always set stable exported IDs instead of deriving them from filenames or node names at runtime.
 - Avoid renaming persistent IDs casually; that can invalidate saves.
-- Treat room IDs, dungeon IDs, item IDs, and resource IDs as migration-sensitive.
+- Treat room IDs, `RoomData.scene_path`, dungeon IDs, item IDs, and resource IDs as migration-sensitive.
 - Treat `PlayerState` serialization shape and `GameManager` flag keys as migration-sensitive as well.
 - If you must change save-relevant structure, update the schema version and note the migration impact.
 

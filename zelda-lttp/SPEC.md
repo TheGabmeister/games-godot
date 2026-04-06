@@ -373,16 +373,23 @@ For fast-moving entities, draw a fading trail using `_draw()`:
 
 ### Room Metadata
 
-Each room scene should have a companion `RoomData` resource or exported fields on `room.gd` with:
+Every room scene must have a companion `RoomData` resource (`@export var room_data: RoomData` on `room.gd`). This is the single source of truth for room metadata — do not duplicate these fields as loose exports on the room script.
+
+`RoomData` fields:
 
 - `room_id: StringName`
+- `scene_path: String` — `res://` path to the room's `.tscn`, used by `SceneManager.room_registry`
 - `room_type: StringName` such as `overworld`, `cave`, `dungeon`
+- `dungeon_id: StringName` — matches `DungeonData.dungeon_id` for dungeon rooms, empty for overworld/cave/interior
 - `world_type: StringName` such as `light`, `dark`, `interior`
 - `screen_coords: Vector2i` for overworld screens when applicable
 - `music_track: StringName`
 - `ambient_color: Color`
 - `is_dark_room: bool`
+- `is_safe_respawn_point: bool` — dungeon entrance rooms and overworld save-point rooms set this to `true`
 - `neighbor_ids: Dictionary` keyed by `up`, `down`, `left`, `right` — values are `room_id` StringNames, not scene paths
+
+`SceneManager` scans all `RoomData` `.tres` files under `res://resources/room_data/` at startup to build its `room_registry: Dictionary[StringName, String]` (room_id → scene_path). A room without a `RoomData` resource is undiscoverable by transitions and will not load.
 
 This keeps transitions, music, save flags, and debug reporting consistent.
 
@@ -636,15 +643,15 @@ Pure signal hub. Initial signals:
 
 **GameManager**
 
-Owns run-level state:
+Owns persistent run-level state (saved/restored, not transient navigation):
 
-- Current world type
-- Current dungeon id and room id
 - Global flags dictionary
 - Pause state
 - Last safe player position (`last_safe_position: Vector2`)
-- Last safe room id (`last_safe_room_id: StringName`) — updated whenever the player enters a dungeon entrance room or a designated overworld safe room
+- Last safe room id (`last_safe_room_id: StringName`) — updated whenever the player enters a room whose `RoomData.is_safe_respawn_point` is `true`
 - Current save slot
+
+`GameManager` does **not** track current room, dungeon, or world type — that is transient navigation state owned by `SceneManager` (see below). `GameManager` reads from `SceneManager` when it needs those values (e.g., building flag keys, serializing save data).
 
 Public methods:
 
@@ -689,12 +696,20 @@ Owns:
 - Every room scene has a `PlayerSpawn` `Marker2D` that marks the default entry position. `SceneManager` places the player at the matching entry-point marker when loading a room.
 - **New Game**: always loads `room_id = &"start_house"` (Link's house intro room) and places the player at `PlayerSpawn`.
 - **Continue (save load)**: `SaveManager.load_game()` restores the serialized `current_room_id` and `player_position` directly — no marker lookup needed since the exact position is saved.
-- **Respawn after death**: `SceneManager` loads `GameManager.last_safe_room_id` and places the player at `PlayerSpawn`. `GameManager` updates `last_safe_room_id` whenever the player passes through a dungeon entrance room (`@export var is_safe_respawn_point: bool` on the room script) or uses a save point.
+- **Respawn after death**: `SceneManager` loads `GameManager.last_safe_room_id` and places the player at `PlayerSpawn`. `GameManager` updates `last_safe_room_id` whenever the player enters a room whose `RoomData.is_safe_respawn_point` is `true`, or uses a save point.
+
+**SceneManager is the single owner of transient navigation state:**
+
+- `current_room: Node` — the active room scene instance
+- `current_room_data: RoomData` — the active room's metadata (room_id, dungeon_id, world_type, etc.)
+- `current_screen_coords: Vector2i` — for overworld scroll tracking
+- `room_registry: Dictionary[StringName, String]` — room_id → scene_path, built at startup from `RoomData` scans
+
+Other autoloads that need the current dungeon_id, world_type, or room_id read them from `SceneManager.current_room_data`. For example, `PlayerState.acquire()` reads `SceneManager.current_room_data.dungeon_id` for dungeon-scoped items; `SaveManager.save_game()` serializes `SceneManager.current_room_data.room_id` and the player's position.
 
 Implementation notes:
 
 - Use `ResourceLoader.load_threaded_request()` for room preloading
-- Maintain `current_room`, `current_room_id`, and `current_screen_coords`
 - Provide a blocking fallback load path so the game still works if threaded loading is unavailable in a debug context
 
 **AudioManager**
@@ -1005,7 +1020,7 @@ Persistence:
 
 Dungeon scoping:
 
-- Every `Room` script also exposes `@export var dungeon_id: StringName`. For rooms inside a dungeon, this matches the owning `DungeonData.dungeon_id` (e.g., `&"dungeon_01"`). For overworld, interior, and cave rooms, the field is left empty (`&""`).
+- `dungeon_id` is authored on the room's `RoomData` resource (see "Room Metadata" in Shared Systems). The room script exposes it as a read-only property: `var dungeon_id: StringName: get = func(): return room_data.dungeon_id`. There is no separate `@export var dungeon_id` on the room script — `RoomData` is the single source.
 - Entities that need dungeon context — `LockedDoor`, `BossDoor`, anything that reads `PlayerState.dungeon_small_keys` or per-dungeon `GameManager` flags — read `dungeon_id` from their containing `Room` at `_ready()` time rather than declaring their own. This prevents a door from drifting out of sync with the dungeon it's placed in (e.g., a Dungeon 1 door copy-pasted into Dungeon 2 would automatically pick up the right dungeon_id from its new parent room).
 
 **Verification** (in `debug_room.tscn`):
@@ -1423,8 +1438,8 @@ For the "Yes" cases, the source emits `EventBus.item_get_requested` and the play
 
 **RESOURCE path:**
 1. Branch on `item.resource_key`:
-   - `"big_key"`, `"map"`, `"compass"`: call `GameManager.set_flag(&"%s/has_%s" % [GameManager.current_dungeon_id, item.resource_key], true)`. No PlayerState counter is incremented. Requires `GameManager.current_dungeon_id` to be set (always true when inside a dungeon room).
-   - `"small_key"`: call `add_small_key(GameManager.current_dungeon_id, item.resource_amount)`. Dungeon context is read from `GameManager` at acquisition time, not stored on `ItemData`.
+   - `"big_key"`, `"map"`, `"compass"`: call `GameManager.set_flag(&"%s/has_%s" % [SceneManager.current_room_data.dungeon_id, item.resource_key], true)`. No PlayerState counter is incremented. Requires the current room to have a non-empty `dungeon_id` (always true when inside a dungeon room).
+   - `"small_key"`: call `add_small_key(SceneManager.current_room_data.dungeon_id, item.resource_amount)`. Dungeon context is read from `SceneManager` at acquisition time, not stored on `ItemData`.
    - All other keys (rupees, arrows, bombs, heart pieces, magic, etc.): add `item.resource_amount` to the counter keyed by `item.resource_key`.
 2. Heart pieces: if count reaches 4, reset to 0 and increase `max_health` by 2 (1 full heart)
 3. Clamp to max capacity (e.g., max 999 rupees, max ammo based on quiver/bomb-bag upgrade tier)
