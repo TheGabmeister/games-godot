@@ -16,8 +16,9 @@ func enter() -> void:
 	player.hurtbox.set_deferred("monitoring", false)
 	player.hurtbox.set_deferred("monitorable", false)
 
-	# Drop z_index below pipe so Mario slides behind it
+	# Drop z_index below pipe (z=5) so Mario slides behind it
 	player.z_index = 0
+	player.z_as_relative = false
 
 	AudioManager.play_sfx(&"pipe")
 
@@ -32,7 +33,8 @@ func enter() -> void:
 
 
 func exit() -> void:
-	player.z_index = 0
+	player.z_index = 10
+	player.z_as_relative = false
 	player.set_physics_process(true)
 	player.collision_shape.set_deferred("disabled", false)
 	player.stomp_detector.set_deferred("monitoring", true)

@@ -30,18 +30,34 @@ func _ready() -> void:
 
 
 func _start_level() -> void:
-	# Only reset full game state if coming from title; otherwise just restart timer
-	if GameManager.game_state == GameManager.GameState.TITLE:
-		GameManager.start_new_game()
+	var is_new_game := GameManager.game_state == GameManager.GameState.TITLE
+
+	# Reset state but don't start timer yet — it should not run during intro
+	if is_new_game:
+		GameManager.score = 0
+		GameManager.coins = 0
+		GameManager.lives = 3
+		GameManager.current_world = 1
+		GameManager.current_level = 1
+		GameManager.current_power_state = GameManager.PowerState.SMALL
+		EventBus.score_changed.emit(GameManager.score)
+		EventBus.lives_changed.emit(GameManager.lives)
+		EventBus.coins_changed.emit(GameManager.coins)
 	else:
 		GameManager.current_power_state = GameManager.PowerState.SMALL
-		GameManager.set_game_state(GameManager.GameState.PLAYING)
-		GameManager._start_level_timer()
+
+	# Set to TRANSITIONING so the timer does NOT run during the intro overlay
+	GameManager.set_game_state(GameManager.GameState.TRANSITIONING)
+
 	await SceneManager.show_level_intro(
 		GameManager.current_world,
 		GameManager.current_level,
 		GameManager.lives
 	)
+
+	# Now start gameplay and the timer
+	GameManager.set_game_state(GameManager.GameState.PLAYING)
+	GameManager._start_level_timer()
 
 
 func _setup_camera() -> void:

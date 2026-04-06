@@ -4,11 +4,13 @@ const _timing := preload("res://resources/config/level_timing_default.tres")
 
 var _death_timer: float = 0.0
 var _has_bounced: bool = false
+var _life_lost: bool = false
 
 
 func enter() -> void:
 	_death_timer = 0.0
 	_has_bounced = false
+	_life_lost = false
 	player.velocity = Vector2.ZERO
 	player.set_physics_process(false)
 	player.set_collision_layer(0)
@@ -26,5 +28,6 @@ func process_frame(delta: float) -> void:
 		player.velocity.y += _timing.death_gravity * delta
 		player.global_position += player.velocity * delta
 
-	if _death_timer >= _timing.death_duration:
+	if _death_timer >= _timing.death_duration and not _life_lost:
+		_life_lost = true
 		GameManager.lose_life()

@@ -62,4 +62,5 @@ func process_frame(delta: float) -> void:
 			if player.global_position.x >= _target_x:
 				player.global_position.x = _target_x
 				player.visible = false
+				_phase = 3  # prevent re-entry
 				EventBus.level_completed.emit()

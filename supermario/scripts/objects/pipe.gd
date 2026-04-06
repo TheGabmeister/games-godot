@@ -9,6 +9,8 @@ var _player_on_top: bool = false
 var _player_ref: CharacterBody2D
 
 @onready var _warp_zone: Area2D = $WarpZone
+@onready var _col_shape: CollisionShape2D = $CollisionShape2D
+@onready var _warp_shape: CollisionShape2D = $WarpZone/WarpShape
 
 
 func _ready() -> void:
@@ -16,6 +18,15 @@ func _ready() -> void:
 	collision_mask = 0
 	z_index = 5
 	z_as_relative = false
+
+	# Resize collision to match actual pipe_height
+	var h: float = pipe_height * 16.0
+	var body_shape := _col_shape.shape as RectangleShape2D
+	body_shape.size = Vector2(32, h)
+	_col_shape.position = Vector2(0, -h / 2.0)
+
+	# Position warp zone on top of the pipe
+	_warp_shape.position = Vector2(0, -h - 4.0)
 
 	_warp_zone.body_entered.connect(_on_warp_zone_body_entered)
 	_warp_zone.body_exited.connect(_on_warp_zone_body_exited)

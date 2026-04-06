@@ -141,6 +141,7 @@ pipe_height = 4
 [node name="Pipe_57" parent="Pipes" instance=ExtResource("15_pipe")]
 position = Vector2(928, 192)
 pipe_height = 4
+warp_target = NodePath("../Pipe_28")
 
 [node name="Coins" type="Node2D" parent="." unique_id=1534874590]
 
