@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://c8debug001"]
+[gd_scene load_steps=8 format=3 uid="uid://c8debug001"]
 
 [ext_resource type="Script" path="res://debug/debug_room.gd" id="1_room"]
 [ext_resource type="Resource" path="res://resources/room_data/debug_room.tres" id="2_rd"]
@@ -11,6 +11,12 @@ size = Vector2(16, 224)
 
 [sub_resource type="RectangleShape2D" id="pit_shape"]
 size = Vector2(32, 32)
+
+[sub_resource type="RectangleShape2D" id="corridor_wall_h"]
+size = Vector2(64, 16)
+
+[sub_resource type="RectangleShape2D" id="corridor_wall_v"]
+size = Vector2(16, 48)
 
 [node name="DebugRoom" type="Node2D"]
 script = ExtResource("1_room")
@@ -94,7 +100,7 @@ offset_bottom = 112.0
 color = Color(0.3, 0.3, 0.35, 1)
 
 [node name="InnerWall" type="StaticBody2D" parent="Walls"]
-position = Vector2(64, 64)
+position = Vector2(64, 56)
 collision_layer = 1
 collision_mask = 0
 
@@ -108,10 +114,79 @@ offset_right = 16.0
 offset_bottom = 16.0
 color = Color(0.3, 0.3, 0.35, 1)
 
+[node name="CorridorLabel" type="Label" parent="Walls"]
+offset_left = 20.0
+offset_top = 136.0
+offset_right = 108.0
+offset_bottom = 148.0
+theme_override_font_sizes/font_size = 7
+text = "16px corridor test"
+horizontal_alignment = 1
+
+[node name="CorridorTop" type="StaticBody2D" parent="Walls"]
+position = Vector2(64, 152)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorTop"]
+shape = SubResource("corridor_wall_h")
+
+[node name="Visual" type="ColorRect" parent="Walls/CorridorTop"]
+offset_left = -32.0
+offset_top = -8.0
+offset_right = 32.0
+offset_bottom = 8.0
+color = Color(0.4, 0.3, 0.3, 1)
+
+[node name="CorridorBottom" type="StaticBody2D" parent="Walls"]
+position = Vector2(64, 184)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorBottom"]
+shape = SubResource("corridor_wall_h")
+
+[node name="Visual" type="ColorRect" parent="Walls/CorridorBottom"]
+offset_left = -32.0
+offset_top = -8.0
+offset_right = 32.0
+offset_bottom = 8.0
+color = Color(0.4, 0.3, 0.3, 1)
+
+[node name="CorridorRight" type="StaticBody2D" parent="Walls"]
+position = Vector2(168, 168)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorRight"]
+shape = SubResource("corridor_wall_v")
+
+[node name="Visual" type="ColorRect" parent="Walls/CorridorRight"]
+offset_left = -8.0
+offset_top = -24.0
+offset_right = 8.0
+offset_bottom = 24.0
+color = Color(0.4, 0.3, 0.3, 1)
+
+[node name="CorridorRightOpen" type="StaticBody2D" parent="Walls"]
+position = Vector2(200, 168)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Walls/CorridorRightOpen"]
+shape = SubResource("corridor_wall_v")
+
+[node name="Visual" type="ColorRect" parent="Walls/CorridorRightOpen"]
+offset_left = -8.0
+offset_top = -24.0
+offset_right = 8.0
+offset_bottom = 24.0
+color = Color(0.4, 0.3, 0.3, 1)
+
 [node name="Hazards" type="Node2D" parent="."]
 
 [node name="PitArea" type="Area2D" parent="Hazards"]
-position = Vector2(200, 60)
+position = Vector2(200, 56)
 collision_layer = 64
 collision_mask = 2
 
@@ -124,6 +199,15 @@ offset_top = -16.0
 offset_right = 16.0
 offset_bottom = 16.0
 color = Color(0.05, 0.05, 0.08, 1)
+
+[node name="PitLabel" type="Label" parent="Hazards"]
+offset_left = 184.0
+offset_top = 78.0
+offset_right = 220.0
+offset_bottom = 88.0
+theme_override_font_sizes/font_size = 7
+text = "Pit"
+horizontal_alignment = 1
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
 color = Color(1, 0.98, 0.9, 1)

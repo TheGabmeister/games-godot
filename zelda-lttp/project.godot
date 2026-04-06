@@ -32,7 +32,6 @@ window/size/viewport_height=224
 window/size/window_width_override=1024
 window/size/window_height_override=896
 window/stretch/mode="viewport"
-window/stretch/aspect="keep"
 
 [input]
 
@@ -127,4 +126,5 @@ pause={
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
