@@ -16,7 +16,10 @@
       "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --headless --path . --quit)",
       "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --headless --path . -s _test_ready_timing.gd)",
       "Bash(ls \"c:/dev/games-godot/supermario/_test_ready_timing\"*)",
-      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --headless --path . _test_ready_timing.tscn)"
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --headless --path . _test_ready_timing.tscn)",
+      "WebSearch",
+      "WebFetch(domain:support.claude.com)",
+      "WebFetch(domain:portkey.ai)"
     ]
   }
 }

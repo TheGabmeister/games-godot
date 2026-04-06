@@ -1,0 +1,43 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/koopa_shell.gd" id="1_shell"]
+[ext_resource type="Script" path="res://scripts/enemies/koopa_shell_drawer.gd" id="2_drawer"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
+size = Vector2(12, 12)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(14, 14)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_damage"]
+size = Vector2(16, 12)
+
+[node name="KoopaShell" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_shell")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
+shape = SubResource("RectangleShape2D_col")
+
+[node name="Visuals" type="Node2D" parent="."]
+
+[node name="Drawer" type="Node2D" parent="Visuals"]
+script = ExtResource("2_drawer")
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 0
+
+[node name="HitboxShape" type="CollisionShape2D" parent="Hitbox"]
+position = Vector2(0, -7)
+shape = SubResource("RectangleShape2D_hitbox")
+
+[node name="DamageArea" type="Area2D" parent="."]
+collision_layer = 128
+collision_mask = 16
+
+[node name="DamageShape" type="CollisionShape2D" parent="DamageArea"]
+position = Vector2(0, -6)
+shape = SubResource("RectangleShape2D_damage")

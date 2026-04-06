@@ -17,6 +17,9 @@ const JUMP_BUFFER_TIME  := 0.10
 
 const SMALL_COLLISION := Vector2(12.0, 14.0)
 const BIG_COLLISION   := Vector2(12.0, 28.0)
+const STOMP_BOUNCE_VELOCITY := -250.0
+const INVINCIBILITY_DURATION := 2.0
+const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000]
 
 var coyote_active: bool = false
 var jump_buffered: bool = false
@@ -24,12 +27,17 @@ var jump_buffered: bool = false
 var _coyote_timer: float = 0.0
 var _jump_buffer_timer: float = 0.0
 var _is_crouching: bool = false
+var _is_invincible: bool = false
+var _invincibility_timer: float = 0.0
+var _stomp_combo: int = 0
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var visuals: Node2D = $Visuals
 @onready var drawer: Node2D = $Visuals/PlayerDrawer
 @onready var state_machine: Node = $StateMachine
 @onready var camera: Camera2D = $Camera2D
+@onready var stomp_detector: Area2D = $StompDetector
+@onready var hurtbox: Area2D = $Hurtbox
 
 
 var _camera_look_ahead: float = 0.0
@@ -39,6 +47,8 @@ var _max_camera_x: float = 0.0
 func _ready() -> void:
 	add_to_group("player")
 	CameraEffects.register_camera(camera)
+	stomp_detector.area_entered.connect(_on_stomp_area_entered)
+	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
 
 
 func _process(delta: float) -> void:
@@ -64,6 +74,19 @@ func _process(delta: float) -> void:
 	if cam_left > _max_camera_x:
 		_max_camera_x = cam_left
 	camera.limit_left = int(_max_camera_x)
+
+	# Stomp combo resets on ground
+	if is_on_floor():
+		_stomp_combo = 0
+
+	# Invincibility flash
+	if _is_invincible:
+		_invincibility_timer -= delta
+		if _invincibility_timer <= 0.0:
+			_is_invincible = false
+			modulate.a = 1.0
+		else:
+			modulate.a = 0.3 if fmod(_invincibility_timer, 0.15) < 0.075 else 1.0
 
 
 func apply_gravity(delta: float) -> void:
@@ -178,6 +201,71 @@ func power_up(item_type: StringName, _position: Vector2 = Vector2.ZERO) -> void:
 	_update_collision_shape()
 	# Small upward nudge so the bigger collision shape doesn't clip into ground
 	global_position.y -= 1.0
+
+
+func take_damage() -> void:
+	if _is_invincible:
+		return
+	if GameManager.current_power_state == GameManager.PowerState.SMALL:
+		die()
+	else:
+		GameManager.set_power_state(GameManager.PowerState.SMALL)
+		_update_collision_shape()
+		_start_invincibility()
+
+
+func _start_invincibility() -> void:
+	_is_invincible = true
+	_invincibility_timer = INVINCIBILITY_DURATION
+
+
+func _on_stomp_area_entered(area: Area2D) -> void:
+	if velocity.y <= 0.0:
+		return
+	var enemy := area.get_parent()
+	if not is_instance_valid(enemy) or not enemy.has_method("stomp_kill"):
+		return
+	if enemy.has_method("is_dead") and enemy.is_dead():
+		return
+	var was_killed: bool = enemy.stomp_kill()
+	if was_killed:
+		# Award combo points
+		var points: int
+		if _stomp_combo < STOMP_COMBO_POINTS.size():
+			points = STOMP_COMBO_POINTS[_stomp_combo]
+		else:
+			points = 0
+			GameManager.lives += 1
+			EventBus.one_up_earned.emit()
+			EventBus.lives_changed.emit(GameManager.lives)
+		if points > 0:
+			GameManager.add_score(points, enemy.global_position)
+		_stomp_combo += 1
+	velocity.y = STOMP_BOUNCE_VELOCITY
+
+
+func _on_hurtbox_area_entered(area: Area2D) -> void:
+	if _is_invincible:
+		return
+	var enemy := area.get_parent()
+	if not is_instance_valid(enemy):
+		return
+	if enemy.has_method("is_dead") and enemy.is_dead():
+		return
+	# If moving downward and above the enemy, this is a stomp handled elsewhere
+	if velocity.y > 0.0 and global_position.y + 2.0 < enemy.global_position.y:
+		return
+	# Shell kick interaction
+	if enemy.has_method("try_kick"):
+		var kick_dir := signf(enemy.global_position.x - global_position.x)
+		if kick_dir == 0.0:
+			kick_dir = signf(visuals.scale.x)
+		if enemy.try_kick(kick_dir):
+			return
+	# Check if the enemy is actually dangerous
+	if enemy.has_method("is_dangerous") and not enemy.is_dangerous():
+		return
+	take_damage()
 
 
 func _update_collision_shape() -> void:

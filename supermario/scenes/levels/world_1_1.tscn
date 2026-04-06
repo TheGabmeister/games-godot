@@ -9,6 +9,9 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/brick_block.tscn" id="7_brick"]
 [ext_resource type="PackedScene" path="res://scenes/objects/coin.tscn" id="8_coin"]
 [ext_resource type="PackedScene" path="res://scenes/objects/hidden_block.tscn" id="9_hidden"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/goomba.tscn" id="10_goomba"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/koopa.tscn" id="11_koopa"]
+[ext_resource type="Script" path="res://scripts/level/enemy_spawner.gd" id="12_spawner"]
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
@@ -135,6 +138,34 @@ position = Vector2(1608, 136)
 position = Vector2(1624, 136)
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1496569193]
+script = ExtResource("12_spawner")
+
+[node name="Goomba_22" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(352, 192)
+
+[node name="Goomba_40" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(640, 192)
+
+[node name="Goomba_51a" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(816, 192)
+
+[node name="Goomba_51b" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(848, 192)
+
+[node name="Koopa_69" parent="Enemies" instance=ExtResource("11_koopa")]
+position = Vector2(1104, 192)
+
+[node name="Goomba_80" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(1280, 192)
+
+[node name="Goomba_88" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(1408, 192)
+
+[node name="Goomba_96a" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(1536, 192)
+
+[node name="Goomba_96b" parent="Enemies" instance=ExtResource("10_goomba")]
+position = Vector2(1568, 192)
 
 [node name="Interactables" type="Node2D" parent="." unique_id=309133980]
 
