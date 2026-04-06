@@ -1,9 +1,11 @@
-[gd_scene load_steps=11 format=3 uid="uid://c8debug001"]
+[gd_scene load_steps=13 format=3 uid="uid://c8debug001"]
 
 [ext_resource type="Script" path="res://debug/debug_room.gd" id="1_room"]
 [ext_resource type="Resource" path="res://resources/room_data/debug_room.tres" id="2_rd"]
 [ext_resource type="Script" path="res://components/hitbox_component.gd" id="3_hitbox"]
 [ext_resource type="Script" path="res://debug/pit_hazard.gd" id="4_pit"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/soldier/soldier.tscn" id="5_soldier"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/keese/keese.tscn" id="6_keese"]
 
 [sub_resource type="RectangleShape2D" id="wall_top"]
 size = Vector2(256, 16)
@@ -34,6 +36,12 @@ color = Color(0.35, 0.55, 0.3, 1)
 
 [node name="Entities" type="Node2D" parent="."]
 y_sort_enabled = true
+
+[node name="TestSoldier" parent="Entities" instance=ExtResource("5_soldier")]
+position = Vector2(160, 140)
+
+[node name="TestKeese" parent="Entities" instance=ExtResource("6_keese")]
+position = Vector2(100, 100)
 
 [node name="Transitions" type="Node2D" parent="."]
 

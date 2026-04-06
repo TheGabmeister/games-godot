@@ -41,10 +41,10 @@ shape = SubResource("RectangleShape2D_player")
 script = ExtResource("2_body")
 
 [node name="SwordHitbox" type="Area2D" parent="."]
-collision_layer = 4
-collision_mask = 3
-monitoring = true
-monitorable = false
+collision_layer = 8
+collision_mask = 0
+monitoring = false
+monitorable = true
 script = ExtResource("10_sword")
 
 [node name="SwordShape" type="CollisionShape2D" parent="SwordHitbox"]

@@ -30,6 +30,7 @@ func activate(direction: Vector2, damage: int) -> void:
 	set_meta("damage", _damage)
 	set_meta("damage_type", DamageType.Type.SWORD)
 	set_meta("source_direction", _direction)
+	set_meta("source_team", &"player")
 
 
 func deactivate() -> void:

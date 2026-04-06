@@ -49,12 +49,15 @@ func _on_area_entered(area: Area2D) -> void:
 		hurt.emit(data)
 	elif area.has_meta("damage"):
 		# Non-environmental hazards with metadata (still respect i-frames)
+		var source_team: StringName = area.get_meta("source_team") if area.has_meta("source_team") else &"environment"
+		if source_team == team:
+			return
 		var data := {
 			"damage": area.get_meta("damage") as int,
 			"damage_type": area.get_meta("damage_type") if area.has_meta("damage_type") else DamageType.Type.CONTACT,
 			"knockback_force": area.get_meta("knockback_force") if area.has_meta("knockback_force") else 120.0,
 			"effect": DamageType.HitEffect.NONE,
-			"source_team": &"environment",
+			"source_team": source_team,
 			"source_position": area.global_position,
 		}
 		_start_invincibility()

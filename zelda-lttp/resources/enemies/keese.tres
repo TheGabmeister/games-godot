@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_data.gd" id="1_ed"]
+
+[resource]
+script = ExtResource("1_ed")
+id = &"keese"
+display_name = "Keese"
+max_health = 1
+contact_damage = 2
+knockback_resistance = 0.0
+color = Color(0.6, 0.2, 0.7, 1)
+damage_immunities = Array[int]([])

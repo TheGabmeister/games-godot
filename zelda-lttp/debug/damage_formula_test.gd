@@ -11,6 +11,8 @@ func _ready() -> void:
 	_test_environmental_bypass()
 	_test_immunity()
 	_test_minimum_damage()
+	_test_enemy_data_load()
+	_test_enemy_data_immunities()
 
 	for r in _results:
 		print(r)
@@ -91,6 +93,46 @@ func _test_minimum_damage() -> void:
 
 	r = DamageFormula.calculate_damage(2, DamageType.Type.ARROW, 3)
 	_assert_eq(r.final_damage, 1, "Red Mail: 2 ARROW -> 1 (ceil(0.5) = 1)")
+
+
+func _test_enemy_data_load() -> void:
+	var paths := [
+		"res://resources/enemies/soldier.tres",
+		"res://resources/enemies/octorok.tres",
+		"res://resources/enemies/keese.tres",
+		"res://resources/enemies/stalfos.tres",
+		"res://resources/enemies/buzz_blob.tres",
+	]
+	for p in paths:
+		var res := load(p)
+		if res is EnemyData:
+			var ed: EnemyData = res
+			_assert_eq(ed.id != &"", true, "EnemyData '%s' has id" % p.get_file())
+			_assert_eq(ed.max_health > 0, true, "EnemyData '%s' has health" % p.get_file())
+		else:
+			_assert_eq(false, true, "EnemyData '%s' failed to load" % p.get_file())
+
+
+func _test_enemy_data_immunities() -> void:
+	var buzz: EnemyData = load("res://resources/enemies/buzz_blob.tres")
+	_assert_eq(buzz.damage_immunities.size() > 0, true, "Buzz Blob has immunities")
+	_assert_eq(DamageType.Type.SWORD in buzz.damage_immunities, true, "Buzz Blob immune to SWORD")
+
+	# DamageFormula rejects SWORD hits using Buzz Blob immunities
+	var r := DamageFormula.calculate_damage(4, DamageType.Type.SWORD, 0, buzz.damage_immunities)
+	_assert_eq(r.immune, true, "Buzz Blob: SWORD hit rejected")
+	_assert_eq(r.final_damage, 0, "Buzz Blob: SWORD does 0 damage")
+
+	# Non-immune type still deals damage
+	r = DamageFormula.calculate_damage(4, DamageType.Type.ARROW, 0, buzz.damage_immunities)
+	_assert_eq(r.immune, false, "Buzz Blob: ARROW not immune")
+	_assert_eq(r.final_damage, 4, "Buzz Blob: ARROW does 4 damage")
+
+	# Soldier has no immunities — SWORD works normally
+	var soldier: EnemyData = load("res://resources/enemies/soldier.tres")
+	r = DamageFormula.calculate_damage(4, DamageType.Type.SWORD, 0, soldier.damage_immunities)
+	_assert_eq(r.immune, false, "Soldier: SWORD not immune")
+	_assert_eq(r.final_damage, 4, "Soldier: SWORD does 4 damage")
 
 
 func _assert_eq(actual: Variant, expected: Variant, label: String) -> void:
