@@ -1,0 +1,56 @@
+[gd_scene load_steps=5 format=3 uid="uid://c8hud00001"]
+
+[ext_resource type="Script" path="res://scenes/ui/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scenes/ui/hearts_display.gd" id="2_hearts"]
+[ext_resource type="Script" path="res://scenes/ui/rupee_counter.gd" id="3_rupee"]
+[ext_resource type="Script" path="res://scenes/ui/item_slot.gd" id="4_slot"]
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="HeartsDisplay" type="Control" parent="."]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 104.0
+offset_bottom = 24.0
+mouse_filter = 2
+script = ExtResource("2_hearts")
+
+[node name="RupeeCounter" type="Control" parent="."]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 26.0
+offset_right = 54.0
+offset_bottom = 38.0
+mouse_filter = 2
+script = ExtResource("3_rupee")
+
+[node name="Label" type="Label" parent="RupeeCounter"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = -1.0
+offset_right = 50.0
+offset_bottom = 11.0
+theme_override_font_sizes/font_size = 8
+text = "0"
+
+[node name="ItemSlot" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -24.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = 24.0
+grow_horizontal = 0
+mouse_filter = 2
+script = ExtResource("4_slot")

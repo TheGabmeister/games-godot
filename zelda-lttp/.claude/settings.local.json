@@ -4,7 +4,11 @@
       "Bash(where godot:*)",
       "Bash(/d/Godot_v4.6.2-stable_win64.exe --path /c/dev/games-godot/flappy-bird)",
       "Bash(/d/Godot_v4.6.2-stable_win64.exe --path /c/dev/games-godot/flappy-bird --headless --quit)",
-      "Bash(grep -E \"\\\\.\\(gd|tscn|tres|png|jpg|svg|tres\\)$\")"
+      "Bash(grep -E \"\\\\.\\(gd|tscn|tres|png|jpg|svg|tres\\)$\")",
+      "Bash(godot --path . --headless --quit)",
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path . --headless --quit)",
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path . --headless --import)",
+      "Bash(timeout 5 \"d:/Godot_v4.6.2-stable_win64.exe\" --path . --scene res://scenes/main/main.tscn)"
     ]
   }
 }
