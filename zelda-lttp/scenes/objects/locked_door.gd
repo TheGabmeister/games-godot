@@ -2,8 +2,6 @@ class_name LockedDoor extends StaticBody2D
 ## Consumes one small key scoped to its containing room's dungeon_id.
 ## Once opened, persists via GameManager flag.
 
-@export var target_room_id: StringName = &""
-@export var target_entry_point: StringName = &""
 @export var persist_id: StringName = &""
 
 var _opened: bool = false

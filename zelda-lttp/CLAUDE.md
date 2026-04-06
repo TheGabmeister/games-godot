@@ -201,8 +201,8 @@ Screen-edge scroll transitions for overworld: player walks past screen boundary,
 
 ### Dungeon Elements (Phase 4.3)
 
-- **LockedDoor** (`scenes/objects/locked_door.gd`) — consumes one small key scoped to dungeon_id from parent Room. Persists via GameManager flag.
-- **BossDoor** (`scenes/objects/boss_door.gd`) — gates on big key (`GameManager.get_flag("{dungeon_id}/has_big_key")`). Does not consume.
+- **LockedDoor** (`scenes/objects/locked_door.gd`) — barrier that consumes one small key scoped to dungeon_id from parent Room. Becomes passable on unlock. Persists via GameManager flag. Not a teleporter — place a Door trigger behind it for room transitions.
+- **BossDoor** (`scenes/objects/boss_door.gd`) — barrier that gates on big key (`GameManager.get_flag("{dungeon_id}/has_big_key")`). Does not consume the key. Same pattern as LockedDoor: barrier only, pair with a Door for transitions.
 - **PushBlock** (`scenes/objects/push_block.gd`) — pushes 1 tile in facing direction. Persists position. Checks pressure plates after push.
 - **DungeonSwitch** (`scenes/objects/switch.gd`) — sword-activated toggle. Links to SwitchDoor nodes.
 - **PressurePlate** (`scenes/objects/pressure_plate.gd`) — activates with player/block weight. Optional sticky mode.

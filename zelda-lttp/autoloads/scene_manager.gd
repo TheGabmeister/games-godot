@@ -4,6 +4,7 @@ var current_room: Node = null
 var current_room_data: RoomData = null
 var current_screen_coords: Vector2i = Vector2i.ZERO
 var room_registry: Dictionary = {}  # StringName -> String (room_id -> scene_path)
+var _room_data_cache: Dictionary = {}  # StringName -> RoomData (room_id -> RoomData)
 
 var _world_node: Node2D = null
 var _player: CharacterBody2D = null
@@ -41,6 +42,7 @@ func _scan_room_data(path: String) -> void:
 				var rd: RoomData = res
 				if rd.room_id != &"":
 					room_registry[rd.room_id] = rd.scene_path
+					_room_data_cache[rd.room_id] = rd
 		file_name = dir.get_next()
 	dir.list_dir_end()
 
@@ -143,26 +145,40 @@ func scroll_to_room(room_id: StringName, direction: Vector2) -> void:
 		_world_node.add_child(_player)
 		_player.global_position = player_global_pos
 
-	# Disable camera smoothing during scroll and detach limits
+	# Detach camera from player so it holds still while rooms scroll past.
+	# Make it top_level so it ignores parent transforms, then tween nothing —
+	# it just sits at screen center (128, 112) as the world slides.
 	var cam: Camera2D = _player.get_node_or_null("Camera2D") if _player else null
 	var old_smoothing := false
 	if cam:
 		old_smoothing = cam.position_smoothing_enabled
 		cam.position_smoothing_enabled = false
-		# Remove limits so camera can scroll freely
+		cam.top_level = true
+		cam.global_position = Vector2(SCREEN_WIDTH * 0.5, SCREEN_HEIGHT * 0.5)
 		cam.limit_left = -100000
 		cam.limit_top = -100000
 		cam.limit_right = 100000
 		cam.limit_bottom = 100000
 
-	# Scroll: tween the world node position so both rooms slide
+	# Compute where the player should end up in the NEW room's local coordinates.
+	var player_pos := _player.global_position
+	var final_pos_in_new_room := Vector2.ZERO
+	if direction == Vector2.RIGHT:
+		final_pos_in_new_room = Vector2(AUTO_WALK_DISTANCE, player_pos.y)
+	elif direction == Vector2.LEFT:
+		final_pos_in_new_room = Vector2(SCREEN_WIDTH - AUTO_WALK_DISTANCE, player_pos.y)
+	elif direction == Vector2.DOWN:
+		final_pos_in_new_room = Vector2(player_pos.x, AUTO_WALK_DISTANCE)
+	elif direction == Vector2.UP:
+		final_pos_in_new_room = Vector2(player_pos.x, SCREEN_HEIGHT - AUTO_WALK_DISTANCE)
+
+	# Tween: slide the world so the new room ends at the origin, walk the player into it.
+	var player_target_local := final_pos_in_new_room + offset
 	var scroll_offset := -offset
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(_world_node, "position", scroll_offset, SCROLL_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	# Auto-walk player a short distance into the new screen
-	var player_target := _player.global_position + direction * AUTO_WALK_DISTANCE
-	tween.tween_property(_player, "global_position", player_target, SCROLL_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(_player, "position", player_target_local, SCROLL_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
 
 	# Remove old room
@@ -170,36 +186,9 @@ func scroll_to_room(room_id: StringName, direction: Vector2) -> void:
 	if old_room:
 		old_room.queue_free()
 
-	# Reset world position — shift new room to origin
+	# Reset world and new room to origin
 	_world_node.position = Vector2.ZERO
 	new_room.position = Vector2.ZERO
-	# Adjust player position to compensate
-	_player.global_position = _player.global_position + offset  # undo the world scroll effect
-
-	# Actually: player's position relative to the new room is correct after scroll.
-	# We need to recalculate: during scroll, world moved by scroll_offset, new_room was at +offset.
-	# After reset: player needs to be at (player_target - offset + Vector2.ZERO) relative to new room origin
-	# Simpler: the player ended at player_target in world-space where world.position = scroll_offset and new_room.position = offset.
-	# Player's position relative to new_room = player_target - scroll_offset - offset = player_target
-	# After reset (world at 0, new_room at 0): player should be at player_target - scroll_offset - offset + 0
-	# Wait, let me think more carefully.
-	# During scroll end state:
-	#   world.position = scroll_offset = -offset
-	#   new_room.position (local to world) = offset
-	#   new_room global position = world.position + new_room.position = -offset + offset = 0
-	#   player.global_position = player_target (player is child of world)
-	#   player position relative to new_room's global = player_target - 0 = player_target
-	# After reset:
-	#   world.position = 0
-	#   new_room.position = 0 (global = 0)
-	#   player should be at player_target (since new_room is now at 0 same as before)
-	# So player position stays the same! But player is a child of world, so:
-	#   Before reset: player.global_position = world.position + player.position = -offset + player.position = player_target
-	#     => player.position = player_target + offset
-	#   After reset: world.position = 0, so player.global_position = player.position = player_target + offset
-	#   But we want player.global_position = player_target
-	# So we need to adjust:
-	_player.global_position = player_target
 
 	# Reparent player into new room's Entities
 	if _player.get_parent():
@@ -209,14 +198,17 @@ func scroll_to_room(room_id: StringName, direction: Vector2) -> void:
 		entities.add_child(_player)
 	else:
 		new_room.add_child(_player)
-	_player.global_position = player_target
+	# Player is now a child of the new room (at origin), set final position directly
+	_player.position = final_pos_in_new_room
 
 	# Update current room state
 	current_room = new_room
 	_read_room_data(new_room)
 
-	# Restore camera
+	# Restore camera: re-attach to player, apply room limits
 	if cam:
+		cam.top_level = false
+		cam.position = Vector2.ZERO
 		cam.position_smoothing_enabled = old_smoothing
 		_apply_camera_limits(new_room)
 
@@ -259,19 +251,11 @@ func switch_world(target_world_type: StringName) -> void:
 
 
 func _find_mirror_room(coords: Vector2i, world_type: StringName) -> StringName:
-	# Scan all room data to find one with matching coords and world_type
-	for room_id: StringName in room_registry:
-		var path: String = room_registry[room_id]
-		# We need to check the RoomData - load it from the resource folder
-		# Use a cached lookup approach
-		pass
-
-	# Fallback: convention-based lookup
-	# Light world: overworld_X_Y, Dark world: dark_overworld_X_Y
-	var prefix := "dark_overworld" if world_type == &"dark" else "overworld"
-	var target_id := StringName("%s_%d_%d" % [prefix, coords.x, coords.y])
-	if room_registry.has(target_id):
-		return target_id
+	# Data-driven: scan cached RoomData for a room with matching coords, world_type, and room_type=overworld
+	for room_id: StringName in _room_data_cache:
+		var rd: RoomData = _room_data_cache[room_id]
+		if rd.screen_coords == coords and rd.world_type == world_type and rd.room_type == &"overworld":
+			return room_id
 	return &""
 
 
@@ -395,8 +379,18 @@ func _set_player_control(enabled: bool) -> void:
 		return
 	if enabled:
 		_player.set_process_unhandled_input(true)
-		_player.set_physics_process(true)
+		# Re-enable state machine processing
+		var sm: Node = _player.get_node_or_null("StateMachine")
+		if sm:
+			sm.set_process(true)
+			sm.set_physics_process(true)
+			sm.set_process_unhandled_input(true)
 	else:
 		_player.set_process_unhandled_input(false)
-		# Keep physics for visual updates but zero velocity
 		_player.velocity = Vector2.ZERO
+		# Disable state machine so walk/idle states stop reading input and moving
+		var sm: Node = _player.get_node_or_null("StateMachine")
+		if sm:
+			sm.set_process(false)
+			sm.set_physics_process(false)
+			sm.set_process_unhandled_input(false)

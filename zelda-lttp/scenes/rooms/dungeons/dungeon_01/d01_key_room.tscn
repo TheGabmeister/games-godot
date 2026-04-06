@@ -62,7 +62,7 @@ linked_nodes = Array[NodePath]([NodePath("../SwitchBarrier")])
 shape = SubResource("switch_block")
 
 [node name="SwitchBarrier" type="StaticBody2D" parent="Entities"]
-position = Vector2(200, 112)
+position = Vector2(200, 80)
 collision_layer = 1
 script = ExtResource("6_sdoor")
 
@@ -77,9 +77,6 @@ position = Vector2(24, 112)
 [node name="from_entrance" type="Marker2D" parent="EntryPoints"]
 position = Vector2(24, 112)
 
-[node name="from_boss_room" type="Marker2D" parent="EntryPoints"]
-position = Vector2(128, 192)
-
 [node name="Transitions" type="Node2D" parent="."]
 
 [node name="DoorToEntrance" type="Area2D" parent="Transitions"]
@@ -93,19 +90,6 @@ transition_style = &"fade"
 trigger_mode = 0
 
 [node name="Shape" type="CollisionShape2D" parent="Transitions/DoorToEntrance"]
-shape = SubResource("door_shape")
-
-[node name="DoorToBossRoom" type="Area2D" parent="Transitions"]
-position = Vector2(128, 220)
-collision_layer = 128
-collision_mask = 2
-script = ExtResource("3_door")
-target_room_id = &"d01_boss_room"
-target_entry_point = &"from_key_room"
-transition_style = &"fade"
-trigger_mode = 0
-
-[node name="Shape" type="CollisionShape2D" parent="Transitions/DoorToBossRoom"]
 shape = SubResource("door_shape")
 
 [node name="Walls" type="Node2D" parent="."]

@@ -10,4 +10,7 @@ func can_use(player: CharacterBody2D) -> bool:
 
 func activate(player: CharacterBody2D) -> float:
 	EventBus.world_switch_requested.emit(&"light")
-	return 0.0  # No lock duration — transition handles timing
+	# Return enough lock time to cover the fade-out + load + fade-in transition.
+	# SceneManager.switch_world() disables player control separately, so this just
+	# keeps ItemUseState from dropping back to Idle mid-transition.
+	return 2.0

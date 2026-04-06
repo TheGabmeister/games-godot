@@ -5,23 +5,23 @@
 [ext_resource type="Script" path="res://scenes/objects/door.gd" id="3_door"]
 [ext_resource type="Script" path="res://scenes/objects/boss_door.gd" id="4_bdoor"]
 
-[sub_resource type="RectangleShape2D" id="wall_top_left"]
-size = Vector2(112, 16)
-
-[sub_resource type="RectangleShape2D" id="wall_top_right"]
-size = Vector2(112, 16)
+[sub_resource type="RectangleShape2D" id="wall_top"]
+size = Vector2(256, 16)
 
 [sub_resource type="RectangleShape2D" id="wall_bottom"]
 size = Vector2(256, 16)
 
-[sub_resource type="RectangleShape2D" id="wall_left"]
-size = Vector2(16, 224)
+[sub_resource type="RectangleShape2D" id="wall_left_top"]
+size = Vector2(16, 96)
+
+[sub_resource type="RectangleShape2D" id="wall_left_bottom"]
+size = Vector2(16, 96)
 
 [sub_resource type="RectangleShape2D" id="wall_right"]
 size = Vector2(16, 224)
 
 [sub_resource type="RectangleShape2D" id="door_shape"]
-size = Vector2(16, 8)
+size = Vector2(8, 16)
 
 [sub_resource type="RectangleShape2D" id="bdoor_shape"]
 size = Vector2(20, 20)
@@ -39,11 +39,9 @@ color = Color(0.15, 0.12, 0.18, 1)
 y_sort_enabled = true
 
 [node name="BossDoor" type="StaticBody2D" parent="Entities"]
-position = Vector2(128, 20)
+position = Vector2(32, 112)
 collision_layer = 1
 script = ExtResource("4_bdoor")
-target_room_id = &""
-target_entry_point = &""
 persist_id = &"boss_door"
 
 [node name="Shape" type="CollisionShape2D" parent="Entities/BossDoor"]
@@ -52,44 +50,34 @@ shape = SubResource("bdoor_shape")
 [node name="EntryPoints" type="Node2D" parent="."]
 
 [node name="PlayerSpawn" type="Marker2D" parent="EntryPoints"]
-position = Vector2(128, 192)
-
-[node name="from_key_room" type="Marker2D" parent="EntryPoints"]
-position = Vector2(128, 24)
+position = Vector2(24, 112)
 
 [node name="from_puzzle_room" type="Marker2D" parent="EntryPoints"]
-position = Vector2(128, 192)
+position = Vector2(24, 112)
 
 [node name="Transitions" type="Node2D" parent="."]
 
-[node name="DoorToKeyRoom" type="Area2D" parent="Transitions"]
-position = Vector2(128, 8)
+[node name="DoorToPuzzleRoom" type="Area2D" parent="Transitions"]
+position = Vector2(8, 112)
 collision_layer = 128
 collision_mask = 2
 script = ExtResource("3_door")
-target_room_id = &"d01_key_room"
+target_room_id = &"d01_puzzle_room"
 target_entry_point = &"from_boss_room"
 transition_style = &"fade"
 trigger_mode = 0
 
-[node name="Shape" type="CollisionShape2D" parent="Transitions/DoorToKeyRoom"]
+[node name="Shape" type="CollisionShape2D" parent="Transitions/DoorToPuzzleRoom"]
 shape = SubResource("door_shape")
 
 [node name="Walls" type="Node2D" parent="."]
 
-[node name="TopWallLeft" type="StaticBody2D" parent="Walls"]
-position = Vector2(56, 8)
+[node name="TopWall" type="StaticBody2D" parent="Walls"]
+position = Vector2(128, 8)
 collision_layer = 1
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/TopWallLeft"]
-shape = SubResource("wall_top_left")
-
-[node name="TopWallRight" type="StaticBody2D" parent="Walls"]
-position = Vector2(200, 8)
-collision_layer = 1
-
-[node name="Shape" type="CollisionShape2D" parent="Walls/TopWallRight"]
-shape = SubResource("wall_top_right")
+[node name="Shape" type="CollisionShape2D" parent="Walls/TopWall"]
+shape = SubResource("wall_top")
 
 [node name="BottomWall" type="StaticBody2D" parent="Walls"]
 position = Vector2(128, 216)
@@ -98,12 +86,19 @@ collision_layer = 1
 [node name="Shape" type="CollisionShape2D" parent="Walls/BottomWall"]
 shape = SubResource("wall_bottom")
 
-[node name="LeftWall" type="StaticBody2D" parent="Walls"]
-position = Vector2(8, 112)
+[node name="LeftWallTop" type="StaticBody2D" parent="Walls"]
+position = Vector2(8, 48)
 collision_layer = 1
 
-[node name="Shape" type="CollisionShape2D" parent="Walls/LeftWall"]
-shape = SubResource("wall_left")
+[node name="Shape" type="CollisionShape2D" parent="Walls/LeftWallTop"]
+shape = SubResource("wall_left_top")
+
+[node name="LeftWallBottom" type="StaticBody2D" parent="Walls"]
+position = Vector2(8, 176)
+collision_layer = 1
+
+[node name="Shape" type="CollisionShape2D" parent="Walls/LeftWallBottom"]
+shape = SubResource("wall_left_bottom")
 
 [node name="RightWall" type="StaticBody2D" parent="Walls"]
 position = Vector2(248, 112)

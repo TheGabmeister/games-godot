@@ -2,8 +2,6 @@ class_name BossDoor extends StaticBody2D
 ## Requires the big key scoped to its containing room's dungeon_id.
 ## Does NOT consume the big key — just gates on it.
 
-@export var target_room_id: StringName = &""
-@export var target_entry_point: StringName = &""
 @export var persist_id: StringName = &""
 
 var _opened: bool = false
