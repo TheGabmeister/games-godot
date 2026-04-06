@@ -28,7 +28,6 @@ layer = 15
 
 [node name="PostProcessLayer" type="CanvasLayer" parent="." unique_id=640527347]
 layer = 19
-visible = false
 
 [node name="ColorRect" type="ColorRect" parent="PostProcessLayer" unique_id=609874778]
 material = SubResource("ShaderMaterial_post")

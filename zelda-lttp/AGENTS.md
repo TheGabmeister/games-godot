@@ -8,13 +8,22 @@ This repository is a Godot 4.6 recreation of the mechanics and game feel of *The
 
 ## Current Repository State
 
-- The repo is still at an early scaffold stage.
+- Phase 1 is now implemented as a runnable baseline rather than a blank scaffold.
 - `SPEC.md` defines the intended architecture, conventions, milestones, and acceptance criteria.
 - `project.godot` currently confirms:
   - Godot `4.6`
   - Renderer: `Forward Plus`
   - Windows rendering driver: `d3d12`
-- There is not yet a full gameplay codebase in place, so new work should build toward the spec's phase plan instead of inventing a parallel structure.
+- Current implemented baseline includes:
+  - `scenes/main/main.tscn` as the root scene with `World`, `HUDLayer`, `DialogLayer`, `PostProcessLayer`, `TransitionOverlay`, and `PauseLayer`
+  - Phase 1 autoloads registered in `project.godot`: `EventBus`, `GameManager`, `ItemRegistry`, `PlayerState`, `AudioManager`, `SceneManager`, `SaveManager`
+  - A persistent player scene with Phase 1 states present in the scene tree: `Idle`, `Walk`, `Attack`, `Knockback`, `Fall`, and `Dash`
+  - A debug room with `Entities`, `EntryPoints`, walls, a pit hazard, and y-sort verification dummies
+  - A primitive HUD for hearts, rupees, and the equipped item slot
+- Later-phase gameplay content is still incomplete, so new work should extend the Phase 1 baseline toward the spec instead of inventing a parallel structure.
+- Some systems intentionally remain scaffolds:
+  - `SaveManager` is still a Phase 1 stub and should not be turned into a real save system before Phase 6 unless the user explicitly wants forward scaffolding
+  - Registries/resources for later phases may exist before their full gameplay loops do
 
 ## Read This First
 
@@ -39,6 +48,7 @@ Before changing code, skim these in order:
 Follow these conventions from the spec unless the user asks to change them:
 
 - The player is a persistent scene instance created once per run and reparented into each room's `Entities` node during transitions.
+- Room `Entities` nodes should stay `y_sort_enabled = true`; moving actors, NPCs, pickups, and the persistent player should sort there instead of faking depth with manual `z_index` tweaks.
 - The sword is always available.
 - There is one equipped skill slot on the action button, not two active item slots.
 - Every room script must expose `@export var room_data: RoomData`; `RoomData` is the single source of truth for room metadata.
@@ -80,6 +90,7 @@ If the user asks for a new feature and the repo does not yet support its prerequ
 - Prefer typed GDScript where practical.
 - Keep scenes and scripts paired and organized by feature domain as described in `SPEC.md`.
 - Reuse shared components for health, hurtboxes, hitboxes, flashing, knockback, loot drops, and state machines instead of duplicating logic.
+- Do not remove or bypass an existing state from the player's scene tree when a transition already targets it; keep the state machine scene wiring and scripts in sync.
 - Use the current spec terminology consistently: `skills`, `upgrades`, and `resources`, not an RPG-style inventory model.
 - Keep `PlayerState` as a character-sheet facade, not a god object. If its logic grows, split internals into small helper/domain scripts while preserving `PlayerState` as the stable public entry point.
 - Enemy behavior is per-enemy-state driven; do not collapse all enemies into a single generic AI script.
@@ -93,6 +104,7 @@ The project is mechanics-first, but visual polish still matters. Keep this intac
 - Feedback should come from animation, lighting, particles, shaders, squash/stretch, and screen shake.
 - Avoid placeholder UI or visuals that contradict the spec's visual language if a simple aligned version is feasible.
 - Respect the intended logical resolution of `256x224` and the `16x16` tile grid.
+- Godot's default fallback font is anti-aliased and will look soft at this resolution when scaled. If crisp retro text matters, use an imported pixel font instead of assuming the engine default will read cleanly.
 
 ## Persistence and Content Safety
 
@@ -119,6 +131,7 @@ When possible, verify work in one of these ways:
 - Open the project in the Godot editor configured in `.vscode/settings.json`
 - Run Godot headless for smoke checks if the project has enough content to load safely
 - Validate that scene/script/resource references are still consistent
+- Use the debug room to verify room loading, hazards, player insertion under `Entities`, and y-sort behavior before treating a Phase 1 change as done
 
 Useful local context:
 

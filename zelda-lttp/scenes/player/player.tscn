@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://c8player001"]
+[gd_scene load_steps=17 format=3 uid="uid://c8player001"]
 
 [ext_resource type="Script" path="res://scenes/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scenes/player/player_body.gd" id="2_body"]
@@ -10,6 +10,9 @@
 [ext_resource type="Script" path="res://scenes/player/states/fall_state.gd" id="8_fall"]
 [ext_resource type="Script" path="res://scenes/player/states/dash_state.gd" id="9_dash"]
 [ext_resource type="Script" path="res://scenes/items/sword_hitbox.gd" id="10_sword"]
+[ext_resource type="Script" path="res://components/hurtbox_component.gd" id="11_hurtbox"]
+[ext_resource type="Script" path="res://components/flash_component.gd" id="12_flash"]
+[ext_resource type="Script" path="res://components/knockback_component.gd" id="13_knockback"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(12, 14)
@@ -54,10 +57,19 @@ collision_mask = 16
 [node name="HurtboxComponent" type="Area2D" parent="."]
 collision_layer = 2
 collision_mask = 80
+script = ExtResource("11_hurtbox")
+team = &"player"
+invincibility_duration = 0.5
 
 [node name="HurtboxShape" type="CollisionShape2D" parent="HurtboxComponent"]
 position = Vector2(0, 2)
 shape = SubResource("RectangleShape2D_player")
+
+[node name="FlashComponent" type="Node" parent="."]
+script = ExtResource("12_flash")
+
+[node name="KnockbackComponent" type="Node" parent="."]
+script = ExtResource("13_knockback")
 
 [node name="InteractionProbe" type="Area2D" parent="."]
 collision_layer = 0

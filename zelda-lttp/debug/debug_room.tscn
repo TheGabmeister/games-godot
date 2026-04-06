@@ -1,7 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://c8debug001"]
+[gd_scene load_steps=11 format=3 uid="uid://c8debug001"]
 
 [ext_resource type="Script" path="res://debug/debug_room.gd" id="1_room"]
 [ext_resource type="Resource" path="res://resources/room_data/debug_room.tres" id="2_rd"]
+[ext_resource type="Script" path="res://components/hitbox_component.gd" id="3_hitbox"]
+[ext_resource type="Script" path="res://debug/pit_hazard.gd" id="4_pit"]
 
 [sub_resource type="RectangleShape2D" id="wall_top"]
 size = Vector2(256, 16)
@@ -17,6 +19,9 @@ size = Vector2(64, 16)
 
 [sub_resource type="RectangleShape2D" id="corridor_wall_v"]
 size = Vector2(16, 48)
+
+[sub_resource type="RectangleShape2D" id="hitbox_shape"]
+size = Vector2(20, 20)
 
 [node name="DebugRoom" type="Node2D"]
 script = ExtResource("1_room")
@@ -189,6 +194,7 @@ color = Color(0.4, 0.3, 0.3, 1)
 position = Vector2(200, 56)
 collision_layer = 64
 collision_mask = 2
+script = ExtResource("4_pit")
 
 [node name="PitShape" type="CollisionShape2D" parent="Hazards/PitArea"]
 shape = SubResource("pit_shape")
@@ -207,6 +213,36 @@ offset_right = 220.0
 offset_bottom = 88.0
 theme_override_font_sizes/font_size = 7
 text = "Pit"
+horizontal_alignment = 1
+
+[node name="TestHitbox" type="Area2D" parent="Hazards"]
+position = Vector2(128, 56)
+collision_layer = 16
+collision_mask = 2
+monitorable = true
+script = ExtResource("3_hitbox")
+damage = 4
+damage_type = 0
+knockback_force = 150.0
+source_team = &"enemy"
+
+[node name="HitboxShape" type="CollisionShape2D" parent="Hazards/TestHitbox"]
+shape = SubResource("hitbox_shape")
+
+[node name="HitboxVisual" type="ColorRect" parent="Hazards/TestHitbox"]
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+color = Color(0.8, 0.15, 0.1, 0.7)
+
+[node name="HitboxLabel" type="Label" parent="Hazards/TestHitbox"]
+offset_left = -14.0
+offset_top = -22.0
+offset_right = 14.0
+offset_bottom = -12.0
+theme_override_font_sizes/font_size = 7
+text = "Dmg"
 horizontal_alignment = 1
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]

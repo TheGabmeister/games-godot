@@ -29,9 +29,9 @@ func _ready() -> void:
 			state.player = self
 
 	# Connect hurtbox for damage
-	var hurtbox := $HurtboxComponent as Area2D
+	var hurtbox: HurtboxComponent = get_node_or_null("HurtboxComponent") as HurtboxComponent
 	if hurtbox:
-		hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+		hurtbox.hurt.connect(_on_hurt)
 
 	# Connect screen shake
 	EventBus.screen_shake_requested.connect(_on_screen_shake_requested)
@@ -61,21 +61,38 @@ func get_sword_damage() -> int:
 		_: return 2
 
 
-func _on_hurtbox_area_entered(area: Area2D) -> void:
-	# Check if it's a pit/hazard
-	if area.collision_layer & 64:  # Layer 7 = Hazards (bit 6, 0-indexed)
+func _on_hurt(hitbox_data: Dictionary) -> void:
+	var dmg_type: int = hitbox_data.get("damage_type", DamageType.Type.CONTACT)
+	var raw_damage: int = hitbox_data.get("damage", 2)
+	var source_pos: Vector2 = hitbox_data.get("source_position", global_position)
+	var kb_force: float = hitbox_data.get("knockback_force", 120.0)
+
+	# Pit triggers Fall state directly
+	if dmg_type == DamageType.Type.PIT:
 		state_machine.transition_to(&"Fall")
 		return
 
-	# Check if it's an enemy attack
-	if area.collision_layer & 16:  # Layer 5 = EnemyAttacks (bit 4)
-		var direction := (global_position - area.global_position).normalized()
-		var damage := 2
-		if area.has_meta("damage"):
-			damage = area.get_meta("damage")
-		PlayerState.apply_damage(damage)
-		state_machine.transition_to(&"Knockback", {"direction": direction})
-		EventBus.screen_shake_requested.emit(1.0, 0.12)
+	# Run damage formula with player armor
+	var armor_tier: int = PlayerState.get_upgrade(&"armor")
+	var result: Dictionary = DamageFormula.calculate_damage(raw_damage, dmg_type, armor_tier)
+
+	if result.immune:
+		AudioManager.play_sfx(&"clink")
+		return
+
+	var final_damage: int = result.final_damage
+	PlayerState.apply_damage(final_damage)
+
+	# Flash
+	var flash: FlashComponent = get_node_or_null("FlashComponent") as FlashComponent
+	if flash:
+		flash.flash()
+
+	# Knockback
+	var direction: Vector2 = (global_position - source_pos).normalized()
+	state_machine.transition_to(&"Knockback", {"direction": direction, "force": kb_force})
+
+	EventBus.screen_shake_requested.emit(1.0, 0.12)
 
 
 # --- Screen Shake ---

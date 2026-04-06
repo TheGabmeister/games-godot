@@ -19,16 +19,17 @@ If implementation pressure conflicts with the spec, favor the spec and document 
 ## Running the Project
 
 ```bash
-# Godot executable (aliased as `godot` in bash)
-godot                           # Open editor
-godot --path . --scene res://scenes/main/main.tscn  # Run main scene
-godot --path . --headless --quit  # Headless smoke check
+# Godot executable — use full path (no bash alias configured)
+"d:/Godot_v4.6.2-stable_win64.exe" --path .                                    # Open editor
+"d:/Godot_v4.6.2-stable_win64.exe" --path . --scene res://scenes/main/main.tscn  # Run main scene
+"d:/Godot_v4.6.2-stable_win64.exe" --path . --headless --quit                    # Headless smoke check
+"d:/Godot_v4.6.2-stable_win64.exe" --path . --headless --import                  # Reimport (needed after adding new class_name scripts)
 
 # GUT unit tests (after GUT is installed in Phase 2)
-godot --path . --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests/unit -gexit
+"d:/Godot_v4.6.2-stable_win64.exe" --path . --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests/unit -gexit
 ```
 
-Editor path: `d:\Godot_v4.6.2-stable_win64.exe`
+**Important:** After creating new scripts with `class_name`, run `--headless --import` before `--headless --quit` or the class_name types won't be in the cache and scripts will fail to parse.
 
 ## Testing
 
@@ -103,13 +104,35 @@ Only SKILL items persist as `ItemData` references. UPGRADE and RESOURCE items ar
 
 `@export var persist_id: StringName` on entities, `room_id` from `RoomData`. Flag keys: `{room_id}/{persist_id}`. Never derive IDs from node names or scene paths. Treat room IDs, item IDs, and flag keys as save-migration-sensitive.
 
+## Physics Layer Bitmask Reference
+
+Godot uses 1-indexed layers but 0-indexed bitmask values in `.tscn` files:
+
+| Layer | Name | Bitmask Value |
+|-------|------|---------------|
+| 1 | World | 1 |
+| 2 | Player | 2 |
+| 3 | Enemies | 4 |
+| 4 | PlayerAttacks | 8 |
+| 5 | EnemyAttacks | 16 |
+| 6 | Interactables | 32 |
+| 7 | Hazards | 64 |
+| 8 | Triggers | 128 |
+
+Combine with bitwise OR. Example: EnemyAttacks + Hazards = 16 + 64 = 80.
+
 ## Conventions
 
 - Health unit = half heart. Starting health = 6 (3 hearts). Magic = 0-128 units (fixed max).
-- Physics layers: 1=World, 2=Player, 3=Enemies, 4=PlayerAttacks, 5=EnemyAttacks, 6=Interactables, 7=Hazards, 8=Triggers.
 - Rooms use `y_sort_enabled = true` on the `Entities` node.
 - JSON saves use basic types only. Convert `Vector2` to `[x, y]` arrays. Include `schema_version`.
 - Enemies respawn on room re-entry. Chests/blocks/switches persist via GameManager flags.
 - Audio: drop files at `res://audio/bgm/{name}.ogg` or `res://audio/sfx/{name}.ogg`. System logs when assets are missing.
 - Cutscene lifecycle signals live on the `Cutscene` autoload (not EventBus).
 - `ItemRegistry` lookup by stable id; never hardcode `.tres` paths in gameplay code.
+- In `.tscn` files, `sub_resource` definitions must appear before any node that references them (order matters).
+- `BasePlayerState.player` is typed as `CharacterBody2D`, not `Player`. Use explicit type annotations (e.g., `var x: Vector2 = player.facing_direction`) instead of `:=` inference when accessing `Player`-specific properties to avoid parse errors.
+
+## Current Phase Status
+
+Phase 1 is implemented. The repo has: project config, all 7 autoloads, generic state machine, player with 6 states (Idle/Walk/Attack/Knockback/Fall/Dash), room system with debug room, HUD (hearts/rupees/item slot), camera with room bounds and screen shake, 6 shaders, and shared resources (ItemData/RoomData/EnemyData/LootTable/DungeonData/DamageType).
