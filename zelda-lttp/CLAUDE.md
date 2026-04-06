@@ -137,14 +137,28 @@ Combine with bitwise OR. Example: EnemyAttacks + Hazards = 16 + 64 = 80.
 
 `components/` contains reusable combat building blocks:
 - **HitboxComponent** (`Area2D`) — deals damage. Exports: damage, damage_type, knockback_force, effect (HitEffect), source_team. Provides `get_hitbox_data()` dict.
-- **HurtboxComponent** (`Area2D`) — receives hits. Tracks i-frames. Emits `hurt(hitbox_data)`. Environmental damage types (PIT, WATER, SPIKE) bypass i-frames.
+- **HurtboxComponent** (`Area2D`) — receives hits. Tracks i-frames. Emits `hurt(hitbox_data)`. Environmental damage types (PIT, WATER, SPIKE) bypass i-frames. Also handles meta-based areas (like SwordHitbox) via `has_meta("damage")` path with `source_team` team check.
 - **HealthComponent** — enemy health tracking. `take_damage()`, `heal()`, signals `health_changed`/`died`.
 - **KnockbackComponent** — decelerating knockback. `apply(direction, force, duration)`.
 - **FlashComponent** — white flash via `damage_flash.gdshader`. Auto-finds `*Body*` visual node.
 - **DamageFormula** — static `calculate_damage()` implementing the 4-step pipeline (shield, immunity, armor reduction, minimum 1).
+- **LootDropComponent** — reads `drop_table` from parent enemy's `EnemyData`, rolls on death. Pickup spawning deferred to Phase 2.7.
 
 The player does NOT use HealthComponent — player health lives on `PlayerState` autoload since it's persistent and serialized. Enemies use HealthComponent since they're transient per room.
 
+### Enemy Architecture (Phase 2.3)
+
+`base_enemy.gd` (class_name `BaseEnemy`) extends `CharacterBody2D`. Shared logic: damage reception via `DamageFormula` + `EnemyData.damage_immunities`, knockback with resistance, death sequence (CPUParticles2D + loot + `EventBus.enemy_defeated` + `queue_free()`).
+
+`BaseEnemyState` extends `State`, types `actor` as `BaseEnemy`. Shared `StunnedState` (`scenes/enemies/shared/stunned_state.gd`): immobile, blue tint, timer, returns to prior state.
+
+Enemy collision setup:
+- Root `CharacterBody2D`: layer=Enemies(4), mask=World(1)
+- `HurtboxComponent`: layer=Enemies(4), mask=PlayerAttacks(8)
+- `ContactHitbox` (HitboxComponent): layer=EnemyAttacks(16), mask=0, monitoring=false, monitorable=true
+
+Player's `SwordHitbox`: layer=PlayerAttacks(8), monitorable=true. Sets `source_team` meta so `HurtboxComponent` team check works via the meta path.
+
 ## Current Phase Status
 
-Phase 1 complete, Phase 2.1 (combat components) complete. The repo has: project config, all 7 autoloads, generic state machine, player with 6 states (Idle/Walk/Attack/Knockback/Fall/Dash), room system with debug room, HUD (hearts/rupees/item slot), camera with room bounds and screen shake, 6 shaders, shared resources (ItemData/RoomData/EnemyData/LootTable/DungeonData/DamageType), and combat components (HitboxComponent/HurtboxComponent/HealthComponent/KnockbackComponent/FlashComponent/DamageFormula).
+Phase 1 complete, Phase 2.1-2.3 complete. The repo has: project config, all 7 autoloads, generic state machine, player with 6 states (Idle/Walk/Attack/Knockback/Fall/Dash), room system with debug room, HUD (hearts/rupees/item slot), camera with room bounds and screen shake, 6 shaders, shared resources (ItemData/RoomData/EnemyData/LootTable/DungeonData/DamageType), combat components (HitboxComponent/HurtboxComponent/HealthComponent/KnockbackComponent/FlashComponent/DamageFormula/LootDropComponent), enemy architecture (BaseEnemy/BaseEnemyState/StunnedState), 5 EnemyData .tres files (soldier/octorok/keese/stalfos/buzz_blob), and Soldier + Keese scenes with stub states in debug_room.
