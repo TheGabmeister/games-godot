@@ -2088,6 +2088,7 @@ Minimum title screen features:
 - New Game
 - Continue
 - Options placeholder
+- Debug Room — loads `debug_room.tscn` with a fresh `PlayerState` for quick feature testing. Keep this option available throughout development.
 - Animated background treatment
 
 **Slot-select screen** (shared by New Game and Continue):

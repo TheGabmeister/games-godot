@@ -39,6 +39,7 @@ func _show_title_screen() -> void:
 	_title_screen = TITLE_SCREEN_SCENE.instantiate()
 	_title_screen.new_game_requested.connect(_on_new_game)
 	_title_screen.continue_requested.connect(_on_continue)
+	_title_screen.debug_room_requested.connect(_on_debug_room)
 	$HUDLayer.visible = false
 	add_child(_title_screen)
 
@@ -58,6 +59,25 @@ func _on_new_game(slot: int) -> void:
 	# Create player and start
 	_create_player()
 	_load_starting_room()
+	get_tree().paused = false
+
+
+func _on_debug_room() -> void:
+	_title_screen.queue_free()
+	_title_screen = null
+	_in_title_screen = false
+	$HUDLayer.visible = true
+
+	PlayerState.reset()
+	GameManager.reset()
+	GameManager.current_save_slot = 1
+	_play_time_seconds = 0.0
+
+	_create_player()
+	if SceneManager.room_registry.has(&"debug_room"):
+		SceneManager.load_room(&"debug_room")
+	else:
+		SceneManager.load_room_direct("res://debug/debug_room.tscn")
 	get_tree().paused = false
 
 
@@ -84,13 +104,12 @@ func _create_player() -> void:
 
 
 func _load_starting_room() -> void:
-	# Debug: start in debug_room for testing. Change to overworld_0_0 for release.
-	if SceneManager.room_registry.has(&"debug_room"):
-		SceneManager.load_room(&"debug_room")
-	elif SceneManager.room_registry.has(&"overworld_0_0"):
+	if SceneManager.room_registry.has(&"overworld_0_0"):
 		SceneManager.load_room(&"overworld_0_0")
 	elif SceneManager.room_registry.has(&"start_house"):
 		SceneManager.load_room(&"start_house")
+	elif SceneManager.room_registry.has(&"debug_room"):
+		SceneManager.load_room(&"debug_room")
 	else:
 		var debug_path := "res://debug/debug_room.tscn"
 		if ResourceLoader.exists(debug_path):

@@ -5,6 +5,7 @@ extends Control
 
 signal new_game_requested(slot: int)
 signal continue_requested(slot: int)
+signal debug_room_requested
 
 enum Screen { TITLE, SLOT_SELECT, CONFIRM_OVERWRITE, CONFIRM_DELETE }
 
@@ -15,7 +16,7 @@ var _is_new_game: bool = false
 var _confirm_cursor: int = 1  # 0 = Yes, 1 = No (default No)
 var _anim_time: float = 0.0
 
-const MENU_ITEMS := ["New Game", "Continue", "Options"]
+const MENU_ITEMS := ["New Game", "Continue", "Options", "Debug Room"]
 const SLOT_COUNT := 3
 
 
@@ -71,6 +72,9 @@ func _handle_title_input(event: InputEvent) -> void:
 					AudioManager.play_sfx(&"error")
 			2:  # Options (placeholder)
 				AudioManager.play_sfx(&"error")
+			3:  # Debug Room
+				AudioManager.play_sfx(&"menu_select")
+				debug_room_requested.emit()
 
 
 func _handle_slot_input(event: InputEvent) -> void:

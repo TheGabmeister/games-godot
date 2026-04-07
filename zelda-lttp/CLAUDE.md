@@ -225,11 +225,15 @@ Hearts flash white briefly when lost. Rupee counter ticks up/down digit by digit
 
 ### Dialog System (Phase 6.2)
 
-`DialogBox` (`scenes/ui/dialog_box.gd`) on DialogLayer (CanvasLayer 15). Typewriter effect at 30 chars/sec. `interact` fast-forwards or advances page. Multi-page arrays. Emits `EventBus.dialog_closed` on final page dismiss. Page-complete indicator triangle when more pages remain.
+`DialogBox` (`scenes/ui/dialog_box.gd`) on DialogLayer (CanvasLayer 15, process_mode=ALWAYS). Typewriter effect at 30 chars/sec. `interact` fast-forwards or advances page. Multi-page arrays. Page-complete indicator triangle when more pages remain.
+
+**Dialog pauses the game.** When dialog opens and the tree isn't already paused (e.g., by ItemGetState), dialog_box pauses it. On close, it only unpauses if it was the one that paused — tracked via `_paused_by_dialog` flag.
+
+**`dialog_closed` ownership is strict.** Only `dialog_box._close_dialog()` emits `EventBus.dialog_closed`. No other system should emit it. `ItemGetState` awaits this signal via `CONNECT_ONE_SHOT` instead of emitting its own. `EventBus.dialog_force_close` exists for programmatic close (e.g., auto-dismiss timers) — dialog_box listens and calls `_close_dialog()`, which then emits `dialog_closed` through the single path.
 
 ### Cutscene System (Phase 6.3)
 
-`Cutscene` autoload (`autoloads/cutscene.gd`). Coroutine-based with awaitable primitives: `wait()`, `move_entity()`, `camera_pan()`, `camera_follow()`, `camera_shake()`, `dialog()`, `sfx()`, `fade_to_black()`, `fade_from_black()`, `flash()`. Signals: `cutscene_started`, `cutscene_finished`. Player enters `CutsceneState` on start (input blocked), returns to `IdleState` on finish. Example cutscene: `scenes/cutscenes/sahasrahla_intro.gd`.
+`Cutscene` autoload (`autoloads/cutscene.gd`, process_mode=ALWAYS). Coroutine-based with awaitable primitives: `wait()`, `move_entity()`, `camera_pan()`, `camera_follow()`, `camera_shake()`, `dialog()`, `sfx()`, `fade_to_black()`, `fade_from_black()`, `flash()`. Signals: `cutscene_started`, `cutscene_finished`. Player enters `CutsceneState` on start (input blocked), returns to `IdleState` on finish. Example cutscene: `scenes/cutscenes/sahasrahla_intro.gd`. process_mode=ALWAYS is required because `dialog()` pauses the tree — the coroutine must survive the pause to resume after dialog closes.
 
 ### Effects & Juice (Phase 6.4)
 
@@ -241,11 +245,11 @@ Hearts flash white briefly when lost. Rupee counter ticks up/down digit by digit
 
 ### Title Screen (Phase 6.5)
 
-`TitleScreen` (`scenes/ui/title_screen.gd` + `.tscn`) — boots on launch. Animated background with scrolling lines and pulsing triforce. Menu: New Game, Continue (grayed when no saves), Options (placeholder). Slot select screen: 3 slots showing play time, hearts, timestamp. Overwrite confirmation for New Game on occupied slots. Emits `new_game_requested(slot)` / `continue_requested(slot)` to main.gd.
+`TitleScreen` (`scenes/ui/title_screen.gd` + `.tscn`) — boots on launch. Animated background with scrolling lines and pulsing triforce. Menu: New Game, Continue (grayed when no saves), Options (placeholder), Debug Room (loads `debug_room.tscn` for testing). Slot select screen: 3 slots showing play time, hearts, timestamp. Overwrite confirmation for New Game on occupied slots. Continue skips empty slots and supports delete via B button. Emits `new_game_requested(slot)` / `continue_requested(slot)` / `debug_room_requested` to main.gd.
 
 ### Save and Load (Phase 6.6)
 
-`SaveManager` (`autoloads/save_manager.gd`) — fully functional. 3 slots at `user://saves/save_{slot}.json`. `schema_version` for future migration. Methods: `save_game(slot)`, `load_game(slot)`, `has_save(slot)`, `get_slot_metadata(slot)`, `delete_save(slot)`. Serializes `PlayerState` (skills by id via ItemRegistry, upgrades, resources, bottles) and `GameManager` (flags, safe position). `PlayerState.serialize()`/`deserialize()`/`reset()` and `GameManager.serialize()`/`deserialize()`/`reset()` implemented. Unknown skill ids on load log a warning and are skipped (soft-fail). Play time tracked in main.gd.
+`SaveManager` (`autoloads/save_manager.gd`) — fully functional. 3 slots at `user://saves/save_{slot}.json`. `schema_version` for future migration. Methods: `save_game(slot)`, `load_game(slot)`, `has_save(slot)`, `get_slot_metadata(slot)`, `delete_save(slot)`. Serializes `PlayerState` (skills by id via ItemRegistry, upgrades, resources, bottles) and `GameManager` (flags, safe position) under the `game_manager` top-level key. `PlayerState.serialize()`/`deserialize()`/`reset()` and `GameManager.serialize()`/`deserialize()`/`reset()` implemented. Unknown skill ids on load log a warning and are skipped (soft-fail). Play time tracked in main.gd. Save trigger: B button (K/Z) in the pause subscreen.
 
 ## Current Phase Status
 
