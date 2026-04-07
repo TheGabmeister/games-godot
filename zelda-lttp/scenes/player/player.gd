@@ -50,13 +50,21 @@ func _ready() -> void:
 	Cutscene.cutscene_started.connect(_on_cutscene_started)
 	Cutscene.cutscene_finished.connect(_on_cutscene_finished)
 
+	# Connect lift requests from destructibles
+	EventBus.lift_requested.connect(_on_lift_requested)
+
 	# Set up interaction probe shape
 	_setup_interaction_probe()
 
 
+func _on_lift_requested(target: Node2D) -> void:
+	if state_machine.current_state.name in [&"Idle", &"Walk"]:
+		state_machine.transition_to(&"Lift", {"target": target})
+
+
 func _on_item_get_requested(item: ItemData) -> void:
 	var auto_dismiss: bool = (item.item_type == ItemData.ItemType.RESOURCE
-		and item.resource_key not in [&"small_key", &"heart_piece"])
+		and item.resource_key not in [&"small_key", &"heart_piece", &"heart_container"])
 	state_machine.transition_to(&"ItemGet", {"item": item, "auto_dismiss": auto_dismiss})
 
 

@@ -24,6 +24,13 @@ func physics_update(delta: float) -> void:
 	player.velocity = direction * player.speed * player.dash_speed_multiplier
 	player.move_and_slide()
 
+	# Check for dash-destroyable objects
+	for i in player.get_slide_collision_count():
+		var collision := player.get_slide_collision(i)
+		var collider := collision.get_collider()
+		if collider is Destructible and collider.dash_destroyable:
+			collider.dash_destroy()
+
 	if _dash_timer >= DASH_DURATION:
 		var input := get_movement_input()
 		if input != Vector2.ZERO:

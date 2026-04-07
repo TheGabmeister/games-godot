@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="DungeonData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/dungeon_data.gd" id="1_dd"]
+
+[resource]
+script = ExtResource("1_dd")
+dungeon_id = &"dungeon_02"
+dungeon_name = "Desert Temple"
+rooms = {
+"0,0": &"d02_entrance",
+"1,0": &"d02_conveyor_hall",
+"0,1": &"d02_pit_maze",
+"1,1": &"d02_key_hub",
+"0,2": &"d02_conveyor_puzzle",
+"1,2": &"d02_big_key_room",
+"0,3": &"d02_pre_boss",
+"1,3": &"d02_boss_room"
+}
+starting_room = Vector2i(0, 0)
+boss_room = Vector2i(1, 3)
+boss_id = &""
+floor_count = 1
+music_track = &"dungeon"
+boss_music_track = &"boss"

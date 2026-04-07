@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://c8ow205"]
+
+[ext_resource type="Script" path="res://scenes/rooms/overworld/overworld_room.gd" id="1_script"]
+[ext_resource type="Resource" path="res://resources/room_data/overworld/overworld_0_5.tres" id="2_rd"]
+[ext_resource type="Script" path="res://scenes/objects/npc.gd" id="3_npc"]
+[ext_resource type="Resource" path="res://resources/items/pickups/heart_piece.tres" id="4_hp"]
+
+[node name="overworld_0_5" type="Node2D"]
+script = ExtResource("1_script")
+room_data = ExtResource("2_rd")
+biome = &"village"
+
+[node name="Floor" type="ColorRect" parent="."]
+offset_right = 256.0
+offset_bottom = 224.0
+color = Color(0.5, 0.65, 0.35, 1)
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="KindWoman" type="Node2D" parent="Entities"]
+position = Vector2(128, 80)
+script = ExtResource("3_npc")
+npc_name = "Kind Woman"
+dialog_lines = Array[String](["Oh, you look like a brave adventurer!", "Please take this. It may help you on your journey."])
+reward_item = ExtResource("4_hp")
+reward_flag = &"npc/kind_woman_reward"
+npc_color = Color(0.7, 0.4, 0.6, 1)
+
+[node name="EntryPoints" type="Node2D" parent="."]
+
+[node name="PlayerSpawn" type="Marker2D" parent="EntryPoints"]
+position = Vector2(128, 112)
+
+[node name="Transitions" type="Node2D" parent="."]
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(1, 0.98, 0.9, 1)

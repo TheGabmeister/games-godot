@@ -2,6 +2,25 @@ extends Room
 ## Base script for dungeon rooms. Draws stone floor with torch lighting.
 
 
+func _ready() -> void:
+	if room_data and room_data.is_dark_room:
+		var cm: CanvasModulate = get_node_or_null("CanvasModulate")
+		if cm:
+			var lit_flag := "%s/lit" % room_data.room_id
+			if not GameManager.get_flag(lit_flag):
+				cm.color = Color(0.05, 0.05, 0.08)
+	EventBus.room_lit.connect(_on_room_lit)
+
+
+func _on_room_lit(lit_room_id: StringName) -> void:
+	if room_data and lit_room_id == room_data.room_id:
+		var cm: CanvasModulate = get_node_or_null("CanvasModulate")
+		if cm:
+			var tween := create_tween()
+			tween.tween_property(cm, "color", room_data.ambient_color, 0.5)
+			GameManager.set_flag("%s/lit" % room_data.room_id, true)
+
+
 func _draw() -> void:
 	# Dark stone floor
 	draw_rect(Rect2(0, 0, 256, 224), Color(0.18, 0.16, 0.2))

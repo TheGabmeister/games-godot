@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"heart_container"
+display_name = "Heart Container"
+description = "Your maximum health has increased!"
+item_type = 2
+icon_color = Color(1, 0.2, 0.2, 1)
+icon_shape = PackedVector2Array(0, -5, 3, -3, 5, 0, 3, 3, 0, 5, -3, 3, -5, 0, -3, -3)
+resource_key = &"heart_container"
+resource_amount = 1

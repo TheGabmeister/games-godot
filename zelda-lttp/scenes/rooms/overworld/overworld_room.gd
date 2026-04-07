@@ -2,7 +2,7 @@ extends Room
 ## Base script for overworld rooms. Draws a tiled floor with biome coloring.
 ## Each overworld room is 256x224 (16x14 tiles of 16px).
 
-@export var biome: StringName = &"plains"  # plains, forest, mountain, lake
+@export var biome: StringName = &"plains"  # plains, forest, mountain, lake, desert, village, graveyard, field
 
 # Biome color palettes
 const BIOME_COLORS := {
@@ -25,6 +25,26 @@ const BIOME_COLORS := {
 		"ground": Color(0.35, 0.6, 0.3),
 		"accent": Color(0.2, 0.35, 0.65),
 		"detail": Color(0.4, 0.65, 0.35),
+	},
+	&"desert": {
+		"ground": Color(0.75, 0.65, 0.4),
+		"accent": Color(0.65, 0.55, 0.3),
+		"detail": Color(0.85, 0.75, 0.5),
+	},
+	&"village": {
+		"ground": Color(0.5, 0.65, 0.35),
+		"accent": Color(0.55, 0.45, 0.3),
+		"detail": Color(0.6, 0.5, 0.35),
+	},
+	&"graveyard": {
+		"ground": Color(0.3, 0.3, 0.25),
+		"accent": Color(0.25, 0.25, 0.2),
+		"detail": Color(0.4, 0.35, 0.3),
+	},
+	&"field": {
+		"ground": Color(0.5, 0.72, 0.38),
+		"accent": Color(0.42, 0.62, 0.3),
+		"detail": Color(0.58, 0.78, 0.45),
 	},
 }
 
@@ -66,6 +86,14 @@ func _draw() -> void:
 			_draw_rocks(rng)
 		&"lake":
 			_draw_water_patches(rng)
+		&"desert":
+			_draw_cacti(rng)
+		&"village":
+			_draw_houses(rng)
+		&"graveyard":
+			_draw_tombstones(rng)
+		&"field":
+			_draw_flowers(rng)
 
 
 func _draw_trees(rng: RandomNumberGenerator) -> void:
@@ -98,3 +126,76 @@ func _draw_water_patches(rng: RandomNumberGenerator) -> void:
 		var w := rng.randf_range(16, 48)
 		var h := rng.randf_range(16, 32)
 		draw_rect(Rect2(wx - w / 2, wy - h / 2, w, h), water_color)
+
+
+func _draw_cacti(rng: RandomNumberGenerator) -> void:
+	var cactus_color := Color(0.3, 0.55, 0.25)
+	var sand_rock := Color(0.6, 0.5, 0.35)
+	for i in rng.randi_range(2, 6):
+		var cx := rng.randf_range(20, 236)
+		var cy := rng.randf_range(20, 204)
+		# Trunk
+		draw_rect(Rect2(cx - 2, cy - 6, 4, 12), cactus_color)
+		# Arms
+		draw_rect(Rect2(cx - 6, cy - 4, 4, 3), cactus_color)
+		draw_rect(Rect2(cx + 2, cy - 2, 4, 3), cactus_color)
+	# Scattered sand rocks
+	for i in rng.randi_range(3, 7):
+		var rx := rng.randf_range(8, 248)
+		var ry := rng.randf_range(8, 216)
+		draw_circle(Vector2(rx, ry), rng.randf_range(2, 4), sand_rock)
+
+
+func _draw_houses(rng: RandomNumberGenerator) -> void:
+	var wall_color := Color(0.6, 0.55, 0.45)
+	var roof_color := Color(0.5, 0.25, 0.15)
+	for i in rng.randi_range(1, 3):
+		var hx := rng.randf_range(32, 208)
+		var hy := rng.randf_range(32, 176)
+		# Walls
+		draw_rect(Rect2(hx - 10, hy - 6, 20, 16), wall_color)
+		draw_rect(Rect2(hx - 10, hy - 6, 20, 16), wall_color.darkened(0.15), false, 1.0)
+		# Roof
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(hx - 12, hy - 6), Vector2(hx + 12, hy - 6), Vector2(hx, hy - 14),
+		]), roof_color)
+		# Door
+		draw_rect(Rect2(hx - 2, hy + 4, 4, 6), Color(0.3, 0.2, 0.12))
+	# Paths between houses
+	var path_color := Color(0.55, 0.48, 0.35)
+	for i in rng.randi_range(2, 4):
+		var px := rng.randf_range(24, 232)
+		var py := rng.randf_range(24, 200)
+		draw_rect(Rect2(px, py, rng.randf_range(8, 24), 3), path_color)
+
+
+func _draw_tombstones(rng: RandomNumberGenerator) -> void:
+	var stone_color := Color(0.45, 0.42, 0.4)
+	var dark_stone := Color(0.35, 0.32, 0.3)
+	for i in rng.randi_range(4, 10):
+		var tx := rng.randf_range(20, 236)
+		var ty := rng.randf_range(20, 204)
+		# Base
+		draw_rect(Rect2(tx - 4, ty, 8, 3), dark_stone)
+		# Stone
+		draw_rect(Rect2(tx - 3, ty - 8, 6, 9), stone_color)
+		# Rounded top
+		draw_circle(Vector2(tx, ty - 8), 3.0, stone_color)
+		# Cross etching
+		draw_line(Vector2(tx, ty - 7), Vector2(tx, ty - 3), dark_stone, 0.5)
+		draw_line(Vector2(tx - 1.5, ty - 5), Vector2(tx + 1.5, ty - 5), dark_stone, 0.5)
+	# Dead grass patches
+	for i in rng.randi_range(3, 6):
+		var gx := rng.randf_range(8, 248)
+		var gy := rng.randf_range(8, 216)
+		draw_circle(Vector2(gx, gy), 2.0, Color(0.35, 0.32, 0.22))
+
+
+func _draw_flowers(rng: RandomNumberGenerator) -> void:
+	var flower_colors := [Color(0.9, 0.3, 0.3), Color(0.9, 0.8, 0.2), Color(0.4, 0.4, 0.9), Color(0.9, 0.5, 0.8)]
+	for i in rng.randi_range(5, 12):
+		var fx := rng.randf_range(8, 248)
+		var fy := rng.randf_range(8, 216)
+		var color: Color = flower_colors[rng.randi() % flower_colors.size()]
+		draw_circle(Vector2(fx, fy), 1.5, color)
+		draw_circle(Vector2(fx, fy), 0.8, Color(1, 1, 0.6))

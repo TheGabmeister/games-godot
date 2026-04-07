@@ -27,6 +27,11 @@ var _grading_presets: Dictionary = {
 	&"dark_world": {"color_shift": Vector3(0.05, -0.03, 0.08), "saturation": 0.8, "brightness": 0.9, "contrast": 1.1},
 	&"boss": {"color_shift": Vector3(0.03, -0.02, -0.02), "saturation": 0.9, "brightness": 0.92, "contrast": 1.15},
 	&"cave": {"color_shift": Vector3(-0.02, -0.01, 0.03), "saturation": 0.85, "brightness": 0.95, "contrast": 1.02},
+	&"desert": {"color_shift": Vector3(0.04, 0.02, -0.03), "saturation": 0.9, "brightness": 1.05, "contrast": 1.05},
+	&"village": {"color_shift": Vector3(0.01, 0.02, -0.01), "saturation": 1.1, "brightness": 1.0, "contrast": 1.0},
+	&"graveyard": {"color_shift": Vector3(-0.03, -0.02, 0.02), "saturation": 0.7, "brightness": 0.88, "contrast": 1.1},
+	&"lake": {"color_shift": Vector3(-0.01, 0.02, 0.04), "saturation": 1.0, "brightness": 1.0, "contrast": 1.0},
+	&"field": {"color_shift": Vector3(0.01, 0.02, -0.01), "saturation": 1.05, "brightness": 1.03, "contrast": 1.0},
 }
 
 var _post_process_rect: ColorRect = null

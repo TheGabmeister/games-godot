@@ -19,3 +19,6 @@ signal dialog_closed()
 signal dialog_force_close()
 
 signal screen_shake_requested(intensity: float, duration: float)
+
+signal lift_requested(target: Node2D)
+signal room_lit(room_id: StringName)

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="LootTable" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/loot_table.gd" id="1_lt"]
+
+[resource]
+script = ExtResource("1_lt")
+item_ids = PackedStringArray("heart", "rupee_green", "rupee_blue", "magic_jar_small")
+weights = PackedFloat32Array(2.5, 2.0, 0.8, 1.0)
+nothing_weight = 4.0

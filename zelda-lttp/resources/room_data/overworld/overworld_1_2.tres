@@ -14,4 +14,4 @@ music_track = &"overworld"
 ambient_color = Color(1, 0.98, 0.9, 1)
 is_dark_room = false
 is_safe_respawn_point = false
-neighbor_ids = {"left": &"overworld_0_2", "right": &"overworld_2_2", "up": &"overworld_1_1", "down": &"overworld_1_3"}
+neighbor_ids = {"down": &"overworld_1_3", "left": &"overworld_0_2", "right": &"overworld_2_2", "up": &"overworld_1_1"}

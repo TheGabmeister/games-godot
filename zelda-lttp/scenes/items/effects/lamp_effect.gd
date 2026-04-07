@@ -13,6 +13,12 @@ func can_use(_player: CharacterBody2D) -> bool:
 
 
 func activate(player: CharacterBody2D) -> float:
+	# If in a dark room, light it permanently
+	if SceneManager.current_room_data and SceneManager.current_room_data.is_dark_room:
+		var lit_flag := "%s/lit" % SceneManager.current_room_data.room_id
+		if not GameManager.get_flag(lit_flag):
+			EventBus.room_lit.emit(SceneManager.current_room_data.room_id)
+
 	var light := PointLight2D.new()
 	light.color = Color(1.0, 0.85, 0.4)
 	light.energy = 1.2

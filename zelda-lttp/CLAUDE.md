@@ -251,6 +251,38 @@ Hearts flash white briefly when lost. Rupee counter ticks up/down digit by digit
 
 `SaveManager` (`autoloads/save_manager.gd`) — fully functional. 3 slots at `user://saves/save_{slot}.json`. `schema_version` for future migration. Methods: `save_game(slot)`, `load_game(slot)`, `has_save(slot)`, `get_slot_metadata(slot)`, `delete_save(slot)`. Serializes `PlayerState` (skills by id via ItemRegistry, upgrades, resources, bottles) and `GameManager` (flags, safe position) under the `game_manager` top-level key. `PlayerState.serialize()`/`deserialize()`/`reset()` and `GameManager.serialize()`/`deserialize()`/`reset()` implemented. Unknown skill ids on load log a warning and are skipped (soft-fail). Play time tracked in main.gd. Save trigger: B button (K/Z) in the pause subscreen.
 
+### Destructible Objects and Lifting (Phase 7.4)
+
+`Destructible` (`scenes/objects/destructible.gd`) base class extends `StaticBody2D`. Weight system: `@export var weight: int` (0=bare hands, 1=Power Glove, 2=Titan's Mitt). Boolean exports: `liftable`, `sword_destroyable`, `dash_destroyable`. Persist via GameManager flags.
+
+Concrete types: `Bush` (sword/dash/throw destroyable, weight 0), `Pot` (lift only, weight 0), `Skull` (lift/throw, weight 0), `SignPost` (shows dialog first, then lifts, weight 0). Each has `_draw()` visuals and a `LootTable` export.
+
+Player states: `LiftState` → `CarryState` → `ThrowState`. Lift triggered by `EventBus.lift_requested` from destructible `interact()`. CarryState: reduced speed, no sword. ThrowState spawns `ThrownObject` (Area2D projectile, shatters on impact, drops loot). `CarriedVisual` node drawn above player head.
+
+`DashState` checks `get_slide_collision()` for `Destructible.dash_destroyable` to break bushes on dash.
+
+### NPC System (Phase 7.3)
+
+`NPC` (`scenes/objects/npc.gd`) extends `Node2D`. Exports: `npc_name`, `dialog_lines`, `required_flag` (invisible until flag true), `reward_item`+`reward_flag` (one-time reward after dialog), `wander_enabled`+`wander_radius`, `npc_color`. Simple humanoid `_draw()` visual. Creates interaction area (Interactables layer) and collision body. Wander uses IDLE/WALKING state with random targets within radius.
+
+### Heart Pieces (Phase 7.2)
+
+`heart_piece.tres` (RESOURCE, resource_key=&"heart_piece") — existing PlayerState logic: 4 pieces = +2 max_health. `heart_container.tres` (RESOURCE, resource_key=&"heart_container") — direct +2 max_health and full heal. 20 heart pieces placed across overworld (13 in chests, 3 in optional caves, 4 as NPC/overworld rewards). 2 heart containers from D02/D03 pedestals. Total achievable max_health = 20 (10 hearts).
+
+### Additional Dungeons (Phase 7.1)
+
+**Dungeon 2: Desert Temple** (`scenes/rooms/dungeons/dungeon_02/`, dungeon_id=&"dungeon_02") — 8 rooms in 2x4 grid. Conveyor/pit-heavy. Entrance→Conveyor Hall→Pit Maze→Key Hub→Conveyor Puzzle→Big Key Room→Pre-Boss→Boss Room. 3 small keys, map, compass, big key. RewardPedestal grants heart_container + sets pendants/power flag.
+
+**Dungeon 3: Shadow Crypt** (`scenes/rooms/dungeons/dungeon_03/`, dungeon_id=&"dungeon_03") — 8 rooms in 3x3 grid (8 used). Dark rooms requiring Lamp (4 of 8 rooms). Traversal puzzles. RewardPedestal grants heart_container + sets pendants/wisdom flag.
+
+Dark room system: `dungeon_room.gd._ready()` sets CanvasModulate to near-black when `room_data.is_dark_room`. `EventBus.room_lit` signal + handler tweens back to normal. `lamp_effect.gd` emits `room_lit` when used in dark room, sets `{room_id}/lit` flag.
+
+### Expanded Overworld (Phase 7.5)
+
+8x8 overworld grid (64 rooms total, expanded from 4x4). 7 biomes: Plains, Forest, Mountain, Lake, Desert, Village, Graveyard, Field. Each biome has unique palette in `overworld_room.gd BIOME_COLORS` and decoration draw functions. Color grading presets added to SceneManager for all biomes.
+
+3 optional caves (`cave_02` through `cave_04`) with heart piece rewards. Dungeon entrances at overworld_6_3 (D02) and overworld_3_5 (D03). NPCs in village biome. Bushes, pots, signs scattered in various rooms.
+
 ## Current Phase Status
 
-Phase 1 complete, Phase 2 complete (2.1-2.7), Phase 3 complete (3.1-3.8), Phase 4 complete (4.1-4.4), Phase 5 complete (5.1), Phase 6 complete (6.1-6.6). All 5 enemy types implemented with full behavior. Projectile system, pickup/loot system with 13 pickup types (9 original + small_key, big_key, map, compass), weighted loot tables wired to all enemies. Phase 3: 10 SKILL items (Bow, Bomb, Boomerang, Hookshot, Lamp, Fire Rod, Ice Rod, Hammer, Magic Powder, Magic Mirror) with effect scripts. 16 UPGRADE items. Phase 4: 4x4 light world overworld grid with screen-edge scroll transitions, 2 interiors (cave + house) with iris/fade transitions, 4-room dungeon (Eastern Palace) with locked door, boss door, push block, switch, pressure plate, and chests. 2x2 dark world subset with world portal and bunny transform. TransitionOverlay with fade and iris effects. Door, LockedDoor, BossDoor, PushBlock, DungeonSwitch, PressurePlate, SwitchDoor, ConveyorBelt, WorldPortal scene components. Phase 5: Eastern Palace playable end-to-end with RewardPedestal (Pendant of Courage), WarpTile, enemies in all 4 dungeon rooms. Phase 6: HUD polish (heart flash, rupee tick, item highlight flash, background panels), dialog system with typewriter effect, Cutscene autoload with coroutine primitives, effects pass (TorchFlicker, SquashStretch, ImpactParticles, color grading transitions), title screen with slot select, full save/load system (3 slots, JSON, schema_version, round-trip serialization). Three test scenes: `debug/damage_formula_test.tscn` (38 tests), `debug/test_loot_table.tscn` (10 tests), `debug/test_player_state.tscn` (37 tests).
+Phase 1 complete, Phase 2 complete (2.1-2.7), Phase 3 complete (3.1-3.8), Phase 4 complete (4.1-4.4), Phase 5 complete (5.1), Phase 6 complete (6.1-6.6), Phase 7 complete (7.1-7.5). All 5 enemy types implemented with full behavior. Projectile system, pickup/loot system with 13 pickup types (9 original + small_key, big_key, map, compass), weighted loot tables wired to all enemies. Phase 3: 10 SKILL items (Bow, Bomb, Boomerang, Hookshot, Lamp, Fire Rod, Ice Rod, Hammer, Magic Powder, Magic Mirror) with effect scripts. 16 UPGRADE items. Phase 4: 4x4 light world overworld grid with screen-edge scroll transitions, 2 interiors (cave + house) with iris/fade transitions, 4-room dungeon (Eastern Palace) with locked door, boss door, push block, switch, pressure plate, and chests. 2x2 dark world subset with world portal and bunny transform. TransitionOverlay with fade and iris effects. Door, LockedDoor, BossDoor, PushBlock, DungeonSwitch, PressurePlate, SwitchDoor, ConveyorBelt, WorldPortal scene components. Phase 5: Eastern Palace playable end-to-end with RewardPedestal (Pendant of Courage), WarpTile, enemies in all 4 dungeon rooms. Phase 6: HUD polish (heart flash, rupee tick, item highlight flash, background panels), dialog system with typewriter effect, Cutscene autoload with coroutine primitives, effects pass (TorchFlicker, SquashStretch, ImpactParticles, color grading transitions), title screen with slot select, full save/load system (3 slots, JSON, schema_version, round-trip serialization). Phase 7: Destructible objects (Bush, Pot, Skull, SignPost) with lift/carry/throw system (3 new player states), NPC system with dialog/flag-gating/rewards/wandering, heart pieces (20 placed) and heart containers, Dungeon 2 (Desert Temple, 8 rooms, conveyor/pit theme), Dungeon 3 (Shadow Crypt, 8 rooms, dark room/traversal theme with lamp lighting), expanded 8x8 overworld with 7 biomes and 3 optional caves. Three test scenes: `debug/damage_formula_test.tscn` (38 tests), `debug/test_loot_table.tscn` (10 tests), `debug/test_player_state.tscn` (37 tests).

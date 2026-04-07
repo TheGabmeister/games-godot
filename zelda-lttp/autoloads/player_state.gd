@@ -195,6 +195,10 @@ func _acquire_resource(item: ItemData) -> void:
 				max_health += 2
 				current_health = max_health
 				EventBus.player_health_changed.emit(current_health, max_health)
+		&"heart_container":
+			max_health += 2
+			current_health = max_health
+			EventBus.player_health_changed.emit(current_health, max_health)
 		&"small_key":
 			var dungeon_id: StringName = SceneManager.current_room_data.dungeon_id if SceneManager.current_room_data else &""
 			add_small_key(dungeon_id, item.resource_amount)
