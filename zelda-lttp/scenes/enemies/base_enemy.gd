@@ -58,9 +58,12 @@ func _on_hurt(hitbox_data: Dictionary) -> void:
 
 	health_component.take_damage(result.final_damage)
 	flash_component.flash()
+	AudioManager.play_sfx(&"enemy_hurt")
 
 	# Sword impact particles
 	ImpactParticles.sword_hit(get_tree(), global_position)
+	if dmg_type == DamageType.Type.SWORD:
+		AudioManager.play_sfx(&"sword_hit")
 
 	# Knockback with resistance
 	var resistance: float = enemy_data.knockback_resistance if enemy_data else 0.0
@@ -77,6 +80,7 @@ func _on_hurt(hitbox_data: Dictionary) -> void:
 
 
 func _on_died() -> void:
+	AudioManager.play_sfx(&"enemy_death")
 	_spawn_death_particles()
 	loot_drop.drop(global_position)
 	EventBus.enemy_defeated.emit(enemy_data.id if enemy_data else &"", global_position)

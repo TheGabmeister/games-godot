@@ -30,7 +30,8 @@
       "Bash(grep -l \"door\\\\|chest\\\\|npc\\\\|bush\\\\|pot\\\\|sign\" c:/dev/games-godot/zelda-lttp/scenes/rooms/overworld/overworld_[4-7]_*.tscn c:/dev/games-godot/zelda-lttp/scenes/rooms/overworld/overworld_*_[4-7].tscn)",
       "Bash(python3 tools/add_heart_pieces.py)",
       "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path c:/dev/games-godot/zelda-lttp --headless --import)",
-      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path c:/dev/games-godot/zelda-lttp --headless --quit)"
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --path c:/dev/games-godot/zelda-lttp --headless --quit)",
+      "Bash(grep -v '^$')"
     ]
   }
 }

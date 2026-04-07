@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://c8player001"]
+[gd_scene load_steps=30 format=3 uid="uid://c8player001"]
 
 [ext_resource type="Script" path="res://scenes/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scenes/player/player_body.gd" id="2_body"]
@@ -22,6 +22,8 @@
 [ext_resource type="Script" path="res://scenes/player/states/lift_state.gd" id="20_lift"]
 [ext_resource type="Script" path="res://scenes/player/states/carry_state.gd" id="21_carry"]
 [ext_resource type="Script" path="res://scenes/player/states/throw_state.gd" id="22_throw"]
+[ext_resource type="Script" path="res://scenes/player/states/death_state.gd" id="23_death"]
+[ext_resource type="Script" path="res://scenes/player/states/trapped_state.gd" id="24_trapped"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(12, 14)
@@ -138,6 +140,14 @@ script = ExtResource("21_carry")
 
 [node name="Throw" type="Node" parent="StateMachine"]
 script = ExtResource("22_throw")
+
+[node name="Death" type="Node" parent="StateMachine"]
+process_mode = 3
+script = ExtResource("23_death")
+
+[node name="Trapped" type="Node" parent="StateMachine"]
+process_mode = 3
+script = ExtResource("24_trapped")
 
 [node name="SquashStretch" type="Node" parent="." node_paths=PackedStringArray("target_path")]
 script = ExtResource("19_squash")

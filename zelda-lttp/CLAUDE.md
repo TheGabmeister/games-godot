@@ -283,6 +283,33 @@ Dark room system: `dungeon_room.gd._ready()` sets CanvasModulate to near-black w
 
 3 optional caves (`cave_02` through `cave_04`) with heart piece rewards. Dungeon entrances at overworld_6_3 (D02) and overworld_3_5 (D03). NPCs in village biome. Bushes, pots, signs scattered in various rooms.
 
+### Glove Upgrades (Phase 8.1)
+
+`SkullRock` (weight 1, requires Power Glove) and `DarkBoulder` (weight 2, requires Titan's Mitt) extend `Destructible`. LiftState checks `object.weight <= PlayerState.get_upgrade(&"gloves")` with screen shake on fail. Placed in mountain/graveyard overworld rooms as future-gated obstacles. Upgrade items `power_glove.tres` (tier 1) and `titans_mitt.tres` (tier 2) already existed from Phase 3.
+
+### Game Over (Phase 8.2)
+
+`DeathState` (`scenes/player/states/death_state.gd`, process_mode=ALWAYS): spin animation → collapse → emits `EventBus.game_over_requested`. `GameOverScreen` (`scenes/ui/game_over_screen.gd`) on GameOverLayer (CanvasLayer 22, process_mode=ALWAYS): shows Continue / Save and Quit menu. `main.gd` handles:
+- `game_over_requested` → pause tree, show screen
+- `game_over_continue` → respawn at `GameManager.last_safe_room_id` with 3 hearts (6 half-hearts)
+- `game_over_save_quit` → save to current slot, return to title screen
+
+`EventBus.player_died` triggers `player.gd._on_player_died()` → transitions to DeathState.
+
+### Advanced Enemies (Phase 8.3)
+
+**Wizzrobe** (`scenes/enemies/wizzrobe/`): 6 states (Hidden→Appear→Telegraph→Fire→Disappear→repeat + Stunned). No DetectionZone. Teleports to predefined positions. Invulnerable during Hidden/Disappear. Spawns magic Projectile (damage_type=MAGIC, deflectable). `set_invulnerable()` toggles HurtboxComponent collision.
+
+**Like-Like** (`scenes/enemies/like_like/`): 4 states (Idle→Pursue→Engulf + Stunned). DetectionZone for player tracking. On Engulf: forces player into `TrappedState`. Player mashes `action_sword` to escape (6 presses). Timeout calls `PlayerState.reduce_upgrade(&"shield", 1)`. Releases player on death.
+
+`TrappedState` (`scenes/player/states/trapped_state.gd`, process_mode=ALWAYS): tracks captor, tick damage, mash counter, escape/timeout logic.
+
+### Audio Coverage (Phase 8.4)
+
+38 SFX call sites covering: sword_swing, sword_hit, shield_block, shield_reflect, shield_break, pickups (heart/rupee/generic), chest_open, door_unlock, bomb_place, bomb_explode, arrow_fire, hookshot_clink, hammer, player_hurt, player_death, enemy_hurt, enemy_death, enemy_shoot, engulf, escape, menu_move, menu_select, menu_back, text_blip, dash_start, block_push, switch, fall, transition, item_fanfare, item_fanfare_minor, lift, throw, bush_cut, error, clink.
+
+BGM tracks via RoomData.music_track: overworld, dungeon, cave, dark_world, house. Direct play_bgm: title, game_over. Boss BGM deferred to Phase 9.
+
 ## Current Phase Status
 
-Phase 1 complete, Phase 2 complete (2.1-2.7), Phase 3 complete (3.1-3.8), Phase 4 complete (4.1-4.4), Phase 5 complete (5.1), Phase 6 complete (6.1-6.6), Phase 7 complete (7.1-7.5). All 5 enemy types implemented with full behavior. Projectile system, pickup/loot system with 13 pickup types (9 original + small_key, big_key, map, compass), weighted loot tables wired to all enemies. Phase 3: 10 SKILL items (Bow, Bomb, Boomerang, Hookshot, Lamp, Fire Rod, Ice Rod, Hammer, Magic Powder, Magic Mirror) with effect scripts. 16 UPGRADE items. Phase 4: 4x4 light world overworld grid with screen-edge scroll transitions, 2 interiors (cave + house) with iris/fade transitions, 4-room dungeon (Eastern Palace) with locked door, boss door, push block, switch, pressure plate, and chests. 2x2 dark world subset with world portal and bunny transform. TransitionOverlay with fade and iris effects. Door, LockedDoor, BossDoor, PushBlock, DungeonSwitch, PressurePlate, SwitchDoor, ConveyorBelt, WorldPortal scene components. Phase 5: Eastern Palace playable end-to-end with RewardPedestal (Pendant of Courage), WarpTile, enemies in all 4 dungeon rooms. Phase 6: HUD polish (heart flash, rupee tick, item highlight flash, background panels), dialog system with typewriter effect, Cutscene autoload with coroutine primitives, effects pass (TorchFlicker, SquashStretch, ImpactParticles, color grading transitions), title screen with slot select, full save/load system (3 slots, JSON, schema_version, round-trip serialization). Phase 7: Destructible objects (Bush, Pot, Skull, SignPost) with lift/carry/throw system (3 new player states), NPC system with dialog/flag-gating/rewards/wandering, heart pieces (20 placed) and heart containers, Dungeon 2 (Desert Temple, 8 rooms, conveyor/pit theme), Dungeon 3 (Shadow Crypt, 8 rooms, dark room/traversal theme with lamp lighting), expanded 8x8 overworld with 7 biomes and 3 optional caves. Three test scenes: `debug/damage_formula_test.tscn` (38 tests), `debug/test_loot_table.tscn` (10 tests), `debug/test_player_state.tscn` (37 tests).
+Phase 1 complete, Phase 2 complete (2.1-2.7), Phase 3 complete (3.1-3.8), Phase 4 complete (4.1-4.4), Phase 5 complete (5.1), Phase 6 complete (6.1-6.6), Phase 7 complete (7.1-7.5), Phase 8 complete (8.1-8.4). 7 enemy types (5 base + Wizzrobe + Like-Like). Projectile system, pickup/loot system with 13 pickup types, weighted loot tables. 10 SKILL items, 16 UPGRADE items. 8x8 overworld with 7 biomes, 3 dungeons (4+8+8 rooms), 4 interiors. Lift/carry/throw with weight tiers (gloves upgrade). Game Over with death animation, continue/save-quit. Full audio coverage (38 SFX + 7 BGM tracks). Three test scenes: `debug/damage_formula_test.tscn` (38 tests), `debug/test_loot_table.tscn` (10 tests), `debug/test_player_state.tscn` (37 tests).

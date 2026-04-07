@@ -18,6 +18,7 @@ func _ready() -> void:
 
 func fade_out(duration: float = 0.3) -> void:
 	_kill_tween()
+	AudioManager.play_sfx(&"transition")
 	color_rect.material = null
 	color_rect.visible = true
 	color_rect.color = Color(0, 0, 0, 0)

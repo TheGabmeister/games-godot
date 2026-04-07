@@ -25,6 +25,7 @@ func _ready() -> void:
 	_screen = Screen.TITLE
 	_cursor = 0
 	visible = true
+	AudioManager.play_bgm(&"title")
 
 
 func _process(delta: float) -> void:

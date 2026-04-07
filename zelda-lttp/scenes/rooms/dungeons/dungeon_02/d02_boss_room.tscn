@@ -4,7 +4,8 @@
 [ext_resource type="Resource" path="res://resources/room_data/dungeons/d02_boss_room.tres" id="2_rd"]
 [ext_resource type="Script" path="res://scenes/objects/door.gd" id="3_door"]
 [ext_resource type="Script" path="res://scenes/rooms/components/reward_pedestal.gd" id="4_pedestal"]
-[ext_resource type="Resource" path="res://resources/items/rewards/heart_container.tres" id="5_heart"]
+[ext_resource type="Resource" path="res://resources/items/rewards/pendant_power.tres" id="5_pendant"]
+[ext_resource type="Resource" path="res://resources/items/rewards/heart_container.tres" id="5b_heart"]
 [ext_resource type="Script" path="res://scenes/objects/pit_hazard.gd" id="6_pit"]
 [ext_resource type="Script" path="res://scenes/objects/conveyor_belt.gd" id="7_conv"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/stalfos/stalfos.tscn" id="8_stalfos"]
@@ -54,7 +55,8 @@ position = Vector2(176, 80)
 script = ExtResource("4_pedestal")
 dungeon_id = &"dungeon_02"
 reward_flag = &"pendants/power"
-reward_item = ExtResource("5_heart")
+reward_item = ExtResource("5_pendant")
+secondary_reward_item = ExtResource("5b_heart")
 persist_id = &"pedestal"
 warp_target_room_id = &"d02_entrance"
 warp_target_entry_point = &"from_overworld"

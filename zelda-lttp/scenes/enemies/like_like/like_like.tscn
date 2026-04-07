@@ -1,0 +1,102 @@
+[gd_scene load_steps=15 format=3 uid="uid://c8likelike01"]
+
+[ext_resource type="Script" path="res://scenes/enemies/like_like/like_like.gd" id="1_ll"]
+[ext_resource type="Script" path="res://scenes/enemies/like_like/like_like_body.gd" id="2_body"]
+[ext_resource type="Script" path="res://components/state_machine.gd" id="3_sm"]
+[ext_resource type="Script" path="res://scenes/enemies/like_like/like_like_idle.gd" id="4_idle"]
+[ext_resource type="Script" path="res://scenes/enemies/like_like/like_like_pursue.gd" id="5_pursue"]
+[ext_resource type="Script" path="res://scenes/enemies/like_like/like_like_engulf.gd" id="6_engulf"]
+[ext_resource type="Script" path="res://scenes/enemies/shared/stunned_state.gd" id="7_stun"]
+[ext_resource type="Script" path="res://components/hurtbox_component.gd" id="8_hurtbox"]
+[ext_resource type="Script" path="res://components/hitbox_component.gd" id="9_hitbox"]
+[ext_resource type="Script" path="res://components/health_component.gd" id="10_health"]
+[ext_resource type="Script" path="res://components/knockback_component.gd" id="11_kb"]
+[ext_resource type="Script" path="res://components/flash_component.gd" id="12_flash"]
+[ext_resource type="Script" path="res://components/loot_drop_component.gd" id="13_loot"]
+[ext_resource type="Resource" path="res://resources/enemies/like_like.tres" id="14_data"]
+
+[sub_resource type="RectangleShape2D" id="body_shape"]
+size = Vector2(14, 16)
+
+[sub_resource type="RectangleShape2D" id="hurtbox_shape"]
+size = Vector2(14, 16)
+
+[sub_resource type="RectangleShape2D" id="contact_shape"]
+size = Vector2(16, 18)
+
+[sub_resource type="CircleShape2D" id="detection_shape"]
+radius = 64.0
+
+[node name="LikeLike" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_ll")
+enemy_data = ExtResource("14_data")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 2)
+shape = SubResource("body_shape")
+
+[node name="EnemyBody" type="Node2D" parent="."]
+script = ExtResource("2_body")
+
+[node name="HurtboxComponent" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 8
+script = ExtResource("8_hurtbox")
+team = &"enemy"
+invincibility_duration = 0.3
+
+[node name="HurtboxShape" type="CollisionShape2D" parent="HurtboxComponent"]
+position = Vector2(0, 2)
+shape = SubResource("hurtbox_shape")
+
+[node name="ContactHitbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("9_hitbox")
+damage = 2
+damage_type = 0
+knockback_force = 80.0
+source_team = &"enemy"
+
+[node name="ContactShape" type="CollisionShape2D" parent="ContactHitbox"]
+position = Vector2(0, 2)
+shape = SubResource("contact_shape")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("10_health")
+
+[node name="KnockbackComponent" type="Node" parent="."]
+script = ExtResource("11_kb")
+
+[node name="FlashComponent" type="Node" parent="."]
+script = ExtResource("12_flash")
+
+[node name="LootDropComponent" type="Node" parent="."]
+script = ExtResource("13_loot")
+
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("3_sm")
+initial_state = NodePath("Idle")
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("4_idle")
+
+[node name="Pursue" type="Node" parent="StateMachine"]
+script = ExtResource("5_pursue")
+
+[node name="Engulf" type="Node" parent="StateMachine"]
+script = ExtResource("6_engulf")
+
+[node name="Stunned" type="Node" parent="StateMachine"]
+script = ExtResource("7_stun")
+
+[node name="DetectionZone" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="DetectionShape" type="CollisionShape2D" parent="DetectionZone"]
+shape = SubResource("detection_shape")

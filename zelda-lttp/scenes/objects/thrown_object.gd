@@ -7,6 +7,8 @@ var damage: int = 2
 var drop_table: LootTable
 var visual_color: Color = Color(0.5, 0.4, 0.3)
 var visual_type: StringName = &"pot"  # pot, bush, skull, sign
+var persist_id: StringName = &""
+var persist_room_id: StringName = &""
 
 var _lifetime: float = 0.0
 const MAX_LIFETIME := 1.5
@@ -55,10 +57,17 @@ func _on_area_entered(area: Area2D) -> void:
 
 
 func _shatter() -> void:
+	_persist_removal()
 	_spawn_particles()
 	_spawn_loot()
 	AudioManager.play_sfx(&"bush_cut")
 	queue_free()
+
+
+func _persist_removal() -> void:
+	if persist_id == &"" or persist_room_id == &"":
+		return
+	GameManager.set_flag("%s/%s" % [persist_room_id, persist_id], true)
 
 
 func _spawn_loot() -> void:

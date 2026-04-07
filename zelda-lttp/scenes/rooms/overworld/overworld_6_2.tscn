@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/rooms/overworld/overworld_room.gd" id="1_script"]
 [ext_resource type="Resource" path="res://resources/room_data/overworld/overworld_6_2.tres" id="2_rd"]
+[ext_resource type="Script" path="res://scenes/objects/dark_boulder.gd" id="3_boulder"]
 
 [node name="overworld_6_2" type="Node2D"]
 script = ExtResource("1_script")
@@ -15,6 +16,12 @@ color = Color(0.5, 0.45, 0.4, 1)
 
 [node name="Entities" type="Node2D" parent="."]
 y_sort_enabled = true
+
+[node name="DarkBoulder1" type="StaticBody2D" parent="Entities"]
+position = Vector2(128, 80)
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("3_boulder")
 
 [node name="EntryPoints" type="Node2D" parent="."]
 

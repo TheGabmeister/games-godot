@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://j6oqo86uxk0h" path="res://scenes/ui/pause_subscreen.gd" id="4_pause"]
 [ext_resource type="Script" uid="uid://bt4a2sqa7xonj" path="res://scenes/ui/dialog_box.gd" id="5_dialog"]
 [ext_resource type="Script" path="res://scenes/main/transition_overlay.gd" id="6_transition"]
+[ext_resource type="Script" path="res://scenes/ui/game_over_screen.gd" id="7_gameover"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_post"]
 shader = ExtResource("2_post")
@@ -64,6 +65,20 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
+
+[node name="GameOverLayer" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 22
+
+[node name="GameOverScreen" type="Control" parent="GameOverLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_gameover")
 
 [node name="PauseLayer" type="CanvasLayer" parent="." unique_id=1965254366]
 process_mode = 3

@@ -22,3 +22,6 @@ signal screen_shake_requested(intensity: float, duration: float)
 
 signal lift_requested(target: Node2D)
 signal room_lit(room_id: StringName)
+signal game_over_requested()
+signal game_over_continue()
+signal game_over_save_quit()

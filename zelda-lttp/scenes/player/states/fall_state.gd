@@ -9,6 +9,7 @@ func enter(msg: Dictionary = {}) -> void:
 	super.enter(msg)
 	_fall_timer = 0.0
 	player.velocity = Vector2.ZERO
+	AudioManager.play_sfx(&"fall")
 
 	# Shrink tween
 	var tween := player.create_tween()

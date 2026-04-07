@@ -4,7 +4,8 @@ class_name RewardPedestal extends Node2D
 
 @export var dungeon_id: StringName = &""
 @export var reward_flag: StringName = &""  # e.g. &"pendants/courage"
-@export var reward_item: ItemData
+@export var reward_item: ItemData  ## Primary reward shown first (pendant)
+@export var secondary_reward_item: ItemData  ## Second reward shown after (heart container)
 @export var persist_id: StringName = &"pedestal"
 @export var warp_target_room_id: StringName = &""
 @export var warp_target_entry_point: StringName = &""
@@ -55,11 +56,16 @@ func interact() -> void:
 	if room_id != &"" and persist_id != &"":
 		GameManager.set_flag("%s/%s" % [room_id, persist_id], true)
 
-	# 5. Present reward item via ItemGetState
+	# 5. Present primary reward item via ItemGetState
 	EventBus.item_get_requested.emit(reward_item)
-
-	# 6. After ItemGetState dismisses, spawn warp tile
 	await EventBus.dialog_closed
+
+	# 6. Present secondary reward if set (e.g. heart container after pendant)
+	if secondary_reward_item:
+		EventBus.item_get_requested.emit(secondary_reward_item)
+		await EventBus.dialog_closed
+
+	# 7. Spawn warp tile
 	_spawn_warp_tile()
 
 	queue_redraw()

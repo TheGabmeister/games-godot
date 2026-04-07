@@ -4,6 +4,7 @@ extends Node
 @onready var transition_overlay: CanvasLayer = $TransitionOverlay
 @onready var pause_subscreen: Control = $PauseLayer/PauseSubscreen
 @onready var post_process_rect: ColorRect = $PostProcessLayer/ColorRect
+@onready var game_over_screen: Control = $GameOverLayer/GameOverScreen
 
 var _player: Player = null
 var _title_screen: Control = null
@@ -22,6 +23,9 @@ func _ready() -> void:
 	# Connect signals
 	EventBus.room_transition_requested.connect(_on_room_transition_requested)
 	EventBus.world_switch_requested.connect(_on_world_switch_requested)
+	EventBus.game_over_requested.connect(_on_game_over_requested)
+	EventBus.game_over_continue.connect(_on_game_over_continue)
+	EventBus.game_over_save_quit.connect(_on_game_over_save_quit)
 
 	# Show title screen
 	_show_title_screen()
@@ -151,3 +155,58 @@ func _on_world_switch_requested(target_world_type: StringName) -> void:
 
 func get_play_time() -> int:
 	return int(_play_time_seconds)
+
+
+# --- Game Over ---
+
+func _on_game_over_requested() -> void:
+	get_tree().paused = true
+	game_over_screen.show_game_over()
+
+
+func _on_game_over_continue() -> void:
+	# Respawn at dungeon entrance or last safe overworld point
+	var respawn_room: StringName = GameManager.last_safe_room_id
+	var respawn_pos: Vector2 = GameManager.last_safe_position
+
+	# Restore health to 3 hearts (6 half-hearts), not full
+	PlayerState.current_health = mini(6, PlayerState.max_health)
+	EventBus.player_health_changed.emit(PlayerState.current_health, PlayerState.max_health)
+
+	# Reset player body visuals (DeathState.exit already does this, but ensure)
+	if _player:
+		_player.player_body.rotation = 0.0
+		_player.player_body.scale = Vector2.ONE
+		_player.player_body.modulate = Color.WHITE
+
+	# Load respawn room
+	if respawn_room != &"" and SceneManager.room_registry.has(respawn_room):
+		SceneManager.load_room(respawn_room)
+		if _player:
+			_player.global_position = respawn_pos
+			_player.state_machine.transition_to(&"Idle")
+	else:
+		_load_starting_room()
+		if _player:
+			_player.state_machine.transition_to(&"Idle")
+
+	get_tree().paused = false
+
+
+func _on_game_over_save_quit() -> void:
+	# Save current state then return to title screen
+	if GameManager.current_save_slot >= 0:
+		SaveManager.save_game(GameManager.current_save_slot)
+
+	# Clean up player and room
+	if _player:
+		if _player.get_parent():
+			_player.get_parent().remove_child(_player)
+		_player.queue_free()
+		_player = null
+	if SceneManager.current_room:
+		SceneManager.current_room.queue_free()
+		SceneManager.current_room = null
+		SceneManager.current_room_data = null
+
+	_show_title_screen()

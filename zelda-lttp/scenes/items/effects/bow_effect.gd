@@ -9,6 +9,7 @@ func can_use(player: CharacterBody2D) -> bool:
 
 
 func activate(player: CharacterBody2D) -> float:
+	AudioManager.play_sfx(&"arrow_fire")
 	var arrow: Area2D = ARROW_SCENE.instantiate()
 	arrow.direction = player.facing_direction.normalized()
 	arrow.global_position = player.global_position + player.facing_direction * 8.0

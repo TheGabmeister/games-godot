@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/rooms/overworld/overworld_room.gd" id="1_script"]
 [ext_resource type="Resource" path="res://resources/room_data/overworld/overworld_5_5.tres" id="2_rd"]
+[ext_resource type="Script" path="res://scenes/objects/skull_rock.gd" id="3_rock"]
 
 [node name="overworld_5_5" type="Node2D"]
 script = ExtResource("1_script")
@@ -15,6 +16,18 @@ color = Color(0.3, 0.3, 0.25, 1)
 
 [node name="Entities" type="Node2D" parent="."]
 y_sort_enabled = true
+
+[node name="SkullRock1" type="StaticBody2D" parent="Entities"]
+position = Vector2(80, 120)
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("3_rock")
+
+[node name="SkullRock2" type="StaticBody2D" parent="Entities"]
+position = Vector2(96, 120)
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("3_rock")
 
 [node name="EntryPoints" type="Node2D" parent="."]
 

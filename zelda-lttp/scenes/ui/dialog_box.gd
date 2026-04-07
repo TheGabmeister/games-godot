@@ -81,6 +81,8 @@ func _process(delta: float) -> void:
 	while _char_timer >= 1.0 and _char_index < current_text.length():
 		_char_index += 1
 		_char_timer -= 1.0
+		if _char_index % 3 == 0:
+			AudioManager.play_sfx(&"text_blip")
 
 	if _char_index >= current_text.length():
 		_page_complete = true

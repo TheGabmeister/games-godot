@@ -17,35 +17,44 @@ func enter(msg: Dictionary = {}) -> void:
 	var weight: int = _target.weight if "weight" in _target else 0
 	if weight > PlayerState.get_upgrade(&"gloves"):
 		AudioManager.play_sfx(&"error")
+		EventBus.screen_shake_requested.emit(0.5, 0.15)
 		state_machine.transition_to(&"Idle")
 		return
 
 	player.velocity = Vector2.ZERO
 	AudioManager.play_sfx(&"lift")
 
-	# Tween object from its world position to above player head
-	var start_pos: Vector2 = _target.global_position
-	var end_offset := Vector2(0, -16)
-
-	# Remove target from its current parent and store as data
-	# We don't reparent to player — we just track it and free it when done
+	# Capture data from the target before hiding it
 	var target_drop_table: LootTable = _target.drop_table if "drop_table" in _target else null
 	var target_visual_type: StringName = _get_visual_type(_target)
 	var target_visual_color: Color = _target._get_particle_color() if _target.has_method("_get_particle_color") else Color(0.5, 0.4, 0.3)
+	var target_persist_id: StringName = _target.persist_id if "persist_id" in _target else &""
+	var target_room_id: StringName = _target._get_room_id() if _target.has_method("_get_room_id") else &""
 
-	# Remove the destructible from the scene
-	if _target.has_method("_persist_removal"):
-		_target._persist_removal()
-	_target.queue_free()
+	# Hide and disable the destructible — don't free or persist yet
+	_target.visible = false
+	_target.set_deferred("collision_layer", 0)
+	# Disable child areas so the interact probe stops seeing it
+	for child in _target.get_children():
+		if child is Area2D:
+			child.set_deferred("collision_layer", 0)
+			child.set_deferred("monitorable", false)
+		if child is CollisionShape2D:
+			child.set_deferred("disabled", true)
 
 	# After brief lift animation, transition to carry
 	_lift_tween = player.create_tween()
 	_lift_tween.tween_interval(LIFT_DURATION)
 	_lift_tween.tween_callback(func() -> void:
+		# Now free the scene node (still not persisted — that happens on shatter)
+		if is_instance_valid(_target):
+			_target.queue_free()
 		state_machine.transition_to(&"Carry", {
 			"drop_table": target_drop_table,
 			"visual_type": target_visual_type,
 			"visual_color": target_visual_color,
+			"persist_id": target_persist_id,
+			"room_id": target_room_id,
 		})
 	)
 

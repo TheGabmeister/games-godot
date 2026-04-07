@@ -53,8 +53,16 @@ func _ready() -> void:
 	# Connect lift requests from destructibles
 	EventBus.lift_requested.connect(_on_lift_requested)
 
+	# Connect death
+	EventBus.player_died.connect(_on_player_died)
+
 	# Set up interaction probe shape
 	_setup_interaction_probe()
+
+
+func _on_player_died() -> void:
+	if state_machine.current_state.name != &"Death":
+		state_machine.transition_to(&"Death")
 
 
 func _on_lift_requested(target: Node2D) -> void:
@@ -157,6 +165,7 @@ func _on_hurt(hitbox_data: Dictionary) -> void:
 
 	var final_damage: int = result.final_damage
 	PlayerState.apply_damage(final_damage)
+	AudioManager.play_sfx(&"player_hurt")
 
 	# Flash
 	var flash: FlashComponent = get_node_or_null("FlashComponent") as FlashComponent

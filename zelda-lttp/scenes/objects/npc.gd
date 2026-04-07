@@ -18,6 +18,8 @@ var _wander_target: Vector2 = Vector2.ZERO
 var _spawn_position: Vector2 = Vector2.ZERO
 var _move_speed: float = 15.0
 var _visible_flag_met: bool = true
+var _interact_area: Area2D = null
+var _collision_body: StaticBody2D = null
 
 
 func _ready() -> void:
@@ -29,28 +31,32 @@ func _ready() -> void:
 		visible = _visible_flag_met
 
 	# Create interaction area
-	var area := Area2D.new()
-	area.name = "InteractArea"
-	area.collision_layer = 32  # Interactables
-	area.collision_mask = 0
-	area.monitorable = true
+	_interact_area = Area2D.new()
+	_interact_area.name = "InteractArea"
+	_interact_area.collision_layer = 32  # Interactables
+	_interact_area.collision_mask = 0
+	_interact_area.monitorable = true
 	var shape := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
 	rect.size = Vector2(16, 16)
 	shape.shape = rect
-	area.add_child(shape)
-	add_child(area)
+	_interact_area.add_child(shape)
+	add_child(_interact_area)
 
 	# Create collision body so player can't walk through
-	var body := StaticBody2D.new()
-	body.collision_layer = 1  # World
-	body.collision_mask = 0
+	_collision_body = StaticBody2D.new()
+	_collision_body.collision_layer = 1  # World
+	_collision_body.collision_mask = 0
 	var body_shape := CollisionShape2D.new()
 	var body_rect := RectangleShape2D.new()
 	body_rect.size = Vector2(12, 12)
 	body_shape.shape = body_rect
-	body.add_child(body_shape)
-	add_child(body)
+	_collision_body.add_child(body_shape)
+	add_child(_collision_body)
+
+	# Disable interaction and collision when flag-gated and hidden
+	if not _visible_flag_met:
+		_set_active(false)
 
 	if wander_enabled:
 		_wander_timer = randf_range(2.0, 4.0)
@@ -64,8 +70,9 @@ func _process(delta: float) -> void:
 		if GameManager.get_flag(required_flag):
 			_visible_flag_met = true
 			visible = true
+			_set_active(true)
 
-	if not visible:
+	if not _visible_flag_met:
 		return
 
 	if wander_enabled:
@@ -91,7 +98,17 @@ func _update_wander(delta: float) -> void:
 				_wander_timer = randf_range(2.0, 5.0)
 
 
+func _set_active(active: bool) -> void:
+	if _interact_area:
+		_interact_area.collision_layer = 32 if active else 0
+		_interact_area.monitorable = active
+	if _collision_body:
+		_collision_body.collision_layer = 1 if active else 0
+
+
 func interact() -> void:
+	if not _visible_flag_met:
+		return
 	if dialog_lines.is_empty():
 		return
 	EventBus.dialog_requested.emit(dialog_lines)

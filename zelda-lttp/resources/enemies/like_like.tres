@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_data.gd" id="1_ed"]
+[ext_resource type="Resource" path="res://resources/loot_tables/common_loot.tres" id="2_lt"]
+
+[resource]
+script = ExtResource("1_ed")
+id = &"like_like"
+display_name = "Like-Like"
+max_health = 8
+contact_damage = 2
+knockback_resistance = 0.3
+drop_table = ExtResource("2_lt")
+color = Color(0.7, 0.5, 0.3, 1)
+damage_immunities = Array[int]([])

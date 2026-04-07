@@ -4,6 +4,8 @@ extends BasePlayerState
 var drop_table: LootTable = null
 var visual_type: StringName = &"pot"
 var visual_color: Color = Color(0.5, 0.4, 0.3)
+var persist_id: StringName = &""
+var room_id: StringName = &""
 var _carried_visual: Node2D = null
 
 const CARRY_SPEED_MULT := 0.5
@@ -14,6 +16,8 @@ func enter(msg: Dictionary = {}) -> void:
 	drop_table = msg.get("drop_table", null)
 	visual_type = msg.get("visual_type", &"pot")
 	visual_color = msg.get("visual_color", Color(0.5, 0.4, 0.3))
+	persist_id = msg.get("persist_id", &"")
+	room_id = msg.get("room_id", &"")
 
 	# Create a visual node above the player
 	_carried_visual = Node2D.new()
@@ -24,7 +28,7 @@ func enter(msg: Dictionary = {}) -> void:
 	player.add_child(_carried_visual)
 
 
-func physics_update(delta: float) -> void:
+func physics_update(_delta: float) -> void:
 	if is_gameplay_paused():
 		return
 	var input := get_movement_input()
@@ -34,6 +38,9 @@ func physics_update(delta: float) -> void:
 	else:
 		player.velocity = Vector2.ZERO
 	player.move_and_slide()
+
+	# Check screen-edge transitions — drop the object during transition
+	_check_screen_edge_drop()
 
 
 func handle_input(event: InputEvent) -> void:
@@ -45,7 +52,53 @@ func handle_input(event: InputEvent) -> void:
 			"drop_table": drop_table,
 			"visual_type": visual_type,
 			"visual_color": visual_color,
+			"persist_id": persist_id,
+			"room_id": room_id,
 		})
+
+
+func _check_screen_edge_drop() -> void:
+	if SceneManager._is_transitioning:
+		return
+	if not SceneManager.current_room_data:
+		return
+	if SceneManager.current_room_data.room_type != &"overworld":
+		return
+
+	var pos := player.global_position
+	var direction := &""
+	var scroll_dir := Vector2.ZERO
+
+	if pos.x < 0:
+		direction = &"left"
+		scroll_dir = Vector2.LEFT
+	elif pos.x > SceneManager.SCREEN_WIDTH:
+		direction = &"right"
+		scroll_dir = Vector2.RIGHT
+	elif pos.y < 0:
+		direction = &"up"
+		scroll_dir = Vector2.UP
+	elif pos.y > SceneManager.SCREEN_HEIGHT:
+		direction = &"down"
+		scroll_dir = Vector2.DOWN
+
+	if direction == &"":
+		return
+
+	# Drop the carried object before transitioning
+	_drop_carried()
+
+	var room := SceneManager.current_room
+	if room and room.has_method("get_neighbor"):
+		var neighbor_id: StringName = room.get_neighbor(direction)
+		if neighbor_id != &"":
+			SceneManager.scroll_to_room(neighbor_id, scroll_dir)
+
+
+## Drop the carried object without throwing — used during transitions and pits.
+func _drop_carried() -> void:
+	# No persistence — the object is simply lost (not shattered, no loot)
+	state_machine.transition_to(&"Idle")
 
 
 func exit() -> void:
