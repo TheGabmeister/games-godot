@@ -52,6 +52,7 @@ Main (Node)
   +-- DialogLayer (CanvasLayer 15)
   +-- PostProcessLayer (CanvasLayer 19) -- bloom/color-grade shader
   +-- TransitionOverlay (CanvasLayer 20)
+  +-- GameOverLayer (CanvasLayer 22, process_mode=ALWAYS)
   +-- PauseLayer (CanvasLayer 25, process_mode=ALWAYS)
 ```
 
@@ -257,7 +258,7 @@ Hearts flash white briefly when lost. Rupee counter ticks up/down digit by digit
 
 Concrete types: `Bush` (sword/dash/throw destroyable, weight 0), `Pot` (lift only, weight 0), `Skull` (lift/throw, weight 0), `SignPost` (shows dialog first, then lifts, weight 0). Each has `_draw()` visuals and a `LootTable` export.
 
-Player states: `LiftState` → `CarryState` → `ThrowState`. Lift triggered by `EventBus.lift_requested` from destructible `interact()`. CarryState: reduced speed, no sword. ThrowState spawns `ThrownObject` (Area2D projectile, shatters on impact, drops loot). `CarriedVisual` node drawn above player head.
+Player states: `LiftState` → `CarryState` → `ThrowState`. Lift triggered by `EventBus.lift_requested` from destructible `interact()`. LiftState hides the source destructible but keeps it in the tree as a stashed reference (no queue_free, no persist). CarryState: reduced speed, no sword, holds stashed object. On screen-edge transition or pit, `_drop_object_to_world()` restores the stashed object at the player's feet. On throw, the stashed object is freed and `ThrownObject` (Area2D projectile) replaces it — persistence only happens when `ThrownObject._shatter()` fires. `CarriedVisual` node drawn above player head.
 
 `DashState` checks `get_slide_collision()` for `Destructible.dash_destroyable` to break bushes on dash.
 
@@ -292,9 +293,9 @@ Dark room system: `dungeon_room.gd._ready()` sets CanvasModulate to near-black w
 `DeathState` (`scenes/player/states/death_state.gd`, process_mode=ALWAYS): spin animation → collapse → emits `EventBus.game_over_requested`. `GameOverScreen` (`scenes/ui/game_over_screen.gd`) on GameOverLayer (CanvasLayer 22, process_mode=ALWAYS): shows Continue / Save and Quit menu. `main.gd` handles:
 - `game_over_requested` → pause tree, show screen
 - `game_over_continue` → respawn at `GameManager.last_safe_room_id` with 3 hearts (6 half-hearts)
-- `game_over_save_quit` → save to current slot, return to title screen
+- `game_over_save_quit` → restore health to 3 hearts, point save at safe room (not death room), save, return to title
 
-`EventBus.player_died` triggers `player.gd._on_player_died()` → transitions to DeathState.
+Death is triggered **directly at each damage site** (not via signal): `player._on_hurt()`, `fall_state._respawn()`, and `trapped_state.update()` all check `PlayerState.current_health <= 0` after `apply_damage()` and transition to `Death` immediately, preventing race conditions with Knockback/Idle transitions.
 
 ### Advanced Enemies (Phase 8.3)
 

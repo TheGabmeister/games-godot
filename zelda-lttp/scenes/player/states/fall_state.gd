@@ -32,6 +32,11 @@ func _respawn() -> void:
 	# Apply damage
 	PlayerState.apply_damage(FALL_DAMAGE)
 
+	# If lethal, go to Death instead of Idle
+	if PlayerState.current_health <= 0:
+		state_machine.transition_to(&"Death")
+		return
+
 	# Landing squash
 	var tween := player.create_tween()
 	tween.tween_property(player.player_body, "scale", Vector2(1.3, 0.6), 0.05)

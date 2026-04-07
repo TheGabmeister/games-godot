@@ -8,16 +8,16 @@ This repository is a Godot 4.6 recreation of the mechanics and game feel of *The
 
 ## Current Repository State
 
-- Phases 1-5 are implemented. The repo also contains a substantial Phase 6 work-in-progress branch with HUD polish, dialog, cutscene, effects, title screen, and save/load code present, but some of that Phase 6 integration should still be treated as incomplete until verified against the spec.
+- Phases 1-8 are present in the repository, but some Phase 7 and Phase 8 integrations should still be treated as verification-sensitive until they are confirmed end-to-end against `SPEC.md`.
 - `SPEC.md` defines the intended architecture, conventions, milestones, and acceptance criteria.
 - `project.godot` currently confirms:
   - Godot `4.6`
   - Renderer: `Forward Plus`
   - Windows rendering driver: `d3d12`
 - Current implemented baseline includes:
-  - `scenes/main/main.tscn` as the root scene with `World`, `HUDLayer`, `DialogLayer`, `PostProcessLayer`, `TransitionOverlay`, and `PauseLayer`
+  - `scenes/main/main.tscn` as the root scene with `World`, `HUDLayer`, `DialogLayer`, `PostProcessLayer`, `TransitionOverlay`, `GameOverLayer`, and `PauseLayer`
   - Autoloads registered in `project.godot`: `EventBus`, `GameManager`, `ItemRegistry`, `PlayerState`, `AudioManager`, `SceneManager`, `SaveManager`, `Cutscene`
-  - A persistent player scene with Phase 1 states present in the scene tree: `Idle`, `Walk`, `Attack`, `Knockback`, `Fall`, and `Dash`
+  - A persistent player scene with states currently present in the scene tree including `Idle`, `Walk`, `Attack`, `Knockback`, `Fall`, `Dash`, `ItemUse`, `ItemGet`, `Cutscene`, `Swim`, `Lift`, `Carry`, `Throw`, `Death`, and `Trapped`
   - Phase 2 combat components and enemy architecture: shared `HurtboxComponent`, `HitboxComponent`, `HealthComponent`, `KnockbackComponent`, `FlashComponent`, `LootDropComponent`, `EnemyData`, and `base_enemy.gd`
   - Five Phase 2 enemy archetypes implemented as standalone scenes: Soldier, Octorok, Keese, Stalfos, and Buzz Blob
   - A reusable projectile baseline in `scenes/projectiles/projectile_base.tscn`
@@ -27,20 +27,23 @@ This repository is a Godot 4.6 recreation of the mechanics and game feel of *The
   - Phase 4 transition system: `TransitionOverlay` with fade/iris effects, screen-edge scroll transitions, `Door` scene with walk-in/interact triggers
   - Phase 4 dungeon elements: `LockedDoor`, `BossDoor`, `PushBlock`, `DungeonSwitch`, `PressurePlate`, `SwitchDoor`, `ConveyorBelt`
   - Phase 4 world switching: `WorldPortal`, `SceneManager.switch_world()`, bunny transform without Moon Pearl
+  - Phase 6 systems present in the branch: title screen flow, save/load, dialog typewriter flow, cutscene autoload, post-process color grading hooks, squash/stretch helper, torch flicker helper, and impact particle helper
+  - Phase 7 systems present: expanded 8x8 overworld room-data coverage, dungeon 02 and dungeon 03 room sets, NPC scene/reward flows, heart piece placements, destructible/liftable objects, and baseline lift/carry/throw support
+  - Phase 8-era additions currently present: glove-tier liftables (`SkullRock`, `DarkBoulder`), `GameOverScreen`, `DeathState`, `TrappedState`, and advanced enemy scenes/resources for `LikeLike` and `Wizzrobe`
   - Debug coverage including `debug/debug_room.tscn`, `debug/damage_formula_test.gd`, `debug/test_loot_table.tscn`, and `debug/test_player_state.tscn`
   - A debug room with `Entities`, `EntryPoints`, walls, a pit hazard, combat test fixtures, y-sort verification dummies, and 6 Phase 3 test chests
   - A HUD with hearts display, rupee counter, equipped item slot, and magic meter
-  - Phase 6-era additions currently present in the branch: `Cutscene` autoload, title screen scene, dialog typewriter flow, post-process color grading hooks, squash/stretch helper, torch flicker helper, and impact particle helper
-- Later-phase gameplay content is still incomplete, so new work should extend the current Phase 5 baseline and the in-progress Phase 6 branch toward the spec instead of inventing a parallel structure.
+- Later-phase gameplay content is still incomplete, so new work should extend the current Phase 8 baseline toward the Phase 9 boss work in the spec instead of inventing a parallel structure.
 - Some systems intentionally remain scaffolds:
   - Later-phase registries/resources may exist before their full gameplay loops do
 - Some systems are present but should be treated as integration-sensitive rather than assumed finished:
-  - Phase 6 save/load and title-screen flow exist in code, but do not assume end-to-end slot creation, continue flow, or delete flow are complete in the current branch unless you verify them
+  - Phase 6 save/load and title-screen flow exist in code, but do not assume end-to-end slot creation, continue flow, delete flow, or game-over save-and-quit behavior are complete in the current branch unless you verify them
   - Dialog, `ItemGetState`, reward flows, and cutscene waits should be checked carefully before extension; `EventBus.dialog_closed` ownership is especially migration-sensitive
   - Save schema shape and `schema_version` handling should be treated as migration-sensitive if you touch `SaveManager`, `PlayerState.serialize()`, or `GameManager.serialize()`
-- Some spec-defined combat details may still need alignment work even though the Phase 2 baseline is present:
+- Some spec-defined combat and interaction details may still need alignment work even though the Phase 2-8 baseline is present:
   - Shield-block behavior should be treated as migration-sensitive combat logic, not assumed complete unless verified in the current branch
   - Loot/pickup behavior should stay aligned with the spec's weighted-table and pickup-payload expectations when extending drops to bushes, pots, or other destructibles
+  - Lift/carry/throw edge cases, game-over respawn/save behavior, and advanced enemy integration should be treated as verification-sensitive before building further features on top of them
 
 ## Read This First
 
@@ -151,6 +154,8 @@ When possible, verify work in one of these ways:
 - Use the debug room to verify room loading, hazards, player insertion under `Entities`, y-sort behavior, enemy combat behavior, projectile interactions, and pickup drops before treating a Phase 1 or Phase 2 change as done
 - Run the available debug tests when touching combat math or loot behavior, especially `debug/damage_formula_test.gd` and `debug/test_loot_table.tscn`
 - For Phase 6 work, do not stop at headless boot: verify title-screen flow, dialog dismissal, cutscene resume points, and any save/load path you changed
+- For Phase 7 work, verify NPC gating/reward flow, heart piece persistence, dungeon reward pedestal flow, and lift/carry/throw behavior including pit and transition edge cases
+- For Phase 8 work, verify glove-tier lifting, death-to-game-over flow, continue/save-and-quit behavior, and advanced enemy behavior in an authored room or debug setup rather than relying on headless boot alone
 
 Useful local context:
 

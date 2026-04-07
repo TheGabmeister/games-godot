@@ -194,7 +194,20 @@ func _on_game_over_continue() -> void:
 
 
 func _on_game_over_save_quit() -> void:
-	# Save current state then return to title screen
+	# Restore a recoverable state before saving — don't persist 0 HP or death room
+	PlayerState.current_health = mini(6, PlayerState.max_health)
+	EventBus.player_health_changed.emit(PlayerState.current_health, PlayerState.max_health)
+
+	# Point the save at the safe respawn room/position, not the death location.
+	# SaveManager reads room_id from SceneManager.current_room_data and position
+	# from SceneManager._player, so update both before saving.
+	if GameManager.last_safe_room_id != &"":
+		var safe_rd: RoomData = SceneManager._room_data_cache.get(GameManager.last_safe_room_id, null)
+		if safe_rd:
+			SceneManager.current_room_data = safe_rd
+	if _player:
+		_player.global_position = GameManager.last_safe_position
+
 	if GameManager.current_save_slot >= 0:
 		SaveManager.save_game(GameManager.current_save_slot)
 

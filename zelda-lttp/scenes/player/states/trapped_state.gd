@@ -33,6 +33,12 @@ func update(delta: float) -> void:
 		var flash: FlashComponent = player.get_node_or_null("FlashComponent") as FlashComponent
 		if flash:
 			flash.flash()
+		# Lethal tick — release and die
+		if PlayerState.current_health <= 0:
+			if _captor and is_instance_valid(_captor) and _captor.has_method("release_player"):
+				_captor.release_player()
+			state_machine.transition_to(&"Death")
+			return
 
 	# Time's up — drop shield tier and release
 	if _timer >= ENGULF_DURATION:
