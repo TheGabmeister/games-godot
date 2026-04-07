@@ -5,6 +5,10 @@ extends Node
 
 var is_playing: bool = false
 
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
 signal cutscene_started
 signal cutscene_finished
 

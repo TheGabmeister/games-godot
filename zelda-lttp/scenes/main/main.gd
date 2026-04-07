@@ -84,12 +84,13 @@ func _create_player() -> void:
 
 
 func _load_starting_room() -> void:
-	if SceneManager.room_registry.has(&"overworld_0_0"):
+	# Debug: start in debug_room for testing. Change to overworld_0_0 for release.
+	if SceneManager.room_registry.has(&"debug_room"):
+		SceneManager.load_room(&"debug_room")
+	elif SceneManager.room_registry.has(&"overworld_0_0"):
 		SceneManager.load_room(&"overworld_0_0")
 	elif SceneManager.room_registry.has(&"start_house"):
 		SceneManager.load_room(&"start_house")
-	elif SceneManager.room_registry.has(&"debug_room"):
-		SceneManager.load_room(&"debug_room")
 	else:
 		var debug_path := "res://debug/debug_room.tscn"
 		if ResourceLoader.exists(debug_path):

@@ -18,6 +18,7 @@ const CHARS_PER_SECOND := 30.0
 const FAST_CHARS_PER_SECOND := 120.0
 
 var _fast_forward: bool = false
+var _paused_by_dialog: bool = false
 
 
 func _ready() -> void:
@@ -36,6 +37,12 @@ func _on_dialog_requested(lines: Array) -> void:
 	_fast_forward = false
 	_is_active = true
 	visible = true
+	# Pause the game if not already paused (e.g. by ItemGetState or pause menu)
+	if not get_tree().paused:
+		get_tree().paused = true
+		_paused_by_dialog = true
+	else:
+		_paused_by_dialog = false
 	queue_redraw()
 
 
@@ -52,6 +59,10 @@ func _close_dialog() -> void:
 	_char_index = 0
 	_page_complete = false
 	_fast_forward = false
+	# Unpause only if we were the ones who paused
+	if _paused_by_dialog:
+		get_tree().paused = false
+		_paused_by_dialog = false
 	queue_redraw()
 	EventBus.dialog_closed.emit()
 
