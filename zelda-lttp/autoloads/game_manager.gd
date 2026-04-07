@@ -24,3 +24,35 @@ func get_flag(key: StringName, default_value: Variant = false) -> Variant:
 
 func has_flag(key: StringName) -> bool:
 	return flags.has(key)
+
+
+# --- Serialization ---
+
+func serialize() -> Dictionary:
+	var flags_dict: Dictionary = {}
+	for key: StringName in flags:
+		flags_dict[String(key)] = flags[key]
+	return {
+		"flags": flags_dict,
+		"last_safe_room_id": String(last_safe_room_id),
+		"last_safe_position": [last_safe_position.x, last_safe_position.y],
+	}
+
+
+func deserialize(data: Dictionary) -> void:
+	flags.clear()
+	var flags_data: Dictionary = data.get("flags", {})
+	for key: String in flags_data:
+		flags[StringName(key)] = flags_data[key]
+
+	last_safe_room_id = StringName(data.get("last_safe_room_id", ""))
+	var pos_arr: Array = data.get("last_safe_position", [0, 0])
+	last_safe_position = Vector2(float(pos_arr[0]), float(pos_arr[1]))
+
+
+func reset() -> void:
+	flags.clear()
+	is_paused = false
+	last_safe_position = Vector2.ZERO
+	last_safe_room_id = &""
+	current_save_slot = -1

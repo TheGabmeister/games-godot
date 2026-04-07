@@ -17,6 +17,8 @@
 [ext_resource type="Script" path="res://scenes/player/states/item_use_state.gd" id="15_item_use"]
 [ext_resource type="Script" path="res://scenes/player/states/swim_state.gd" id="16_swim"]
 [ext_resource type="Script" path="res://components/shield_component.gd" id="17_shield"]
+[ext_resource type="Script" path="res://scenes/player/states/cutscene_state.gd" id="18_cutscene"]
+[ext_resource type="Script" path="res://components/squash_stretch.gd" id="19_squash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(12, 14)
@@ -121,6 +123,13 @@ script = ExtResource("15_item_use")
 
 [node name="Swim" type="Node" parent="StateMachine"]
 script = ExtResource("16_swim")
+
+[node name="Cutscene" type="Node" parent="StateMachine"]
+script = ExtResource("18_cutscene")
+
+[node name="SquashStretch" type="Node" parent="." node_paths=PackedStringArray("target_path")]
+script = ExtResource("19_squash")
+target_path = NodePath("../PlayerBody")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 

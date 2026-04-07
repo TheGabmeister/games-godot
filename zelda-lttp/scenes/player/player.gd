@@ -46,6 +46,10 @@ func _ready() -> void:
 	# Connect item get presentation
 	EventBus.item_get_requested.connect(_on_item_get_requested)
 
+	# Connect cutscene state transitions
+	Cutscene.cutscene_started.connect(_on_cutscene_started)
+	Cutscene.cutscene_finished.connect(_on_cutscene_finished)
+
 	# Set up interaction probe shape
 	_setup_interaction_probe()
 
@@ -156,6 +160,18 @@ func _on_hurt(hitbox_data: Dictionary) -> void:
 	state_machine.transition_to(&"Knockback", {"direction": direction, "force": kb_force})
 
 	EventBus.screen_shake_requested.emit(1.0, 0.12)
+
+
+# --- Cutscene ---
+
+func _on_cutscene_started() -> void:
+	if state_machine.current_state.name != &"Cutscene":
+		state_machine.transition_to(&"Cutscene")
+
+
+func _on_cutscene_finished() -> void:
+	if state_machine.current_state.name == &"Cutscene":
+		state_machine.transition_to(&"Idle")
 
 
 # --- Screen Shake ---

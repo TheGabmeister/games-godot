@@ -39,6 +39,106 @@ func _ready() -> void:
 	_emit_initial_state()
 
 
+# --- Serialization ---
+
+func serialize() -> Dictionary:
+	var skill_ids: Array = []
+	for id: StringName in owned_skills:
+		skill_ids.append(String(id))
+
+	var upgrades_dict: Dictionary = {}
+	for key: StringName in upgrades:
+		upgrades_dict[String(key)] = upgrades[key]
+
+	var keys_dict: Dictionary = {}
+	for key: StringName in dungeon_small_keys:
+		keys_dict[String(key)] = dungeon_small_keys[key]
+
+	return {
+		"equipped_skill_id": String(equipped_skill_id),
+		"owned_skills": skill_ids,
+		"upgrades": upgrades_dict,
+		"current_health": current_health,
+		"max_health": max_health,
+		"current_magic": current_magic,
+		"max_magic": max_magic,
+		"heart_pieces": heart_pieces,
+		"rupees": rupees,
+		"arrows": arrows,
+		"bombs": bombs,
+		"dungeon_small_keys": keys_dict,
+		"bottle_count": bottle_count,
+		"bottles": Array(bottles),
+	}
+
+
+func deserialize(data: Dictionary) -> void:
+	# Skills — rehydrate via ItemRegistry
+	owned_skills.clear()
+	skill_effects.clear()
+	var skill_ids: Array = data.get("owned_skills", [])
+	for id_str in skill_ids:
+		var id: StringName = StringName(id_str)
+		var item: ItemData = ItemRegistry.get_item(id)
+		if item:
+			owned_skills[id] = item
+			if item.use_script:
+				skill_effects[id] = item.use_script.new()
+		else:
+			push_warning("[PlayerState] Skipping unknown skill id: \"%s\"" % id_str)
+
+	equipped_skill_id = StringName(data.get("equipped_skill_id", ""))
+
+	# Upgrades
+	upgrades.clear()
+	var upgrades_data: Dictionary = data.get("upgrades", {})
+	for key: String in upgrades_data:
+		upgrades[StringName(key)] = int(upgrades_data[key])
+
+	# Resources
+	current_health = int(data.get("current_health", 6))
+	max_health = int(data.get("max_health", 6))
+	current_magic = int(data.get("current_magic", 0))
+	max_magic = int(data.get("max_magic", 128))
+	heart_pieces = int(data.get("heart_pieces", 0))
+	rupees = int(data.get("rupees", 0))
+	arrows = int(data.get("arrows", 0))
+	bombs = int(data.get("bombs", 0))
+
+	# Small keys
+	dungeon_small_keys.clear()
+	var keys_data: Dictionary = data.get("dungeon_small_keys", {})
+	for key: String in keys_data:
+		dungeon_small_keys[StringName(key)] = int(keys_data[key])
+
+	# Bottles
+	bottle_count = int(data.get("bottle_count", 0))
+	var bottles_data: Array = data.get("bottles", [0, 0, 0, 0])
+	for i in 4:
+		bottles[i] = int(bottles_data[i]) if i < bottles_data.size() else 0
+
+	_emit_initial_state()
+
+
+func reset() -> void:
+	equipped_skill_id = &""
+	owned_skills.clear()
+	skill_effects.clear()
+	upgrades.clear()
+	current_health = 6
+	max_health = 6
+	current_magic = 0
+	max_magic = 128
+	heart_pieces = 0
+	rupees = 0
+	arrows = 0
+	bombs = 0
+	dungeon_small_keys.clear()
+	bottle_count = 0
+	bottles = [0, 0, 0, 0]
+	_emit_initial_state()
+
+
 func _emit_initial_state() -> void:
 	EventBus.player_health_changed.emit(current_health, max_health)
 	EventBus.player_rupees_changed.emit(rupees)

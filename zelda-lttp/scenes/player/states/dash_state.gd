@@ -9,6 +9,11 @@ func enter(msg: Dictionary = {}) -> void:
 	_dash_timer = 0.0
 	AudioManager.play_sfx(&"dash_start")
 
+	# Dash stretch
+	var ss: Node = player.get_node_or_null("SquashStretch")
+	if ss and ss.has_method("stretch"):
+		ss.stretch(1.3, 0.7, 0.12)
+
 
 func physics_update(delta: float) -> void:
 	_dash_timer += delta

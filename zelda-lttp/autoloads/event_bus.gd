@@ -16,5 +16,6 @@ signal world_switch_requested(target_world_type: StringName)
 
 signal dialog_requested(lines: Array)
 signal dialog_closed()
+signal dialog_force_close()
 
 signal screen_shake_requested(intensity: float, duration: float)

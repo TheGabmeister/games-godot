@@ -16,6 +16,21 @@ const AUTO_WALK_DISTANCE := 24.0
 const AUTO_WALK_SPEED := 60.0
 const SCREEN_WIDTH := 256.0
 const SCREEN_HEIGHT := 224.0
+const COLOR_GRADE_TRANSITION := 0.3
+
+# Color grading presets: preset_name -> {color_shift, saturation, brightness, contrast}
+var _grading_presets: Dictionary = {
+	&"overworld": {"color_shift": Vector3(0.02, 0.01, -0.01), "saturation": 1.05, "brightness": 1.02, "contrast": 1.0},
+	&"forest": {"color_shift": Vector3(-0.02, 0.04, -0.02), "saturation": 1.0, "brightness": 0.98, "contrast": 1.05},
+	&"mountain": {"color_shift": Vector3(-0.02, -0.01, 0.03), "saturation": 0.85, "brightness": 1.0, "contrast": 1.0},
+	&"dungeon": {"color_shift": Vector3(-0.01, -0.01, 0.02), "saturation": 0.75, "brightness": 0.95, "contrast": 1.05},
+	&"dark_world": {"color_shift": Vector3(0.05, -0.03, 0.08), "saturation": 0.8, "brightness": 0.9, "contrast": 1.1},
+	&"boss": {"color_shift": Vector3(0.03, -0.02, -0.02), "saturation": 0.9, "brightness": 0.92, "contrast": 1.15},
+	&"cave": {"color_shift": Vector3(-0.02, -0.01, 0.03), "saturation": 0.85, "brightness": 0.95, "contrast": 1.02},
+}
+
+var _post_process_rect: ColorRect = null
+var _grade_tween: Tween = null
 
 
 func _ready() -> void:
@@ -57,6 +72,10 @@ func set_player(player: CharacterBody2D) -> void:
 
 func set_transition_overlay(overlay) -> void:
 	_transition_overlay = overlay
+
+
+func set_post_process_rect(rect: ColorRect) -> void:
+	_post_process_rect = rect
 
 
 # --- Standard room load (no transition animation) ---
@@ -313,6 +332,7 @@ func _read_room_data(room_instance: Node) -> void:
 			GameManager.last_safe_room_id = current_room_data.room_id
 		if current_room_data.music_track != &"":
 			AudioManager.play_bgm(current_room_data.music_track)
+		_apply_color_grading(current_room_data.color_grading_preset)
 		_update_bunny_state()
 
 
@@ -361,6 +381,46 @@ func _get_player_screen_position() -> Vector2:
 		var viewport_size := viewport.get_visible_rect().size
 		return _player.global_position - cam_pos + viewport_size * 0.5
 	return Vector2(128, 112)
+
+
+func _apply_color_grading(preset: StringName) -> void:
+	if not _post_process_rect or not _post_process_rect.material:
+		return
+	var mat: ShaderMaterial = _post_process_rect.material as ShaderMaterial
+	if not mat:
+		return
+	var data: Dictionary = _grading_presets.get(preset, _grading_presets.get(&"overworld", {}))
+	if data.is_empty():
+		return
+
+	if _grade_tween and _grade_tween.is_valid():
+		_grade_tween.kill()
+	_grade_tween = create_tween()
+	_grade_tween.set_parallel(true)
+	_grade_tween.tween_method(
+		func(v: Vector3) -> void: mat.set_shader_parameter("color_shift", v),
+		mat.get_shader_parameter("color_shift") as Vector3,
+		data["color_shift"] as Vector3,
+		COLOR_GRADE_TRANSITION
+	)
+	_grade_tween.tween_method(
+		func(v: float) -> void: mat.set_shader_parameter("saturation", v),
+		mat.get_shader_parameter("saturation") as float,
+		data["saturation"] as float,
+		COLOR_GRADE_TRANSITION
+	)
+	_grade_tween.tween_method(
+		func(v: float) -> void: mat.set_shader_parameter("brightness", v),
+		mat.get_shader_parameter("brightness") as float,
+		data["brightness"] as float,
+		COLOR_GRADE_TRANSITION
+	)
+	_grade_tween.tween_method(
+		func(v: float) -> void: mat.set_shader_parameter("contrast", v),
+		mat.get_shader_parameter("contrast") as float,
+		data["contrast"] as float,
+		COLOR_GRADE_TRANSITION
+	)
 
 
 func _update_bunny_state() -> void:

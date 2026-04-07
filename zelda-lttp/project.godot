@@ -24,6 +24,7 @@ PlayerState="*res://autoloads/player_state.gd"
 AudioManager="*res://autoloads/audio_manager.gd"
 SceneManager="*res://autoloads/scene_manager.gd"
 SaveManager="*res://autoloads/save_manager.gd"
+Cutscene="*res://autoloads/cutscene.gd"
 
 [display]
 

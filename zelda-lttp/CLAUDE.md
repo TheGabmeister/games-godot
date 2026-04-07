@@ -55,7 +55,7 @@ Main (Node)
   +-- PauseLayer (CanvasLayer 25, process_mode=ALWAYS)
 ```
 
-**Autoload order matters:** EventBus -> GameManager -> ItemRegistry -> PlayerState -> AudioManager -> SceneManager -> SaveManager -> Cutscene (Phase 6+)
+**Autoload order matters:** EventBus -> GameManager -> ItemRegistry -> PlayerState -> AudioManager -> SceneManager -> SaveManager -> Cutscene
 
 ### Ownership Split: SceneManager vs GameManager
 
@@ -219,6 +219,34 @@ Screen-edge scroll transitions for overworld: player walks past screen boundary,
 
 `WarpTile` (`scenes/rooms/components/warp_tile.gd`) — glowing floor trigger that emits `room_transition_requested` on player contact to return to dungeon entrance.
 
+### HUD Polish (Phase 6.1)
+
+Hearts flash white briefly when lost. Rupee counter ticks up/down digit by digit. Equipped item slot flashes on skill switch. Semi-transparent dark background panels behind hearts/rupees and item slot for readability.
+
+### Dialog System (Phase 6.2)
+
+`DialogBox` (`scenes/ui/dialog_box.gd`) on DialogLayer (CanvasLayer 15). Typewriter effect at 30 chars/sec. `interact` fast-forwards or advances page. Multi-page arrays. Emits `EventBus.dialog_closed` on final page dismiss. Page-complete indicator triangle when more pages remain.
+
+### Cutscene System (Phase 6.3)
+
+`Cutscene` autoload (`autoloads/cutscene.gd`). Coroutine-based with awaitable primitives: `wait()`, `move_entity()`, `camera_pan()`, `camera_follow()`, `camera_shake()`, `dialog()`, `sfx()`, `fade_to_black()`, `fade_from_black()`, `flash()`. Signals: `cutscene_started`, `cutscene_finished`. Player enters `CutsceneState` on start (input blocked), returns to `IdleState` on finish. Example cutscene: `scenes/cutscenes/sahasrahla_intro.gd`.
+
+### Effects & Juice (Phase 6.4)
+
+- `TorchFlicker` (`components/torch_flicker.gd`) — PointLight2D with organic energy oscillation for dungeon torches.
+- `SquashStretch` (`components/squash_stretch.gd`) — reusable scale animation helper. Wired to player Attack (squash→stretch→reset) and Dash (horizontal stretch).
+- `ImpactParticles` (`components/impact_particles.gd`) — static methods for one-shot CPUParticles2D bursts: `sword_hit`, `enemy_death`, `bomb_explosion`, `water_splash`, `chest_sparkle`.
+- Color grading presets in SceneManager — smooth 0.3s tween of post-process shader uniforms (color_shift, saturation, brightness, contrast) per room's `color_grading_preset`.
+- `RoomData.color_grading_preset` field added (default `&"overworld"`).
+
+### Title Screen (Phase 6.5)
+
+`TitleScreen` (`scenes/ui/title_screen.gd` + `.tscn`) — boots on launch. Animated background with scrolling lines and pulsing triforce. Menu: New Game, Continue (grayed when no saves), Options (placeholder). Slot select screen: 3 slots showing play time, hearts, timestamp. Overwrite confirmation for New Game on occupied slots. Emits `new_game_requested(slot)` / `continue_requested(slot)` to main.gd.
+
+### Save and Load (Phase 6.6)
+
+`SaveManager` (`autoloads/save_manager.gd`) — fully functional. 3 slots at `user://saves/save_{slot}.json`. `schema_version` for future migration. Methods: `save_game(slot)`, `load_game(slot)`, `has_save(slot)`, `get_slot_metadata(slot)`, `delete_save(slot)`. Serializes `PlayerState` (skills by id via ItemRegistry, upgrades, resources, bottles) and `GameManager` (flags, safe position). `PlayerState.serialize()`/`deserialize()`/`reset()` and `GameManager.serialize()`/`deserialize()`/`reset()` implemented. Unknown skill ids on load log a warning and are skipped (soft-fail). Play time tracked in main.gd.
+
 ## Current Phase Status
 
-Phase 1 complete, Phase 2 complete (2.1-2.7), Phase 3 complete (3.1-3.8), Phase 4 complete (4.1-4.4), Phase 5 complete (5.1). All 5 enemy types implemented with full behavior. Projectile system, pickup/loot system with 13 pickup types (9 original + small_key, big_key, map, compass), weighted loot tables wired to all enemies. Phase 3: 10 SKILL items (Bow, Bomb, Boomerang, Hookshot, Lamp, Fire Rod, Ice Rod, Hammer, Magic Powder, Magic Mirror) with effect scripts. 16 UPGRADE items. Phase 4: 4x4 light world overworld grid with screen-edge scroll transitions, 2 interiors (cave + house) with iris/fade transitions, 4-room dungeon (Eastern Palace) with locked door, boss door, push block, switch, pressure plate, and chests. 2x2 dark world subset with world portal and bunny transform. TransitionOverlay with fade and iris effects. Door, LockedDoor, BossDoor, PushBlock, DungeonSwitch, PressurePlate, SwitchDoor, ConveyorBelt, WorldPortal scene components. Phase 5: Eastern Palace playable end-to-end with RewardPedestal (Pendant of Courage), WarpTile, enemies in all 4 dungeon rooms. Three test scenes: `debug/damage_formula_test.tscn` (38 tests), `debug/test_loot_table.tscn` (10 tests), `debug/test_player_state.tscn` (37 tests).
+Phase 1 complete, Phase 2 complete (2.1-2.7), Phase 3 complete (3.1-3.8), Phase 4 complete (4.1-4.4), Phase 5 complete (5.1), Phase 6 complete (6.1-6.6). All 5 enemy types implemented with full behavior. Projectile system, pickup/loot system with 13 pickup types (9 original + small_key, big_key, map, compass), weighted loot tables wired to all enemies. Phase 3: 10 SKILL items (Bow, Bomb, Boomerang, Hookshot, Lamp, Fire Rod, Ice Rod, Hammer, Magic Powder, Magic Mirror) with effect scripts. 16 UPGRADE items. Phase 4: 4x4 light world overworld grid with screen-edge scroll transitions, 2 interiors (cave + house) with iris/fade transitions, 4-room dungeon (Eastern Palace) with locked door, boss door, push block, switch, pressure plate, and chests. 2x2 dark world subset with world portal and bunny transform. TransitionOverlay with fade and iris effects. Door, LockedDoor, BossDoor, PushBlock, DungeonSwitch, PressurePlate, SwitchDoor, ConveyorBelt, WorldPortal scene components. Phase 5: Eastern Palace playable end-to-end with RewardPedestal (Pendant of Courage), WarpTile, enemies in all 4 dungeon rooms. Phase 6: HUD polish (heart flash, rupee tick, item highlight flash, background panels), dialog system with typewriter effect, Cutscene autoload with coroutine primitives, effects pass (TorchFlicker, SquashStretch, ImpactParticles, color grading transitions), title screen with slot select, full save/load system (3 slots, JSON, schema_version, round-trip serialization). Three test scenes: `debug/damage_formula_test.tscn` (38 tests), `debug/test_loot_table.tscn` (10 tests), `debug/test_player_state.tscn` (37 tests).

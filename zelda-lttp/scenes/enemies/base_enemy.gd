@@ -59,6 +59,9 @@ func _on_hurt(hitbox_data: Dictionary) -> void:
 	health_component.take_damage(result.final_damage)
 	flash_component.flash()
 
+	# Sword impact particles
+	ImpactParticles.sword_hit(get_tree(), global_position)
+
 	# Knockback with resistance
 	var resistance: float = enemy_data.knockback_resistance if enemy_data else 0.0
 	var actual_force: float = kb_force * (1.0 - resistance)
