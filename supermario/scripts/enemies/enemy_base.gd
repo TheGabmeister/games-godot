@@ -81,12 +81,16 @@ func _kill_flip(award_points: bool) -> void:
 
 func _start_flip_death() -> void:
 	_flip_dying = true
+	_disable_all_collision()
+	_visuals.scale.y = -1
+	velocity = Vector2(velocity.x * 0.5, -200.0)
+
+
+func _disable_all_collision() -> void:
 	collision_layer = 0
 	collision_mask = 0
 	_hitbox.set_deferred("monitoring", false)
 	_hitbox.set_deferred("monitorable", false)
-	_visuals.scale.y = -1
-	velocity = Vector2(velocity.x * 0.5, -200.0)
 
 
 func _process_flip_death(delta: float) -> void:

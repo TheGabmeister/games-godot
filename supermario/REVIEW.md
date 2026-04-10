@@ -2,30 +2,6 @@
 
 ## A. Duplicated Code (DRY violations)
 
-### 4. Collision disable boilerplate — repeated in enemy_base, goomba, koopa_shell
-
-```gdscript
-collision_layer = 0
-collision_mask = 0
-_hitbox.set_deferred("monitoring", false)
-_hitbox.set_deferred("monitorable", false)
-```
-
-Repeated in 3+ files. Should be a `_disable_all_collision()` helper on `enemy_base`.
-
-### 5. GameManager reset — two nearly identical methods
-
-- `game_manager.gd:41-52` (`start_new_game`)
-- `game_manager.gd:55-63` (`reset_for_title`)
-
-Same 6 variable resets, only differs in what happens after. Extract `_reset_state()`.
-
-### 6. Grow/Shrink states — mirror images of each other
-
-`grow_state.gd` vs `shrink_state.gd`
-
-The `process_frame()` methods are identical except which power state goes to which. Could share a base `TransformState`.
-
 ## B. Performance Issues
 
 ### 7. `load()` at runtime in AudioManager

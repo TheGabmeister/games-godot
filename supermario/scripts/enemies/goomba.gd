@@ -33,10 +33,7 @@ func stomp_kill() -> bool:
 
 func _start_squish_death() -> void:
 	_squish_dying = true
-	collision_layer = 0
-	collision_mask = 0
-	_hitbox.set_deferred("monitoring", false)
-	_hitbox.set_deferred("monitorable", false)
+	_disable_all_collision()
 	velocity = Vector2.ZERO
 	_squish_timer = SQUISH_DURATION
 	_drawer.is_squished = true
