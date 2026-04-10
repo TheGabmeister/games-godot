@@ -1,37 +1,20 @@
-extends StaticBody2D
+extends "res://scripts/objects/block_base.gd"
 
 const P := preload("res://scripts/color_palette.gd")
 const MushroomScene := preload("res://scenes/objects/mushroom.tscn")
 
 @export var contents: StringName = &"coin"
-@export var bump_config: Resource  # BlockBumpConfig
 
 var _revealed: bool = false
-var _bumping: bool = false
-var _bump_time: float = 0.0
-var _bump_offset: float = 0.0
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var trigger_area: Area2D = $TriggerArea
 
 
 func _ready() -> void:
-	collision_layer = 1
-	collision_mask = 0
+	super._ready()
 	collision_shape.disabled = true
 	trigger_area.body_entered.connect(_on_body_entered)
-
-
-func _process(delta: float) -> void:
-	if _bumping:
-		_bump_time += delta
-		var t: float = _bump_time / bump_config.bump_duration
-		if t >= 1.0:
-			_bump_offset = 0.0
-			_bumping = false
-		else:
-			_bump_offset = -bump_config.bump_amplitude * sin(t * PI)
-		queue_redraw()
 
 
 func _draw() -> void:
@@ -59,15 +42,10 @@ func _reveal_and_bump() -> void:
 	_revealed = true
 	collision_shape.set_deferred("disabled", false)
 	trigger_area.set_deferred("monitoring", false)
-	_bumping = true
-	_bump_time = 0.0
+	start_bump()
 	EventBus.block_bumped.emit(global_position)
 	queue_redraw()
 	_spawn_contents()
-
-
-func bump_from_below() -> void:
-	pass
 
 
 func _spawn_contents() -> void:

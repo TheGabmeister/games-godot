@@ -1,4 +1,4 @@
-extends StaticBody2D
+extends "res://scripts/objects/block_base.gd"
 
 const P := preload("res://scripts/color_palette.gd")
 const CoinScene := preload("res://scenes/objects/coin.tscn")
@@ -7,32 +7,14 @@ const FireFlowerScene := preload("res://scenes/objects/fire_flower.tscn")
 const StarmanScene := preload("res://scenes/objects/starman.tscn")
 
 @export var contents: StringName = &"coin"
-@export var bump_config: Resource  # BlockBumpConfig
 
 var _used: bool = false
-var _bump_offset: float = 0.0
-var _bump_time: float = 0.0
-var _bumping: bool = false
 var _pulse_time: float = 0.0
 
 
-func _ready() -> void:
-	collision_layer = 1
-	collision_mask = 0
-
-
 func _process(delta: float) -> void:
+	super._process(delta)
 	_pulse_time += delta
-
-	if _bumping:
-		_bump_time += delta
-		var t: float = _bump_time / bump_config.bump_duration
-		if t >= 1.0:
-			_bump_offset = 0.0
-			_bumping = false
-		else:
-			_bump_offset = -bump_config.bump_amplitude * sin(t * PI)
-
 	queue_redraw()
 
 
@@ -63,8 +45,7 @@ func bump_from_below() -> void:
 	if _used:
 		return
 	_used = true
-	_bumping = true
-	_bump_time = 0.0
+	start_bump()
 	EventBus.block_bumped.emit(global_position)
 	_spawn_contents()
 
