@@ -1,5 +1,7 @@
 extends Node
 
+const StateIds := preload("res://scripts/player/player_state_ids.gd")
+
 var player: CharacterBody2D
 var state_machine: Node
 

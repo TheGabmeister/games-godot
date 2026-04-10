@@ -38,8 +38,8 @@ func process_frame(delta: float) -> void:
 
 	if _timer >= player.effects.grow_shrink_duration:
 		var return_state: StringName = _source_state_name
-		if return_state == &"JumpState" and _source_velocity.y >= 0.0:
-			return_state = &"FallState"
-		if return_state == &"GrowState" or return_state == &"ShrinkState":
-			return_state = &"IdleState"
+		if return_state == StateIds.JUMP and _source_velocity.y >= 0.0:
+			return_state = StateIds.FALL
+		if return_state == StateIds.GROW or return_state == StateIds.SHRINK:
+			return_state = StateIds.IDLE
 		state_machine.transition_to(return_state)

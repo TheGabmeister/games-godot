@@ -76,4 +76,4 @@ func _reposition() -> void:
 
 func _finish() -> void:
 	_phase = 3
-	state_machine.transition_to(&"IdleState")
+	state_machine.transition_to(StateIds.IDLE)

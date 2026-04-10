@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000]
 const FireballScene := preload("res://scenes/objects/fireball.tscn")
+const StateIds := preload("res://scripts/player/player_state_ids.gd")
 
 const STAR_POWER_DURATION: float = 10.0
 const STAR_WARNING_TIME: float = 2.0
@@ -172,7 +173,7 @@ func die() -> void:
 	stomp_detector.set_deferred("monitoring", false)
 	hurtbox.set_deferred("monitoring", false)
 	hurtbox.set_deferred("monitorable", false)
-	state_machine.transition_to(&"DeathState")
+	state_machine.transition_to(StateIds.DEATH)
 	EventBus.player_died.emit()
 
 
@@ -200,7 +201,7 @@ func power_up(item_type: StringName, _position: Vector2 = Vector2.ZERO) -> void:
 
 	GameManager.set_power_state(new_state)
 	GameManager.add_score(1000, global_position)
-	state_machine.transition_to(&"GrowState")
+	state_machine.transition_to(StateIds.GROW)
 
 
 func take_damage() -> void:
@@ -210,7 +211,7 @@ func take_damage() -> void:
 		die()
 	else:
 		GameManager.set_power_state(GameManager.PowerState.SMALL)
-		state_machine.transition_to(&"ShrinkState")
+		state_machine.transition_to(StateIds.SHRINK)
 
 
 func start_invincibility() -> void:
@@ -309,7 +310,13 @@ func _check_fireball_input() -> void:
 		return
 	# Don't shoot during special states
 	var current_state_name: StringName = state_machine.current_state.name
-	if current_state_name in [&"DeathState", &"GrowState", &"ShrinkState", &"PipeEnterState", &"FlagpoleState"]:
+	if current_state_name in [
+		StateIds.DEATH,
+		StateIds.GROW,
+		StateIds.SHRINK,
+		StateIds.PIPE_ENTER,
+		StateIds.FLAGPOLE,
+	]:
 		return
 	if Input.is_action_just_pressed(&"run"):
 		_spawn_fireball()
@@ -331,16 +338,16 @@ func _spawn_fireball() -> void:
 # --- Pipe Entry ---
 
 func enter_pipe(pipe: Node2D, target: Node2D) -> void:
-	var pipe_state := state_machine.get_node(NodePath("PipeEnterState"))
+	var pipe_state := state_machine.get_node(NodePath(StateIds.PIPE_ENTER))
 	if pipe_state and pipe_state.has_method("setup"):
 		pipe_state.setup(pipe, target)
-		state_machine.transition_to(&"PipeEnterState")
+		state_machine.transition_to(StateIds.PIPE_ENTER)
 
 
 # --- Flagpole ---
 
 func start_flagpole(flagpole: Node2D) -> void:
-	var fp_state := state_machine.get_node(NodePath("FlagpoleState"))
+	var fp_state := state_machine.get_node(NodePath(StateIds.FLAGPOLE))
 	if fp_state and fp_state.has_method("setup"):
 		fp_state.setup(flagpole)
-		state_machine.transition_to(&"FlagpoleState")
+		state_machine.transition_to(StateIds.FLAGPOLE)

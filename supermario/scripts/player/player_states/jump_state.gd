@@ -12,13 +12,13 @@ func process_physics(delta: float) -> void:
 	# Variable-height jump: cut velocity on release
 	if not Input.is_action_pressed(&"jump") and player.velocity.y < 0.0:
 		player.velocity.y *= player.movement.jump_release_mult
-		state_machine.transition_to(&"FallState")
+		state_machine.transition_to(StateIds.FALL)
 		return
 
 	player.apply_gravity(delta)
 
 	if player.velocity.y >= 0.0:
-		state_machine.transition_to(&"FallState")
+		state_machine.transition_to(StateIds.FALL)
 		return
 
 	# Air control

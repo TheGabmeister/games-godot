@@ -7,19 +7,19 @@ func process_physics(delta: float) -> void:
 	if player.is_on_floor():
 		# Check jump buffer
 		if player.jump_buffered:
-			state_machine.transition_to(&"JumpState")
+			state_machine.transition_to(StateIds.JUMP)
 			return
 		var direction := Input.get_axis(&"move_left", &"move_right")
 		if direction != 0.0:
-			state_machine.transition_to(&"RunState")
+			state_machine.transition_to(StateIds.RUN)
 		else:
-			state_machine.transition_to(&"IdleState")
+			state_machine.transition_to(StateIds.IDLE)
 		return
 
 	# Coyote time jump
 	if Input.is_action_just_pressed(&"jump"):
 		if player.coyote_active:
-			state_machine.transition_to(&"JumpState")
+			state_machine.transition_to(StateIds.JUMP)
 			return
 		else:
 			player.buffer_jump()
