@@ -33,7 +33,7 @@ func exit() -> void:
 
 	player.velocity = _source_velocity
 	player.drawer.power_state = GameManager.current_power_state
-	player._update_collision_shape()
+	player.update_collision_shape()
 
 
 func process_frame(delta: float) -> void:

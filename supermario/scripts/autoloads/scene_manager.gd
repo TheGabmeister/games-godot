@@ -31,9 +31,9 @@ func change_scene(path: String) -> void:
 	if _is_transitioning:
 		return
 	_is_transitioning = true
-	await _fade_out()
+	await fade_out()
 	get_tree().change_scene_to_file(path)
-	await _fade_in()
+	await fade_in()
 	_is_transitioning = false
 
 
@@ -41,9 +41,9 @@ func reload_current_scene() -> void:
 	if _is_transitioning:
 		return
 	_is_transitioning = true
-	await _fade_out()
+	await fade_out()
 	get_tree().reload_current_scene()
-	await _fade_in()
+	await fade_in()
 	_is_transitioning = false
 
 
@@ -55,16 +55,18 @@ func show_level_intro(world: int, level: int, lives: int) -> void:
 	await get_tree().create_timer(_timing.level_intro_duration).timeout
 
 	_intro_label.visible = false
-	await _fade_in()
+	await fade_in()
 
 
-func _fade_out() -> void:
+func fade_out(duration: float = -1.0) -> void:
+	var dur: float = _timing.fade_duration if duration < 0.0 else duration
 	var tween := create_tween()
-	tween.tween_property(_fade_rect, "modulate:a", 1.0, _timing.fade_duration)
+	tween.tween_property(_fade_rect, "modulate:a", 1.0, dur)
 	await tween.finished
 
 
-func _fade_in() -> void:
+func fade_in(duration: float = -1.0) -> void:
+	var dur: float = _timing.fade_duration if duration < 0.0 else duration
 	var tween := create_tween()
-	tween.tween_property(_fade_rect, "modulate:a", 0.0, _timing.fade_duration)
+	tween.tween_property(_fade_rect, "modulate:a", 0.0, dur)
 	await tween.finished

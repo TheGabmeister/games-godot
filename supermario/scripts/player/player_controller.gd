@@ -144,7 +144,7 @@ func can_crouch() -> bool:
 func set_crouching(crouching: bool) -> void:
 	_is_crouching = crouching
 	drawer.is_crouching = crouching
-	_update_collision_shape()
+	update_collision_shape()
 
 
 func has_ceiling_clearance() -> bool:
@@ -208,7 +208,7 @@ func take_damage() -> void:
 		state_machine.transition_to(&"ShrinkState")
 
 
-func _start_invincibility() -> void:
+func start_invincibility() -> void:
 	_is_invincible = true
 	_invincibility_timer = movement.invincibility_duration
 
@@ -263,7 +263,7 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 		take_damage()
 
 
-func _update_collision_shape() -> void:
+func update_collision_shape() -> void:
 	var shape := collision_shape.shape as RectangleShape2D
 	if _is_crouching or GameManager.current_power_state == GameManager.PowerState.SMALL:
 		shape.size = movement.small_collision

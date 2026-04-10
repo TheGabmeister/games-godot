@@ -48,7 +48,7 @@ func start_new_game() -> void:
 	EventBus.lives_changed.emit(lives)
 	EventBus.coins_changed.emit(coins)
 	set_game_state(GameState.PLAYING)
-	_start_level_timer()
+	start_level_timer()
 
 
 func reset_for_title() -> void:
@@ -113,11 +113,15 @@ func set_game_state(state: GameState) -> void:
 			_timer_active = false
 
 
-func _start_level_timer() -> void:
+func start_level_timer() -> void:
 	time_remaining = 400.0
 	_last_time_tick = -1
 	_timer_active = true
 	EventBus.level_started.emit(current_world, current_level)
+
+
+func stop_level_timer() -> void:
+	_timer_active = false
 
 
 func _on_player_died() -> void:

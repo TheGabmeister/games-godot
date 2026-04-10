@@ -36,7 +36,7 @@ func _start_level() -> void:
 	)
 
 	GameManager.set_game_state(GameManager.GameState.PLAYING)
-	GameManager._start_level_timer()
+	GameManager.start_level_timer()
 
 
 func _setup_camera() -> void:

@@ -24,8 +24,8 @@ func exit() -> void:
 
 	player.velocity = _source_velocity
 	player.drawer.power_state = GameManager.current_power_state
-	player._update_collision_shape()
-	player._start_invincibility()
+	player.update_collision_shape()
+	player.start_invincibility()
 
 
 func process_frame(delta: float) -> void:

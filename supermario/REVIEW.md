@@ -6,20 +6,6 @@
 
 ## C. Architecture Issues
 
-### 14. States and other scripts reach into private members of controllers and autoloads
-
-- `grow_state.gd` and `shrink_state.gd` call `player._update_collision_shape()`
-- `shrink_state.gd` calls `player._start_invincibility()`
-- `flagpole_state.gd:31` reads `GameManager._timer_active` (private var on an autoload)
-- `level_base.gd:60`, `level_1_2.gd:38`
-- `pipe_enter_state.gd:53`, `pipe_enter_state.gd:55`, `pipe_enter_state.gd:75`
-
-Underscore-prefixed members are meant to be private. These should be exposed as public APIs.
-
-### 15. PiranhaPlant doesn't extend EnemyBase but reimplements its interface
-
-`piranha_plant.gd` duck-types the full enemy API (`is_active()`, `is_dead()`, `is_dangerous()`, `stomp_kill()`, `non_stomp_kill()`, `shell_kill()`, `die()`) without inheriting from `enemy_base.gd`. If the interface changes, this silently breaks.
-
 ### 16. Combat/item interaction is heavily duck-typed and parent-dependent
 
 - `player_controller.gd:117`, `player_controller.gd:240`, `player_controller.gd:277`
