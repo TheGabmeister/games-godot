@@ -40,6 +40,11 @@ func _ready() -> void:
 	add_to_group("player")
 	stomp_detector.area_entered.connect(_on_stomp_area_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+	# Sync collision size and drawer form with the current GameManager
+	# power state. Required because power is preserved across level
+	# transitions (e.g., finishing 1-1 as Fire Mario should spawn Fire
+	# Mario in 1-2), but the scene file bakes in the Small collision.
+	update_collision_shape()
 
 
 func _process(delta: float) -> void:

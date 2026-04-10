@@ -44,17 +44,52 @@ func _process(delta: float) -> void:
 
 func start_new_game() -> void:
 	_reset_run_state()
-	EventBus.score_changed.emit(score)
-	EventBus.lives_changed.emit(lives)
-	EventBus.coins_changed.emit(coins)
-	set_game_state(GameState.PLAYING)
-	start_level_timer()
+	await _enter_level(LEVEL_SCENES[LEVEL_ORDER[0]])
+
+
+func advance_to_next_level() -> void:
+	var key := get_current_level_key()
+	var idx := LEVEL_ORDER.find(key)
+	if idx < 0 or idx + 1 >= LEVEL_ORDER.size():
+		# No more levels — back to title.
+		return_to_title()
+		return
+	var next_key: String = LEVEL_ORDER[idx + 1]
+	var parts := next_key.split("-")
+	current_world = int(parts[0])
+	current_level = int(parts[1])
+	# power_state preserved across level transitions (classic SMB behavior)
+	await _enter_level(LEVEL_SCENES[next_key])
+
+
+func respawn_current_level() -> void:
+	# Player lost a life — drop back to Small Mario and reload the level.
+	current_power_state = PowerState.SMALL
+	var key := get_current_level_key()
+	await _enter_level(LEVEL_SCENES[key])
+
+
+func return_to_title() -> void:
+	set_game_state(GameState.TITLE)
+	SceneManager.change_scene("res://scenes/ui/title_screen.tscn")
 
 
 func reset_for_title() -> void:
 	_reset_run_state()
 	_timer_active = false
 	game_state = GameState.TITLE
+
+
+# --- Level transition flow ---
+# Single source of truth for "load a level scene and start playing".
+# Callers: start_new_game, advance_to_next_level, respawn_current_level.
+func _enter_level(scene_path: String) -> void:
+	set_game_state(GameState.TRANSITIONING)
+	await SceneManager.fade_out()
+	SceneManager.change_scene_no_fade(scene_path)
+	await SceneManager.show_level_intro(current_world, current_level, lives)
+	set_game_state(GameState.PLAYING)
+	start_level_timer()
 
 
 func _reset_run_state() -> void:
@@ -90,6 +125,9 @@ func lose_life() -> void:
 		EventBus.game_over.emit()
 	else:
 		EventBus.player_respawned.emit()
+		# Defer the actual reload so death-state callers finish cleanly
+		# before the scene is swapped out from under them.
+		respawn_current_level.call_deferred()
 
 
 func set_power_state(state: PowerState) -> void:
@@ -143,19 +181,6 @@ func _earn_one_up() -> void:
 
 func get_current_level_key() -> String:
 	return "%d-%d" % [current_world, current_level]
-
-
-func get_next_level_scene() -> String:
-	var key := get_current_level_key()
-	var idx := LEVEL_ORDER.find(key)
-	if idx >= 0 and idx + 1 < LEVEL_ORDER.size():
-		var next_key := LEVEL_ORDER[idx + 1]
-		# Parse world-level from key
-		var parts := next_key.split("-")
-		current_world = int(parts[0])
-		current_level = int(parts[1])
-		return LEVEL_SCENES[next_key]
-	return ""  # no next level
 
 
 func _power_state_name(state: PowerState) -> StringName:

@@ -27,5 +27,6 @@ func _process(delta: float) -> void:
 	if _timer >= DISPLAY_DURATION:
 		_active = false
 		visible = false
-		GameManager.reset_for_title()
-		SceneManager.change_scene("res://scenes/ui/title_screen.tscn")
+		# title_screen._ready() calls reset_for_title() itself, so we
+		# only need to drive the scene transition here.
+		GameManager.return_to_title()

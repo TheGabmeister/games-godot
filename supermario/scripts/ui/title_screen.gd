@@ -27,5 +27,7 @@ func _process(delta: float) -> void:
 
 func _start_game() -> void:
 	_ready_for_input = false
+	# GameManager.start_new_game() now owns the full boot flow — it resets
+	# run state, swaps to the first level scene, runs the intro, and starts
+	# the timer.
 	GameManager.start_new_game()
-	SceneManager.change_scene("res://scenes/levels/world_1_1.tscn")

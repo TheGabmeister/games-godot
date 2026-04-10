@@ -6,27 +6,32 @@
 
 ## C. Architecture Issues
 
-### 16. Combat/item interaction is heavily duck-typed and parent-dependent
+### 17. Level boot and run-state ownership is split across UI, level scripts, and GameManager — **RESOLVED**
 
-- `player_controller.gd:117`, `player_controller.gd:240`, `player_controller.gd:277`
-- `fireball.gd:48`
-- `koopa_shell.gd:147`
+Centralized into `GameManager._enter_level(scene_path)` with three public entry
+points: `start_new_game()`, `advance_to_next_level()`, and
+`respawn_current_level()`. Level scripts (`level_base.gd`, `level_1_2.gd`) are
+now pure scene construction — no `_start_level`, no `_on_player_respawned`, no
+timer calls, no state mutations. `title_screen.gd`, `level_complete.gd`, and
+`game_over_screen.gd` all delegate to the new GameManager API.
 
-The repeated `has_method(...)` plus `area.get_parent()` pattern works, but it's brittle and makes contracts implicit.
+Three real bugs were fixed along the way:
+- Timer was being started twice on new-game boot (once in `start_new_game`,
+  once in `level_base._start_level`).
+- The `is_new_game` branch in `level_base._start_level` was dead code that
+  duplicated `_reset_run_state()`.
+- `level_1_2._start_level` unconditionally stripped Fire Mario on level
+  transition. Power state now persists across level completions (classic SMB
+  behavior). Requires `player_controller._ready()` to call
+  `update_collision_shape()` so the collision size and drawer form match the
+  preserved `GameManager.current_power_state` on a fresh scene instance.
 
-### 17. Level boot and run-state ownership is split across UI, level scripts, and GameManager
+### 18. GameManager has misleading API boundaries — **PARTIALLY RESOLVED**
 
-- `title_screen.gd:30`
-- `game_manager.gd:41`
-- `level_base.gd:33`, `level_base.gd:60`
-- `level_1_2.gd:27`, `level_1_2.gd:38`
-
-Too many places can start/reset a run, making the flow hard to reason about.
-
-### 18. GameManager has misleading API boundaries
-
-- `game_manager.gd:140`, `game_manager.gd:147` — `get_next_level_scene()` mutates world/level state inside a getter
-- `player_controller.gd:250`, `koopa_shell.gd:175` — random scripts do `GameManager.lives += 1` instead of going through life-management helpers
+- `get_next_level_scene()` was removed (absorbed into `advance_to_next_level()`
+  where the world/level mutation is explicit, not hidden in a "getter").
+- Still outstanding: `player_controller.gd` and `koopa_shell.gd` write
+  `GameManager.lives += 1` directly instead of going through a helper.
 
 ### 19. Unused `_camera` field in CameraEffects
 

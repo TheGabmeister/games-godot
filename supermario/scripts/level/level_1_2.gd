@@ -11,32 +11,13 @@ const LEVEL_WIDTH := 170  # tiles
 @onready var player: CharacterBody2D = $Player
 @onready var camera: Camera2D
 
-var _player_spawn: Vector2
-
 
 func _ready() -> void:
 	camera = player.get_node("Camera2D") as Camera2D
 	tilemap.tile_set = TilesetBuilder.create_tileset(P.UNDERGROUND_DARK, P.UNDERGROUND_BASE)
 	_setup_camera()
 	_paint_terrain()
-	_player_spawn = player.global_position
-
-	EventBus.player_respawned.connect(_on_player_respawned)
-	_start_level()
-
-
-func _start_level() -> void:
-	GameManager.current_power_state = GameManager.PowerState.SMALL
-	GameManager.set_game_state(GameManager.GameState.TRANSITIONING)
-
-	await SceneManager.show_level_intro(
-		GameManager.current_world,
-		GameManager.current_level,
-		GameManager.lives
-	)
-
-	GameManager.set_game_state(GameManager.GameState.PLAYING)
-	GameManager.start_level_timer()
+	# Level boot and run-state are owned by GameManager._enter_level().
 
 
 func _setup_camera() -> void:
@@ -88,5 +69,3 @@ func _paint_platform(start_x: int, end_x: int, row: int) -> void:
 		tilemap.set_cell(Vector2i(x, row), 0, Vector2i(0, 0))
 
 
-func _on_player_respawned() -> void:
-	SceneManager.reload_current_scene()

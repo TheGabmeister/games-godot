@@ -37,14 +37,11 @@ func change_scene(path: String) -> void:
 	_is_transitioning = false
 
 
-func reload_current_scene() -> void:
-	if _is_transitioning:
-		return
-	_is_transitioning = true
-	await fade_out()
-	get_tree().reload_current_scene()
-	await fade_in()
-	_is_transitioning = false
+# Swap scene without touching the fade overlay. Use this when the caller
+# is managing its own fade sequence (e.g., GameManager._enter_level, which
+# needs fade_out → swap → intro overlay → fade_in as one flow).
+func change_scene_no_fade(path: String) -> void:
+	get_tree().change_scene_to_file(path)
 
 
 func show_level_intro(world: int, level: int, lives: int) -> void:

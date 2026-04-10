@@ -14,51 +14,14 @@ const LEVEL_HEIGHT := 14  # tiles
 @onready var camera: Camera2D
 
 
-var _player_spawn: Vector2
-
-
 func _ready() -> void:
 	camera = player.get_node("Camera2D") as Camera2D
 	tilemap.tile_set = TilesetBuilder.create_tileset(P.GROUND_GREEN, P.GROUND_BROWN)
 	_setup_camera()
 	_paint_terrain()
-	_player_spawn = player.global_position
-
-	EventBus.player_respawned.connect(_on_player_respawned)
-
-	# Show level intro then start
-	_start_level()
-
-
-func _start_level() -> void:
-	var is_new_game := GameManager.game_state == GameManager.GameState.TITLE
-
-	# Reset state but don't start timer yet — it should not run during intro
-	if is_new_game:
-		GameManager.score = 0
-		GameManager.coins = 0
-		GameManager.lives = 3
-		GameManager.current_world = 1
-		GameManager.current_level = 1
-		GameManager.current_power_state = GameManager.PowerState.SMALL
-		EventBus.score_changed.emit(GameManager.score)
-		EventBus.lives_changed.emit(GameManager.lives)
-		EventBus.coins_changed.emit(GameManager.coins)
-	else:
-		GameManager.current_power_state = GameManager.PowerState.SMALL
-
-	# Set to TRANSITIONING so the timer does NOT run during the intro overlay
-	GameManager.set_game_state(GameManager.GameState.TRANSITIONING)
-
-	await SceneManager.show_level_intro(
-		GameManager.current_world,
-		GameManager.current_level,
-		GameManager.lives
-	)
-
-	# Now start gameplay and the timer
-	GameManager.set_game_state(GameManager.GameState.PLAYING)
-	GameManager.start_level_timer()
+	# Level boot, run-state resets, intro overlay, timer start, and
+	# respawn reloads are all driven by GameManager._enter_level(). This
+	# script only builds the level; it does not drive the flow.
 
 
 func _setup_camera() -> void:
@@ -120,6 +83,3 @@ func _paint_stairs() -> void:
 			tilemap.set_cell(Vector2i(198 + i, row), 0, Vector2i(1, 0))
 
 
-func _on_player_respawned() -> void:
-	# Reload the level scene for a clean respawn
-	SceneManager.reload_current_scene()

@@ -43,14 +43,21 @@ When in doubt: read the relevant §9/§14/§15 subsection before touching code. 
 ### Game Flow
 
 ```
-Title Screen → Level Intro (2.5s) → Gameplay
-  → Flagpole → Level Complete (time bonus tally) → Next Level or Title
-  → Death → Lives > 0 → Reload Scene → Level Intro → Respawn
-  → Death → Lives = 0 → Game Over (3s) → Title
+Title Screen → GameManager.start_new_game() → _enter_level(1-1)
+                                                  → TRANSITIONING
+                                                  → fade_out
+                                                  → scene swap
+                                                  → show_level_intro (2.5s)
+                                                  → PLAYING + timer start
+  → Flagpole → EventBus.level_completed → level_complete tally
+             → GameManager.advance_to_next_level() → _enter_level(next) or return_to_title()
+  → Death → lose_life() → lives > 0 → respawn_current_level.call_deferred()
+                                     → power reset to SMALL → _enter_level(current)
+  → Death → lose_life() → lives = 0 → GAME_OVER → game_over_screen (3s) → return_to_title()
   → Pause (Escape) → Resume
 ```
 
-GameManager tracks the current level key (e.g., `"1-1"`). After level complete, `get_next_level_scene()` looks up the next entry in `LEVEL_ORDER`. Level scenes set `GameState.TRANSITIONING` during the intro overlay so the timer doesn't run, then switch to `PLAYING` afterward.
+**GameManager owns the entire level-transition flow.** Level scripts (`level_base.gd`, `level_1_2.gd`) are pure scene construction — they paint terrain and set up the camera, but they do not touch run state, timers, or the intro overlay. All transitions go through `GameManager._enter_level(scene_path)`, which sets `TRANSITIONING`, fades out, swaps the scene via `SceneManager.change_scene_no_fade()`, runs the intro overlay via `SceneManager.show_level_intro()`, sets `PLAYING`, and starts the timer. There are exactly three callers: `start_new_game()` (from title screen, full state reset), `advance_to_next_level()` (from `level_complete.gd`, preserves power/coins/score/lives), and `respawn_current_level()` (deferred from `lose_life()` after death, resets power to SMALL). `return_to_title()` handles the non-gameplay transition to the title screen. Do not add a fourth entry point — extend one of these instead.
 
 ### Player System
 
