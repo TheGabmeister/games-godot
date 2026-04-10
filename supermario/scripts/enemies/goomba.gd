@@ -16,7 +16,7 @@ func _physics_process(delta: float) -> void:
 	if _squish_dying:
 		_squish_timer -= delta
 		if _squish_timer <= 0.0:
-			queue_free()
+			call_deferred("queue_free")
 		return
 	super(delta)
 

@@ -97,7 +97,7 @@ func _process_flip_death(delta: float) -> void:
 	velocity.y += config.gravity * delta
 	global_position += velocity * delta
 	if global_position.y > 500.0:
-		queue_free()
+		call_deferred("queue_free")
 
 
 func die() -> void:

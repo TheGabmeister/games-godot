@@ -2,24 +2,9 @@
 
 ## D. Code Smells
 
-### 20. `Vector2.ZERO` used as null sentinel in AudioManager
-
-`audio_manager.gd:61` — `if position == Vector2.ZERO: return`. What if a legitimate SFX source is at world origin? Ambiguous API.
-
-### 21. Redundant else branch in CameraEffects
-
-`camera_effects.gd:24-25` — sets `_shake_offset = Vector2.ZERO` every frame even when no shake is active. Once the shake ends (line 22-23 handles that), this is just wasted assignment every subsequent frame.
-
 ### 22. Hardcoded state name strings everywhere
 
 `&"IdleState"`, `&"JumpState"`, `&"FallState"`, etc. are scattered across all state files and the controller. A rename in the scene tree silently breaks everything with no compile-time error.
-
-### 23. Inconsistent `queue_free()` vs `call_deferred("queue_free")`
-
-- `goomba.gd` uses `queue_free()` directly
-- `koopa.gd` and `enemy_base.gd` use `call_deferred("queue_free")`
-
-Should be consistent. During physics callbacks, deferred is safer.
 
 ### 24. Magic numbers throughout drawing and collision code
 

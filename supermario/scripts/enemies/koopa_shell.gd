@@ -114,7 +114,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y += GRAVITY * delta
 		global_position += velocity * delta
 		if global_position.y > 500.0:
-			queue_free()
+			call_deferred("queue_free")
 		return
 	if _is_dead:
 		return

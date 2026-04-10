@@ -51,24 +51,31 @@ func _ready() -> void:
 	_connect_signals()
 
 
-func play_sfx(sound_name: StringName, position: Vector2 = Vector2.ZERO) -> void:
+func play_sfx(sound_name: StringName) -> void:
 	if not _sfx_registry.has(sound_name):
 		push_warning("AudioManager: unknown SFX key '%s'" % sound_name)
 		return
 	var stream := _get_sfx_stream(sound_name)
 	if stream == null:
 		return
-	if position == Vector2.ZERO:
-		var player := _sfx_pool[_sfx_pool_index]
-		player.stream = stream
-		player.play()
-		_sfx_pool_index = (_sfx_pool_index + 1) % SFX_POOL_SIZE
-	else:
-		var player := _sfx_2d_pool[_sfx_2d_pool_index]
-		player.stream = stream
-		player.global_position = position
-		player.play()
-		_sfx_2d_pool_index = (_sfx_2d_pool_index + 1) % SFX_2D_POOL_SIZE
+	var player := _sfx_pool[_sfx_pool_index]
+	player.stream = stream
+	player.play()
+	_sfx_pool_index = (_sfx_pool_index + 1) % SFX_POOL_SIZE
+
+
+func play_sfx_at(sound_name: StringName, position: Vector2) -> void:
+	if not _sfx_registry.has(sound_name):
+		push_warning("AudioManager: unknown SFX key '%s'" % sound_name)
+		return
+	var stream := _get_sfx_stream(sound_name)
+	if stream == null:
+		return
+	var player := _sfx_2d_pool[_sfx_2d_pool_index]
+	player.stream = stream
+	player.global_position = position
+	player.play()
+	_sfx_2d_pool_index = (_sfx_2d_pool_index + 1) % SFX_2D_POOL_SIZE
 
 
 func play_music(music_name: StringName) -> void:
@@ -159,14 +166,14 @@ func _build_music_players() -> void:
 
 
 func _connect_signals() -> void:
-	EventBus.coin_collected.connect(func(pos: Vector2) -> void: play_sfx(&"coin", pos))
+	EventBus.coin_collected.connect(func(pos: Vector2) -> void: play_sfx_at(&"coin", pos))
 	EventBus.player_died.connect(func() -> void:
 		play_sfx(&"death")
 		stop_music()
 	)
-	EventBus.enemy_stomped.connect(func(pos: Vector2) -> void: play_sfx(&"stomp", pos))
-	EventBus.block_bumped.connect(func(pos: Vector2) -> void: play_sfx(&"block_bump", pos))
-	EventBus.block_broken.connect(func(pos: Vector2) -> void: play_sfx(&"block_break", pos))
+	EventBus.enemy_stomped.connect(func(pos: Vector2) -> void: play_sfx_at(&"stomp", pos))
+	EventBus.block_bumped.connect(func(pos: Vector2) -> void: play_sfx_at(&"block_bump", pos))
+	EventBus.block_broken.connect(func(pos: Vector2) -> void: play_sfx_at(&"block_break", pos))
 	EventBus.player_powered_up.connect(func(_type: StringName) -> void: play_sfx(&"powerup"))
 	EventBus.player_damaged.connect(func() -> void: play_sfx(&"powerdown"))
 	EventBus.level_started.connect(func(_w: int, l: int) -> void:

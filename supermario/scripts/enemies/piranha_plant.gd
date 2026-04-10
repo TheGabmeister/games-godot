@@ -72,7 +72,7 @@ func _die() -> void:
 	_is_dead = true
 	GameManager.add_score(200, global_position)
 	EventBus.enemy_killed.emit(global_position, &"piranha_plant")
-	queue_free()
+	call_deferred("queue_free")
 
 
 func die() -> void:

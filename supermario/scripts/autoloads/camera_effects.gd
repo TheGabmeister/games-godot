@@ -20,7 +20,7 @@ func _process(delta: float) -> void:
 		) * decay
 		if _shake_timer <= 0.0:
 			_shake_offset = Vector2.ZERO
-	else:
+	elif _shake_offset != Vector2.ZERO:
 		_shake_offset = Vector2.ZERO
 
 
