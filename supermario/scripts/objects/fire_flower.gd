@@ -1,21 +1,18 @@
 extends Area2D
 
 const P := preload("res://scripts/color_palette.gd")
+const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
 
 @export var item_config: Resource  # ItemConfig
 
-var _emerge_start_y: float = 0.0
-var _emerge_initialized: bool = false
-var _emerge_timer: float = 0.0
-var _emerging: bool = true
+var _emerge := EmergeHelper.new()
 var _collected: bool = false
 
 
 func _ready() -> void:
-	# NOTE: We intentionally do NOT capture _emerge_start_y here. _ready()
-	# fires synchronously inside get_parent().add_child(item) in the
-	# spawning question block, which runs BEFORE the spawner sets
-	# global_position.
+	# Emerge start position is captured lazily by EmergeHelper on the first
+	# tick. _ready() fires synchronously inside the spawning question block's
+	# add_child(), BEFORE the spawner sets global_position.
 	monitoring = false
 	body_entered.connect(_on_body_entered)
 	queue_redraw()
@@ -25,15 +22,9 @@ func _process(delta: float) -> void:
 	if _collected:
 		return
 
-	if _emerging:
-		if not _emerge_initialized:
-			_emerge_start_y = global_position.y
-			_emerge_initialized = true
-		_emerge_timer += delta
-		var t: float = minf(_emerge_timer / item_config.emerge_duration, 1.0)
-		global_position.y = _emerge_start_y - item_config.emerge_height * t
-		if t >= 1.0:
-			_emerging = false
+	if not _emerge.done:
+		global_position.y = _emerge.update(delta, global_position.y, item_config.emerge_duration, item_config.emerge_height)
+		if _emerge.done:
 			monitoring = true
 
 

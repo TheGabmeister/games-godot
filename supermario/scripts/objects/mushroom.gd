@@ -1,14 +1,12 @@
 extends CharacterBody2D
 
 const P := preload("res://scripts/color_palette.gd")
+const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
 
 @export var item_config: Resource  # ItemConfig
 
 var _direction: float = 1.0
-var _emerging: bool = true
-var _emerge_initialized: bool = false
-var _emerge_start_y: float = 0.0
-var _emerge_timer: float = 0.0
+var _emerge := EmergeHelper.new()
 var _collected: bool = false
 
 @onready var hurtbox: Area2D = $Hurtbox
@@ -16,9 +14,9 @@ var _collected: bool = false
 
 
 func _ready() -> void:
-	# _emerge_start_y is captured lazily on the first physics tick, not
-	# here. _ready() fires synchronously inside the spawner's add_child(),
-	# BEFORE the spawner sets global_position.
+	# Emerge start position is captured lazily by EmergeHelper on the first
+	# physics tick. _ready() fires synchronously inside the spawner's
+	# add_child(), BEFORE the spawner sets global_position.
 	set_collision_layer_value(1, false)
 	set_collision_mask_value(1, false)
 	hurtbox.body_entered.connect(_on_body_entered)
@@ -28,15 +26,9 @@ func _physics_process(delta: float) -> void:
 	if _collected:
 		return
 
-	if _emerging:
-		if not _emerge_initialized:
-			_emerge_start_y = global_position.y
-			_emerge_initialized = true
-		_emerge_timer += delta
-		var t: float = minf(_emerge_timer / item_config.emerge_duration, 1.0)
-		global_position.y = _emerge_start_y - item_config.emerge_height * t
-		if t >= 1.0:
-			_emerging = false
+	if not _emerge.done:
+		global_position.y = _emerge.update(delta, global_position.y, item_config.emerge_duration, item_config.emerge_height)
+		if _emerge.done:
 			collision_mask = 1
 		return
 

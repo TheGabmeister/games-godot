@@ -1,14 +1,12 @@
 extends CharacterBody2D
 
 const P := preload("res://scripts/color_palette.gd")
+const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
 
 @export var item_config: Resource  # ItemConfig
 
 var _direction: float = 1.0
-var _emerging: bool = true
-var _emerge_initialized: bool = false
-var _emerge_start_y: float = 0.0
-var _emerge_timer: float = 0.0
+var _emerge := EmergeHelper.new()
 var _collected: bool = false
 var _bounce_velocity: float = -250.0
 
@@ -29,15 +27,9 @@ func _physics_process(delta: float) -> void:
 
 	_anim_time += delta
 
-	if _emerging:
-		if not _emerge_initialized:
-			_emerge_start_y = global_position.y
-			_emerge_initialized = true
-		_emerge_timer += delta
-		var t: float = minf(_emerge_timer / item_config.emerge_duration, 1.0)
-		global_position.y = _emerge_start_y - item_config.emerge_height * t
-		if t >= 1.0:
-			_emerging = false
+	if not _emerge.done:
+		global_position.y = _emerge.update(delta, global_position.y, item_config.emerge_duration, item_config.emerge_height)
+		if _emerge.done:
 			collision_mask = 1
 			velocity.y = _bounce_velocity
 		return

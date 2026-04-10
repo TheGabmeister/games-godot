@@ -2,16 +2,6 @@
 
 ## A. Duplicated Code (DRY violations)
 
-### 2. Tileset creation — two files that are 90% identical
-
-`terrain_tileset.gd` vs `underground_tileset.gd`
-
-The only difference is two color values. Everything else (image creation, atlas source, physics layer, collision polygons) is duplicated. Should be a single parameterized `create_tileset(top_color, fill_color)`.
-
-### 3. Item emergence logic — copy-pasted across mushroom, fire_flower, starman
-
-All three items have the same `_emerging` / `_emerge_initialized` / lazy-init-on-first-tick pattern with identical math. Should be an `ItemBase` class.
-
 ### 4. Collision disable boilerplate — repeated in enemy_base, goomba, koopa_shell
 
 ```gdscript
