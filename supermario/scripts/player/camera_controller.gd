@@ -15,7 +15,6 @@ var _visuals: Node2D
 func _ready() -> void:
 	_player = get_parent() as Node2D
 	_visuals = _player.get_node("Visuals") as Node2D
-	CameraEffects.register_camera(self)
 
 
 func _process(delta: float) -> void:

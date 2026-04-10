@@ -26,7 +26,6 @@ func _setup_camera() -> void:
 	camera.limit_top = -TILE_SIZE * 2
 	camera.limit_bottom = LEVEL_HEIGHT * TILE_SIZE + TILE_SIZE * 2
 	camera.position_smoothing_speed = 8.0
-	CameraEffects.register_camera(camera)
 
 
 func _paint_terrain() -> void:

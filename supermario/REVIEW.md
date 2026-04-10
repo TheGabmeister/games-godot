@@ -1,20 +1,5 @@
 # Code Review Results
 
-## A. Duplicated Code (DRY violations)
-
-## B. Performance Issues
-
-## C. Architecture Issues
-
-### 18. GameManager has misleading API boundaries — **PARTIALLY RESOLVED**
-
-- Still outstanding: `player_controller.gd` and `koopa_shell.gd` write
-  `GameManager.lives += 1` directly instead of going through a helper.
-
-### 19. Unused `_camera` field in CameraEffects
-
-`camera_effects.gd:7` — `_camera` is stored via `register_camera()` on line 40 but never read anywhere. Dead code.
-
 ## D. Code Smells
 
 ### 20. `Vector2.ZERO` used as null sentinel in AudioManager

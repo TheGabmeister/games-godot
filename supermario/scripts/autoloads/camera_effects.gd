@@ -4,7 +4,6 @@ var _shake_intensity: float = 0.0
 var _shake_duration: float = 0.0
 var _shake_timer: float = 0.0
 var _shake_offset: Vector2 = Vector2.ZERO
-var _camera: Camera2D
 
 
 func get_shake_offset() -> Vector2:
@@ -35,7 +34,3 @@ func freeze_frame(duration: float) -> void:
 	Engine.time_scale = 0.05
 	await get_tree().create_timer(duration * 0.05).timeout
 	Engine.time_scale = 1.0
-
-
-func register_camera(camera: Camera2D) -> void:
-	_camera = camera

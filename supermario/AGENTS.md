@@ -421,8 +421,6 @@ Known quirk:
 - The player camera behavior is now split: scene camera limits are still set by
   the level scripts, but follow/look-ahead/no-backtrack behavior lives in
   `scripts/player/camera_controller.gd`.
-- `CameraEffects.register_camera()` currently stores a `_camera` reference that
-  is not read anywhere; shake is consumed through `get_shake_offset()` instead.
 - Phase 6 moved many tunables into config resources, but some behavior may still
   be split across scene assignments, preloaded resources, and scripts. When
   adjusting feel or polish, search both `scripts/config/` and scene/resource
