@@ -95,8 +95,9 @@ Current state:
   paints the level floor/stairs, configures the player camera limits, registers
   the camera with `CameraEffects`, shows the level intro, then starts gameplay
   and the level timer.
-- `scripts/level/level_1_2.gd` mirrors that pattern for the underground level
-  using `underground_tileset.gd` instead of the overworld terrain tileset.
+- `scripts/level/level_1_2.gd` mirrors that pattern for the underground level,
+  calling `tileset_builder.gd` with the underground palette colors instead of
+  the overworld ones.
 - `world_1_1.tscn` uses container nodes like `Blocks`, `Pipes`, `Coins`,
   `Enemies`, `Effects`, and `Interactables`. Interactive objects are scene
   instances under these containers rather than TileMap-authored gameplay
@@ -130,11 +131,12 @@ Current state:
 
 - `scripts/level/level_base.gd`: World bootstrap for terrain painting, pits,
   stairs, and camera bounds.
-- `scripts/level/terrain_tileset.gd`: Builds the ground `TileSet` and collision
-  polygons procedurally. Keep this in sync with any terrain tile assumptions in
-  level scripts.
-- `scripts/level/underground_tileset.gd`: Builds the underground floor/ceiling
-  `TileSet` procedurally for World 1-2.
+- `scripts/level/tileset_builder.gd`: Builds a two-tile (top, fill) `TileSet`
+  and collision polygons procedurally. Parameterized by `top_color` and
+  `fill_color`; level scripts pass the appropriate constants from
+  `color_palette.gd` (e.g. `GROUND_GREEN`/`GROUND_BROWN` for the overworld,
+  `UNDERGROUND_DARK`/`UNDERGROUND_BASE` for World 1-2). Keep this in sync with
+  any terrain tile assumptions in level scripts.
 - `scripts/level/parallax_controller.gd`: Draws clouds, hills, and bushes in
   `_draw()`, driven by camera movement.
 - `scripts/level/enemy_spawner.gd`: Enemy activation and cleanup gate tied to
@@ -337,10 +339,10 @@ When making changes in this repo:
   spawned and then positioned by the caller, do not snapshot spawn position in
   `_ready()`. Use the existing lazy-initialization pattern from
   `mushroom.gd` and `fire_flower.gd`.
-- Procedural terrain tiles in `terrain_tileset.gd` and `underground_tileset.gd`
-  currently use full-tile rectangular collision polygons. The painted stripe or
-  cap inside the tile is visual only; do not assume the visible color break is
-  the physics boundary.
+- Procedural terrain tiles built by `tileset_builder.gd` currently use
+  full-tile rectangular collision polygons. The painted stripe or cap inside
+  the tile is visual only; do not assume the visible color break is the
+  physics boundary.
 - Question blocks and brick blocks respond to head hits through
   `player_controller.gd`'s `check_ceiling_bumps()` slide-collision iteration.
   New bumpable solid blocks should expose a `bump_from_below()` method.

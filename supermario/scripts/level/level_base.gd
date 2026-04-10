@@ -1,6 +1,7 @@
 extends Node2D
 
-const TerrainTileset := preload("res://scripts/level/terrain_tileset.gd")
+const P := preload("res://scripts/color_palette.gd")
+const TilesetBuilder := preload("res://scripts/level/tileset_builder.gd")
 
 const TILE_SIZE := 16
 const LEVEL_HEIGHT := 14  # tiles
@@ -18,7 +19,7 @@ var _player_spawn: Vector2
 
 func _ready() -> void:
 	camera = player.get_node("Camera2D") as Camera2D
-	tilemap.tile_set = TerrainTileset.create_tileset()
+	tilemap.tile_set = TilesetBuilder.create_tileset(P.GROUND_GREEN, P.GROUND_BROWN)
 	_setup_camera()
 	_paint_terrain()
 	_player_spawn = player.global_position

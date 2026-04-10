@@ -71,8 +71,8 @@ States transition themselves (e.g., `state_machine.transition_to(&"JumpState")`)
 
 ### Level System
 
-- `level_base.gd` (World 1-1) — programmatically creates a `TileSet` at runtime via `terrain_tileset.gd`, paints ground/stairs/pits onto a `TileMapLayer`. Handles level intro flow and respawn.
-- `level_1_2.gd` (World 1-2) — underground variant with `underground_tileset.gd`, ceiling tiles, raised platforms.
+- `level_base.gd` (World 1-1) — programmatically creates a `TileSet` at runtime via `tileset_builder.gd` (passing `GROUND_GREEN` / `GROUND_BROWN` from the palette), paints ground/stairs/pits onto a `TileMapLayer`. Handles level intro flow and respawn.
+- `level_1_2.gd` (World 1-2) — underground variant using `tileset_builder.gd` with `UNDERGROUND_DARK` / `UNDERGROUND_BASE`, ceiling tiles, raised platforms.
 - Only static terrain uses `TileMapLayer`. Interactive objects (blocks, enemies, items) are individual scene instances placed under container `Node2D` nodes.
 - `parallax_controller.gd` — procedural cloud/hill/bush drawing with parallax offset from camera. Looks up the player camera lazily in `_process` (not `_ready`) because the parallax node is earlier in the scene tree than the player.
 - Camera: child of player, horizontal follow only, look-ahead offset, `limit_left` ratchets forward to prevent backtracking. Parallax reads `camera.get_screen_center_position()` (not `global_position`) so smoothing/offset are honored.
