@@ -114,7 +114,7 @@ func add_coin(position: Vector2 = Vector2.ZERO) -> void:
 	add_score(200, position)
 	if coins >= 100:
 		coins -= 100
-		_earn_one_up()
+		earn_one_up()
 
 
 func lose_life() -> void:
@@ -173,7 +173,7 @@ func _on_level_completed() -> void:
 	set_game_state(GameState.LEVEL_COMPLETE)
 
 
-func _earn_one_up() -> void:
+func earn_one_up() -> void:
 	lives += 1
 	EventBus.one_up_earned.emit()
 	EventBus.lives_changed.emit(lives)

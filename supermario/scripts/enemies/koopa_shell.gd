@@ -172,6 +172,4 @@ func _award_combo_points(pos: Vector2) -> void:
 		GameManager.add_score(points, pos)
 	else:
 		# 1-UP
-		GameManager.lives += 1
-		EventBus.one_up_earned.emit()
-		EventBus.lives_changed.emit(GameManager.lives)
+		GameManager.earn_one_up()

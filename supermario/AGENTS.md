@@ -54,9 +54,6 @@ Current state:
   pipes, flagpoles, and the castle.
 - `scenes/enemies/`: Enemy scenes for Goomba, Koopa, Koopa shell, and Piranha
   Plant.
-- `scenes/effects/`: Reserved for effect scenes if any are added later, though
-  the current repo mostly instantiates effect scripts directly under the level
-  `Effects` node.
 - `scenes/main.tscn`: Present as a shell scene stub, but not the active boot
   scene right now.
 - `scripts/autoloads/`: Global singletons for events, game state, audio, scene
@@ -70,11 +67,15 @@ Current state:
   power-up ring.
 - `scripts/player/`: Player controller, primitive-shape drawing, state machine,
   and per-state scripts.
+- `scripts/player/camera_controller.gd`: Camera follow, look-ahead, screen
+  shake composition, and no-backtracking logic for the player's `Camera2D`
+  child.
 - `scripts/level/`: Level bootstrap, terrain tileset generation, parallax
   drawing, underground level setup, and kill-zone behavior.
 - `scripts/enemies/`: Enemy base logic, per-enemy behavior, shell logic, and
   enemy procedural drawing.
-- `scripts/objects/`: Interactive blocks and collectible/power-up behavior.
+- `scripts/objects/`: Interactive blocks and collectible/power-up behavior,
+  including shared helpers like `block_base.gd` and `emerge_helper.gd`.
 - `scripts/color_palette.gd`: Shared named color constants used throughout the
   procedural visuals.
 - `shaders/`: Shader assets, currently including the sky/background gradient.
@@ -88,13 +89,13 @@ Current state:
 
 - `project.godot` boots `res://scenes/ui/title_screen.tscn`.
 - `scripts/ui/title_screen.gd` resets title-state data, waits briefly to avoid
-  stale input carry-over, then starts a new run by changing to
-  `res://scenes/levels/world_1_1.tscn`.
+  stale input carry-over, then delegates the actual new-run boot flow to
+  `GameManager.start_new_game()`.
 - `scripts/level/level_base.gd` expects a `Player` child and a
   `TileMapLayer_Ground` child. On `_ready()` it creates the terrain tileset,
-  paints the level floor/stairs, configures the player camera limits, registers
-  the camera with `CameraEffects`, shows the level intro, then starts gameplay
-  and the level timer.
+  paints the level floor/stairs, and configures the player camera limits.
+  Level boot flow, intro overlays, and timer start are owned by
+  `GameManager._enter_level()`, not by the level scene script itself.
 - `scripts/level/level_1_2.gd` mirrors that pattern for the underground level,
   calling `tileset_builder.gd` with the underground palette colors instead of
   the overworld ones.
@@ -107,16 +108,21 @@ Current state:
 - The `Enemies` node in `world_1_1.tscn` is scripted by
   `scripts/level/enemy_spawner.gd`, which activates enemies near the camera and
   cleans up enemies far behind it.
+- `world_1_2.tscn` also uses `scripts/level/enemy_spawner.gd` on its `Enemies`
+  node and `scripts/effects/effects_manager.gd` on its `Effects` node.
 - `scripts/autoloads/game_manager.gd` owns level order and currently advances
   from `1-1` to `1-2`, then returns to the title screen when no next level is
   configured.
-- The `Effects` node in `world_1_1.tscn` is scripted by
+- The `Effects` nodes in both playable levels are scripted by
   `scripts/effects/effects_manager.gd`, which listens to `EventBus` and spawns
   procedural visual effects for score, block breaks, stomps, and coin pops.
 - `scenes/player/player.tscn` expects child nodes named `CollisionShape2D`,
   `Visuals`, `Visuals/PlayerDrawer`, `StateMachine`, `Camera2D`,
   `StompDetector`, `Hurtbox`, `DamageFlash`, and `MotionTrail`. The player is
   also added to the `"player"` group at runtime.
+- That `Camera2D` child is scripted by `scripts/player/camera_controller.gd`,
+  so camera feel changes often live there rather than in
+  `player_controller.gd`.
 - `StateMachine` transitions by child node name. Current state nodes include
   `IdleState`, `RunState`, `JumpState`, `FallState`, `CrouchState`,
   `DeathState`, `GrowState`, `ShrinkState`, `PipeEnterState`, and
@@ -145,8 +151,10 @@ Current state:
   and calls `die()` when available.
 - `scripts/player/player_controller.gd`: Owns movement config references,
   crouching and collision shape changes, coyote time, jump buffering, damage,
-  stomp logic, camera no-backtracking behavior, `check_ceiling_bumps()`, and
-  `power_up()`.
+  stomp logic, fireball spawning, `check_ceiling_bumps()`, and `power_up()`.
+- `scripts/player/camera_controller.gd`: Owns camera look-ahead, shake offset
+  composition via `CameraEffects.get_shake_offset()`, and the ratcheting
+  no-backtrack left limit. `pipe_enter_state.gd` resets it after warps.
 - `scripts/player/state_machine.gd`: Routes input, frame, and physics
   processing to child state nodes by name.
 - `scripts/player/player_states/*.gd`: Individual player movement states.
@@ -168,16 +176,21 @@ Current state:
 - `scripts/enemies/piranha_plant.gd`: Pipe enemy emerge/retract behavior and
   non-stomp death handling.
 - `scripts/objects/question_block.gd`: Bumpable `?` block that can spawn coins,
-  mushrooms, fire flowers, or Starman.
+  mushrooms, fire flowers, or Starman. Extends `block_base.gd`.
 - `scripts/objects/brick_block.gd`: Breakable or bumpable brick block, with
-  multi-coin support.
+  multi-coin support. Extends `block_base.gd`.
 - `scripts/objects/hidden_block.gd`: Hidden block that reveals itself with a
   trigger-area pattern instead of standard slide-collision bump detection.
+  Also extends `block_base.gd`.
+- `scripts/objects/block_base.gd`: Shared bump animation and collision-layer
+  setup for solid bumpable blocks. Override `bump_from_below()` in subclasses.
 - `scripts/objects/mushroom.gd`: Moving mushroom pickup with emerge animation.
 - `scripts/objects/fire_flower.gd`: Stationary fire flower pickup with emerge
   animation.
 - `scripts/objects/starman.gd`: Moving invincibility pickup with emerge and
   bounce behavior.
+- `scripts/objects/emerge_helper.gd`: Shared lazy-init helper for item emerge
+  motion. Reuse this pattern when adding new upward-emerging pickups.
 - `scripts/objects/fireball.gd`: Player-fired projectile with bounce, wall
   death, and enemy hit handling.
 - `scripts/objects/pipe.gd`: Pipe collision sizing, warp-zone setup, and warp
@@ -206,7 +219,9 @@ Configured in `project.godot`:
 - `EventBus`: Central signal hub for player, scoring, level, enemy, item, and
   pause/game-over events.
 - `GameManager`: Owns score, coins, lives, timer, world/level numbers, power
-  state, and game state.
+  state, and game state. It also owns the level-enter flow via
+  `_enter_level()`, run reset via `_reset_run_state()`, and the ordered
+  `LEVEL_SCENES` / `LEVEL_ORDER` mapping.
 - `AudioManager`: Audio skeleton with pooled SFX players, pooled 2D SFX
   players, and dual music players for crossfades. Registries are present but
   most paths are still empty.
@@ -247,9 +262,9 @@ When adding new tunables:
 - `GameManager` also owns the current ordered level list and currently maps
   `1-1` to `world_1_1.tscn` and `1-2` to `world_1_2.tscn`.
 - `EventBus` already exposes signals for block bumps/breaks, item spawning,
-  power-state changes, enemy stomps/kills, combo stomps, one-ups, level state,
-  and game-over flow. Prefer using those signals instead of direct cross-system
-  calls.
+  power-state changes, star-power start/end, enemy stomps/kills, combo stomps,
+  one-ups, level state, and game-over flow. Prefer using those signals instead
+  of direct cross-system calls.
 - Character movement physics collide only with terrain by default. Most
   gameplay overlaps use `Area2D` on the named layers in `project.godot`.
 - Score popups and several polish effects are event-driven. If you add a new
@@ -345,14 +360,17 @@ When making changes in this repo:
   physics boundary.
 - Question blocks and brick blocks respond to head hits through
   `player_controller.gd`'s `check_ceiling_bumps()` slide-collision iteration.
-  New bumpable solid blocks should expose a `bump_from_below()` method.
+  New bumpable solid blocks should usually extend `block_base.gd` and expose a
+  `bump_from_below()` method.
 - Hidden blocks are different: because they start with collision disabled, they
   use an `Area2D` trigger on the Player layer to detect upward entry, then
   enable their `StaticBody2D` collision. Reuse that pattern for toggleable
   collision blocks instead of forcing them through slide-collision bump logic.
 - Effects are intentionally procedural and lightweight. Prefer `_draw()`,
   short-lived helper nodes, and `EventBus`-driven spawning over heavyweight
-  particle scene hierarchies unless the task clearly needs them.
+  particle scene hierarchies unless the task clearly needs them. Right now the
+  effects manager instantiates script-backed `Node2D`s at runtime instead of
+  dedicated `.tscn` effect scenes.
 
 ## Running The Project
 
@@ -400,6 +418,11 @@ Known quirk:
   level after `world_1_1.tscn`.
 - Most visuals are intentionally drawn with `_draw()`, primitive shapes, color
   constants, and a small amount of shader work. Preserve that style.
+- The player camera behavior is now split: scene camera limits are still set by
+  the level scripts, but follow/look-ahead/no-backtrack behavior lives in
+  `scripts/player/camera_controller.gd`.
+- `CameraEffects.register_camera()` currently stores a `_camera` reference that
+  is not read anywhere; shake is consumed through `get_shake_offset()` instead.
 - Phase 6 moved many tunables into config resources, but some behavior may still
   be split across scene assignments, preloaded resources, and scripts. When
   adjusting feel or polish, search both `scripts/config/` and scene/resource

@@ -231,9 +231,7 @@ func _on_stomp_area_entered(area: Area2D) -> void:
 			points = STOMP_COMBO_POINTS[_stomp_combo]
 		else:
 			points = 0
-			GameManager.lives += 1
-			EventBus.one_up_earned.emit()
-			EventBus.lives_changed.emit(GameManager.lives)
+			GameManager.earn_one_up()
 		if points > 0:
 			GameManager.add_score(points, enemy.global_position)
 		_stomp_combo += 1

@@ -6,30 +6,8 @@
 
 ## C. Architecture Issues
 
-### 17. Level boot and run-state ownership is split across UI, level scripts, and GameManager — **RESOLVED**
-
-Centralized into `GameManager._enter_level(scene_path)` with three public entry
-points: `start_new_game()`, `advance_to_next_level()`, and
-`respawn_current_level()`. Level scripts (`level_base.gd`, `level_1_2.gd`) are
-now pure scene construction — no `_start_level`, no `_on_player_respawned`, no
-timer calls, no state mutations. `title_screen.gd`, `level_complete.gd`, and
-`game_over_screen.gd` all delegate to the new GameManager API.
-
-Three real bugs were fixed along the way:
-- Timer was being started twice on new-game boot (once in `start_new_game`,
-  once in `level_base._start_level`).
-- The `is_new_game` branch in `level_base._start_level` was dead code that
-  duplicated `_reset_run_state()`.
-- `level_1_2._start_level` unconditionally stripped Fire Mario on level
-  transition. Power state now persists across level completions (classic SMB
-  behavior). Requires `player_controller._ready()` to call
-  `update_collision_shape()` so the collision size and drawer form match the
-  preserved `GameManager.current_power_state` on a fresh scene instance.
-
 ### 18. GameManager has misleading API boundaries — **PARTIALLY RESOLVED**
 
-- `get_next_level_scene()` was removed (absorbed into `advance_to_next_level()`
-  where the world/level mutation is explicit, not hidden in a "getter").
 - Still outstanding: `player_controller.gd` and `koopa_shell.gd` write
   `GameManager.lives += 1` directly instead of going through a helper.
 
