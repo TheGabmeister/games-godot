@@ -1,7 +1,5 @@
 extends Node2D
 
-const P := preload("res://scripts/color_palette.gd")
-
 const EMERGE_HEIGHT: float = 24.0
 const EMERGE_DURATION: float = 0.8
 const WAIT_TOP_DURATION: float = 1.5
@@ -137,15 +135,15 @@ func _draw() -> void:
 	var base_y: float = _offset_y
 
 	# Stem
-	draw_rect(Rect2(-3, base_y, 6, -base_y), P.PIRANHA_GREEN)
+	draw_rect(Rect2(-3, base_y, 6, -base_y), Palette.PIRANHA_GREEN)
 
 	# Head (only draw if visible)
 	if base_y < -2.0:
 		# Head body
-		draw_rect(Rect2(-7, base_y - 10, 14, 10), P.PIRANHA_GREEN)
+		draw_rect(Rect2(-7, base_y - 10, 14, 10), Palette.PIRANHA_GREEN)
 		# Lips / spots
-		draw_rect(Rect2(-8, base_y - 10, 16, 3), P.PIRANHA_RED)
-		draw_rect(Rect2(-8, base_y - 1, 16, 2), P.PIRANHA_RED)
+		draw_rect(Rect2(-8, base_y - 10, 16, 3), Palette.PIRANHA_RED)
+		draw_rect(Rect2(-8, base_y - 1, 16, 2), Palette.PIRANHA_RED)
 		# White teeth
 		draw_rect(Rect2(-4, base_y - 7, 2, 3), Color.WHITE)
 		draw_rect(Rect2(2, base_y - 7, 2, 3), Color.WHITE)

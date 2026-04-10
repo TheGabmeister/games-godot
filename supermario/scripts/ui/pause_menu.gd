@@ -1,8 +1,5 @@
 extends CanvasLayer
 
-@onready var _panel: ColorRect = $Panel
-@onready var _label: Label = $Panel/Label
-
 var _is_paused: bool = false
 
 

@@ -1,7 +1,5 @@
 extends CharacterBody2D
 
-const P := preload("res://scripts/color_palette.gd")
-
 const SPEED: float = 250.0
 const GRAVITY: float = 600.0
 const BOUNCE_VELOCITY: float = -180.0
@@ -64,5 +62,5 @@ func _die() -> void:
 
 func _draw() -> void:
 	# Small fireball: 8x8 circle with orange/red
-	draw_circle(Vector2(0, -4), 4.0, P.FIRE_ORANGE)
-	draw_circle(Vector2(0, -4), 2.0, P.FIRE_RED)
+	draw_circle(Vector2(0, -4), 4.0, Palette.FIRE_ORANGE)
+	draw_circle(Vector2(0, -4), 2.0, Palette.FIRE_RED)

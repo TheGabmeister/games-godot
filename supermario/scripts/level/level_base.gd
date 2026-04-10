@@ -1,6 +1,5 @@
 extends Node2D
 
-const P := preload("res://scripts/color_palette.gd")
 const TilesetBuilder := preload("res://scripts/level/tileset_builder.gd")
 
 const TILE_SIZE := 16
@@ -16,7 +15,7 @@ const LEVEL_HEIGHT := 14  # tiles
 
 func _ready() -> void:
 	camera = player.get_node("Camera2D") as Camera2D
-	tilemap.tile_set = TilesetBuilder.create_tileset(P.GROUND_GREEN, P.GROUND_BROWN)
+	tilemap.tile_set = TilesetBuilder.create_tileset(Palette.GROUND_GREEN, Palette.GROUND_BROWN)
 	_setup_camera()
 	_paint_terrain()
 	# Level boot, run-state resets, intro overlay, timer start, and

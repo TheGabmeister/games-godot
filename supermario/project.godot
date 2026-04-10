@@ -26,6 +26,7 @@ GameManager="*res://scripts/autoloads/game_manager.gd"
 AudioManager="*res://scripts/autoloads/audio_manager.gd"
 SceneManager="*res://scripts/autoloads/scene_manager.gd"
 CameraEffects="*res://scripts/autoloads/camera_effects.gd"
+Palette="*res://scripts/color_palette.gd"
 
 [display]
 

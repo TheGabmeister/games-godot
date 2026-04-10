@@ -3,8 +3,6 @@ extends Node2D
 ## Draws repeating cloud and hill decorations with simple parallax.
 ## Attach as a child of a CanvasLayer at layer -1.
 
-const P := preload("res://scripts/color_palette.gd")
-
 @export var parallax_clouds: float = 0.3
 @export var parallax_hills: float = 0.5
 
@@ -31,7 +29,7 @@ func _draw() -> void:
 
 
 func _draw_hills(cam_x: float) -> void:
-	var hill_color := P.GROUND_GREEN.lightened(0.2)
+	var hill_color := Palette.GROUND_GREEN.lightened(0.2)
 	var offset_x := cam_x * (1.0 - parallax_hills)
 	# Repeat hills every 768px
 	var pattern_width: float = 768.0
@@ -77,7 +75,7 @@ func _draw_cloud(center: Vector2, size_scale: float) -> void:
 
 
 func _draw_bushes(cam_x: float) -> void:
-	var bush_color := P.GROUND_GREEN.darkened(0.1)
+	var bush_color := Palette.GROUND_GREEN.darkened(0.1)
 	var offset_x := cam_x * (1.0 - parallax_hills)
 	var pattern_width: float = 768.0
 	var start_x := floorf((cam_x - 256.0 - offset_x) / pattern_width) * pattern_width

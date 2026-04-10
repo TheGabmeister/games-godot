@@ -2,6 +2,8 @@ extends CanvasLayer
 
 const TALLY_SPEED: float = 200.0  # points per second for visual countdown
 const POST_TALLY_DELAY: float = 2.0
+# Matches SCORE_FORMAT in hud.gd — zero-padded 6-digit score.
+const SCORE_FORMAT: String = "%06d"
 
 var _active: bool = false
 var _timer: float = 0.0
@@ -50,7 +52,7 @@ func _process(delta: float) -> void:
 
 
 func _update_label() -> void:
-	_label.text = "LEVEL COMPLETE!\n\nSCORE: %06d" % GameManager.score
+	_label.text = "LEVEL COMPLETE!\n\nSCORE: " + (SCORE_FORMAT % GameManager.score)
 
 
 func _go_next() -> void:

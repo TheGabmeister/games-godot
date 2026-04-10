@@ -1,7 +1,5 @@
 extends Control
 
-const P := preload("res://scripts/color_palette.gd")
-
 var _blink_timer: float = 0.0
 var _ready_for_input: bool = false
 

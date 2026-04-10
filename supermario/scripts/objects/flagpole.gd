@@ -1,7 +1,5 @@
 extends Node2D
 
-const P := preload("res://scripts/color_palette.gd")
-
 const POLE_HEIGHT: float = 160.0  # 10 tiles
 const BALL_RADIUS: float = 4.0
 
@@ -81,7 +79,7 @@ func _draw() -> void:
 	# Pole
 	draw_rect(Rect2(-2, -POLE_HEIGHT, 4, POLE_HEIGHT), Color(0.6, 0.6, 0.6))
 	# Ball on top
-	draw_circle(Vector2(0, -POLE_HEIGHT), BALL_RADIUS, P.STAR_YELLOW)
+	draw_circle(Vector2(0, -POLE_HEIGHT), BALL_RADIUS, Palette.STAR_YELLOW)
 	# Flag (triangle)
 	var flag_y: float = -POLE_HEIGHT + 8.0 + _flag_offset_y
 	var flag_points := PackedVector2Array([
@@ -91,4 +89,4 @@ func _draw() -> void:
 	])
 	draw_colored_polygon(flag_points, Color(0.1, 0.7, 0.15))
 	# Base block
-	draw_rect(Rect2(-8, -8, 16, 8), P.GROUND_GREEN)
+	draw_rect(Rect2(-8, -8, 16, 8), Palette.GROUND_GREEN)

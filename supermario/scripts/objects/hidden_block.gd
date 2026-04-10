@@ -1,6 +1,5 @@
 extends "res://scripts/objects/block_base.gd"
 
-const P := preload("res://scripts/color_palette.gd")
 const MushroomScene := preload("res://scenes/objects/mushroom.tscn")
 
 @export var contents: StringName = &"coin"
@@ -21,11 +20,11 @@ func _draw() -> void:
 	if not _revealed:
 		return
 	var y_off: float = _bump_offset
-	draw_rect(Rect2(-8, -16 + y_off, 16, 16), P.BLOCK_BROWN)
-	draw_rect(Rect2(-8, -16 + y_off, 16, 2), P.BLOCK_BROWN.darkened(0.3))
-	draw_rect(Rect2(-8, -2 + y_off, 16, 2), P.BLOCK_BROWN.darkened(0.3))
-	draw_rect(Rect2(-8, -16 + y_off, 2, 16), P.BLOCK_BROWN.darkened(0.3))
-	draw_rect(Rect2(6, -16 + y_off, 2, 16), P.BLOCK_BROWN.darkened(0.3))
+	draw_rect(Rect2(-8, -16 + y_off, 16, 16), Palette.BLOCK_BROWN)
+	draw_rect(Rect2(-8, -16 + y_off, 16, 2), Palette.BLOCK_BROWN.darkened(0.3))
+	draw_rect(Rect2(-8, -2 + y_off, 16, 2), Palette.BLOCK_BROWN.darkened(0.3))
+	draw_rect(Rect2(-8, -16 + y_off, 2, 16), Palette.BLOCK_BROWN.darkened(0.3))
+	draw_rect(Rect2(6, -16 + y_off, 2, 16), Palette.BLOCK_BROWN.darkened(0.3))
 
 
 func _on_body_entered(body: Node2D) -> void:

@@ -1,6 +1,5 @@
 extends CharacterBody2D
 
-const P := preload("res://scripts/color_palette.gd")
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
 
 @export var item_config: Resource  # ItemConfig

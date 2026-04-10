@@ -1,7 +1,5 @@
 extends Node2D
 
-const P := preload("res://scripts/color_palette.gd")
-
 var _velocity: Vector2 = Vector2(0, -280.0)
 var _timer: float = 0.0
 var _spawn_y: float = 0.0
@@ -41,9 +39,9 @@ func _draw() -> void:
 	if half_w < 0.5:
 		half_w = 0.5
 	# Coin body
-	draw_rect(Rect2(-half_w, -6, half_w * 2.0, 10), P.COIN_GOLD)
+	draw_rect(Rect2(-half_w, -6, half_w * 2.0, 10), Palette.COIN_GOLD)
 	# Highlight
 	if half_w > 1.5:
-		draw_rect(Rect2(-half_w + 1, -4, 2, 6), P.COIN_SHINE)
+		draw_rect(Rect2(-half_w + 1, -4, 2, 6), Palette.COIN_SHINE)
 	# Border
-	draw_rect(Rect2(-half_w, -6, half_w * 2.0, 10), P.COIN_GOLD.darkened(0.3), false, 1.0)
+	draw_rect(Rect2(-half_w, -6, half_w * 2.0, 10), Palette.COIN_GOLD.darkened(0.3), false, 1.0)

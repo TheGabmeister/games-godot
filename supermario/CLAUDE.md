@@ -39,6 +39,7 @@ When in doubt: read the relevant §9/§14/§15 subsection before touching code. 
 3. **AudioManager** — Registry-based audio. SFX/music registries map `StringName` keys to file paths (currently empty — fill paths to add audio). Unknown keys log a warning. SFX pool of 10+6 players, music crossfade via dual `AudioStreamPlayer`. All EventBus-to-audio wiring is already connected. Streams are loaded lazily via `_get_sfx_stream()` / `_get_music_stream()` and cached in `_sfx_streams` / `_music_streams` dictionaries — `load()` runs at most once per asset per session, then subsequent plays are pure dictionary lookups.
 4. **SceneManager** — Fade-to-black scene transitions, level intro overlay.
 5. **CameraEffects** — Screen shake with decay (exposes `get_shake_offset()` — does NOT write to camera directly), freeze frame via time scale dip. The camera controller (script on the player's `Camera2D` child) reads the shake offset every frame and composes it with its look-ahead.
+6. **Palette** — `res://scripts/color_palette.gd`. Constants-only script holding every named color used by `_draw()` methods. Accessed as `Palette.MARIO_RED`, `Palette.PIPE_GREEN`, etc. No per-file preload needed.
 
 ### Game Flow
 
@@ -161,7 +162,7 @@ Several small helper scripts encapsulate patterns that were duplicated across mu
 
 ### Color Palette
 
-`color_palette.gd` holds all named color constants. Access via preload: `const P := preload("res://scripts/color_palette.gd")` then `P.MARIO_RED`.
+`color_palette.gd` holds all named color constants and is registered as the `Palette` autoload in `project.godot`. Access directly — `Palette.MARIO_RED`, `Palette.PIPE_GREEN`, etc. No per-file preload needed.
 
 ### Collision Layers
 

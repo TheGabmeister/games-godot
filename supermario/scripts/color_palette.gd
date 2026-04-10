@@ -1,3 +1,8 @@
+extends Node
+
+# Registered as the `Palette` autoload in project.godot so every other
+# script can use `Palette.MARIO_RED` without a per-file preload const.
+
 # Sky / Background
 const SKY_BLUE         := Color(0.35, 0.65, 0.95)
 const SKY_UNDERGROUND  := Color(0.05, 0.05, 0.08)

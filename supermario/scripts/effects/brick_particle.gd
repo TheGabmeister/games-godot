@@ -1,7 +1,5 @@
 extends Node2D
 
-const P := preload("res://scripts/color_palette.gd")
-
 var _velocity: Vector2 = Vector2.ZERO
 var _timer: float = 0.0
 var _rotation_speed: float = 0.0
@@ -26,5 +24,5 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(-3, -3, 6, 6), P.BRICK_RED)
-	draw_rect(Rect2(-3, -3, 6, 6), P.BRICK_DARK, false, 1.0)
+	draw_rect(Rect2(-3, -3, 6, 6), Palette.BRICK_RED)
+	draw_rect(Rect2(-3, -3, 6, 6), Palette.BRICK_DARK, false, 1.0)

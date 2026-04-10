@@ -1,6 +1,5 @@
 extends CharacterBody2D
 
-const P := preload("res://scripts/color_palette.gd")
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
 
 @export var item_config: Resource  # ItemConfig
@@ -61,8 +60,8 @@ func _draw() -> void:
 	var cycle := int(_anim_time * 6.0) % 3
 	var color: Color
 	match cycle:
-		0: color = P.STAR_YELLOW
-		1: color = P.FIRE_ORANGE
+		0: color = Palette.STAR_YELLOW
+		1: color = Palette.FIRE_ORANGE
 		_: color = Color(0.6, 0.9, 0.3)
 
 	# Draw a simple 5-pointed star shape

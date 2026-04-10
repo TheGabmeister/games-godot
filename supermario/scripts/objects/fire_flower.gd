@@ -1,6 +1,5 @@
 extends Area2D
 
-const P := preload("res://scripts/color_palette.gd")
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
 
 @export var item_config: Resource  # ItemConfig
@@ -29,14 +28,14 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(-1, -8, 2, 8), P.PIRANHA_GREEN)
+	draw_rect(Rect2(-1, -8, 2, 8), Palette.PIRANHA_GREEN)
 	for i in 5:
 		var angle: float = (float(i) / 5.0) * TAU - PI * 0.5
 		var px: float = cos(angle) * 3.5
 		var py: float = -11.0 + sin(angle) * 3.5
-		var petal_color: Color = P.FIRE_ORANGE if i % 2 == 0 else P.FIRE_RED
+		var petal_color: Color = Palette.FIRE_ORANGE if i % 2 == 0 else Palette.FIRE_RED
 		draw_circle(Vector2(px, py), 3.0, petal_color)
-	draw_circle(Vector2(0, -11), 1.8, P.STAR_YELLOW)
+	draw_circle(Vector2(0, -11), 1.8, Palette.STAR_YELLOW)
 
 
 func _on_body_entered(body: Node) -> void:

@@ -1,7 +1,5 @@
 extends Node2D
 
-const P := preload("res://scripts/color_palette.gd")
-
 const CASTLE_COLOR := Color(0.55, 0.35, 0.15)
 const CASTLE_DARK := Color(0.40, 0.25, 0.10)
 

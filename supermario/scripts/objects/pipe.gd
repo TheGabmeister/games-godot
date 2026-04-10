@@ -1,7 +1,5 @@
 extends StaticBody2D
 
-const P := preload("res://scripts/color_palette.gd")
-
 @export var warp_target: NodePath
 @export var pipe_height: int = 2  # in tiles (each tile = 16px)
 
@@ -73,10 +71,10 @@ func _on_warp_zone_body_exited(body: Node2D) -> void:
 func _draw() -> void:
 	var h: float = pipe_height * 16.0
 	# Pipe head (wider lip)
-	draw_rect(Rect2(-16, -h, 32, 8), P.PIPE_GREEN_LIGHT)
-	draw_rect(Rect2(-16, -h, 4, 8), P.PIPE_GREEN)
-	draw_rect(Rect2(12, -h, 4, 8), P.PIPE_GREEN)
+	draw_rect(Rect2(-16, -h, 32, 8), Palette.PIPE_GREEN_LIGHT)
+	draw_rect(Rect2(-16, -h, 4, 8), Palette.PIPE_GREEN)
+	draw_rect(Rect2(12, -h, 4, 8), Palette.PIPE_GREEN)
 	# Pipe body
-	draw_rect(Rect2(-12, -h + 8, 24, h - 8), P.PIPE_GREEN_LIGHT)
-	draw_rect(Rect2(-12, -h + 8, 4, h - 8), P.PIPE_GREEN)
-	draw_rect(Rect2(8, -h + 8, 4, h - 8), P.PIPE_GREEN)
+	draw_rect(Rect2(-12, -h + 8, 24, h - 8), Palette.PIPE_GREEN_LIGHT)
+	draw_rect(Rect2(-12, -h + 8, 4, h - 8), Palette.PIPE_GREEN)
+	draw_rect(Rect2(8, -h + 8, 4, h - 8), Palette.PIPE_GREEN)

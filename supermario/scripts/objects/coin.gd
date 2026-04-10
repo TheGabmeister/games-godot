@@ -1,7 +1,5 @@
 extends Area2D
 
-const P := preload("res://scripts/color_palette.gd")
-
 var _spin_time: float = 0.0
 var _collected: bool = false
 
@@ -24,10 +22,10 @@ func _draw() -> void:
 	if width < 0.5:
 		width = 0.5
 	# Outer coin body
-	draw_rect(Rect2(-width, -7, width * 2.0, 14), P.COIN_GOLD)
+	draw_rect(Rect2(-width, -7, width * 2.0, 14), Palette.COIN_GOLD)
 	# Inner shine
 	var shine_width := width * 0.5
-	draw_rect(Rect2(-shine_width, -5, shine_width * 2.0, 10), P.COIN_SHINE)
+	draw_rect(Rect2(-shine_width, -5, shine_width * 2.0, 10), Palette.COIN_SHINE)
 
 
 func _on_body_entered(_body: Node2D) -> void:
