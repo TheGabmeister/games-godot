@@ -20,6 +20,7 @@ var current_power_state: PowerState = PowerState.SMALL
 var game_state: GameState = GameState.TITLE
 
 var _timer_active: bool = false
+var _last_time_tick: int = -1
 
 
 func _ready() -> void:
@@ -35,7 +36,10 @@ func _process(delta: float) -> void:
 			_timer_active = false
 			EventBus.player_died.emit()
 		else:
-			EventBus.time_tick.emit(ceili(time_remaining))
+			var current_tick: int = ceili(time_remaining)
+			if current_tick != _last_time_tick:
+				_last_time_tick = current_tick
+				EventBus.time_tick.emit(current_tick)
 
 
 func start_new_game() -> void:
@@ -111,6 +115,7 @@ func set_game_state(state: GameState) -> void:
 
 func _start_level_timer() -> void:
 	time_remaining = 400.0
+	_last_time_tick = -1
 	_timer_active = true
 	EventBus.level_started.emit(current_world, current_level)
 

@@ -127,7 +127,6 @@ func apply_movement(direction: float, delta: float) -> void:
 	var accel: float = movement.turn_acceleration if is_turning else movement.acceleration
 
 	velocity.x = move_toward(velocity.x, direction * max_speed, accel * delta)
-	move_and_slide()
 
 
 func apply_air_movement(direction: float, delta: float) -> void:
@@ -138,7 +137,6 @@ func apply_air_movement(direction: float, delta: float) -> void:
 
 func apply_deceleration(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, movement.deceleration * delta)
-	move_and_slide()
 
 
 func update_facing(direction: float) -> void:
