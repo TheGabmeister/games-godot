@@ -8,7 +8,6 @@ const STAR_WARNING_TIME: float = 2.0
 const MAX_FIREBALLS: int = 2
 
 @export var movement: Resource  # PlayerMovementConfig
-@export var cam_config: Resource  # CameraConfig
 @export var effects: Resource  # EffectsConfig
 
 var coyote_active: bool = false
@@ -37,13 +36,8 @@ var _active_fireballs: int = 0
 @onready var hurtbox: Area2D = $Hurtbox
 
 
-var _camera_look_ahead: float = 0.0
-var _max_camera_x: float = 0.0
-
-
 func _ready() -> void:
 	add_to_group("player")
-	CameraEffects.register_camera(camera)
 	stomp_detector.area_entered.connect(_on_stomp_area_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
 
@@ -60,19 +54,6 @@ func _process(delta: float) -> void:
 		_jump_buffer_timer -= delta
 		if _jump_buffer_timer <= 0.0:
 			jump_buffered = false
-
-	# Camera look-ahead and no-backtrack
-	var target_ahead: float = signf(visuals.scale.x) * cam_config.look_ahead_distance
-	_camera_look_ahead = move_toward(_camera_look_ahead, target_ahead, cam_config.look_ahead_speed * delta)
-	var shake := CameraEffects.get_shake_offset()
-	camera.offset.x = _camera_look_ahead + shake.x
-	camera.offset.y = shake.y
-
-	# Prevent camera from scrolling left (no backtracking)
-	var cam_left: float = global_position.x + _camera_look_ahead - cam_config.no_backtrack_offset
-	if cam_left > _max_camera_x:
-		_max_camera_x = cam_left
-	camera.limit_left = int(_max_camera_x)
 
 	# Stomp combo resets on ground
 	if is_on_floor():

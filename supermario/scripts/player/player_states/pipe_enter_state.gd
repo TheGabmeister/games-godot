@@ -68,7 +68,7 @@ func _reposition() -> void:
 
 	# Reset camera position to prevent jarring snap
 	player.camera.reset_smoothing()
-	player._max_camera_x = 0.0
+	player.camera.reset_no_backtrack()
 
 	# Fade in then slide out
 	var tween := player.create_tween()

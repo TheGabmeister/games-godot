@@ -4,27 +4,7 @@
 
 ## B. Performance Issues
 
-### 11. `move_and_slide()` is called twice per frame in the run path
-
-The helper API is inconsistent — movement helpers both mutate velocity *and* call `move_and_slide()`, so the run path ends up sliding twice.
-
-- `player_controller.gd:122`, `player_controller.gd:139`
-- `run_state.gd:18`, `run_state.gd:23`, `run_state.gd:26`
-
-Movement helpers should either only mutate velocity or own the whole move step, not both.
-
-### 12. Timer/HUD emits every frame even when the displayed second has not changed
-
-- `game_manager.gd:30`, `game_manager.gd:38`
-- `hud.gd:31`
-
-Only emit when the integer second actually changes.
-
 ## C. Architecture Issues
-
-### 13. Player controller is a God Object
-
-`player_controller.gd` handles: movement, gravity, camera management, collision shape updates, 3 timer systems, star power, invincibility, fireball management, stomp combos, death handling, power-ups, damage, pipe entry, and flagpole entry. That's too many responsibilities for one file.
 
 ### 14. States and other scripts reach into private members of controllers and autoloads
 

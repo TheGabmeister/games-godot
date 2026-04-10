@@ -35,10 +35,10 @@ When in doubt: read the relevant §9/§14/§15 subsection before touching code. 
 ### Autoloads (loaded in this order)
 
 1. **EventBus** — Pure signal hub. All cross-system communication goes through here. ~30 signals covering player, scoring, enemies, blocks, game state.
-2. **GameManager** — Persistent game state: score, coins, lives, timer, power state (`SMALL`/`BIG`/`FIRE`), game state (`TITLE`/`PLAYING`/`PAUSED`/`GAME_OVER`/`LEVEL_COMPLETE`/`TRANSITIONING`). Level progression via `LEVEL_SCENES` dictionary and `LEVEL_ORDER` array.
-3. **AudioManager** — Registry-based audio. SFX/music registries map `StringName` keys to file paths (currently empty — fill paths to add audio). Unknown keys log a warning. SFX pool of 10+6 players, music crossfade via dual `AudioStreamPlayer`. All EventBus-to-audio wiring is already connected.
+2. **GameManager** — Persistent game state: score, coins, lives, timer, power state (`SMALL`/`BIG`/`FIRE`), game state (`TITLE`/`PLAYING`/`PAUSED`/`GAME_OVER`/`LEVEL_COMPLETE`/`TRANSITIONING`). Level progression via `LEVEL_SCENES` dictionary and `LEVEL_ORDER` array. Run-state reset (score/coins/lives/world/level/power) is centralized in `_reset_run_state()` — both `start_new_game()` and `reset_for_title()` call it. Timer ticks (`EventBus.time_tick`) are emitted only when the displayed integer second changes, deduped via `_last_time_tick`. The cache resets in `_start_level_timer()` so the first tick of every level always emits.
+3. **AudioManager** — Registry-based audio. SFX/music registries map `StringName` keys to file paths (currently empty — fill paths to add audio). Unknown keys log a warning. SFX pool of 10+6 players, music crossfade via dual `AudioStreamPlayer`. All EventBus-to-audio wiring is already connected. Streams are loaded lazily via `_get_sfx_stream()` / `_get_music_stream()` and cached in `_sfx_streams` / `_music_streams` dictionaries — `load()` runs at most once per asset per session, then subsequent plays are pure dictionary lookups.
 4. **SceneManager** — Fade-to-black scene transitions, level intro overlay.
-5. **CameraEffects** — Screen shake with decay (exposes `get_shake_offset()` — does NOT write to camera directly), freeze frame via time scale dip. The player controller composes shake offset with its own look-ahead offset each frame.
+5. **CameraEffects** — Screen shake with decay (exposes `get_shake_offset()` — does NOT write to camera directly), freeze frame via time scale dip. The camera controller (script on the player's `Camera2D` child) reads the shake offset every frame and composes it with its look-ahead.
 
 ### Game Flow
 
@@ -56,7 +56,8 @@ GameManager tracks the current level key (e.g., `"1-1"`). After level complete, 
 
 The player uses a **state machine with child nodes** pattern:
 
-- `player_controller.gd` (CharacterBody2D) — movement helpers, collision shape management, stomp/damage handling, fireball shooting, star power, pipe entry, flagpole grab. Tunables come from `@export` Resource configs (see Tunables section).
+- `player_controller.gd` (CharacterBody2D) — movement helpers, collision shape management, stomp/damage handling, fireball shooting, star power, pipe entry, flagpole grab. Tunables come from `@export var movement: PlayerMovementConfig` and `@export var effects: EffectsConfig` wired in `player.tscn`.
+- `camera_controller.gd` — script attached to the `Camera2D` child of the player. Owns look-ahead in the facing direction, screen-shake compositing (via `CameraEffects.get_shake_offset()`), and the no-backtrack `limit_left` ratchet. Reads facing from the parent's `Visuals` child. Exposes `reset_no_backtrack()` for pipe warps. Self-registers with `CameraEffects` in `_ready()`.
 - `state_machine.gd` — delegates `_process`/`_physics_process`/`_unhandled_input` to the active state
 - States extend `player_state.gd` base via `extends "res://..."` paths. Each state owns its own transition logic.
 - `player_drawer.gd` — procedural `_draw()` rendering for Small/Big/Crouching Mario with walk cycle animation and star power palette cycling
@@ -83,11 +84,13 @@ Question blocks and brick blocks expose a `bump_from_below()` method. They do NO
 
 Instead, the player's `check_ceiling_bumps()` (called from `JumpState` after `move_and_slide`) iterates `get_slide_collision()` looking for collisions with a downward-pointing normal (`normal.y > 0.5`) and calls `bump_from_below()` on the collider if the method exists. Any new interactable block must implement this method to respond to head bumps.
 
+The block animation state (`_bumping`, `_bump_time`, `_bump_offset`) and the per-frame tween live in `block_base.gd`, which `brick_block.gd`, `question_block.gd`, and `hidden_block.gd` all extend via `extends "res://scripts/objects/block_base.gd"`. Subclasses call `start_bump()` on the base to kick off the animation; the base's `_process` handles the tween and `queue_redraw()`.
+
 **Contrast: hidden blocks.** Hidden blocks start with `CollisionShape2D.disabled = true` so the player passes through them. The slide-iteration pattern cannot detect them (no collision to slide against). `hidden_block.gd` uses a different pattern: a child `Area2D` monitoring the Player layer (`collision_mask = 2`) listens for `body_entered`, checks `body.velocity.y < 0` (player moving up), then enables the `StaticBody2D` collision via `set_deferred("disabled", false)`. This is the canonical pattern for any "toggle-able collision" block — don't try to shoehorn the slide-iteration approach.
 
 ### Item Spawning and `_ready()` Timing
 
-In Godot 4, `_ready()` fires **synchronously inside `add_child()`**, before any subsequent lines in the caller run. Items that need to know their spawn position (e.g., for emerge animations) must **not** capture it in `_ready()`. The project convention is **lazy-initialization on the first `_process` / `_physics_process` tick** via a boolean flag. See `fire_flower.gd` and `mushroom.gd` for the pattern.
+In Godot 4, `_ready()` fires **synchronously inside `add_child()`**, before any subsequent lines in the caller run. Items that need to know their spawn position (e.g., for emerge animations) must **not** capture it in `_ready()`. The project convention is **lazy-initialization on the first tick**. The shared `EmergeHelper` (`scripts/objects/emerge_helper.gd`) is a `RefCounted` that captures the start position lazily and runs the upward tween. `mushroom.gd`, `fire_flower.gd`, and `starman.gd` compose with it via `var _emerge := EmergeHelper.new()`. Note: `coin_pop.gd` uses the older inline `_initialized` flag pattern — if you touch it, consider whether the helper applies (it doesn't quite, since coin_pop just captures spawn_y rather than tweening over a fixed distance).
 
 ### Enemy System
 
@@ -124,6 +127,17 @@ Both may fire for the same enemy in the same frame. The hurtbox handler skips da
 - `coin_pop.gd` — spinning coin arc on `item_spawned(&"coin")`
 
 Player-attached effects: `damage_flash.gd` (red tint on `player_damaged`), `motion_trail.gd` (afterimages at top speed).
+
+All four effects-manager spawns go through `_spawn_effect(script, pos, z)` — a private helper that does the `Node2D.new() + set_script() + add_child()` dance in one place. Adding a new effect is: write the script (extends `Node2D`, owns its own `_process`/`_draw`/lifetime), preload it, call `_spawn_effect()` from the appropriate signal handler. Effects are *not* `.tscn` scenes — see the comment above `_spawn_effect` for the rationale.
+
+### Shared Helpers
+
+Several small helper scripts encapsulate patterns that were duplicated across multiple files. Reach for these instead of re-pasting boilerplate:
+
+- `scripts/objects/block_base.gd` — bump animation state for all interactable blocks (extends `StaticBody2D`).
+- `scripts/objects/emerge_helper.gd` — lazy-init + vertical tween for items that emerge from question blocks (`RefCounted`, composed via `var _emerge := EmergeHelper.new()`).
+- `scripts/level/tileset_builder.gd` — parameterized procedural TileSet builder. `create_tileset(top_color, fill_color)` returns a 2-tile atlas with collision polygons. Used by `level_base.gd` (overworld) and `level_1_2.gd` (underground), both passing colors from `color_palette.gd`.
+- `enemy_base._disable_all_collision()` — sets `collision_layer = 0`, `collision_mask = 0`, and disables the hitbox's `monitoring` and `monitorable`. Called from death-animation paths in `enemy_base.gd` and `goomba.gd`.
 
 ### UI Layer
 
@@ -182,7 +196,7 @@ Gameplay tunables live in Godot `Resource` files (`.tres`) under `resources/conf
 
 **Current config resources:**
 - `PlayerMovementConfig` — walk/run speed, gravity, jump, coyote time, collision sizes, stomp bounce, invincibility
-- `CameraConfig` — look-ahead distance/speed, smoothing, no-backtrack offset
+- `CameraConfig` — look-ahead distance/speed, smoothing, no-backtrack offset (wired to the `Camera2D` node in `player.tscn`, not the player root)
 - `EnemyConfig` — patrol speed, gravity (one `.tres` per enemy type: goomba, koopa)
 - `BlockBumpConfig` — bump amplitude/duration, pulse frequency (shared by all block types)
 - `ItemConfig` — mushroom speed/gravity, emerge height/duration

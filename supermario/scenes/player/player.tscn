@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Resource" path="res://resources/config/player_movement_default.tres" id="10_movement"]
@@ -18,6 +18,7 @@
 [ext_resource type="Script" path="res://scripts/effects/motion_trail.gd" id="15_trail"]
 [ext_resource type="Script" path="res://scripts/player/player_states/pipe_enter_state.gd" id="17_pipe"]
 [ext_resource type="Script" path="res://scripts/player/player_states/flagpole_state.gd" id="18_flagpole"]
+[ext_resource type="Script" path="res://scripts/player/camera_controller.gd" id="19_camcontroller"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
 size = Vector2(12, 14)
@@ -34,7 +35,6 @@ collision_layer = 2
 collision_mask = 1
 script = ExtResource("1_player")
 movement = ExtResource("10_movement")
-cam_config = ExtResource("11_camera")
 effects = ExtResource("16_effects")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -82,6 +82,8 @@ script = ExtResource("18_flagpole")
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true
 position_smoothing_speed = 10.0
+script = ExtResource("19_camcontroller")
+cam_config = ExtResource("11_camera")
 
 [node name="StompDetector" type="Area2D" parent="."]
 collision_layer = 0
