@@ -23,7 +23,12 @@
       "Bash(ls -la /c/dev/games-godot/supermario/scripts/*.gd)",
       "Bash(grep -l \"const P := preload\" /c/dev/games-godot/supermario/scripts/**/*.gd)",
       "Bash(godot --headless --path . --quit)",
-      "Bash(d:/Godot_v4.6.2-stable_win64.exe --headless --path . --quit)"
+      "Bash(d:/Godot_v4.6.2-stable_win64.exe --headless --path . --quit)",
+      "Read(//c/Users/Admin/.claude/projects/c--dev-games-godot/**)",
+      "Read(//c/Users/Admin/.claude/projects//**)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Admin\\.claude\\projects\\c--dev-games-godot-supermario\\memory"
     ]
   }
 }

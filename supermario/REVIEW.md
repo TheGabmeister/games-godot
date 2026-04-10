@@ -4,29 +4,6 @@
 
 ## B. Performance Issues
 
-### 7. `load()` at runtime in AudioManager
-
-- `audio_manager.gd:55`, `audio_manager.gd:58`
-- `audio_manager.gd:80`, `audio_manager.gd:83`
-
-`load(path)` performs synchronous disk I/O every time an SFX or music track plays. This will cause frame stutters. Should `preload()` or cache in a dictionary on first load.
-
-### 8. `Node2D.new()` + `set_script()` pattern in effects_manager
-
-`effects_manager.gd:21-26`, repeated 4 times.
-
-Creating bare `Node2D` and injecting scripts dynamically is slower than `PackedScene.instantiate()` and defeats editor tooling. These effects should be `.tscn` scenes.
-
-### 9. `queue_redraw()` called every frame unconditionally
-
-- `question_block.gd:24`, `question_block.gd:35-36` — redraws every frame even when not bumping (only `_pulse_time` changes)
-- All enemy drawers (`goomba_drawer`, `koopa_drawer`, `koopa_shell_drawer`) call `queue_redraw()` every frame even when stationary/offscreen
-- `flagpole.gd:76-77` — redraws every frame even when totally idle (worst offender)
-- `parallax_controller.gd:19`
-- `player_drawer.gd:25`
-
-Should be conditional: only redraw when visual state actually changed.
-
 ### 10. `get_tree().get_nodes_in_group("player")` in hot paths
 
 - `koopa_shell.gd:78` — on every stomp

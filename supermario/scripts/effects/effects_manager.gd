@@ -18,38 +18,37 @@ func _ready() -> void:
 func _on_score_awarded(points: int, pos: Vector2) -> void:
 	if pos == Vector2.ZERO:
 		return
-	var popup := Node2D.new()
-	popup.set_script(ScorePopupScript)
-	popup.global_position = pos + Vector2(0, -8)
-	popup.z_index = 5
-	add_child(popup)
+	var popup := _spawn_effect(ScorePopupScript, pos + Vector2(0, -8), 5)
 	popup.setup(points, effects_config)
 
 
 func _on_block_broken(pos: Vector2) -> void:
 	for i in 4:
-		var particle := Node2D.new()
-		particle.set_script(BrickParticle)
-		particle.global_position = pos + Vector2(0, -8)
-		particle.z_index = 4
-		add_child(particle)
+		var particle := _spawn_effect(BrickParticle, pos + Vector2(0, -8), 4)
 		var angle: float = -PI * 0.25 - PI * 0.5 * (float(i) / 3.0)
 		var speed: float = 120.0 + randf() * 60.0
 		particle.setup(Vector2(cos(angle) * speed, sin(angle) * speed))
 
 
 func _on_enemy_stomped(pos: Vector2) -> void:
-	var puff := Node2D.new()
-	puff.set_script(StompPuff)
-	puff.global_position = pos
-	puff.z_index = 4
-	add_child(puff)
+	_spawn_effect(StompPuff, pos, 4)
 
 
 func _on_item_spawned(item_type: StringName, pos: Vector2) -> void:
 	if item_type == &"coin":
-		var coin := Node2D.new()
-		coin.set_script(CoinPop)
-		coin.global_position = pos
-		coin.z_index = 5
-		add_child(coin)
+		_spawn_effect(CoinPop, pos, 5)
+
+
+# Effects are scriptless Node2Ds with a script attached at runtime, rather
+# than .tscn scenes or `class_name`-typed classes. The project avoids
+# `class_name` due to a headless-indexing quirk (see CLAUDE.md), and these
+# effects have no children/exports/editor work that would justify a scene
+# file. Convert any single effect to a `.tscn` if it ever grows children
+# or @export tunables.
+func _spawn_effect(script: GDScript, pos: Vector2, z: int) -> Node2D:
+	var node := Node2D.new()
+	node.set_script(script)
+	node.global_position = pos
+	node.z_index = z
+	add_child(node)
+	return node
