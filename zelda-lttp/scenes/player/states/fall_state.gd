@@ -9,6 +9,7 @@ func enter(msg: Dictionary = {}) -> void:
 	super.enter(msg)
 	_fall_timer = 0.0
 	player.velocity = Vector2.ZERO
+	AudioManager.play_sfx(&"fall")
 
 	# Shrink tween
 	var tween := player.create_tween()
@@ -30,6 +31,11 @@ func _respawn() -> void:
 
 	# Apply damage
 	PlayerState.apply_damage(FALL_DAMAGE)
+
+	# If lethal, go to Death instead of Idle
+	if PlayerState.current_health <= 0:
+		state_machine.transition_to(&"Death")
+		return
 
 	# Landing squash
 	var tween := player.create_tween()

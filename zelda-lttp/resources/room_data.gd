@@ -11,3 +11,4 @@ class_name RoomData extends Resource
 @export var is_dark_room: bool = false
 @export var is_safe_respawn_point: bool = false
 @export var neighbor_ids: Dictionary  # "up"/"down"/"left"/"right" -> room_id StringName
+@export var color_grading_preset: StringName = &"overworld"  # Key for post-process color grading

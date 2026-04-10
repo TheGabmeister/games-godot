@@ -1,0 +1,144 @@
+[gd_scene format=3 uid="uid://c8d01key"]
+
+[ext_resource type="Script" path="res://scenes/rooms/dungeons/dungeon_room.gd" id="1_script"]
+[ext_resource type="Resource" path="res://resources/room_data/dungeons/d01_key_room.tres" id="2_rd"]
+[ext_resource type="Script" path="res://scenes/objects/door.gd" id="3_door"]
+[ext_resource type="Script" path="res://scenes/objects/chest.gd" id="4_chest"]
+[ext_resource type="Script" path="res://scenes/objects/switch.gd" id="5_switch"]
+[ext_resource type="Script" path="res://scenes/objects/switch_door.gd" id="6_sdoor"]
+[ext_resource type="Resource" path="res://resources/items/pickups/compass.tres" id="7_compass"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/keese/keese.tscn" id="8_keese"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/stalfos/stalfos.tscn" id="9_stalfos"]
+
+[sub_resource type="RectangleShape2D" id="wall_top"]
+size = Vector2(256, 16)
+
+[sub_resource type="RectangleShape2D" id="wall_bottom"]
+size = Vector2(256, 16)
+
+[sub_resource type="RectangleShape2D" id="wall_left_top"]
+size = Vector2(16, 96)
+
+[sub_resource type="RectangleShape2D" id="wall_left_bottom"]
+size = Vector2(16, 96)
+
+[sub_resource type="RectangleShape2D" id="wall_right"]
+size = Vector2(16, 224)
+
+[sub_resource type="RectangleShape2D" id="door_shape"]
+size = Vector2(16, 8)
+
+[sub_resource type="RectangleShape2D" id="switch_block"]
+size = Vector2(16, 16)
+
+[sub_resource type="RectangleShape2D" id="sdoor_shape"]
+size = Vector2(16, 16)
+
+[node name="d01_key_room" type="Node2D"]
+script = ExtResource("1_script")
+room_data = ExtResource("2_rd")
+
+[node name="Floor" type="ColorRect" parent="."]
+offset_right = 256.0
+offset_bottom = 224.0
+color = Color(0.18, 0.16, 0.2, 1)
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="CompassChest" type="StaticBody2D" parent="Entities"]
+position = Vector2(200, 48)
+collision_layer = 1
+script = ExtResource("4_chest")
+item = ExtResource("7_compass")
+persist_id = &"chest_compass"
+
+[node name="Switch" type="StaticBody2D" parent="Entities"]
+position = Vector2(128, 112)
+collision_layer = 1
+script = ExtResource("5_switch")
+persist_id = &"switch_1"
+linked_nodes = Array[NodePath]([NodePath("../SwitchBarrier")])
+
+[node name="Shape" type="CollisionShape2D" parent="Entities/Switch"]
+shape = SubResource("switch_block")
+
+[node name="SwitchBarrier" type="StaticBody2D" parent="Entities"]
+position = Vector2(200, 80)
+collision_layer = 1
+script = ExtResource("6_sdoor")
+
+[node name="Shape" type="CollisionShape2D" parent="Entities/SwitchBarrier"]
+shape = SubResource("sdoor_shape")
+
+[node name="Keese1" parent="Entities" instance=ExtResource("8_keese")]
+position = Vector2(80, 60)
+
+[node name="Keese2" parent="Entities" instance=ExtResource("8_keese")]
+position = Vector2(180, 160)
+
+[node name="Stalfos1" parent="Entities" instance=ExtResource("9_stalfos")]
+position = Vector2(128, 160)
+
+[node name="EntryPoints" type="Node2D" parent="."]
+
+[node name="PlayerSpawn" type="Marker2D" parent="EntryPoints"]
+position = Vector2(24, 112)
+
+[node name="from_entrance" type="Marker2D" parent="EntryPoints"]
+position = Vector2(24, 112)
+
+[node name="Transitions" type="Node2D" parent="."]
+
+[node name="DoorToEntrance" type="Area2D" parent="Transitions"]
+position = Vector2(8, 112)
+collision_layer = 128
+collision_mask = 2
+script = ExtResource("3_door")
+target_room_id = &"d01_entrance"
+target_entry_point = &"from_key_room"
+transition_style = &"fade"
+trigger_mode = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Transitions/DoorToEntrance"]
+shape = SubResource("door_shape")
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="TopWall" type="StaticBody2D" parent="Walls"]
+position = Vector2(128, 8)
+collision_layer = 1
+
+[node name="Shape" type="CollisionShape2D" parent="Walls/TopWall"]
+shape = SubResource("wall_top")
+
+[node name="BottomWall" type="StaticBody2D" parent="Walls"]
+position = Vector2(128, 216)
+collision_layer = 1
+
+[node name="Shape" type="CollisionShape2D" parent="Walls/BottomWall"]
+shape = SubResource("wall_bottom")
+
+[node name="LeftWallTop" type="StaticBody2D" parent="Walls"]
+position = Vector2(8, 48)
+collision_layer = 1
+
+[node name="Shape" type="CollisionShape2D" parent="Walls/LeftWallTop"]
+shape = SubResource("wall_left_top")
+
+[node name="LeftWallBottom" type="StaticBody2D" parent="Walls"]
+position = Vector2(8, 176)
+collision_layer = 1
+
+[node name="Shape" type="CollisionShape2D" parent="Walls/LeftWallBottom"]
+shape = SubResource("wall_left_bottom")
+
+[node name="RightWall" type="StaticBody2D" parent="Walls"]
+position = Vector2(248, 112)
+collision_layer = 1
+
+[node name="Shape" type="CollisionShape2D" parent="Walls/RightWall"]
+shape = SubResource("wall_right")
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.6, 0.55, 0.7, 1)

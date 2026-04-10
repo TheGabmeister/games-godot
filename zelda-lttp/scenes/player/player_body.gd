@@ -22,6 +22,11 @@ func _draw() -> void:
 		_draw_item_get_pose()
 		return
 
+	# Bunny form in Dark World without Moon Pearl
+	if player.is_bunny:
+		_draw_bunny_form()
+		return
+
 	var facing := player.facing_direction
 
 	# Swim tint
@@ -153,6 +158,30 @@ func _draw_item_get_pose() -> void:
 		draw_colored_polygon(points, item_data.icon_color)
 	elif item_data:
 		draw_circle(Vector2(0, -14), 4.0, item_data.icon_color)
+
+
+func _draw_bunny_form() -> void:
+	var facing := player.facing_direction
+	# Pink bunny body
+	var body_color := Color(0.9, 0.6, 0.7)
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(-4, -1), Vector2(4, -1),
+		Vector2(5, 5), Vector2(-5, 5),
+	]), body_color)
+	# Head
+	draw_circle(Vector2(0, -3), 3.5, body_color.lightened(0.1))
+	# Ears
+	var ear_dir := facing.normalized() if facing != Vector2.ZERO else Vector2.DOWN
+	var ear_perp := Vector2(-ear_dir.y, ear_dir.x)
+	var ear_base := Vector2(0, -5)
+	draw_line(ear_base + ear_perp * 2, ear_base + ear_perp * 2 + Vector2(0, -6), body_color, 2.0)
+	draw_line(ear_base - ear_perp * 2, ear_base - ear_perp * 2 + Vector2(0, -6), body_color, 2.0)
+	# Inner ears
+	draw_line(ear_base + ear_perp * 2, ear_base + ear_perp * 2 + Vector2(0, -5), Color(0.95, 0.7, 0.75), 1.0)
+	draw_line(ear_base - ear_perp * 2, ear_base - ear_perp * 2 + Vector2(0, -5), Color(0.95, 0.7, 0.75), 1.0)
+	# Eyes
+	draw_circle(Vector2(-1.5, -3), 1.0, Color(0.2, 0.1, 0.1))
+	draw_circle(Vector2(1.5, -3), 1.0, Color(0.2, 0.1, 0.1))
 
 
 func _draw_shield(facing: Vector2) -> void:

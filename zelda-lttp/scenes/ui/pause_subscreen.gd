@@ -2,6 +2,7 @@ extends Control
 
 var _cursor_pos: Vector2i = Vector2i.ZERO
 var _skill_ids: Array[StringName] = []
+var _save_flash_timer: float = 0.0
 const GRID_COLS := 5
 const CELL_SIZE := 20
 const GRID_ORIGIN := Vector2(60, 24)
@@ -13,6 +14,12 @@ func _ready() -> void:
 	visible = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	focus_mode = Control.FOCUS_NONE
+
+
+func _process(delta: float) -> void:
+	if _save_flash_timer > 0.0:
+		_save_flash_timer -= delta
+		queue_redraw()
 
 
 func open() -> void:
@@ -68,6 +75,21 @@ func _unhandled_input(event: InputEvent) -> void:
 			AudioManager.play_sfx(&"menu_select")
 			queue_redraw()
 		get_viewport().set_input_as_handled()
+
+	# Save game with action_item (B button / K / Z) while paused
+	if event.is_action_pressed("action_item"):
+		_save_current_game()
+		get_viewport().set_input_as_handled()
+
+
+func _save_current_game() -> void:
+	var slot: int = GameManager.current_save_slot
+	if slot < 1:
+		slot = 1  # Default to slot 1 if no slot selected yet
+	SaveManager.save_game(slot)
+	AudioManager.play_sfx(&"menu_select")
+	_save_flash_timer = 1.5
+	queue_redraw()
 
 
 func _draw() -> void:
@@ -126,6 +148,12 @@ func _draw() -> void:
 	_draw_text(RESOURCE_ORIGIN + Vector2(100, 10), "Rupees: %d" % PlayerState.rupees, 8, Color(0.3, 0.9, 0.3))
 	_draw_text(RESOURCE_ORIGIN + Vector2(100, 22), "Arrows: %d  Bombs: %d" % [PlayerState.arrows, PlayerState.bombs], 8, Color.WHITE)
 	_draw_text(RESOURCE_ORIGIN + Vector2(0, 38), "Heart Pieces: %d/4" % PlayerState.heart_pieces, 8, Color(1.0, 0.5, 0.5))
+
+	# Save hint / confirmation
+	if _save_flash_timer > 0.0:
+		_draw_text(Vector2(8, size.y - 10), "Game saved!", 7, Color(0.3, 1.0, 0.4, clampf(_save_flash_timer * 2.0, 0.0, 1.0)))
+	else:
+		_draw_text(Vector2(8, size.y - 10), "[B] Save", 7, Color(0.5, 0.5, 0.6))
 
 
 func _draw_text(pos: Vector2, text: String, font_size: int, color: Color) -> void:

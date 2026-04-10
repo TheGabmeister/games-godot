@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="DungeonData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/dungeon_data.gd" id="1_dd"]
+
+[resource]
+script = ExtResource("1_dd")
+dungeon_id = &"dungeon_01"
+dungeon_name = "Eastern Palace"
+rooms = {
+"0,0": &"d01_entrance",
+"1,0": &"d01_key_room",
+"0,1": &"d01_puzzle_room",
+"1,1": &"d01_boss_room"
+}
+starting_room = Vector2i(0, 0)
+boss_room = Vector2i(1, 1)
+boss_id = &""
+floor_count = 1
+music_track = &"dungeon"
+boss_music_track = &"boss"

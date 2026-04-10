@@ -17,6 +17,9 @@
 [ext_resource type="Resource" path="res://resources/items/upgrades/flippers.tres" id="15_flip"]
 [ext_resource type="Resource" path="res://resources/items/upgrades/half_magic.tres" id="16_hmagic"]
 [ext_resource type="Script" uid="uid://8uv7wfri5ww2" path="res://scenes/objects/water_zone.gd" id="17_water"]
+[ext_resource type="Script" path="res://debug/test_sign.gd" id="18_sign"]
+[ext_resource type="Script" path="res://debug/test_cutscene_trigger.gd" id="19_cutscene"]
+[ext_resource type="Script" path="res://components/torch_flicker.gd" id="20_torch"]
 
 [sub_resource type="RectangleShape2D" id="wall_top"]
 size = Vector2(256, 16)
@@ -34,6 +37,17 @@ size = Vector2(64, 16)
 size = Vector2(16, 48)
 
 [sub_resource type="RectangleShape2D" id="hitbox_shape"]
+
+[sub_resource type="Gradient" id="Gradient_torch"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_torch"]
+gradient = SubResource("Gradient_torch")
+width = 64
+height = 64
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
 
 [sub_resource type="RectangleShape2D" id="water_shape"]
 size = Vector2(32, 32)
@@ -324,6 +338,47 @@ persist_id = &"chest_flippers"
 position = Vector2(152, 32)
 item = ExtResource("16_hmagic")
 persist_id = &"chest_half_magic"
+
+[node name="TestFixtures" type="Node2D" parent="."]
+
+[node name="TestSign" type="Node2D" parent="TestFixtures"]
+position = Vector2(48, 60)
+script = ExtResource("18_sign")
+
+[node name="SignLabel" type="Label" parent="TestFixtures"]
+offset_left = 32.0
+offset_top = 66.0
+offset_right = 66.0
+offset_bottom = 76.0
+theme_override_font_sizes/font_size = 6
+text = "Sign (E)"
+horizontal_alignment = 1
+
+[node name="CutsceneTrigger" type="Node2D" parent="TestFixtures"]
+position = Vector2(128, 170)
+script = ExtResource("19_cutscene")
+
+[node name="CutsceneLabel" type="Label" parent="TestFixtures"]
+offset_left = 110.0
+offset_top = 178.0
+offset_right = 150.0
+offset_bottom = 188.0
+theme_override_font_sizes/font_size = 6
+text = "Walk here"
+horizontal_alignment = 1
+
+[node name="TestTorch" type="PointLight2D" parent="TestFixtures"]
+position = Vector2(78, 56)
+texture = SubResource("GradientTexture2D_torch")
+texture_scale = 2.0
+script = ExtResource("20_torch")
+
+[node name="TorchVisual" type="ColorRect" parent="TestFixtures/TestTorch"]
+offset_left = -3.0
+offset_top = -3.0
+offset_right = 3.0
+offset_bottom = 3.0
+color = Color(1, 0.6, 0.2, 1)
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=2115867721]
 color = Color(1, 0.98, 0.9, 1)

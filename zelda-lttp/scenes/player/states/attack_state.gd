@@ -14,6 +14,11 @@ func enter(msg: Dictionary = {}) -> void:
 	player.velocity = Vector2.ZERO
 	AudioManager.play_sfx(&"sword_swing")
 
+	# Squash/stretch on swing
+	var ss: Node = player.get_node_or_null("SquashStretch")
+	if ss and ss.has_method("attack_squash"):
+		ss.attack_squash(ATTACK_DURATION)
+
 	# Enable sword hitbox
 	var sword_hitbox := player.get_node_or_null("SwordHitbox")
 	if sword_hitbox and sword_hitbox.has_method("activate"):

@@ -24,6 +24,9 @@ var knockback_velocity: Vector2 = Vector2.ZERO
 # Water detection
 var is_in_water: bool = false
 
+# Dark World bunny transform
+var is_bunny: bool = false
+
 
 func _ready() -> void:
 	last_safe_position = global_position
@@ -43,13 +46,25 @@ func _ready() -> void:
 	# Connect item get presentation
 	EventBus.item_get_requested.connect(_on_item_get_requested)
 
+	# Connect cutscene state transitions
+	Cutscene.cutscene_started.connect(_on_cutscene_started)
+	Cutscene.cutscene_finished.connect(_on_cutscene_finished)
+
+	# Connect lift requests from destructibles
+	EventBus.lift_requested.connect(_on_lift_requested)
+
 	# Set up interaction probe shape
 	_setup_interaction_probe()
 
 
+func _on_lift_requested(target: Node2D) -> void:
+	if state_machine.current_state.name in [&"Idle", &"Walk"]:
+		state_machine.transition_to(&"Lift", {"target": target})
+
+
 func _on_item_get_requested(item: ItemData) -> void:
 	var auto_dismiss: bool = (item.item_type == ItemData.ItemType.RESOURCE
-		and item.resource_key not in [&"small_key", &"heart_piece"])
+		and item.resource_key not in [&"small_key", &"heart_piece", &"heart_container"])
 	state_machine.transition_to(&"ItemGet", {"item": item, "auto_dismiss": auto_dismiss})
 
 
@@ -142,17 +157,35 @@ func _on_hurt(hitbox_data: Dictionary) -> void:
 
 	var final_damage: int = result.final_damage
 	PlayerState.apply_damage(final_damage)
+	AudioManager.play_sfx(&"player_hurt")
 
 	# Flash
 	var flash: FlashComponent = get_node_or_null("FlashComponent") as FlashComponent
 	if flash:
 		flash.flash()
 
+	# If lethal, go straight to Death — don't knockback
+	if PlayerState.current_health <= 0:
+		state_machine.transition_to(&"Death")
+		return
+
 	# Knockback
 	var direction: Vector2 = (global_position - source_pos).normalized()
 	state_machine.transition_to(&"Knockback", {"direction": direction, "force": kb_force})
 
 	EventBus.screen_shake_requested.emit(1.0, 0.12)
+
+
+# --- Cutscene ---
+
+func _on_cutscene_started() -> void:
+	if state_machine.current_state.name != &"Cutscene":
+		state_machine.transition_to(&"Cutscene")
+
+
+func _on_cutscene_finished() -> void:
+	if state_machine.current_state.name == &"Cutscene":
+		state_machine.transition_to(&"Idle")
 
 
 # --- Screen Shake ---

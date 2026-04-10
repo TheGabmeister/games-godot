@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RoomData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/room_data.gd" id="1_rd"]
+
+[resource]
+script = ExtResource("1_rd")
+room_id = &"overworld_7_0"
+scene_path = "res://scenes/rooms/overworld/overworld_7_0.tscn"
+room_type = &"overworld"
+dungeon_id = &""
+world_type = &"light"
+screen_coords = Vector2i(7, 0)
+music_track = &"overworld"
+ambient_color = Color(1, 0.95, 0.85, 1)
+is_dark_room = false
+is_safe_respawn_point = false
+neighbor_ids = {"down": &"overworld_7_1", "left": &"overworld_6_0"}
+color_grading_preset = &"desert"

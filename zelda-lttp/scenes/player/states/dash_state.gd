@@ -9,6 +9,11 @@ func enter(msg: Dictionary = {}) -> void:
 	_dash_timer = 0.0
 	AudioManager.play_sfx(&"dash_start")
 
+	# Dash stretch
+	var ss: Node = player.get_node_or_null("SquashStretch")
+	if ss and ss.has_method("stretch"):
+		ss.stretch(1.3, 0.7, 0.12)
+
 
 func physics_update(delta: float) -> void:
 	_dash_timer += delta
@@ -18,6 +23,13 @@ func physics_update(delta: float) -> void:
 		direction = Vector2.DOWN
 	player.velocity = direction * player.speed * player.dash_speed_multiplier
 	player.move_and_slide()
+
+	# Check for dash-destroyable objects
+	for i in player.get_slide_collision_count():
+		var collision := player.get_slide_collision(i)
+		var collider := collision.get_collider()
+		if collider is Destructible and collider.dash_destroyable:
+			collider.dash_destroy()
 
 	if _dash_timer >= DASH_DURATION:
 		var input := get_movement_input()

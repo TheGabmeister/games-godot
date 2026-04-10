@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://c8ow213"]
+
+[ext_resource type="Script" path="res://scenes/rooms/overworld/overworld_room.gd" id="1_script"]
+[ext_resource type="Resource" path="res://resources/room_data/overworld/overworld_1_5.tres" id="2_rd"]
+[ext_resource type="Script" path="res://scenes/objects/npc.gd" id="3_npc"]
+[ext_resource type="Script" path="res://scenes/objects/chest.gd" id="4_chest"]
+[ext_resource type="Resource" path="res://resources/items/pickups/heart_piece.tres" id="5_hp"]
+
+[node name="overworld_1_5" type="Node2D"]
+script = ExtResource("1_script")
+room_data = ExtResource("2_rd")
+biome = &"village"
+
+[node name="Floor" type="ColorRect" parent="."]
+offset_right = 256.0
+offset_bottom = 224.0
+color = Color(0.5, 0.65, 0.35, 1)
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Villager" type="Node2D" parent="Entities"]
+position = Vector2(80, 96)
+script = ExtResource("3_npc")
+npc_name = "Villager"
+dialog_lines = Array[String](["Welcome to our village!", "Be careful in the mountains to the north."])
+npc_color = Color(0.6, 0.75, 0.4, 1)
+
+[node name="Shopkeeper" type="Node2D" parent="Entities"]
+position = Vector2(192, 80)
+script = ExtResource("3_npc")
+npc_name = "Shopkeeper"
+dialog_lines = Array[String](["I'd sell you something, but my shop is closed today.", "Come back another time!"])
+npc_color = Color(0.8, 0.5, 0.3, 1)
+
+[node name="HeartPieceChest" type="StaticBody2D" parent="Entities"]
+position = Vector2(224, 176)
+collision_layer = 1
+script = ExtResource("4_chest")
+item = ExtResource("5_hp")
+persist_id = &"chest_heart_piece"
+
+[node name="EntryPoints" type="Node2D" parent="."]
+
+[node name="PlayerSpawn" type="Marker2D" parent="EntryPoints"]
+position = Vector2(128, 112)
+
+[node name="Transitions" type="Node2D" parent="."]
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(1, 0.98, 0.9, 1)

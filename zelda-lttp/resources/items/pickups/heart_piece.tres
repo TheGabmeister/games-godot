@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/item_data.gd" id="1_id"]
+
+[resource]
+script = ExtResource("1_id")
+id = &"heart_piece"
+display_name = "Heart Piece"
+description = "Collect 4 to gain a new Heart Container!"
+item_type = 2
+icon_color = Color(1, 0.3, 0.3, 1)
+icon_shape = PackedVector2Array(0, -4, 4, -1, 4, 1, 0, 4, -4, 1, -4, -1)
+resource_key = &"heart_piece"
+resource_amount = 1
