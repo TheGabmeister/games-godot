@@ -67,6 +67,9 @@ Current state:
   power-up ring.
 - `scripts/player/`: Player controller, primitive-shape drawing, state machine,
   and per-state scripts.
+- `scripts/player/player_state_ids.gd`: Shared `StringName` constants for the
+  player state node names. Use this instead of scattering raw state-name
+  literals through controller/state scripts.
 - `scripts/player/camera_controller.gd`: Camera follow, look-ahead, screen
   shake composition, and no-backtracking logic for the player's `Camera2D`
   child.
@@ -126,7 +129,8 @@ Current state:
 - `StateMachine` transitions by child node name. Current state nodes include
   `IdleState`, `RunState`, `JumpState`, `FallState`, `CrouchState`,
   `DeathState`, `GrowState`, `ShrinkState`, `PipeEnterState`, and
-  `FlagpoleState`.
+  `FlagpoleState`. Those names are now centralized in
+  `scripts/player/player_state_ids.gd`.
 - `scripts/level/parallax_controller.gd` finds the first node in the `"player"`
   group and expects that node to have a `Camera2D` child. It resolves that
   lazily in `_process()`, not `_ready()`.
@@ -152,6 +156,9 @@ Current state:
 - `scripts/player/player_controller.gd`: Owns movement config references,
   crouching and collision shape changes, coyote time, jump buffering, damage,
   stomp logic, fireball spawning, `check_ceiling_bumps()`, and `power_up()`.
+- `scripts/player/player_state_ids.gd`: Shared source of truth for
+  `StateMachine` child names like `IdleState` and `JumpState`. If you rename a
+  player state node in `player.tscn`, update this file too.
 - `scripts/player/camera_controller.gd`: Owns camera look-ahead, shake offset
   composition via `CameraEffects.get_shake_offset()`, and the ratcheting
   no-backtrack left limit. `pipe_enter_state.gd` resets it after warps.
@@ -223,12 +230,14 @@ Configured in `project.godot`:
   `_enter_level()`, run reset via `_reset_run_state()`, and the ordered
   `LEVEL_SCENES` / `LEVEL_ORDER` mapping.
 - `AudioManager`: Audio skeleton with pooled SFX players, pooled 2D SFX
-  players, and dual music players for crossfades. Registries are present but
-  most paths are still empty.
+  players, and dual music players for crossfades. Use `play_sfx()` for
+  non-positional playback and `play_sfx_at()` for world-positioned playback.
+  Registries are present but most paths are still empty.
 - `SceneManager`: Handles fade transitions, scene reloads, and level intro
   overlay text.
-- `CameraEffects`: Stores the active camera reference and provides shake and
-  freeze-frame helpers.
+- `CameraEffects`: Provides shake-offset sampling and freeze-frame helpers.
+  Camera scripts pull `get_shake_offset()` each frame instead of registering
+  themselves.
 
 When changing autoload behavior, keep signal contracts and startup expectations
 compatible with existing HUD, player, block, item, and level scripts.
@@ -421,6 +430,9 @@ Known quirk:
 - The player camera behavior is now split: scene camera limits are still set by
   the level scripts, but follow/look-ahead/no-backtrack behavior lives in
   `scripts/player/camera_controller.gd`.
+- Player state names are still scene-node based, but the shared constants in
+  `scripts/player/player_state_ids.gd` are now the source of truth for code
+  references to those nodes.
 - Phase 6 moved many tunables into config resources, but some behavior may still
   be split across scene assignments, preloaded resources, and scripts. When
   adjusting feel or polish, search both `scripts/config/` and scene/resource

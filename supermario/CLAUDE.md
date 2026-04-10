@@ -37,7 +37,7 @@ When in doubt: read the relevant §9/§14/§15 subsection before touching code. 
 1. **EventBus** — Pure signal hub. All cross-system communication goes through here. ~30 signals covering player, scoring, enemies, blocks, game state.
 2. **GameManager** — Persistent game state: score, coins, lives, timer, power state (`SMALL`/`BIG`/`FIRE`), game state (`TITLE`/`PLAYING`/`PAUSED`/`GAME_OVER`/`LEVEL_COMPLETE`/`TRANSITIONING`). Level progression via `LEVEL_SCENES` dictionary and `LEVEL_ORDER` array. Run-state reset (score/coins/lives/world/level/power) is centralized in `_reset_run_state()` — both `start_new_game()` and `reset_for_title()` call it. Timer ticks (`EventBus.time_tick`) are emitted only when the displayed integer second changes, deduped via `_last_time_tick`. The cache resets in `start_level_timer()` so the first tick of every level always emits.
 3. **AudioManager** — Registry-based audio. SFX/music registries map `StringName` keys to file paths (currently empty — fill paths to add audio). Unknown keys log a warning. SFX pool of 10+6 players, music crossfade via dual `AudioStreamPlayer`. All EventBus-to-audio wiring is already connected. Streams are loaded lazily via `_get_sfx_stream()` / `_get_music_stream()` and cached in `_sfx_streams` / `_music_streams` dictionaries — `load()` runs at most once per asset per session, then subsequent plays are pure dictionary lookups.
-4. **SceneManager** — Fade-to-black scene transitions, level intro overlay.
+4. **SceneManager** — Fade-to-black scene transitions and level intro overlay. Public API: `change_scene(path)` (fade out → swap → fade in), `change_scene_no_fade(path)` (swap only — use when the caller is running its own fade sequence, as `GameManager._enter_level` does), `fade_out(duration)` / `fade_in(duration)` (standalone tweens, `duration < 0` uses the config default), `show_level_intro(world, level, lives)`. External callers should never reach in and tween the internal `_fade_rect` directly; use these methods.
 5. **CameraEffects** — Screen shake with decay (exposes `get_shake_offset()` — does NOT write to camera directly), freeze frame via time scale dip. The camera controller (script on the player's `Camera2D` child) reads the shake offset every frame and composes it with its look-ahead.
 6. **Palette** — `res://scripts/color_palette.gd`. Constants-only script holding every named color used by `_draw()` methods. Accessed as `Palette.MARIO_RED`, `Palette.PIPE_GREEN`, etc. No per-file preload needed.
 
@@ -72,7 +72,13 @@ The player uses a **state machine with child nodes** pattern:
 
 States: `IdleState`, `RunState`, `JumpState`, `FallState`, `CrouchState`, `DeathState`, `GrowState`, `ShrinkState`, `PipeEnterState`, `FlagpoleState`.
 
-States transition themselves (e.g., `state_machine.transition_to(&"JumpState")`). The controller provides helpers but doesn't decide when to switch states.
+**State IDs:** All state-name references go through `scripts/player/player_state_ids.gd` — a constants-only `RefCounted` preloaded as `const StateIds := preload(...)`. Callers use `state_machine.transition_to(StateIds.JUMP)`, not `&"JumpState"` string literals. A rename in the scene tree would be silent with string literals; the `StateIds` indirection gives you one place to update.
+
+States transition themselves (e.g., `state_machine.transition_to(StateIds.JUMP)`). The controller provides helpers but doesn't decide when to switch states.
+
+**Public player API:** `update_collision_shape()`, `start_invincibility()`, `die()`, `take_damage()`, `power_up(item_type, position)`, `enter_pipe(pipe, target)`, `start_flagpole(flagpole)` are public because external callers (states, items, enemies) need them. Do not add underscore-prefixed versions — the rule is: if cross-file code has a legitimate reason to call it, it's public. Same rule on `GameManager`: `start_level_timer()` / `stop_level_timer()` / `advance_to_next_level()` / `respawn_current_level()` / `return_to_title()` are the public flow API, not underscore helpers.
+
+**Power-state on spawn:** `player_controller._ready()` calls `update_collision_shape()` so a newly instanced player picks up `GameManager.current_power_state`. Load-bearing for Fire Mario persisting across level transitions — the scene file bakes in the Small collision, so without this line the player would spawn with the wrong collision box on 1-2 after beating 1-1 as Fire Mario.
 
 **Star power:** Managed by `_is_star_powered` flag on the player controller (not a state). 10-second duration, palette cycling in drawer, kills enemies on hurtbox contact, warning flashes in last 2 seconds.
 
@@ -80,8 +86,8 @@ States transition themselves (e.g., `state_machine.transition_to(&"JumpState")`)
 
 ### Level System
 
-- `level_base.gd` (World 1-1) — programmatically creates a `TileSet` at runtime via `tileset_builder.gd` (passing `GROUND_GREEN` / `GROUND_BROWN` from the palette), paints ground/stairs/pits onto a `TileMapLayer`. Handles level intro flow and respawn.
-- `level_1_2.gd` (World 1-2) — underground variant using `tileset_builder.gd` with `UNDERGROUND_DARK` / `UNDERGROUND_BASE`, ceiling tiles, raised platforms.
+- `level_base.gd` (World 1-1) — programmatically creates a `TileSet` at runtime via `tileset_builder.gd` (passing `GROUND_GREEN` / `GROUND_BROWN` from the palette), paints ground/stairs/pits onto a `TileMapLayer`. **Pure scene construction only** — does not drive the intro overlay, timer, or respawn. All run-state flow is owned by `GameManager._enter_level()`.
+- `level_1_2.gd` (World 1-2) — underground variant using `tileset_builder.gd` with `UNDERGROUND_DARK` / `UNDERGROUND_BASE`, ceiling tiles, raised platforms. Same construction-only rule: no flow logic.
 - Only static terrain uses `TileMapLayer`. Interactive objects (blocks, enemies, items) are individual scene instances placed under container `Node2D` nodes.
 - `parallax_controller.gd` — procedural cloud/hill/bush drawing with parallax offset from camera. Looks up the player camera lazily in `_process` (not `_ready`) because the parallax node is earlier in the scene tree than the player.
 - Camera: child of player, horizontal follow only, look-ahead offset, `limit_left` ratchets forward to prevent backtracking. Parallax reads `camera.get_screen_center_position()` (not `global_position`) so smoothing/offset are honored.
@@ -152,7 +158,7 @@ Several small helper scripts encapsulate patterns that were duplicated across mu
 - **Title screen** (`title_screen.gd`) — main scene in `project.godot`. Resets GameManager on load. 0.3s input delay prevents stale presses carrying over.
 - **Pause menu** (`pause_menu.gd`) — `PROCESS_MODE_WHEN_PAUSED` CanvasLayer. Toggles `get_tree().paused` and ducks music.
 - **Game over** (`game_over_screen.gd`) — `PROCESS_MODE_ALWAYS`. Shows 3s on `game_over` signal, returns to title.
-- **Level complete** (`level_complete.gd`) — `PROCESS_MODE_ALWAYS`. Score tally, then advances to next level via `GameManager.get_next_level_scene()`.
+- **Level complete** (`level_complete.gd`) — `PROCESS_MODE_ALWAYS`. Score tally, then calls `GameManager.advance_to_next_level()` which handles both the "next level" and "no more levels → title" cases.
 
 ### Grow/Shrink States and Pause Rule
 
@@ -218,11 +224,12 @@ Gameplay tunables live in Godot `Resource` files (`.tres`) under `resources/conf
 ## GDScript Conventions
 
 - Typed signatures: `func name(param: Type) -> ReturnType:`
-- `snake_case` for variables/functions, `_prefix` for private
+- `snake_case` for variables/functions, `_prefix` for private — and it means it. If external code needs to call something, make it public; do not reach across files into an underscore-prefixed member.
 - No `class_name` — use `preload()` paths to avoid headless indexing issues
 - Prefer Input Map actions (`&"jump"`, `&"run"`) over hard-coded keys
 - Use `res://` paths for all asset/script references
 - Only include `_process`/`_physics_process` when actually used
+- Reference player states via `StateIds.X` (preloaded from `res://scripts/player/player_state_ids.gd`), not `&"XState"` string literals — a rename in the scene tree is silent otherwise.
 
 ## Working Agreement
 
