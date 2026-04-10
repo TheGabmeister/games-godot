@@ -2,14 +2,6 @@
 
 ## A. Duplicated Code (DRY violations)
 
-### 1. Block bump animation — copy-pasted 3 times
-
-- `brick_block.gd:19-27`
-- `question_block.gd:26-34`
-- `hidden_block.gd:25-33`
-
-All three have identical bump timer + sine offset + `queue_redraw()` logic. Should be a shared base class or helper function.
-
 ### 2. Tileset creation — two files that are 90% identical
 
 `terrain_tileset.gd` vs `underground_tileset.gd`
