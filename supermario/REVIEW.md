@@ -4,13 +4,6 @@
 
 ## B. Performance Issues
 
-### 10. `get_tree().get_nodes_in_group("player")` in hot paths
-
-- `koopa_shell.gd:78` — on every stomp
-- `piranha_plant.gd._player_is_nearby()` — every physics frame
-
-Tree traversal on every call. Cache the player reference.
-
 ### 11. `move_and_slide()` is called twice per frame in the run path
 
 The helper API is inconsistent — movement helpers both mutate velocity *and* call `move_and_slide()`, so the run path ends up sliding twice.

@@ -6,7 +6,6 @@ const EMERGE_HEIGHT: float = 24.0
 const EMERGE_DURATION: float = 0.8
 const WAIT_TOP_DURATION: float = 1.5
 const WAIT_BOTTOM_DURATION: float = 1.5
-const PROXIMITY_DISTANCE: float = 32.0
 
 enum State { WAITING_BOTTOM, EMERGING, WAITING_TOP, RETRACTING }
 
@@ -15,9 +14,11 @@ var _timer: float = 0.0
 var _offset_y: float = 0.0  # 0 = hidden, -EMERGE_HEIGHT = fully emerged
 var _is_active: bool = false
 var _is_dead: bool = false
+var _player_in_zone: bool = false
 
 @onready var _hitbox: Area2D = $Hitbox
 @onready var _hitbox_shape: CollisionShape2D = $Hitbox/HitboxShape
+@onready var _proximity_zone: Area2D = $ProximityZone
 
 
 func _ready() -> void:
@@ -25,6 +26,8 @@ func _ready() -> void:
 	visible = false
 	add_to_group("enemies")
 	_hitbox_shape.position.y = 0.0
+	_proximity_zone.body_entered.connect(_on_proximity_body_entered)
+	_proximity_zone.body_exited.connect(_on_proximity_body_exited)
 
 
 func activate() -> void:
@@ -85,7 +88,7 @@ func _physics_process(delta: float) -> void:
 	match _state:
 		State.WAITING_BOTTOM:
 			if _timer >= WAIT_BOTTOM_DURATION:
-				if not _player_is_nearby():
+				if not _player_in_zone:
 					_state = State.EMERGING
 					_timer = 0.0
 				else:
@@ -119,12 +122,12 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 
-func _player_is_nearby() -> bool:
-	var players := get_tree().get_nodes_in_group("player")
-	if players.is_empty():
-		return false
-	var player_pos: Vector2 = players[0].global_position
-	return absf(player_pos.x - global_position.x) < PROXIMITY_DISTANCE
+func _on_proximity_body_entered(_body: Node2D) -> void:
+	_player_in_zone = true
+
+
+func _on_proximity_body_exited(_body: Node2D) -> void:
+	_player_in_zone = false
 
 
 func _draw() -> void:
