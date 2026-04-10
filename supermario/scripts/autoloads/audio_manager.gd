@@ -31,6 +31,9 @@ var _music_registry: Dictionary[StringName, String] = {
 	&"hurry": "",
 }
 
+var _sfx_streams: Dictionary[StringName, AudioStream] = {}
+var _music_streams: Dictionary[StringName, AudioStream] = {}
+
 var _sfx_pool: Array[AudioStreamPlayer] = []
 var _sfx_pool_index: int = 0
 var _sfx_2d_pool: Array[AudioStreamPlayer2D] = []
@@ -52,10 +55,7 @@ func play_sfx(sound_name: StringName, position: Vector2 = Vector2.ZERO) -> void:
 	if not _sfx_registry.has(sound_name):
 		push_warning("AudioManager: unknown SFX key '%s'" % sound_name)
 		return
-	var path := _sfx_registry[sound_name] as String
-	if path.is_empty():
-		return
-	var stream := load(path) as AudioStream
+	var stream := _get_sfx_stream(sound_name)
 	if stream == null:
 		return
 	if position == Vector2.ZERO:
@@ -77,10 +77,7 @@ func play_music(music_name: StringName) -> void:
 	if not _music_registry.has(music_name):
 		push_warning("AudioManager: unknown music key '%s'" % music_name)
 		return
-	var path := _music_registry[music_name] as String
-	if path.is_empty():
-		return
-	var stream := load(path) as AudioStream
+	var stream := _get_music_stream(music_name)
 	if stream == null:
 		stop_music()
 		return
@@ -112,6 +109,30 @@ func set_music_ducked(enabled: bool) -> void:
 	var target_db := -10.0 if enabled else 0.0
 	var tween := create_tween()
 	tween.tween_property(_active_music, "volume_db", target_db, 0.2)
+
+
+func _get_sfx_stream(sound_name: StringName) -> AudioStream:
+	if _sfx_streams.has(sound_name):
+		return _sfx_streams[sound_name]
+	var path: String = _sfx_registry[sound_name]
+	if path.is_empty():
+		return null
+	var stream := load(path) as AudioStream
+	if stream != null:
+		_sfx_streams[sound_name] = stream
+	return stream
+
+
+func _get_music_stream(music_name: StringName) -> AudioStream:
+	if _music_streams.has(music_name):
+		return _music_streams[music_name]
+	var path: String = _music_registry[music_name]
+	if path.is_empty():
+		return null
+	var stream := load(path) as AudioStream
+	if stream != null:
+		_music_streams[music_name] = stream
+	return stream
 
 
 func _build_sfx_pool() -> void:
