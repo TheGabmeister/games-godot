@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where godot:*)",
+      "Bash(kill %1)",
+      "WebSearch",
+      "WebFetch(domain:support.claude.com)",
+      "WebFetch(domain:portkey.ai)",
+      "Bash(godot --headless --path . --quit)",
+      "Read(//c/Users/Admin/.claude/projects/c--dev-games-godot/**)",
+      "Read(//c/Users/Admin/.claude/projects//**)",
+      "Bash(git config:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(grep -v '^$')"
+    ]
+  }
+}
