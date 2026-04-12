@@ -72,8 +72,8 @@ Visual rendering is separated into a dedicated **drawer node** (`PlayerDrawer`) 
 - **Drawer pattern:** Gameplay logic on main node, visuals in a `*Drawer` child using `_Draw()`. Enables palette swaps without touching gameplay code.
 - **Event bus over hard references:** Cross-system communication uses EventBus signals. Local/obvious interactions can use direct references.
 - **Enemies:** All extend a shared base (`CharacterBody2D`). Gravity, wall reversal, edge detection, and off-screen cleanup are shared behavior.
-- **Blocks:** `StaticBody2D` roots. Question blocks are content-generic via an exported `contents` field. Brick behavior depends on player power state.
-- **Primitive rendering:** All characters/objects use `Polygon2D`, `Line2D`, `draw_rect()`, `draw_circle()`, `ColorRect`. Only terrain uses `TileMapLayer`.
+- **Blocks:** `StaticBody2D` roots. Question blocks are content-generic via an exported `Contents` field. Brick behavior depends on player power state.
+- **Primitive rendering:** All characters/objects use `Polygon2D`, `Line2D`, `DrawRect()`, `DrawCircle()`, `ColorRect`. Only terrain uses `TileMapLayer`.
 
 ### Enums
 
@@ -85,7 +85,7 @@ enum GameState { Title, Playing, Paused, GameOver, LevelComplete, Transitioning 
 ### Z-Index Convention
 
 - Background/terrain: 0
-- Pipes: 5 (absolute, `z_as_relative = false`)
+- Pipes: 5 (absolute, `ZAsRelative = false`)
 - Player: 10 (dropped below pipe z during pipe warp tweens)
 - HUD/UI: 100+
 
@@ -93,8 +93,10 @@ enum GameState { Title, Playing, Paused, GameOver, LevelComplete, Transitioning 
 
 - Classes use `public partial class` (required by Godot source generators)
 - Lifecycle methods: `_Ready()`, `_Process(double delta)`, `_PhysicsProcess(double delta)`
-- Physics constants as `const` fields in `UPPER_CASE`
-- File naming: `snake_case.cs` for scripts
+- Physics constants as `const` fields in `PascalCase` (e.g., `WalkSpeed`, `JumpVelocity`)
+- Color constants as `static readonly` fields in `PascalCase` (e.g., `SkyBlue`, `MarioRed`)
+- File naming: `PascalCase.cs` for scripts (e.g., `PlayerController.cs`, `EventBus.cs`)
+- Directory naming: `PascalCase` for script directories (e.g., `Scripts/Player/PlayerStates/`)
 - Scene naming: `snake_case.tscn`
 - Use `StringName` for frequently-used string keys (input actions, signal names, registry keys)
 
@@ -102,4 +104,3 @@ enum GameState { Title, Playing, Paused, GameOver, LevelComplete, Transitioning 
 
 - The `.claude/settings.json` denies access to files outside this project directory
 - AGENTS.md is excluded per hook configuration
-- The SPEC.md uses GDScript syntax for examples but this is a **C# project** — translate all GDScript patterns to idiomatic C#

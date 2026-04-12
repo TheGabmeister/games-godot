@@ -1,8 +1,8 @@
-# SPEC.md - Super Mario Bros (Godot 4.6)
+# SPEC.md - Super Mario Bros (Godot 4.6 / C#)
 
 ## 0. Purpose
 
-This document defines the target design for a 2D Super Mario Bros inspired game built in Godot 4.6.
+This document defines the target design for a 2D Super Mario Bros inspired game built in Godot 4.6 with C#.
 
 Project pillars:
 - Primitive-shape visuals only. No spritesheets or texture-based characters.
@@ -123,60 +123,60 @@ res://
       score_popup.tscn
       firework.tscn
 
-  scripts/
-    autoloads/
-      event_bus.gd
-      game_manager.gd
-      audio_manager.gd
-      scene_manager.gd
-      camera_effects.gd
-    player/
-      player_controller.gd
-      player_drawer.gd
-      state_machine.gd
-      player_states/
-        player_state.gd
-        idle_state.gd
-        run_state.gd
-        jump_state.gd
-        fall_state.gd
-        crouch_state.gd
-        death_state.gd
-        grow_state.gd
-        shrink_state.gd
-        pipe_enter_state.gd
-        flagpole_state.gd
-    enemies/
-      enemy_base.gd
-      goomba.gd
-      koopa.gd
-      koopa_shell.gd
-      piranha_plant.gd
-    objects/
-      brick_block.gd
-      question_block.gd
-      hidden_block.gd
-      coin.gd
-      power_up_base.gd
-      mushroom.gd
-      fire_flower.gd
-      starman.gd
-      fireball.gd
-      flagpole.gd
-      pipe.gd
-      castle.gd
-    ui/
-      hud.gd
-      title_screen.gd
-      game_over.gd
-      pause_menu.gd
-      level_complete.gd
-      level_intro.gd
-    level/
-      level_base.gd
-      enemy_spawner.gd
-      kill_zone.gd
-      parallax_controller.gd
+  Scripts/
+    Autoloads/
+      EventBus.cs
+      GameManager.cs
+      AudioManager.cs
+      SceneManager.cs
+      CameraEffects.cs
+    Player/
+      PlayerController.cs
+      PlayerDrawer.cs
+      StateMachine.cs
+      PlayerStates/
+        PlayerState.cs
+        IdleState.cs
+        RunState.cs
+        JumpState.cs
+        FallState.cs
+        CrouchState.cs
+        DeathState.cs
+        GrowState.cs
+        ShrinkState.cs
+        PipeEnterState.cs
+        FlagpoleState.cs
+    Enemies/
+      EnemyBase.cs
+      Goomba.cs
+      Koopa.cs
+      KoopaShell.cs
+      PiranhaPlant.cs
+    Objects/
+      BrickBlock.cs
+      QuestionBlock.cs
+      HiddenBlock.cs
+      Coin.cs
+      PowerUpBase.cs
+      Mushroom.cs
+      FireFlower.cs
+      Starman.cs
+      Fireball.cs
+      Flagpole.cs
+      Pipe.cs
+      Castle.cs
+    Ui/
+      Hud.cs
+      TitleScreen.cs
+      GameOver.cs
+      PauseMenu.cs
+      LevelComplete.cs
+      LevelIntro.cs
+    Level/
+      LevelBase.cs
+      EnemySpawner.cs
+      KillZone.cs
+      ParallaxController.cs
 
   shaders/
     glow_pulse.gdshader
@@ -196,7 +196,7 @@ res://
 ```
 
 Notes:
-- `new_script.gd` is a temporary placeholder and should be removed or replaced once the real scene structure is created.
+- `NewScript.cs` is a temporary placeholder and should be removed or replaced once the real scene structure is created.
 - Generated files under `.godot/`, `*.uid`, and `*.import` should not be hand-edited.
 
 ---
@@ -206,14 +206,14 @@ Notes:
 Register these singletons in `project.godot`:
 
 ```text
-EventBus      = "*res://scripts/autoloads/event_bus.gd"
-GameManager   = "*res://scripts/autoloads/game_manager.gd"
-AudioManager  = "*res://scripts/autoloads/audio_manager.gd"
-SceneManager  = "*res://scripts/autoloads/scene_manager.gd"
-CameraEffects = "*res://scripts/autoloads/camera_effects.gd"
+EventBus      = "*res://Scripts/Autoloads/EventBus.cs"
+GameManager   = "*res://Scripts/Autoloads/GameManager.cs"
+AudioManager  = "*res://Scripts/Autoloads/AudioManager.cs"
+SceneManager  = "*res://Scripts/Autoloads/SceneManager.cs"
+CameraEffects = "*res://Scripts/Autoloads/CameraEffects.cs"
 ```
 
-All autoloads should extend `Node`.
+All autoloads should inherit from `Node`.
 
 ### 3.1 EventBus
 
@@ -221,44 +221,44 @@ Central signal hub for cross-system communication. Systems should prefer signals
 
 Required signals:
 
-```gdscript
-# Player
-signal player_died
-signal player_respawned
-signal player_powered_up(power_up_type: StringName)
-signal player_power_state_changed(old_state: int, new_state: int)
-signal player_damaged
-signal player_star_power_started
-signal player_star_power_ended
+```csharp
+// Player
+[Signal] public delegate void PlayerDiedEventHandler();
+[Signal] public delegate void PlayerRespawnedEventHandler();
+[Signal] public delegate void PlayerPoweredUpEventHandler(StringName powerUpType);
+[Signal] public delegate void PlayerPowerStateChangedEventHandler(int oldState, int newState);
+[Signal] public delegate void PlayerDamagedEventHandler();
+[Signal] public delegate void PlayerStarPowerStartedEventHandler();
+[Signal] public delegate void PlayerStarPowerEndedEventHandler();
 
-# Scoring and HUD
-signal coin_collected(position: Vector2)
-signal score_awarded(points: int, position: Vector2)
-signal score_changed(new_score: int)
-signal lives_changed(new_lives: int)
-signal coins_changed(new_coin_count: int)
-signal time_tick(time_remaining: int)
-signal one_up_earned
+// Scoring and HUD
+[Signal] public delegate void CoinCollectedEventHandler(Vector2 position);
+[Signal] public delegate void ScoreAwardedEventHandler(int points, Vector2 position);
+[Signal] public delegate void ScoreChangedEventHandler(int newScore);
+[Signal] public delegate void LivesChangedEventHandler(int newLives);
+[Signal] public delegate void CoinsChangedEventHandler(int newCoinCount);
+[Signal] public delegate void TimeTickEventHandler(int timeRemaining);
+[Signal] public delegate void OneUpEarnedEventHandler();
 
-# Level
-signal level_started(world: int, level: int)
-signal level_completed
-signal flagpole_reached(height_ratio: float)
+// Level
+[Signal] public delegate void LevelStartedEventHandler(int world, int level);
+[Signal] public delegate void LevelCompletedEventHandler();
+[Signal] public delegate void FlagpoleReachedEventHandler(float heightRatio);
 
-# Enemies
-signal enemy_stomped(position: Vector2)
-signal enemy_killed(position: Vector2, enemy_type: StringName)
-signal combo_stomp(count: int, position: Vector2)
+// Enemies
+[Signal] public delegate void EnemyStompedEventHandler(Vector2 position);
+[Signal] public delegate void EnemyKilledEventHandler(Vector2 position, StringName enemyType);
+[Signal] public delegate void ComboStompEventHandler(int count, Vector2 position);
 
-# Blocks and items
-signal block_bumped(position: Vector2)
-signal block_broken(position: Vector2)
-signal item_spawned(item_type: StringName, position: Vector2)
+// Blocks and items
+[Signal] public delegate void BlockBumpedEventHandler(Vector2 position);
+[Signal] public delegate void BlockBrokenEventHandler(Vector2 position);
+[Signal] public delegate void ItemSpawnedEventHandler(StringName itemType, Vector2 position);
 
-# Game state
-signal game_paused
-signal game_resumed
-signal game_over
+// Game state
+[Signal] public delegate void GamePausedEventHandler();
+[Signal] public delegate void GameResumedEventHandler();
+[Signal] public delegate void GameOverEventHandler();
 ```
 
 ### 3.2 GameManager
@@ -266,47 +266,47 @@ signal game_over
 Tracks persistent game state across scene loads.
 
 State fields:
-- `score: int = 0`
-- `coins: int = 0`
-- `lives: int = 3`
-- `time_remaining: float = 400.0`
-- `current_world: int = 1`
-- `current_level: int = 1`
-- `current_power_state: PowerState = PowerState.SMALL`
-- `game_state: GameState = GameState.TITLE`
+- `Score: int = 0`
+- `Coins: int = 0`
+- `Lives: int = 3`
+- `TimeRemaining: float = 400.0f`
+- `CurrentWorld: int = 1`
+- `CurrentLevel: int = 1`
+- `CurrentPowerState: PowerState = PowerState.Small`
+- `CurrentGameState: GameState = GameState.Title`
 
 Enums:
 
-```gdscript
-enum PowerState { SMALL, BIG, FIRE }
-enum GameState { TITLE, PLAYING, PAUSED, GAME_OVER, LEVEL_COMPLETE, TRANSITIONING }
+```csharp
+public enum PowerState { Small, Big, Fire }
+public enum GameState { Title, Playing, Paused, GameOver, LevelComplete, Transitioning }
 ```
 
 State flow:
 
 ```text
-TITLE -> PLAYING
-PLAYING <-> PAUSED
-PLAYING -> LEVEL_COMPLETE -> TRANSITIONING -> PLAYING
-PLAYING -> GAME_OVER
-GAME_OVER -> TITLE
+Title -> Playing
+Playing <-> Paused
+Playing -> LevelComplete -> Transitioning -> Playing
+Playing -> GameOver
+GameOver -> Title
 ```
 
 Responsibilities:
 - Score, coin, and life tracking
 - Coin-to-1UP conversion every 100 coins
-- Countdown timer while in `PLAYING`
+- Countdown timer while in `Playing`
 - Death and respawn orchestration
 - Time bonus payout at level end (`remaining_time * 50`)
 - Resetting per-run state on new game start
 
 Add these helper methods:
-- `start_new_game() -> void`
-- `add_score(points: int, position: Vector2 = Vector2.ZERO) -> void`
-- `add_coin(position: Vector2 = Vector2.ZERO) -> void`
-- `lose_life() -> void`
-- `set_power_state(state: PowerState) -> void`
-- `set_game_state(state: GameState) -> void`
+- `public void StartNewGame()`
+- `public void AddScore(int points, Vector2 position = default)`
+- `public void AddCoin(Vector2 position = default)`
+- `public void LoseLife()`
+- `public void SetPowerState(PowerState state)`
+- `public void SetGameState(GameState state)`
 
 ### 3.3 AudioManager
 
@@ -326,33 +326,35 @@ Master
 
 Registry pattern:
 
-```gdscript
-var _sfx_registry: Dictionary[StringName, String] = {
-    &"jump": "",
-    &"jump_big": "",
-    &"stomp": "",
-    &"coin": "",
-    &"block_bump": "",
-    &"block_break": "",
-    &"powerup": "",
-    &"powerdown": "",
-    &"fireball": "",
-    &"kick": "",
-    &"pipe": "",
-    &"1up": "",
-    &"death": "",
-    &"flagpole": "",
-    &"game_over": "",
-    &"stage_clear": "",
-    &"warning": "",
-}
+```csharp
+private Dictionary<StringName, string> _sfxRegistry = new()
+{
+    { "jump", "" },
+    { "jump_big", "" },
+    { "stomp", "" },
+    { "coin", "" },
+    { "block_bump", "" },
+    { "block_break", "" },
+    { "powerup", "" },
+    { "powerdown", "" },
+    { "fireball", "" },
+    { "kick", "" },
+    { "pipe", "" },
+    { "1up", "" },
+    { "death", "" },
+    { "flagpole", "" },
+    { "game_over", "" },
+    { "stage_clear", "" },
+    { "warning", "" },
+};
 
-var _music_registry: Dictionary[StringName, String] = {
-    &"overworld": "",
-    &"underground": "",
-    &"star": "",
-    &"hurry": "",
-}
+private Dictionary<StringName, string> _musicRegistry = new()
+{
+    { "overworld", "" },
+    { "underground", "" },
+    { "star", "" },
+    { "hurry", "" },
+};
 ```
 
 Rules:
@@ -365,10 +367,10 @@ Recommended pool sizes:
 - 6 positional SFX players
 
 Key methods:
-- `play_sfx(sound_name: StringName, position: Vector2 = Vector2.ZERO) -> void`
-- `play_music(music_name: StringName) -> void`
-- `stop_music() -> void`
-- `set_music_ducked(enabled: bool) -> void`
+- `public void PlaySfx(StringName soundName, Vector2 position = default)`
+- `public void PlayMusic(StringName musicName)`
+- `public void StopMusic()`
+- `public void SetMusicDucked(bool enabled)`
 
 ### 3.4 SceneManager
 
@@ -386,17 +388,17 @@ Transition shell:
 - Optional centered text label for world/level intro
 
 Key methods:
-- `change_scene(path: String) -> void`
-- `reload_current_scene() -> void`
-- `show_level_intro(world: int, level: int, lives: int) -> void`
+- `public void ChangeScene(string path)`
+- `public void ReloadCurrentScene()`
+- `public void ShowLevelIntro(int world, int level, int lives)`
 
 ### 3.5 CameraEffects
 
 Controls temporary effects on the active `Camera2D`.
 
 Methods:
-- `shake(intensity: float, duration: float) -> void`
-- `freeze_frame(duration: float) -> void`
+- `public void Shake(float intensity, float duration)`
+- `public void FreezeFrame(float duration)`
 
 Recommended shake presets:
 
@@ -407,7 +409,7 @@ Recommended shake presets:
 | Player death | 6.0 | 0.30s |
 
 Implementation note:
-- `freeze_frame()` should be very short and must not break timers or long tweens. Use a tiny `Engine.time_scale` dip or a controlled local pause rather than freezing the whole app indiscriminately.
+- `FreezeFrame()` should be very short and must not break timers or long tweens. Use a tiny `Engine.TimeScale` dip or a controlled local pause rather than freezing the whole app indiscriminately.
 
 ---
 
@@ -452,9 +454,9 @@ Required UI scenes:
 All visuals use primitive shapes and code-driven drawing:
 - `Polygon2D`
 - `Line2D`
-- `draw_rect`
-- `draw_circle`
-- `draw_polygon`
+- `DrawRect()`
+- `DrawCircle()`
+- `DrawPolygon()`
 - `ColorRect`
 
 Rules:
@@ -464,56 +466,56 @@ Rules:
 
 ### 5.1 Color Palette
 
-```gdscript
-# Sky / Background
-const SKY_BLUE         := Color(0.35, 0.65, 0.95)
-const SKY_UNDERGROUND  := Color(0.05, 0.05, 0.08)
-const CLOUD_WHITE      := Color(0.95, 0.95, 0.98)
+```csharp
+// Sky / Background
+public static readonly Color SkyBlue        = new Color(0.35f, 0.65f, 0.95f);
+public static readonly Color SkyUnderground = new Color(0.05f, 0.05f, 0.08f);
+public static readonly Color CloudWhite     = new Color(0.95f, 0.95f, 0.98f);
 
-# Ground / Terrain
-const GROUND_BROWN     := Color(0.55, 0.35, 0.15)
-const GROUND_GREEN     := Color(0.25, 0.65, 0.25)
-const BRICK_RED        := Color(0.72, 0.30, 0.18)
-const BRICK_DARK       := Color(0.55, 0.22, 0.12)
+// Ground / Terrain
+public static readonly Color GroundBrown    = new Color(0.55f, 0.35f, 0.15f);
+public static readonly Color GroundGreen    = new Color(0.25f, 0.65f, 0.25f);
+public static readonly Color BrickRed       = new Color(0.72f, 0.30f, 0.18f);
+public static readonly Color BrickDark      = new Color(0.55f, 0.22f, 0.12f);
 
-# Mario
-const MARIO_RED        := Color(0.90, 0.15, 0.15)
-const MARIO_SKIN       := Color(0.95, 0.75, 0.55)
-const MARIO_BLUE       := Color(0.20, 0.30, 0.75)
-const MARIO_FIRE_WHITE := Color(0.95, 0.95, 0.95)
+// Mario
+public static readonly Color MarioRed       = new Color(0.90f, 0.15f, 0.15f);
+public static readonly Color MarioSkin      = new Color(0.95f, 0.75f, 0.55f);
+public static readonly Color MarioBlue      = new Color(0.20f, 0.30f, 0.75f);
+public static readonly Color MarioFireWhite = new Color(0.95f, 0.95f, 0.95f);
 
-# Enemies
-const GOOMBA_BROWN     := Color(0.55, 0.30, 0.15)
-const GOOMBA_DARK      := Color(0.35, 0.18, 0.08)
-const KOOPA_GREEN      := Color(0.20, 0.70, 0.25)
-const KOOPA_SHELL      := Color(0.15, 0.55, 0.20)
-const PIRANHA_GREEN    := Color(0.15, 0.60, 0.15)
-const PIRANHA_RED      := Color(0.80, 0.15, 0.12)
+// Enemies
+public static readonly Color GoombaBrown    = new Color(0.55f, 0.30f, 0.15f);
+public static readonly Color GoombaDark     = new Color(0.35f, 0.18f, 0.08f);
+public static readonly Color KoopaGreen     = new Color(0.20f, 0.70f, 0.25f);
+public static readonly Color KoopaShell     = new Color(0.15f, 0.55f, 0.20f);
+public static readonly Color PiranhaGreen   = new Color(0.15f, 0.60f, 0.15f);
+public static readonly Color PiranhaRed     = new Color(0.80f, 0.15f, 0.12f);
 
-# Objects
-const PIPE_GREEN       := Color(0.18, 0.60, 0.22)
-const PIPE_GREEN_LIGHT := Color(0.28, 0.72, 0.32)
-const QUESTION_YELLOW  := Color(0.95, 0.80, 0.20)
-const QUESTION_DARK    := Color(0.70, 0.55, 0.10)
-const COIN_GOLD        := Color(1.00, 0.85, 0.20)
-const COIN_SHINE       := Color(1.00, 0.95, 0.60)
-const BLOCK_BROWN      := Color(0.50, 0.35, 0.20)
-const STAR_YELLOW      := Color(1.00, 0.90, 0.15)
-const FIRE_ORANGE      := Color(1.00, 0.55, 0.10)
-const FIRE_RED         := Color(1.00, 0.25, 0.10)
-const MUSHROOM_RED     := Color(0.90, 0.15, 0.15)
-const MUSHROOM_CREAM   := Color(0.95, 0.90, 0.80)
+// Objects
+public static readonly Color PipeGreen      = new Color(0.18f, 0.60f, 0.22f);
+public static readonly Color PipeGreenLight = new Color(0.28f, 0.72f, 0.32f);
+public static readonly Color QuestionYellow = new Color(0.95f, 0.80f, 0.20f);
+public static readonly Color QuestionDark   = new Color(0.70f, 0.55f, 0.10f);
+public static readonly Color CoinGold       = new Color(1.00f, 0.85f, 0.20f);
+public static readonly Color CoinShine      = new Color(1.00f, 0.95f, 0.60f);
+public static readonly Color BlockBrown     = new Color(0.50f, 0.35f, 0.20f);
+public static readonly Color StarYellow     = new Color(1.00f, 0.90f, 0.15f);
+public static readonly Color FireOrange     = new Color(1.00f, 0.55f, 0.10f);
+public static readonly Color FireRed        = new Color(1.00f, 0.25f, 0.10f);
+public static readonly Color MushroomRed    = new Color(0.90f, 0.15f, 0.15f);
+public static readonly Color MushroomCream  = new Color(0.95f, 0.90f, 0.80f);
 ```
 
 ### 5.2 Character and Object Rendering
 
-All main characters should render through a dedicated `Node2D` drawer child using `_draw()`. That keeps gameplay logic separate from visual construction and makes palette swaps easier.
+All main characters should render through a dedicated `Node2D` drawer child using `_Draw()`. That keeps gameplay logic separate from visual construction and makes palette swaps easier.
 
 Mario:
 - Small Mario footprint: 16 x 16
 - Big Mario footprint: 16 x 32
 - Draw facing right by default
-- Flip via parent `Visuals.scale.x`
+- Flip via parent `Visuals.Scale` (set `X` to `-1` or `1`)
 - Fire form swaps the red/white palette while keeping the same silhouette
 
 Goomba:
@@ -604,20 +606,20 @@ Player (CharacterBody2D)
 
 ### 6.2 Physics Constants
 
-```gdscript
-const WALK_SPEED        := 130.0
-const RUN_SPEED         := 210.0
-const ACCELERATION      := 800.0
-const DECELERATION      := 1200.0
-const AIR_ACCELERATION  := 600.0
-const TURN_ACCELERATION := 1600.0
-const JUMP_VELOCITY     := -330.0
-const JUMP_RELEASE_MULT := 0.5
-const GRAVITY           := 900.0
-const FAST_FALL_GRAVITY := 1400.0
-const MAX_FALL_SPEED    := 500.0
-const COYOTE_TIME       := 0.08
-const JUMP_BUFFER_TIME  := 0.10
+```csharp
+public const float WalkSpeed       = 130.0f;
+public const float RunSpeed        = 210.0f;
+public const float Acceleration    = 800.0f;
+public const float Deceleration    = 1200.0f;
+public const float AirAcceleration = 600.0f;
+public const float TurnAcceleration = 1600.0f;
+public const float JumpVelocity    = -330.0f;
+public const float JumpReleaseMult = 0.5f;
+public const float Gravity         = 900.0f;
+public const float FastFallGravity = 1400.0f;
+public const float MaxFallSpeed    = 500.0f;
+public const float CoyoteTime      = 0.08f;
+public const float JumpBufferTime  = 0.10f;
 ```
 
 ### 6.3 Core Mechanics
@@ -632,44 +634,35 @@ Required movement behavior:
 - Jump buffer
 
 Required crouch behavior:
-- Only BIG and FIRE Mario may crouch
+- Only Big and Fire Mario may crouch
 - Crouch collision height matches 1 tile height
 - If there is not enough overhead clearance, standing back up is blocked
 - Small Mario ignores crouch for collision changes
 
 Facing:
-- `Visuals.scale.x = -1` when moving left
-- `Visuals.scale.x = 1` when moving right
+- `Visuals.Scale = new Vector2(-1, Visuals.Scale.Y)` when moving left
+- `Visuals.Scale = new Vector2(1, Visuals.Scale.Y)` when moving right
 
 ### 6.4 State Machine
 
-`state_machine.gd` should:
-- hold `current_state: PlayerState`
+`StateMachine.cs` should:
+- hold `CurrentState: PlayerState`
 - delegate input/frame/physics to the active state
-- provide `transition_to(state_name: StringName) -> void`
+- provide `public void TransitionTo(StringName stateName)`
 
 Base state:
 
-```gdscript
-class_name PlayerState
-extends Node
+```csharp
+public partial class PlayerState : Node
+{
+    public CharacterBody2D Player { get; set; }
 
-var player: CharacterBody2D
-
-func enter() -> void:
-    pass
-
-func exit() -> void:
-    pass
-
-func process_input(event: InputEvent) -> void:
-    pass
-
-func process_frame(delta: float) -> void:
-    pass
-
-func process_physics(delta: float) -> void:
-    pass
+    public virtual void Enter() { }
+    public virtual void Exit() { }
+    public virtual void ProcessInput(InputEvent @event) { }
+    public virtual void ProcessFrame(double delta) { }
+    public virtual void ProcessPhysics(double delta) { }
+}
 ```
 
 State flow:
@@ -706,16 +699,16 @@ Rules:
 
 ## 7. Power-Ups and Damage
 
-```gdscript
-enum PowerState { SMALL, BIG, FIRE }
+```csharp
+public enum PowerState { Small, Big, Fire }
 ```
 
 Rules:
-- SMALL + Mushroom -> BIG
-- SMALL + Fire Flower -> BIG
-- BIG + Fire Flower -> FIRE
-- BIG or FIRE + damage -> SMALL
-- SMALL + damage -> death
+- Small + Mushroom -> Big
+- Small + Fire Flower -> Big
+- Big + Fire Flower -> Fire
+- Big or Fire + damage -> Small
+- Small + damage -> death
 - Any state + Star -> temporary invincibility
 
 Collision shape:
@@ -742,13 +735,13 @@ Fireball rules:
 Enemy root type: `CharacterBody2D`
 
 Shared properties:
-- `speed`
-- `gravity = 900.0`
-- `direction = -1.0`
+- `Speed`
+- `Gravity = 900.0f`
+- `Direction = -1.0f`
 
 Shared behavior:
 - Apply gravity
-- Move with `move_and_slide()`
+- Move with `MoveAndSlide()`
 - Reverse on wall collision
 - Optional floor-edge detection for walkers via `RayCast2D` or manual floor probe
 - Clean up once permanently off-screen or in a pit
@@ -773,8 +766,8 @@ Enemy-vs-enemy behavior:
 ### 8.4 Koopa Shell
 
 States:
-- `IDLE`
-- `MOVING`
+- `Idle`
+- `Moving`
 
 Rules:
 - Idle shell can be kicked into motion
@@ -803,8 +796,8 @@ Combo rewards:
 
 Pipes may optionally define:
 
-```gdscript
-@export var warp_target: NodePath
+```csharp
+[Export] public NodePath WarpTarget;
 ```
 
 Entry rules:
@@ -829,44 +822,44 @@ rim visually occludes his head as he descends) but still in front of the
 background and terrain. Conversely, while emerging from the destination pipe
 he must start hidden behind the rim and end in front of it. The rule:
 
-- The pipe scene's root uses a fixed `z_index` (e.g., `5`) that sits above
-  terrain and background but below the player's normal `z_index` (e.g., `10`).
-- On entering `PipeEnterState`, the player's `z_index` is dropped to a value
+- The pipe scene's root uses a fixed `ZIndex` (e.g., `5`) that sits above
+  terrain and background but below the player's normal `ZIndex` (e.g., `10`).
+- On entering `PipeEnterState`, the player's `ZIndex` is dropped to a value
   *below* the pipe's (e.g., `0`) for the duration of the slide-in tween.
 - After the fade transition and reposition at the target pipe, the player
-  stays at the lowered `z_index` during the slide-out tween, then restores
-  to its normal `z_index` when control returns.
-- The pipe's `z_as_relative = false` so its `z_index` is absolute and not
+  stays at the lowered `ZIndex` during the slide-out tween, then restores
+  to its normal `ZIndex` when control returns.
+- The pipe's `ZAsRelative = false` so its `ZIndex` is absolute and not
   affected by parent containers.
 
-`PipeEnterState.enter()` caches the player's previous `z_index`, lowers it,
-and `PipeEnterState.exit()` restores the cached value. Do not mutate
-`z_index` from the pipe script itself — the state owns that lifecycle so
+`PipeEnterState.Enter()` caches the player's previous `ZIndex`, lowers it,
+and `PipeEnterState.Exit()` restores the cached value. Do not mutate
+`ZIndex` from the pipe script itself — the state owns that lifecycle so
 early exits (e.g., death during warp, if that's ever possible) can't leave
 the player stuck behind geometry.
 
 **Collision during the tween**
 
 Mario's `CharacterBody2D` is a physics body, and leaving it live during the
-tween would fight the pipe's own collision shape: `move_and_slide()` would
+tween would fight the pipe's own collision shape: `MoveAndSlide()` would
 depenetrate him out of the pipe sideways, and gravity would keep pulling him
 against the pipe top. The tween must drive position directly with no physics
 interference.
 
 Handling:
 
-- On `PipeEnterState.enter()`, set the player's `CollisionShape2D.disabled`
-  via `set_deferred("disabled", true)`. Do **not** toggle
-  `collision_layer`/`collision_mask` — disabling the shape is cleaner and
+- On `PipeEnterState.Enter()`, set the player's `CollisionShape2D.Disabled`
+  via `SetDeferred("disabled", true)`. Do **not** toggle
+  `CollisionLayer`/`CollisionMask` — disabling the shape is cleaner and
   reverses cleanly on exit.
-- Zero `velocity` and stop calling `apply_gravity()` / `move_and_slide()`
-  from the state's `process_physics()`. The state should only advance the
+- Zero `Velocity` and stop calling `ApplyGravity()` / `MoveAndSlide()`
+  from the state's `ProcessPhysics()`. The state should only advance the
   tween and otherwise do nothing physics-related.
-- Position is driven by a `Tween` on the player's `global_position` (or by
-  `Tween`-interpolated `velocity = Vector2.ZERO` plus manual `position`
+- Position is driven by a `Tween` on the player's `GlobalPosition` (or by
+  `Tween`-interpolated `Velocity = Vector2.Zero` plus manual `Position`
   assignment — pick one and stick to it; don't mix).
-- On `PipeEnterState.exit()`, re-enable the collision shape via
-  `set_deferred("disabled", false)` and restore normal state flow. The
+- On `PipeEnterState.Exit()`, re-enable the collision shape via
+  `SetDeferred("disabled", false)` and restore normal state flow. The
   deferred re-enable avoids a one-frame overlap at the exit pipe if the
   emerge tween ends with Mario's collision shape still touching the pipe's
   rim collision.
@@ -877,7 +870,7 @@ Handling:
 Together these two rules mean the pipe warp sequence is "player becomes a
 visual-only puppet tweened by the state, then snaps back to a normal physics
 body when the state exits." This keeps the existing player controller
-untouched — no special cases inside `player_controller.gd`.
+untouched — no special cases inside `PlayerController.cs`.
 
 ---
 
@@ -889,20 +882,20 @@ Root type: `StaticBody2D`
 
 Default content:
 
-```gdscript
-@export var contents: StringName = &"coin"
+```csharp
+[Export] public StringName Contents = "coin";
 ```
 
 Allowed content values:
-- `&"coin"`
-- `&"mushroom"`
-- `&"fire_flower"`
-- `&"star"`
-- `&"1up_mushroom"`
+- `"coin"`
+- `"mushroom"`
+- `"fire_flower"`
+- `"star"`
+- `"1up_mushroom"`
 
 Behavior on hit from below:
 1. Play bump animation
-2. Spawn contents above block (for the `&"coin"` case, spawn the coin pop
+2. Spawn contents above block (for the `"coin"` case, spawn the coin pop
    effect defined in §9.3 and award the coin immediately — no physical
    pickable coin is spawned)
 3. Switch to empty appearance
@@ -910,7 +903,7 @@ Behavior on hit from below:
 5. Emit relevant EventBus signals
 
 Context-sensitive behavior:
-- If content is mushroom and player is already BIG or FIRE, spawn a Fire Flower instead
+- If content is mushroom and player is already Big or Fire, spawn a Fire Flower instead
 
 ### 9.2 Brick Block
 
@@ -918,13 +911,13 @@ Root type: `StaticBody2D`
 
 Optional export:
 
-```gdscript
-@export var coin_count: int = 0
+```csharp
+[Export] public int CoinCount = 0;
 ```
 
 Rules:
-- SMALL Mario can bump but not break
-- BIG and FIRE Mario can break standard bricks
+- Small Mario can bump but not break
+- Big and Fire Mario can break standard bricks
 - Multi-coin bricks pay out one coin per hit, then become empty
 - Each payout spawns the coin pop effect from §9.3 and awards a coin
   immediately (same visual-only behavior as a coin question block)
@@ -934,7 +927,7 @@ Rules:
 
 Scene: `scenes/effects/coin_pop.tscn`. Visual-only effect spawned when a
 coin question block (§9.1) or multi-coin brick (§9.2) is bumped. The coin
-reward itself is awarded on the same frame via `GameManager.add_coin()` —
+reward itself is awarded on the same frame via `GameManager.AddCoin()` —
 the player never needs to touch the popping coin to collect it.
 
 Scheduled for Phase 6 (Effects and Polish). Until then, coin blocks award
@@ -943,7 +936,7 @@ their coin silently on bump; this is a known gap, not a bug.
 Root type: `Node2D` (no physics body, no `Area2D` — purely visual).
 
 Spawn:
-- Spawn position: the block's top edge, i.e. `block.global_position + Vector2(0, -16)`.
+- Spawn position: the block's top edge, i.e. `block.GlobalPosition + new Vector2(0, -16)`.
 - Spawned as a child of the level's effects container (or any ancestor
   above the blocks in draw order), not as a child of the block — the block
   may change visuals or be destroyed (multi-coin brick hitting zero) before
@@ -962,20 +955,20 @@ Motion:
   the numbers are later tuned.
 
 Visual:
-- Procedural `_draw()` matching the regular in-world coin (`P.COIN_GOLD`
-  fill, `P.COIN_SHINE` highlight, 1 px dark border) — the player must be
+- Procedural `_Draw()` matching the regular in-world coin (`P.CoinGold`
+  fill, `P.CoinShine` highlight, 1 px dark border) — the player must be
   able to read it as "a coin" instantly.
 - Spin animation: oscillate horizontal draw scale over time
-  (`scale.x = cos(t * TAU * 6.0)`) so the coin appears to flip at ~6 Hz,
+  (`Scale.X = Mathf.Cos(t * Mathf.Tau * 6.0f)`) so the coin appears to flip at ~6 Hz,
   showing its thin profile twice per rotation. Do not use a full 3D
   rotation — flat horizontal scaling reads correctly at this resolution
   and is cheaper.
-- In the last `0.1 s` of lifetime, fade `modulate.a` from `1.0` to `0.0`.
-- `z_index` above blocks but below HUD (a value of `5` works with the
+- In the last `0.1 s` of lifetime, fade `Modulate` alpha from `1.0` to `0.0`.
+- `ZIndex` above blocks but below HUD (a value of `5` works with the
   z-layering established in §8.6).
 
 Scoring feedback:
-- `GameManager.add_coin()` already emits `coin_collected` and awards 200
+- `GameManager.AddCoin()` already emits `CoinCollected` and awards 200
   points on bump. The score popup ("200") is driven by that event in the
   existing scoring flow and does not need to be re-spawned by this effect.
 - The coin pop effect itself emits no EventBus signals — it is pure
@@ -983,11 +976,11 @@ Scoring feedback:
 
 Bloom:
 - The coin pop benefits from the bloom pipeline per §5.3. No additional
-  shader work is required; using the `P.COIN_GOLD` / `P.COIN_SHINE` colors
+  shader work is required; using the `P.CoinGold` / `P.CoinShine` colors
   is sufficient once WorldEnvironment bloom is active.
 
 Audio:
-- None from this effect. The coin SFX is triggered by `coin_collected` on
+- None from this effect. The coin SFX is triggered by `CoinCollected` on
   the bump frame (same as ground-coin pickup), not by the pop itself.
 
 Non-rules (things this effect does NOT do):
@@ -1276,8 +1269,8 @@ Two validation tools are used throughout:
 
 - `godot --headless --path . --quit` — catches parse errors, broken autoload
   wiring, missing `res://` paths, and malformed scene files. Fast enough to run
-  after any edit. Note: this command exits before indexing new `class_name`
-  scripts, which is why the project avoids `class_name` entirely.
+  after any edit. Run `dotnet build` first to catch C# compile errors — the
+  headless launch only validates the Godot project structure, not C# syntax.
 - `godot --path .` — runs the game windowed for manual gameplay checks. Use
   the Godot editor's remote scene tree and debugger when something looks wrong
   at runtime.
@@ -1294,8 +1287,8 @@ Two validation tools are used throughout:
 - Headless: `godot --headless --path . --quit` exits with code 0 and prints no
   script errors or missing-resource warnings.
 - Manual: launch the game — the main scene loads, autoloads are instantiated
-  (temporarily `print()` from each `_ready()` to confirm), input actions
-  respond in the Input Map tester, and `SceneManager.fade_to_scene()` plays a
+  (temporarily `GD.Print()` from each `_Ready()` to confirm), input actions
+  respond in the Input Map tester, and `SceneManager.FadeToScene()` plays a
   visible fade when called from a debug key.
 - Bug watchlist:
   - Autoload order matters: `EventBus` must load before `GameManager` or
@@ -1316,7 +1309,7 @@ Two validation tools are used throughout:
 **Testing & verification:**
 
 - Headless: project loads clean after adding the state machine and all state
-  scripts (a missing `extends` path in any state script breaks the whole
+  scripts (a missing base class reference in any state script breaks the whole
   player scene).
 - Manual gameplay:
   - Walk, run (hold run key), and stop — decelerate smoothly without sliding
@@ -1330,15 +1323,15 @@ Two validation tools are used throughout:
   - Crouch (as Big Mario): hold down — collision shape shrinks, drawing
     matches. Releasing crouch under a low ceiling must not let Mario stand
     (ceiling clearance check).
-  - `_draw()` walk cycle animates while running and freezes on idle.
+  - `_Draw()` walk cycle animates while running and freezes on idle.
 - Bug watchlist:
-  - State machine leaks: transitions not calling `exit()` cause lingering
+  - State machine leaks: transitions not calling `Exit()` cause lingering
     behavior (e.g., run animation stuck during jump). Add temporary state
     prints if any state feels sticky.
   - Collision shape not resized on power change → Mario gets stuck in ceilings
     or falls through floors after a grow/shrink.
-  - `is_on_floor()` flickering on slopes: if jumping feels inconsistent after
-    landing, check `move_and_slide()` is called every physics frame.
+  - `IsOnFloor()` flickering on slopes: if jumping feels inconsistent after
+    landing, check `MoveAndSlide()` is called every physics frame.
 
 ### Phase 3 - Level Basics
 
@@ -1357,17 +1350,17 @@ Two validation tools are used throughout:
   - Walk the full length of the level — no gaps in terrain, no falling through
     the ground, no invisible walls.
   - Camera follows the player with look-ahead; camera does not scroll left
-    once it has advanced (`limit_left` ratchet).
+    once it has advanced (`LimitLeft` ratchet).
   - Parallax: clouds, hills, and bushes drift at different speeds than the
     foreground as the camera moves. They should not snap or tear as the
-    camera starts moving (verifies the lazy camera lookup in `_process`).
+    camera starts moving (verifies the lazy camera lookup in `_Process()`).
   - Kill zone: fall into a pit — player dies and respawns or triggers game
     over flow.
   - HUD: score, coins, world, timer, and lives display. Timer decrements once
     per second.
 - Bug watchlist:
-  - Parallax reading `camera.global_position` instead of
-    `get_screen_center_position()` causes visible jitter when the camera
+  - Parallax reading `camera.GlobalPosition` instead of
+    `GetScreenCenterPosition()` causes visible jitter when the camera
     smooths or offsets.
   - Kill zone on the wrong collision layer silently never fires.
   - TileMapLayer collision not enabled → player walks through the ground.
@@ -1385,7 +1378,7 @@ Two validation tools are used throughout:
 
 **Testing & verification:**
 
-- Headless: all block and item scenes load; no missing `preload()` paths.
+- Headless: all block and item scenes load; no missing resource paths.
 - Manual gameplay:
   - Question block: jump into it from below — bump animation plays, contents
     spawn above, block turns empty brown. Repeated hits do nothing.
@@ -1404,12 +1397,12 @@ Two validation tools are used throughout:
   - Fire Flower (already Big): Big → Fire, palette changes (instantaneous
     in Phase 4; animated in Phase 6).
   - Fire Flower taken while Small: still upgrades to Big (spec rule).
-  - Coin pickup: score +200, coin count +1, `coins_changed` HUD update. 100
+  - Coin pickup: score +200, coin count +1, `CoinsChanged` HUD update. 100
     coins grants a 1-UP.
 - Bug watchlist:
-  - Any new interactable block that forgets `bump_from_below()` will be hit
-    but do nothing — player's `check_ceiling_bumps()` silently skips it.
-  - Block bump via `Area2D.body_entered` is unreliable on touching contact
+  - Any new interactable block that forgets `BumpFromBelow()` will be hit
+    but do nothing — player's `CheckCeilingBumps()` silently skips it.
+  - Block bump via `Area2D.BodyEntered` is unreliable on touching contact
     (see `CLAUDE.md`). Use the slide-collision pattern for solid blocks.
   - Hidden block: deep head penetration (more than 8 px in a single frame)
     can flip depenetration direction on reveal, popping Mario up through the
@@ -1430,7 +1423,7 @@ Two validation tools are used throughout:
 
 **Testing & verification:**
 
-- Headless: all enemy scenes load; enemy base class (via `preload`) is
+- Headless: all enemy scenes load; enemy base class is
   referenced correctly by Goomba/Koopa.
 - Manual gameplay:
   - Goomba: walks, reverses at walls and ledges (if that rule applies),
@@ -1450,8 +1443,8 @@ Two validation tools are used throughout:
   - Enemies spawning inside terrain due to off-grid placement.
   - Shell collision with the player who just kicked it: shell must ignore
     the player for a few frames post-kick or Mario dies from his own kick.
-  - Enemy `queue_free()` during a signal emission can crash — use
-    `call_deferred("queue_free")`.
+  - Enemy `QueueFree()` during a signal emission can crash — use
+    `CallDeferred(MethodName.QueueFree)`.
 
 ### Phase 6 - Effects, Polish, and Tunables Refactor
 
@@ -1477,19 +1470,19 @@ on the first commit. Tuning happens after the refactor is verified.
 
 #### 6.1 Tunables Refactor
 
-- Create `scripts/config/` directory for `Resource` subclass scripts.
+- Create `Scripts/Config/` directory for `Resource` subclass scripts.
 - Create `resources/config/` directory for saved `.tres` instances.
 - Migrate in this order (stop if you run out of time — later items are lower
   priority):
 
   1. **`PlayerMovementConfig`** — all constants currently in
-     `player_controller.gd` (walk/run speed, acceleration, jump velocity,
+     `PlayerController.cs` (walk/run speed, acceleration, jump velocity,
      gravity, fast fall, coyote time, jump buffer, release multiplier, small
      and big collision sizes). Also absorb the `1.12` high-speed jump boost
-     magic number from `jump_state.gd`.
+     magic number from `JumpState.cs`.
   2. **`CameraConfig`** — look-ahead distance, look-ahead lerp speed, smoothing
      speed, and the no-backtrack offset (`-256.0`) currently inlined in
-     `player_controller.gd`.
+     `PlayerController.cs`.
   3. **`EnemyConfig` (one resource per enemy type)** — patrol speed, stomp
      reward, contact damage type, activation range. Start with Goomba and
      Koopa; Piranha Plant can be added in Phase 7 when it lands.
@@ -1505,27 +1498,27 @@ on the first commit. Tuning happens after the refactor is verified.
      trail spacing.
 
 - Pattern per resource (see `CLAUDE.md` conventions):
-  ```gdscript
-  # scripts/config/player_movement_config.gd
-  extends Resource
-
-  @export var walk_speed: float = 130.0
-  @export var run_speed: float = 210.0
-  # ... one @export per tunable, with the current const value as the default
+  ```csharp
+  // Scripts/Config/PlayerMovementConfig.cs
+  public partial class PlayerMovementConfig : Resource
+  {
+      [Export] public float WalkSpeed = 130.0f;
+      [Export] public float RunSpeed = 210.0f;
+      // ... one [Export] per tunable, with the current const value as the default
+  }
   ```
-  Do **not** use `class_name` (project convention). Scripts that consume the
-  resource declare `@export var movement: Resource` and load the concrete
-  script via `preload()` for type hints in code, matching how the rest of the
-  project handles type references.
+  Scripts that consume the resource declare a strongly typed export
+  (`[Export] public PlayerMovementConfig Movement;`) — C# provides full
+  type safety without any extra loading step.
 - Keep one canonical `.tres` per config under `resources/config/` (e.g.,
   `player_movement_default.tres`). Variants (forgiving, debug, low-gravity)
   can be added later by duplicating the `.tres` — no code changes required.
-- Scripts that currently use the constants should hold an `@export var config`
-  assigned in their scene and read `config.walk_speed` instead of
-  `WALK_SPEED`. The old `const` declarations are deleted, not left as
+- Scripts that currently use the constants should hold an `[Export] public PlayerMovementConfig Config`
+  assigned in their scene and read `Config.WalkSpeed` instead of
+  `WalkSpeed`. The old `const` declarations are deleted, not left as
   fallbacks.
 - `ProjectSettings` is reserved for truly global flags (difficulty, debug
-  toggles) and is **not** used for gameplay tunables. No god `settings.gd`.
+  toggles) and is **not** used for gameplay tunables. No god `Settings.cs`.
 
 #### 6.2 Visual Polish
 
@@ -1544,7 +1537,7 @@ on the first commit. Tuning happens after the refactor is verified.
 **Testing & verification:**
 
 - Headless: project loads clean after the refactor. Every migrated scene must
-  still open — a missing `@export` assignment or a broken `preload()` path
+  still open — a missing `[Export]` assignment or a broken resource path
   in a config script will surface here.
 - Refactor regression checks (run *before* tuning any values):
   - Movement feel is byte-identical to pre-refactor. The fastest way to
@@ -1557,9 +1550,9 @@ on the first commit. Tuning happens after the refactor is verified.
     missing resource shows a yellow warning triangle.
   - Reassigning a config `.tres` in the inspector and re-running the game
     picks up the new values without a code edit. This is the whole point of
-    the migration — if it doesn't work, the `@export` wiring is wrong.
+    the migration — if it doesn't work, the `[Export]` wiring is wrong.
   - Duplicate a `.tres` to `player_movement_forgiving.tres`, bump
-    `coyote_time` to `0.20`, assign it to the player, and confirm the
+    `CoyoteTime` to `0.20`, assign it to the player, and confirm the
     forgiveness window feels longer. Then revert.
 - Visual polish manual gameplay:
   - Bloom/glow visible on bright sprites against darker backgrounds;
@@ -1593,33 +1586,33 @@ on the first commit. Tuning happens after the refactor is verified.
     update on the bump frame — the pop is visual-only.
 - Bug watchlist (refactor):
   - Scene left referencing the old `const` after the script was rewritten
-    to use `config.x` — the scene silently uses default values because the
-    `@export` was never assigned in the inspector. Any sudden "feels wrong"
+    to use `Config.X` — the scene silently uses default values because the
+    `[Export]` was never assigned in the inspector. Any sudden "feels wrong"
     after the refactor is this bug until proven otherwise.
   - `.tres` file edited outside the Godot editor can desync from its script
-    schema (add/remove/rename an `@export` without the editor re-saving
+    schema (add/remove/rename an `[Export]` without the editor re-saving
     the resource). Keep resource edits inside the Godot inspector.
   - Two scenes pointing to the same `.tres` — edits propagate to both. If
     you need per-instance overrides, use **Local to Scene** on the resource
     or duplicate the `.tres`.
-  - Transcription typos during migration (e.g., `ACCELERATION = 800.0`
+  - Transcription typos during migration (e.g., `Acceleration = 800.0f`
     becoming `800`). The regression clip check is how you catch these.
 - Bug watchlist (polish):
-  - Screen shake applied directly to `camera.position` instead of
-    `camera.offset` fights with parallax and breaks camera follow.
+  - Screen shake applied directly to `camera.Position` instead of
+    `camera.Offset` fights with parallax and breaks camera follow.
   - Forward Plus not active → glow silently does nothing. Check project
     settings after any renderer change.
   - Particles on CanvasLayer inherit the wrong coordinate space and render
     off-screen.
-  - Grow/shrink pause implemented by setting `get_tree().paused = true`
+  - Grow/shrink pause implemented by setting `GetTree().Paused = true`
     without marking the transition overlay's process mode appropriately:
     the fade/intro overlay will stop animating alongside gameplay. Use
-    `PROCESS_MODE_ALWAYS` on the nodes that must keep running.
+    `ProcessModeEnum.Always` on the nodes that must keep running.
   - `GrowState` that doesn't record and restore the previous state on exit
     will drop Mario into Idle after grabbing a mushroom mid-jump, losing
-    his airborne momentum. Cache the source state in `enter()` and
-    transition back to it (or to Fall, if the source was Jump and velocity
-    is now downward) in `exit()`.
+    his airborne momentum. Cache the source state in `Enter()` and
+    transition back to it (or to Fall, if the source was Jump and Velocity
+    is now downward) in `Exit()`.
   - Collision shape resized mid-animation rather than at the end: if the
     shape grows while the drawer is still flickering to Small, Big Mario's
     collision clips into ceilings visually occupied by Small Mario. Resize
@@ -1684,7 +1677,7 @@ on the first commit. Tuning happens after the refactor is verified.
   - Complete the flagpole → level complete bonus tally → next level (or back
     to title if no next level).
 - Bug watchlist:
-  - Pause menu not set to `PROCESS_MODE_WHEN_PAUSED` — the menu freezes with
+  - Pause menu not set to `ProcessModeEnum.WhenPaused` — the menu freezes with
     the rest of the game.
   - Title screen input registering a stale jump press that carries into the
     first frame of gameplay.
@@ -1713,7 +1706,7 @@ on the first commit. Tuning happens after the refactor is verified.
   - Signal connected twice → SFX plays twice and doubles in volume.
   - Empty key in audio registry plays nothing silently — log a warning on
     first use to surface missing assets.
-  - Music player not set to `bus = "Music"` means volume sliders don't
+  - Music player not set to `Bus = "Music"` means volume sliders don't
     affect it.
 
 ### Phase 10 - Expansion
@@ -1756,7 +1749,7 @@ on the first commit. Tuning happens after the refactor is verified.
 
 5. Forward Plus renderer because the visual pitch depends on subtle bloom and post-processing.
 
-6. `_draw()`-driven character rendering because the project intentionally avoids sprite production and benefits from procedural animation control.
+6. `_Draw()`-driven character rendering because the project intentionally avoids sprite production and benefits from procedural animation control.
 
 7. A 16 px grid because it preserves Mario-style spacing and keeps scene authoring simple.
 
@@ -1766,7 +1759,7 @@ on the first commit. Tuning happens after the refactor is verified.
 
 All previously open questions have been resolved:
 
-- **Movement feel:** Implemented. See `scripts/player/` — the current physics constants and state machine define the canonical feel for this project.
+- **Movement feel:** Implemented. See `Scripts/Player/` — the current physics constants and state machine define the canonical feel for this project.
 - **Hidden blocks:** Classic SMB behavior — no visuals and no collision until hit from below while the player is moving upward. See §9.4.
 - **Title screen:** Static for v1. No attract/demo playback.
 - **World 1-2 scope:** Included in v1 scope (not a stretch goal).
