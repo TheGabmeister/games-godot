@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="LevelConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://b4wmjqt5owk8f" path="res://Scripts/Config/LevelConfig.cs" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+World = 1
+Level = 1
+TimeLimit = 400.0
+MusicTrack = &"overworld"
+HurryMusicTrack = &"hurry"
+IsUnderground = false
+HasSkyColorOverride = false
+SkyColorOverride = Color(0.42, 0.62, 1, 1)

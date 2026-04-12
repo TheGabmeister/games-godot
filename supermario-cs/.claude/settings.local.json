@@ -24,7 +24,9 @@
       "Bash(\"/d/Godot_v4.6.2-stable_win64.exe\" --headless --path . --quit)",
       "Bash(ls Scripts/Player/*.uid Scripts/Player/PlayerStates/*.uid Scripts/Visual/*.uid)",
       "Bash(ls scenes/*.uid)",
-      "Bash(timeout 3 \"/d/Godot_v4.6.2-stable_mono_win64/Godot_v4.6.2-stable_mono_win64_console.exe\" --headless --path .)"
+      "Bash(timeout 3 \"/d/Godot_v4.6.2-stable_mono_win64/Godot_v4.6.2-stable_mono_win64_console.exe\" --headless --path .)",
+      "Bash(timeout 4 \"/d/Godot_v4.6.2-stable_mono_win64/Godot_v4.6.2-stable_mono_win64_console.exe\" --headless --path .)",
+      "Bash(grep -v -E \"\\(^\\\\s*\\\\[[0-9]+\\\\]| at: |Unreferenced|Thread object|wait_to_finish|RID allocation|Pages in use|PagedAllocator|backtrace|^\\\\s*$|godot/|GodotSharp|System\\\\.|InvokeGodotClass|MoveNext|RunInternal|SignalCallback|UnmanagedCallback|generated\\\\.cs\\)\")"
     ]
   }
 }

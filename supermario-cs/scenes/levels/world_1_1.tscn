@@ -1,0 +1,72 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" uid="uid://bc5wmmxij6ru3" path="res://Scripts/Level/World11Level.cs" id="1_level"]
+[ext_resource type="Script" uid="uid://ccoa1u2txpp0s" path="res://Scripts/Level/ParallaxController.cs" id="2_parallax"]
+[ext_resource type="Script" uid="uid://kf51g20738ba" path="res://Scripts/Level/BackgroundDecorationDrawer.cs" id="3_decor"]
+[ext_resource type="Script" uid="uid://bdyxupdk8vr57" path="res://Scripts/Level/KillZone.cs" id="4_kill"]
+[ext_resource type="Resource" path="res://resources/config/level_1_1.tres" id="5_cfg"]
+
+[sub_resource type="RectangleShape2D" id="shape_killzone"]
+size = Vector2(8192, 64)
+
+[node name="Level_1_1" type="Node2D"]
+script = ExtResource("1_level")
+Config = ExtResource("5_cfg")
+CameraLimitLeft = 0
+CameraLimitRight = 3392
+CameraLimitTop = 0
+CameraLimitBottom = 448
+
+[node name="Background" type="Node2D" parent="."]
+z_index = -10
+
+[node name="SkyGradient" type="ColorRect" parent="Background"]
+offset_left = -512.0
+offset_top = -256.0
+offset_right = 4096.0
+offset_bottom = 512.0
+color = Color(0.35, 0.65, 0.95, 1)
+mouse_filter = 2
+
+[node name="Parallax" type="Node2D" parent="Background"]
+script = ExtResource("2_parallax")
+CloudsRate = 0.3
+HillsRate = 0.6
+
+[node name="HillsLayer" type="Node2D" parent="Background/Parallax"]
+z_index = -2
+
+[node name="HillsDrawer" type="Node2D" parent="Background/Parallax/HillsLayer"]
+script = ExtResource("3_decor")
+DecorationKind = 1
+Count = 14
+Spacing = 256.0
+StartX = 64.0
+BaseY = 224.0
+RandomSeed = 7
+
+[node name="CloudsLayer" type="Node2D" parent="Background/Parallax"]
+z_index = -5
+
+[node name="CloudsDrawer" type="Node2D" parent="Background/Parallax/CloudsLayer"]
+script = ExtResource("3_decor")
+DecorationKind = 0
+Count = 16
+Spacing = 224.0
+StartX = 48.0
+BaseY = 64.0
+RandomSeed = 42
+
+[node name="TileMapLayer_Ground" type="TileMapLayer" parent="."]
+
+[node name="KillZone" type="Area2D" parent="."]
+position = Vector2(1696, 480)
+script = ExtResource("4_kill")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="KillZone"]
+shape = SubResource("shape_killzone")
+
+[node name="SpawnMarkers" type="Node" parent="."]
+
+[node name="PlayerSpawn" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(56, 192)

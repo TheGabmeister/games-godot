@@ -23,6 +23,8 @@ public partial class PlayerController : CharacterBody2D
 	private const float BigHeight    = 30.0f;
 	private const float CrouchHeight = 16.0f;
 	private const float WalkFrameInterval = 0.12f;
+	private const float CameraLookAhead = 48.0f;
+	private const float ViewportHalfWidth = 256.0f;
 
 	public int FacingDirection { get; set; } = 1;
 	public float CoyoteCounter { get; set; }
@@ -33,9 +35,11 @@ public partial class PlayerController : CharacterBody2D
 	private Node2D _visuals;
 	private PlayerDrawer _drawer;
 	private StateMachine _machine;
+	private Camera2D _camera;
 	private GameManager _gameManager;
 	private EventBus _eventBus;
 	private float _walkAnimTime;
+	private float _currentLookAhead;
 
 	public override void _Ready()
 	{
@@ -43,6 +47,7 @@ public partial class PlayerController : CharacterBody2D
 		_visuals = GetNode<Node2D>("Visuals");
 		_drawer = GetNode<PlayerDrawer>("Visuals/PlayerDrawer");
 		_machine = GetNode<StateMachine>("StateMachine");
+		_camera = GetNodeOrNull<Camera2D>("Camera2D");
 		_gameManager = GetNode<GameManager>("/root/GameManager");
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 
@@ -118,6 +123,7 @@ public partial class PlayerController : CharacterBody2D
 
 		MoveAndSlide();
 
+		ClampToCameraLeft();
 		UpdateFacing();
 		UpdateAnimation((float)delta);
 	}
@@ -125,6 +131,35 @@ public partial class PlayerController : CharacterBody2D
 	public override void _Process(double delta)
 	{
 		_machine.CurrentState?.ProcessFrame(delta);
+		UpdateCamera(delta);
+	}
+
+	private void UpdateCamera(double delta)
+	{
+		if (_camera == null) return;
+		float target = FacingDirection * CameraLookAhead;
+		_currentLookAhead = Mathf.Lerp(_currentLookAhead, target, (float)delta * 3.0f);
+		_camera.Offset = new Vector2(_currentLookAhead, _camera.Offset.Y);
+
+		int currentLeftEdge = (int)(_camera.GetScreenCenterPosition().X - ViewportHalfWidth);
+		if (currentLeftEdge > _camera.LimitLeft)
+		{
+			_camera.LimitLeft = currentLeftEdge;
+		}
+	}
+
+	private void ClampToCameraLeft()
+	{
+		if (_camera == null) return;
+		float minX = _camera.LimitLeft + 8.0f;
+		if (GlobalPosition.X < minX)
+		{
+			GlobalPosition = new Vector2(minX, GlobalPosition.Y);
+			if (Velocity.X < 0)
+			{
+				Velocity = new Vector2(0, Velocity.Y);
+			}
+		}
 	}
 
 	private void UpdateTimers(double delta)

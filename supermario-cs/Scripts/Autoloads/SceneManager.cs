@@ -10,6 +10,7 @@ public partial class SceneManager : Node
 	private ColorRect _fadeRect;
 	private Label _introLabel;
 	private bool _isTransitioning;
+	private LevelBase _currentLevel;
 
 	public override void _Ready()
 	{
@@ -60,6 +61,70 @@ public partial class SceneManager : Node
 		else if (!string.IsNullOrEmpty(path))
 		{
 			GD.PrintErr($"[SceneManager] missing scene: {path}");
+		}
+
+		await FadeTo(0.0f);
+		_isTransitioning = false;
+	}
+
+	public async void LoadLevel(string levelPath)
+	{
+		if (_isTransitioning) return;
+		if (!ResourceLoader.Exists(levelPath))
+		{
+			GD.PrintErr($"[SceneManager] level not found: {levelPath}");
+			return;
+		}
+		_isTransitioning = true;
+
+		await FadeTo(1.0f);
+
+		var sceneRoot = GetNodeOrNull("/root/Main/SceneRoot");
+		if (sceneRoot == null)
+		{
+			GD.PrintErr("[SceneManager] /root/Main/SceneRoot missing");
+			_isTransitioning = false;
+			return;
+		}
+
+		foreach (var child in sceneRoot.GetChildren())
+		{
+			child.QueueFree();
+		}
+		_currentLevel = null;
+
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+		var packed = GD.Load<PackedScene>(levelPath);
+		var instance = packed.Instantiate();
+		sceneRoot.AddChild(instance);
+		_currentLevel = instance as LevelBase;
+
+		var player = GetNodeOrNull<PlayerController>("/root/Main/Player");
+		if (player != null && _currentLevel != null)
+		{
+			var spawn = _currentLevel.GetNodeOrNull<Marker2D>("SpawnMarkers/PlayerSpawn");
+			if (spawn != null)
+			{
+				player.GlobalPosition = spawn.GlobalPosition;
+				player.Velocity = Vector2.Zero;
+			}
+
+			var camera = player.GetNodeOrNull<Camera2D>("Camera2D");
+			if (camera != null)
+			{
+				camera.LimitLeft = _currentLevel.CameraLimitLeft;
+				camera.LimitRight = _currentLevel.CameraLimitRight;
+				camera.LimitTop = _currentLevel.CameraLimitTop;
+				camera.LimitBottom = _currentLevel.CameraLimitBottom;
+				camera.ResetSmoothing();
+			}
+		}
+
+		if (_currentLevel?.Config != null)
+		{
+			GetNode<GameManager>("/root/GameManager").StartLevel(_currentLevel.Config);
+			GetNode<AudioManager>("/root/AudioManager").PlayMusic(_currentLevel.Config.MusicTrack);
 		}
 
 		await FadeTo(0.0f);
