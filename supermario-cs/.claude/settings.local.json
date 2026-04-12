@@ -11,7 +11,13 @@
       "Read(//c/Users/Admin/.claude/projects//**)",
       "Bash(git config:*)",
       "Bash(git ls-tree:*)",
-      "Bash(grep -v '^$')"
+      "Bash(grep -v '^$')",
+      "Bash(dotnet build:*)",
+      "Bash(echo \"EXIT: $?\")",
+      "Read(//c/Users/Admin/**)",
+      "Read(//c/Program Files/**)",
+      "Read(//d/Godot_v4.6.2-stable_mono_win64//**)",
+      "Bash(\"/d/Godot_v4.6.2-stable_mono_win64/Godot_v4.6.2-stable_mono_win64_console.exe\" --headless --path . --quit)"
     ]
   }
 }

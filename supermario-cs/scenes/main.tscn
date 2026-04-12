@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Main.cs" id="1_main"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main")
+
+[node name="SceneRoot" type="Node" parent="."]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+
+[node name="DebugRoot" type="Node" parent="."]
