@@ -71,10 +71,9 @@ Notes:
 Set `res://scenes/main.tscn` as the main scene once the real project structure exists.
 
 `main.tscn` responsibilities:
-- Own the top-level gameplay shell
-- Ensure transition/UI overlay layers exist
+- Own the top-level gameplay shell (see §4.1 for full hierarchy)
+- Host persistent nodes: Player, HUD, WorldEnvironment, overlay layers
 - Load the title screen first
-- Provide a stable place for `WorldEnvironment` and debug-only nodes if needed
 
 ---
 
@@ -311,6 +310,14 @@ Responsibilities:
 - Time bonus payout at level end (`TimeRemaining * 50`)
 - Resetting per-run state on new game start
 
+Timer lifecycle:
+- `TimeRemaining` resets to `400.0f` at the start of **every level**, not
+  just on new game. The reset happens when `LevelStarted` fires (after the
+  level intro overlay finishes).
+- Timer pauses during `Paused`, death animation, grow/shrink animation,
+  and the `LevelComplete` bonus tally.
+- Reaching zero triggers player death (same as falling into a pit).
+
 Add these helper methods:
 - `public void StartNewGame()`
 - `public void AddScore(int points, Vector2 position = default)`
@@ -428,25 +435,42 @@ Implementation note:
 
 ### 4.1 Main Scene
 
-`main.tscn` should act as the shell scene, not the level itself.
+`main.tscn` is the persistent shell. It is never unloaded. Level scenes
+are loaded into `SceneRoot` and swapped by `SceneManager`.
 
 Suggested hierarchy:
 
 ```text
 Main (Node)
-  SceneRoot (Node)
-  OverlayRoot (CanvasLayer)
-  DebugRoot (Node) [optional]
+  SceneRoot (Node)           [level scenes load here]
+  Player (CharacterBody2D)   [persistent, repositioned on level load]
+  HUD (CanvasLayer)          [persistent across levels]
+  OverlayRoot (CanvasLayer)  [transition fades, level intro]
+  WorldEnvironment           [persistent, levels can override env settings]
+  DebugRoot (Node)           [optional]
 ```
+
+Ownership rules:
+- **Player** lives under `Main`, not inside the level scene. On level load,
+  `SceneManager` moves the player to the level's `PlayerSpawn` marker.
+  On death/respawn, the player is repositioned without re-instantiation.
+- **HUD** lives in a `CanvasLayer` under `Main`. It reads from `GameManager`
+  signals and is never torn down during gameplay.
+- **WorldEnvironment** lives under `Main` for consistent bloom/glow. A level
+  may override environment settings (e.g., underground palette) via a
+  script that adjusts the shared `WorldEnvironment` on load and restores
+  defaults on unload.
+- **Level scenes** contain only level-specific content: terrain, blocks,
+  enemies, pipes, spawn markers, kill zones, camera bounds, and
+  decorations.
 
 ### 4.2 Level Scene Contract
 
 Every gameplay level scene should:
 - inherit the same broad structure
-- expose a spawn marker for the player
+- expose a `PlayerSpawn` marker (`Marker2D`) for player positioning
 - define camera bounds
 - contain a `KillZone`
-- contain one `WorldEnvironment`
 
 ### 4.3 UI Scenes
 
@@ -719,6 +743,18 @@ Rules:
 public enum PowerState { Small, Big, Fire }
 ```
 
+Authority: `GameManager.CurrentPowerState` is the single source of truth.
+
+- **On spawn / respawn:** the player reads `GameManager.CurrentPowerState`
+  in `_Ready()` and sets its collision shape and drawer accordingly.
+- **On power-up or damage:** the player's state machine (GrowState,
+  ShrinkState) calls `GameManager.SetPowerState()` which updates the
+  field, emits `PlayerPowerStateChanged`, and the player reacts to the
+  new state. The player never stores its own shadow copy.
+- **On death:** `GameManager` resets `CurrentPowerState` to `Small` as
+  part of `LoseLife()`, before the respawn cycle begins.
+- **On new game:** `StartNewGame()` resets to `Small`.
+
 Rules:
 - Small + Mushroom -> Big
 - Small + Fire Flower -> Big
@@ -810,16 +846,37 @@ Combo rewards:
 
 ### 8.6 Pipe Warp
 
-Pipes may optionally define:
+Pipes may optionally define a warp destination. Because a pipe can target
+a location in the same scene (intra-level shortcut) or a different scene
+entirely (World 1-2 underground, bonus room), a raw `NodePath` is not
+sufficient — it only resolves within the current scene tree. Instead, use
+a destination descriptor:
 
 ```csharp
-[Export] public NodePath WarpTarget;
+/// <summary>
+/// If empty, the pipe is non-warp decoration.
+/// If set, this is the scene path to load (e.g. "res://scenes/levels/world_1_2.tscn").
+/// For same-scene warps, set to the current scene's own path.
+/// </summary>
+[Export] public string WarpScenePath = "";
+
+/// <summary>
+/// Name of the Marker2D at the destination that the player emerges from.
+/// Must exist as a child of a Pipe node in the target scene.
+/// </summary>
+[Export] public string WarpSpawnMarker = "";
 ```
+
+A warp is valid only when both fields are non-empty and the target scene
+contains a `Marker2D` with a matching name.
+
+For same-scene warps, `SceneManager` skips the scene load and just
+repositions the player at the target marker after the fade.
 
 Entry rules:
 - Player must be on top of the pipe
 - Player must hold `crouch`
-- Warp only triggers on valid target pipes
+- Warp only triggers when both `WarpScenePath` and `WarpSpawnMarker` are set
 
 Warp sequence:
 1. Enter `PipeEnterState`
@@ -827,9 +884,11 @@ Warp sequence:
 3. Tween player down into pipe
 4. Play pipe SFX
 5. Fade transition
-6. Reposition at target pipe exit
-7. Tween player out
-8. Return control
+6. If `WarpScenePath` differs from the current scene, load the target scene
+   via `SceneManager`; otherwise reposition within the same scene
+7. Place player at the `Marker2D` matching `WarpSpawnMarker`
+8. Tween player out of the destination pipe
+9. Return control
 
 **Z-ordering during the tween**
 
@@ -1015,10 +1074,30 @@ Purpose:
 - Support classic hidden coin or 1-UP placements
 - Stay invisible until hit from below
 
+Scene hierarchy:
+
+```text
+HiddenBlock (StaticBody2D)
+  CollisionShape2D          [disabled until revealed]
+  HitSensor (Area2D)        [always active — detects upward head contact]
+    CollisionShape2D
+```
+
+The `StaticBody2D` collision starts **disabled** so the player passes
+through freely. A separate `Area2D` (`HitSensor`) occupies the same tile
+space and stays active. Detection works as follows:
+
+- `HitSensor` is on layer `Terrain` (layer 1) and masks `PlayerHitbox`
+  (layer 4).
+- When the player's head bump checker enters `HitSensor` **and** the
+  player's `Velocity.Y < 0` (moving upward), the block triggers.
+- On trigger: enable the `StaticBody2D` collision shape, reveal the block
+  visuals, spawn contents, disable the `HitSensor` (no longer needed).
+
 Rules:
-- Initially has no visible geometry and no collision
-- Player can pass freely through the tile space until their head strikes it from below while moving upward
-- On that first head-strike, the block reveals, enables collision, and triggers its contents (coin or 1-UP)
+- Initially has no visible geometry and solid collision is disabled
+- The `Area2D` sensor allows the player to pass through while still detecting upward head contact
+- On that first head-strike, the block reveals, enables solid collision, and triggers its contents (coin or 1-UP)
 - After reveal, behaves like an empty brown block (solid, inert)
 
 ### 9.5 Flagpole
@@ -1093,11 +1172,12 @@ Level_1_1 (Node2D)
   KillZone
   LevelBounds
   SpawnMarkers
-    PlayerSpawn
-  Player
-  HUD
-  WorldEnvironment
+    PlayerSpawn (Marker2D)
 ```
+
+Note: Player, HUD, and WorldEnvironment are **not** in the level scene —
+they live under `Main` (see §4.1). The level only provides `PlayerSpawn`
+so the shell knows where to position the player on load.
 
 ### 11.2 TileMap
 
@@ -1773,9 +1853,9 @@ on the first commit. Tuning happens after the refactor is verified.
 
 ## 17. Open Questions
 
-All previously open questions have been resolved:
+All previously open questions have been resolved in this spec:
 
-- **Movement feel:** Implemented. See `Scripts/Player/` — the current physics constants and state machine define the canonical feel for this project.
-- **Hidden blocks:** Classic SMB behavior — no visuals and no collision until hit from below while the player is moving upward. See §9.4.
+- **Movement feel:** Defined in §6.2 and §6.3. The physics constants and state machine define the canonical feel for this project.
+- **Hidden blocks:** Classic SMB behavior — invisible with a sensor-based detection mechanism. See §9.4.
 - **Title screen:** Static for v1. No attract/demo playback.
 - **World 1-2 scope:** Included in v1 scope (not a stretch goal).
