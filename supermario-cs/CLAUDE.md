@@ -53,6 +53,24 @@ Five global singletons registered in `project.godot`, all inheriting `Node`:
 | **SceneManager** | Fade transitions, scene loading into `SceneRoot`, level intro overlays, player repositioning |
 | **CameraEffects** | Screen shake and freeze frame on the active Camera2D |
 
+**Autoload order matters.** Register in this order in `project.godot` (EventBus first, GameManager second, others can load after):
+
+```
+EventBus → GameManager → AudioManager / SceneManager / CameraEffects
+```
+
+**Dependency direction is one-way.** SceneManager calls into GameManager (`StartLevel(config)`, reads `Lives` and `CurrentGameState`). GameManager never calls SceneManager — when it needs a scene change, it updates `CurrentGameState` and emits EventBus signals (`LevelCompleted`, `GameOver`); SceneManager listens and reacts.
+
+### Per-Level Parameters (LevelConfig)
+
+Each level scene exports a `LevelConfig` resource (`Scripts/Config/LevelConfig.cs`) that declares its identity, time limit, music track, and environment overrides. On level load, `SceneManager` reads the config and forwards it:
+
+- `GameManager.StartLevel(config)` → resets `TimeRemaining` to `config.TimeLimit`, updates world/level, emits `LevelStarted`
+- `AudioManager.PlayMusic(config.MusicTrack)` → begins playback
+- `WorldEnvironment` adjusted if `config.IsUnderground` or `config.SkyColorOverride` is set
+
+One `.tres` per level under `resources/config/` (e.g., `level_1_1.tres`). Tuning time limits or swapping music requires only an inspector edit — no code changes.
+
 ### Power State Authority
 
 `GameManager.CurrentPowerState` is the single source of truth. The player reads it on spawn/respawn via `_Ready()`, and the state machine writes through `GameManager.SetPowerState()`. The player never stores its own shadow copy. `LoseLife()` resets to `Small` before the respawn cycle.
