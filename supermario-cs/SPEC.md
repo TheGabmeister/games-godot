@@ -177,6 +177,14 @@ res://
       EnemySpawner.cs
       KillZone.cs
       ParallaxController.cs
+    Config/
+      PlayerMovementConfig.cs
+      CameraConfig.cs
+      EnemyConfig.cs
+      BlockBumpConfig.cs
+      ItemConfig.cs
+      LevelTimingConfig.cs
+      EffectsConfig.cs
 
   shaders/
     glow_pulse.gdshader
@@ -193,6 +201,9 @@ res://
     color_palette.tres
     default_bus_layout.tres
     hud_label_settings.tres
+    config/
+      player_movement_default.tres
+      camera_default.tres
 ```
 
 Notes:
@@ -297,7 +308,7 @@ Responsibilities:
 - Coin-to-1UP conversion every 100 coins
 - Countdown timer while in `Playing`
 - Death and respawn orchestration
-- Time bonus payout at level end (`remaining_time * 50`)
+- Time bonus payout at level end (`TimeRemaining * 50`)
 - Resetting per-run state on new game start
 
 Add these helper methods:
@@ -466,7 +477,11 @@ Rules:
 
 ### 5.1 Color Palette
 
+Place these in a static class `P` (short for Palette) so they can be referenced concisely throughout the codebase (e.g., `P.CoinGold`).
+
 ```csharp
+public static class P
+{
 // Sky / Background
 public static readonly Color SkyBlue        = new Color(0.35f, 0.65f, 0.95f);
 public static readonly Color SkyUnderground = new Color(0.05f, 0.05f, 0.08f);
@@ -505,6 +520,7 @@ public static readonly Color FireOrange     = new Color(1.00f, 0.55f, 0.10f);
 public static readonly Color FireRed        = new Color(1.00f, 0.25f, 0.10f);
 public static readonly Color MushroomRed    = new Color(0.90f, 0.15f, 0.15f);
 public static readonly Color MushroomCream  = new Color(0.95f, 0.90f, 0.80f);
+}
 ```
 
 ### 5.2 Character and Object Rendering
@@ -943,12 +959,12 @@ Spawn:
   the effect finishes.
 
 Motion:
-- Initial velocity: `Vector2(0, -280.0)` (roughly matched to Mario's
+- Initial velocity: `new Vector2(0, -280.0f)` (roughly matched to Mario's
   small-jump velocity so the arc reads as "popping out").
-- Constant gravity: `900.0` px/s² (same value the player uses — consistent
+- Constant gravity: `900.0f` px/s² (same value the player uses — consistent
   arc feel across the whole game).
 - No horizontal velocity, no air resistance.
-- The effect free's itself when either (a) its total lifetime exceeds
+- The effect frees itself when either (a) its total lifetime exceeds
   `0.5 s`, or (b) its `y` velocity has become positive *and* it has
   returned past its spawn `y` — whichever comes first. In practice the
   lifetime cap triggers first; the position check is a safety net in case
@@ -959,7 +975,7 @@ Visual:
   fill, `P.CoinShine` highlight, 1 px dark border) — the player must be
   able to read it as "a coin" instantly.
 - Spin animation: oscillate horizontal draw scale over time
-  (`Scale.X = Mathf.Cos(t * Mathf.Tau * 6.0f)`) so the coin appears to flip at ~6 Hz,
+  (`Scale = new Vector2(Mathf.Cos(t * Mathf.Tau * 6.0f), Scale.Y)`) so the coin appears to flip at ~6 Hz,
   showing its thin profile twice per rotation. Do not use a full 3D
   rotation — flat horizontal scaling reads correctly at this resolution
   and is cheaper.
@@ -1185,7 +1201,7 @@ Decoration rhythm:
 | Consecutive stomps | 100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000, 1-UP |
 | Shell combo kills | 500, 800, 1000, 2000, 5000, 8000, 1-UP |
 | Flagpole bonus | 100-5000 |
-| Time bonus | `remaining_time * 50` |
+| Time bonus | `TimeRemaining * 50` |
 
 Score popup:
 - Spawn at award position
@@ -1288,7 +1304,7 @@ Two validation tools are used throughout:
   script errors or missing-resource warnings.
 - Manual: launch the game — the main scene loads, autoloads are instantiated
   (temporarily `GD.Print()` from each `_Ready()` to confirm), input actions
-  respond in the Input Map tester, and `SceneManager.FadeToScene()` plays a
+  respond in the Input Map tester, and `SceneManager.ChangeScene()` plays a
   visible fade when called from a debug key.
 - Bug watchlist:
   - Autoload order matters: `EventBus` must load before `GameManager` or
@@ -1713,7 +1729,7 @@ on the first commit. Tuning happens after the refactor is verified.
 
 - Fill out the full World 1-1 pass
 - Add hidden 1-UP spots and polish
-- Stretch goal: World 1-2 underground level
+- World 1-2 underground level
 
 **Testing & verification:**
 
@@ -1724,7 +1740,7 @@ on the first commit. Tuning happens after the refactor is verified.
   - Find every hidden 1-UP in the documented positions.
   - Complete the pipe warp into the coin room (if included) and exit back
     into the level.
-  - (Stretch) Complete World 1-2: underground palette, pipe exit to 1-3 or
+  - Complete World 1-2: underground palette, pipe exit to 1-3 or
     loop back to title.
 - Bug watchlist:
   - Regression: earlier phases' bugs often resurface during level expansion
