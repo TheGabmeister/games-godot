@@ -1,0 +1,50 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" uid="uid://d4hk5g0d774ei" path="res://Scripts/Player/PlayerController.cs" id="1_pc"]
+[ext_resource type="Script" uid="uid://bghwo8tawjuv7" path="res://Scripts/Player/PlayerDrawer.cs" id="2_drawer"]
+[ext_resource type="Script" uid="uid://c4ed7v2r1btpn" path="res://Scripts/Player/StateMachine.cs" id="3_sm"]
+[ext_resource type="Script" uid="uid://cwqm0v5gnra48" path="res://Scripts/Player/PlayerStates/IdleState.cs" id="4_idle"]
+[ext_resource type="Script" uid="uid://fuayif0iab7g" path="res://Scripts/Player/PlayerStates/RunState.cs" id="5_run"]
+[ext_resource type="Script" uid="uid://cylnkuxsrieb2" path="res://Scripts/Player/PlayerStates/JumpState.cs" id="6_jump"]
+[ext_resource type="Script" uid="uid://d4b4sank6lkko" path="res://Scripts/Player/PlayerStates/FallState.cs" id="7_fall"]
+[ext_resource type="Script" uid="uid://bakyutfpnutna" path="res://Scripts/Player/PlayerStates/CrouchState.cs" id="8_crouch"]
+
+[sub_resource type="RectangleShape2D" id="shape_player"]
+size = Vector2(12, 16)
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_pc")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("shape_player")
+
+[node name="Visuals" type="Node2D" parent="."]
+
+[node name="PlayerDrawer" type="Node2D" parent="Visuals"]
+script = ExtResource("2_drawer")
+
+[node name="StateMachine" type="Node" parent="."]
+script = ExtResource("3_sm")
+
+[node name="IdleState" type="Node" parent="StateMachine"]
+script = ExtResource("4_idle")
+
+[node name="RunState" type="Node" parent="StateMachine"]
+script = ExtResource("5_run")
+
+[node name="JumpState" type="Node" parent="StateMachine"]
+script = ExtResource("6_jump")
+
+[node name="FallState" type="Node" parent="StateMachine"]
+script = ExtResource("7_fall")
+
+[node name="CrouchState" type="Node" parent="StateMachine"]
+script = ExtResource("8_crouch")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, -64)
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0

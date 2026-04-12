@@ -1,16 +1,54 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" uid="uid://t4ra5w2s5qxd" path="res://Scripts/Main.cs" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
+
+[sub_resource type="RectangleShape2D" id="shape_ground"]
+size = Vector2(2048, 32)
+
+[sub_resource type="RectangleShape2D" id="shape_wall"]
+size = Vector2(16, 96)
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
 
 [node name="SceneRoot" type="Node" parent="."]
 
-[node name="Player" type="CharacterBody2D" parent="."]
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(80, 380)
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 
 [node name="DebugRoot" type="Node" parent="."]
+
+[node name="DebugGround" type="StaticBody2D" parent="DebugRoot"]
+position = Vector2(256, 420)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DebugRoot/DebugGround"]
+shape = SubResource("shape_ground")
+
+[node name="DebugGroundVisual" type="ColorRect" parent="DebugRoot/DebugGround"]
+offset_left = -1024.0
+offset_top = -16.0
+offset_right = 1024.0
+offset_bottom = 16.0
+color = Color(0.55, 0.35, 0.15, 1)
+
+[node name="DebugWall" type="StaticBody2D" parent="DebugRoot"]
+position = Vector2(600, 356)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DebugRoot/DebugWall"]
+shape = SubResource("shape_wall")
+
+[node name="DebugWallVisual" type="ColorRect" parent="DebugRoot/DebugWall"]
+offset_left = -8.0
+offset_top = -48.0
+offset_right = 8.0
+offset_bottom = 48.0
+color = Color(0.50, 0.30, 0.12, 1)
