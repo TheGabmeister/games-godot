@@ -19,7 +19,7 @@ godot --headless --path . --quit
 godot --path .
 ```
 
-No test framework is configured. Validation is done by building and running in the Godot editor.
+No test framework is configured. Validation is done by building and running in the Godot editor. Always run `dotnet build` before `godot --headless` — the headless launch validates project structure, not C# syntax.
 
 ## Project Configuration
 
@@ -32,21 +32,34 @@ No test framework is configured. Validation is done by building and running in t
 
 ## Architecture
 
+### Scene Ownership Model
+
+`main.tscn` is the persistent shell — it is never unloaded. Level scenes are loaded into a `SceneRoot` child and swapped by `SceneManager`.
+
+**Lives under Main (persistent):** Player, HUD (CanvasLayer), WorldEnvironment, overlay layers.
+**Lives inside level scenes (swapped):** terrain, blocks, enemies, pipes, spawn markers (`Marker2D`), kill zones, camera bounds, decorations.
+
+On level load, `SceneManager` moves the Player to the level's `PlayerSpawn` marker. On death/respawn, the player is repositioned — never re-instantiated.
+
 ### Autoload Singletons
 
-Five global singletons registered in `project.godot`, all extending `Node`:
+Five global singletons registered in `project.godot`, all inheriting `Node`:
 
 | Singleton | Responsibility |
 |-----------|---------------|
-| **EventBus** | Central signal hub for cross-system communication (player, scoring, level, enemy, block signals) |
-| **GameManager** | Persistent game state: score, coins, lives, power state, game state machine, timer |
+| **EventBus** | Central signal hub — `[Signal]` delegates for player, scoring, level, enemy, block events |
+| **GameManager** | Single source of truth for game state: score, coins, lives, power state, timer, game state machine |
 | **AudioManager** | Music crossfade (2 players), pooled SFX (10 non-positional + 6 positional), registry pattern with safe no-op on empty paths |
-| **SceneManager** | Fade transitions, scene loading, level intro overlays |
+| **SceneManager** | Fade transitions, scene loading into `SceneRoot`, level intro overlays, player repositioning |
 | **CameraEffects** | Screen shake and freeze frame on the active Camera2D |
+
+### Power State Authority
+
+`GameManager.CurrentPowerState` is the single source of truth. The player reads it on spawn/respawn via `_Ready()`, and the state machine writes through `GameManager.SetPowerState()`. The player never stores its own shadow copy. `LoseLife()` resets to `Small` before the respawn cycle.
 
 ### Player Controller
 
-`CharacterBody2D` with a **state machine** pattern. Each state (`PlayerState` subclass) implements `Enter()`, `Exit()`, `ProcessInput()`, `ProcessFrame()`, `ProcessPhysics()`.
+`CharacterBody2D` with a **state machine** pattern. Each state (`PlayerState` subclass) implements `Enter()`, `Exit()`, `ProcessInput()`, `ProcessFrame()`, `ProcessPhysics()`. Note: `delta` is `double` in Godot C#, not `float`.
 
 States: Idle, Run, Jump, Fall, Crouch, Death, Grow, Shrink, PipeEnter, Flagpole.
 
@@ -71,16 +84,9 @@ Visual rendering is separated into a dedicated **drawer node** (`PlayerDrawer`) 
 
 - **Drawer pattern:** Gameplay logic on main node, visuals in a `*Drawer` child using `_Draw()`. Enables palette swaps without touching gameplay code.
 - **Event bus over hard references:** Cross-system communication uses EventBus signals. Local/obvious interactions can use direct references.
-- **Enemies:** All extend a shared base (`CharacterBody2D`). Gravity, wall reversal, edge detection, and off-screen cleanup are shared behavior.
-- **Blocks:** `StaticBody2D` roots. Question blocks are content-generic via an exported `Contents` field. Brick behavior depends on player power state.
-- **Primitive rendering:** All characters/objects use `Polygon2D`, `Line2D`, `DrawRect()`, `DrawCircle()`, `ColorRect`. Only terrain uses `TileMapLayer`.
-
-### Enums
-
-```csharp
-enum PowerState { Small, Big, Fire }
-enum GameState { Title, Playing, Paused, GameOver, LevelComplete, Transitioning }
-```
+- **Color palette:** Static class `P` holds all `static readonly Color` constants (e.g., `P.CoinGold`, `P.MarioRed`).
+- **Pipe warps:** Destination is a `WarpScenePath` + `WarpSpawnMarker` pair, not a `NodePath` — supports cross-scene warps (World 1-2, bonus rooms).
+- **Hidden blocks:** Use a dual-shape approach — `StaticBody2D` collision starts disabled, a separate `Area2D` sensor detects upward head contact and triggers reveal.
 
 ### Z-Index Convention
 
@@ -99,6 +105,7 @@ enum GameState { Title, Playing, Paused, GameOver, LevelComplete, Transitioning 
 - Directory naming: `PascalCase` for script directories (e.g., `Scripts/Player/PlayerStates/`)
 - Scene naming: `snake_case.tscn`
 - Use `StringName` for frequently-used string keys (input actions, signal names, registry keys)
+- `Vector2` is a struct — cannot assign to `.X`/`.Y` directly; use `new Vector2(x, Scale.Y)` pattern
 
 ## Constraints
 

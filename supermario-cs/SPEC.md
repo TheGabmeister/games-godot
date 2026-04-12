@@ -177,6 +177,7 @@ res://
       KillZone.cs
       ParallaxController.cs
     Config/
+      LevelConfig.cs
       PlayerMovementConfig.cs
       CameraConfig.cs
       EnemyConfig.cs
@@ -201,6 +202,8 @@ res://
     default_bus_layout.tres
     hud_label_settings.tres
     config/
+      level_1_1.tres
+      level_1_2.tres
       player_movement_default.tres
       camera_default.tres
 ```
@@ -311,15 +314,17 @@ Responsibilities:
 - Resetting per-run state on new game start
 
 Timer lifecycle:
-- `TimeRemaining` resets to `400.0f` at the start of **every level**, not
-  just on new game. The reset happens when `LevelStarted` fires (after the
-  level intro overlay finishes).
+- `TimeRemaining` resets to the level's `LevelConfig.TimeLimit` (see §11.0)
+  at the start of **every level**, not just on new game. The reset happens
+  when `SceneManager` reads the loaded level's config, before `LevelStarted`
+  fires.
 - Timer pauses during `Paused`, death animation, grow/shrink animation,
   and the `LevelComplete` bonus tally.
 - Reaching zero triggers player death (same as falling into a pit).
 
 Add these helper methods:
 - `public void StartNewGame()`
+- `public void StartLevel(LevelConfig config)` — called by SceneManager on level load; resets `TimeRemaining` to `config.TimeLimit`, updates `CurrentWorld`/`CurrentLevel`, emits `LevelStarted`
 - `public void AddScore(int points, Vector2 position = default)`
 - `public void AddCoin(Vector2 position = default)`
 - `public void LoseLife()`
@@ -468,6 +473,7 @@ Ownership rules:
 
 Every gameplay level scene should:
 - inherit the same broad structure
+- export a `LevelConfig` resource on the root node (see §11.0)
 - expose a `PlayerSpawn` marker (`Marker2D`) for player positioning
 - define camera bounds
 - contain a `KillZone`
@@ -1150,12 +1156,62 @@ Implementation note:
 
 ## 11. Level System
 
+### 11.0 LevelConfig Resource
+
+Each level scene declares its identity via an exported `LevelConfig`
+resource. This is how per-level parameters reach the rest of the game
+without hardcoding values in GameManager or SceneManager.
+
+```csharp
+public partial class LevelConfig : Resource
+{
+    [ExportGroup("Identity")]
+    [Export] public int World = 1;
+    [Export] public int Level = 1;
+
+    [ExportGroup("Timer")]
+    [Export] public float TimeLimit = 400.0f;
+
+    [ExportGroup("Music")]
+    [Export] public StringName MusicTrack = "overworld";
+    /// <summary>Track to play when timer drops below 100. Empty = use hurry variant of MusicTrack.</summary>
+    [Export] public StringName HurryMusicTrack = "";
+
+    [ExportGroup("Environment")]
+    /// <summary>If set, overrides the default sky color on WorldEnvironment at load.</summary>
+    [Export] public Color? SkyColorOverride;
+    /// <summary>If true, uses the underground palette and disables bloom.</summary>
+    [Export] public bool IsUnderground = false;
+}
+```
+
+The level scene's root script holds the export:
+
+```csharp
+[Export] public LevelConfig Config;
+```
+
+On level load, `SceneManager` reads the config from the loaded level and
+forwards it:
+
+- `GameManager` receives `Config.TimeLimit` and resets `TimeRemaining`
+  to that value (not a hardcoded `400.0f`).
+- `GameManager` receives `Config.World` / `Config.Level` and emits
+  `LevelStarted(world, level)`.
+- `AudioManager` receives `Config.MusicTrack` and begins playback.
+- `WorldEnvironment` is adjusted if `Config.IsUnderground` or
+  `Config.SkyColorOverride` is set, and restored to defaults on unload.
+
+One `.tres` per level lives under `resources/config/` (e.g.,
+`level_1_1.tres`, `level_1_2.tres`). Tuning time limits or swapping music
+requires only a `.tres` edit in the inspector — no code changes.
+
 ### 11.1 Level Scene Structure
 
 Suggested gameplay hierarchy:
 
 ```text
-Level_1_1 (Node2D)
+Level_1_1 (Node2D)            [script exports LevelConfig]
   Background (Node2D)
     SkyGradient (ColorRect)
     ParallaxClouds (Node2D or Parallax2D)
