@@ -12,85 +12,149 @@ The project will begin and remain placeholder-first until production assets exis
 
 This document is an implementation spec. It defines scope, architecture, feature requirements, stable gameplay contracts, milestone boundaries, and acceptance criteria so future implementation work can proceed without making new product decisions.
 
-## Vision And Constraints
-
-### Project goals
-
-- Recreate the feel and mechanics of *Mega Man X* in Godot.
-- Prioritize movement, combat, boss interactions, stage flow, and progression over audiovisual fidelity.
-- Preserve the recognizable campaign structure of the original game while allowing practical implementation tradeoffs.
-- Build systems so placeholder assets can be replaced later without gameplay rewrites.
-- Follow Godot best practices for scene composition, Resources-based tuning, clear system ownership, and minimal global state.
-
-### Non-goals
-
-- Pixel-perfect art or animation recreation.
-- Exact SNES frame data or emulator-level parity.
-- Shipping with final-quality art, audio, or VFX in early phases.
-- Building every stage and boss before the foundation and vertical slice are proven.
-- Adding platform targets or features outside the core single-player PC experience during early development.
-
-### Fidelity rules
-
-- The remake should preserve the original game's mechanics and progression intent where those mechanics shape the play feel.
-- When exact replication conflicts with clarity, maintainability, or placeholder-first development, choose the cleaner implementation that preserves feel.
-- Do not add modern movement assists such as coyote time, jump buffering, aim assist, or overly generous collision forgiveness by default. These can be added later only if playtesting proves they improve the intended feel.
-- Preserve the original campaign beat that X gains key upgrades through progression, including dash unlock gating in the campaign flow.
-
-### Production constraints
-
-- Placeholder assets are required during all early milestones.
-- Systems must be reusable and data-driven enough to scale from one vertical slice to the full game.
-- Global managers must stay intentionally small.
-- Final art and audio production must be treated as a swap-in pass, not a prerequisite for gameplay implementation.
-
 ## Scope Of The Full Remake
 
-The full remake target includes the core single-player campaign structure of *Mega Man X*:
+The target is the original single-player campaign:
 
-- Intro stage.
-- Stage select flow for the Maverick stages.
-- Maverick stage gameplay loop with bosses and weapon rewards.
-- Upgrade collection and progression systems.
-- Fortress or endgame sequence and final boss flow.
+- `intro_highway`
+- the 8 Maverick stages
+- Sigma Fortress stages
+- final Sigma fights
+- boss weapons
+- armor parts
+- heart tanks
+- sub tanks
 
-This spec does not require content-complete design breakdowns for every stage or boss move list yet. It does require that the architecture can support the full campaign structure without rework.
+## Core Class Layout
 
-## Architecture Principles
+This section replaces broad architecture talk with the actual class and scene shape the project should use.
 
-### Overall approach
+### Shared actor inheritance
 
-- Build the game as a 2D side-scroller using reusable scenes and scripts.
-- Keep gameplay state and gameplay rules separate from presentation.
-- Prefer composition over deep inheritance trees.
-- Prefer small, purpose-specific nodes and scripts over one large "gameplay god object."
+Inheritance stays shallow:
 
-### Godot implementation defaults
+- `ActorBase.gd` for health, team, hurtbox hookup, death flow
+- `EnemyBase.gd` extends `ActorBase.gd`
+- `BossBase.gd` extends `ActorBase.gd`
+- `Player.gd` extends `CharacterBody2D` directly and owns player-specific movement and input
 
-- Use `CharacterBody2D` for the player and for enemies or bosses that rely on kinematic platforming movement.
-- Use `Area2D` and dedicated collision shapes for hitboxes, hurtboxes, pickups, and trigger volumes.
-- Use Godot `Resource` assets for tunable gameplay data such as player tuning, weapon data, enemy stats, boss weakness tables, drops, and stage metadata.
-- Use signals or equivalent semantic event dispatch for cross-system notifications such as damage events, checkpoint activation, boss intro, and audio triggers.
-- Keep autoloads limited to systems that genuinely need global lifetime, such as scene flow, audio routing, save/progression, and optional input abstraction.
+```gdscript
+class_name ActorBase
+extends CharacterBody2D
 
-### Data and tuning
+signal died(actor_id: StringName)
 
-- Values likely to change during feel tuning must live in data resources or clearly isolated configuration constants.
-- Runtime state must be separate from authored configuration data.
-- Boss weaknesses, upgrade unlock flags, checkpoint data, and stage metadata must be serializable for save/load.
+@export var actor_id: StringName
+@export var team: StringName
+@export var max_health := 1
 
-### System boundaries
+var health := 0
 
-- Player locomotion, player combat, health and damage, progression, stage flow, UI, audio, and presentation should be independent systems with clear contracts.
-- UI displays gameplay state but does not own gameplay decisions.
-- Presentation scenes should react to gameplay state rather than contain gameplay authority.
-- Enemy and boss behavior code should depend on shared combat and damage contracts instead of bespoke branches for each entity.
+@onready var hurtbox: Hurtbox = $Hurtbox
 
-### Asset swap readiness
+func _ready() -> void:
+    health = max_health
+    hurtbox.hit_received.connect(_on_hit_received)
 
-- Gameplay logic must not depend on sprite dimensions, sprite counts, sound filenames, or animation clip names that only final assets would provide.
-- Collision shapes, hitboxes, hurtboxes, and gameplay anchors must be authored independently from final visuals.
-- Presentation should be driven by semantic states such as `idle`, `run`, `jump`, `dash`, `hurt`, `charge_small`, and `charge_full`.
+func _on_hit_received(hit: HitData) -> void:
+    health -= hit.damage
+    if health <= 0:
+        died.emit(actor_id)
+        queue_free()
+```
+
+```gdscript
+class_name EnemyBase
+extends ActorBase
+
+@onready var brain: EnemyBrain = $EnemyBrain
+@onready var drop_spawner: Node = $DropSpawner
+
+func _physics_process(delta: float) -> void:
+    brain.physics_update(delta)
+```
+
+```gdscript
+class_name BossBase
+extends ActorBase
+
+signal boss_defeated(boss_id: StringName)
+
+@onready var phase_controller: BossPhaseController = $BossPhaseController
+
+func _on_hit_received(hit: HitData) -> void:
+    super._on_hit_received(hit)
+    phase_controller.update_phase(_health_percent())
+    if health <= 0:
+        boss_defeated.emit(actor_id)
+```
+
+### Composition in actual scenes
+
+Composition happens in scene trees, not in prose:
+
+```text
+Player.tscn
+- Player (CharacterBody2D) [Player.gd]
+  - CollisionShape2D
+  - VisualRoot
+  - Hurtbox [Hurtbox.gd]
+  - PlayerCombat [PlayerCombat.gd]
+  - ShotOrigin
+  - WallCheckLeft
+  - WallCheckRight
+  - CameraAnchor
+```
+
+```text
+Enemy_WalkerBasic.tscn
+- EnemyWalkerBasic (CharacterBody2D) [EnemyBase.gd]
+  - CollisionShape2D
+  - VisualRoot
+  - Hurtbox [Hurtbox.gd]
+  - EnemyBrain [EnemyBrain.gd]
+  - DropSpawner [DropSpawner.gd]
+  - VisionArea
+  - AttackOrigin
+```
+
+```text
+Boss_ChillPenguin.tscn
+- BossChillPenguin (CharacterBody2D) [BossBase.gd]
+  - CollisionShape2D
+  - VisualRoot
+  - Hurtbox [Hurtbox.gd]
+  - BossPhaseController [BossPhaseController.gd]
+  - AttackOrigin
+  - IntroMarker
+  - ArenaMarker
+```
+
+### Core data resources
+
+Use `Resource` files for authored data that should not live inside controller scripts:
+
+```gdscript
+class_name PlayerTuning
+extends Resource
+
+@export var run_speed: float = 220.0
+@export var jump_velocity: float = -360.0
+@export var dash_speed: float = 340.0
+@export var dash_duration: float = 0.18
+@export var wall_slide_speed: float = 70.0
+```
+
+```gdscript
+class_name StageDefinition
+extends Resource
+
+@export var stage_id: StringName
+@export var display_name: String
+@export var stage_scene: PackedScene
+@export var boss_id: StringName
+@export var weapon_reward_id: StringName
+```
 
 ## Runtime Services And Interaction Model
 
@@ -648,6 +712,85 @@ The player combat system must support the base buster loop first and remain exte
 - The player must be able to fire while grounded and airborne.
 - Charge state feedback must exist even with placeholder visuals and placeholder audio.
 - The system must support boss weakness calculations without special-case boss code in the player weapon logic.
+
+#### Weapon switching implementation
+
+Weapon switching should be owned by a dedicated child node on the player, not by `GameFlow`, UI code, or giant `match` statements in `Player.gd`.
+
+```gdscript
+class_name WeaponInventory
+extends Node
+
+signal equipped_weapon_changed(weapon_id: StringName)
+
+const ORDER: Array[StringName] = [
+    &"buster",
+    &"shotgun_ice",
+    &"electric_spark",
+    &"rolling_shield",
+    &"homing_torpedo",
+    &"boomerang_cutter",
+    &"chameleon_sting",
+    &"storm_tornado",
+    &"fire_wave",
+]
+
+var unlocked := {
+    &"buster": true,
+}
+
+var equipped_weapon_id: StringName = &"buster"
+
+func unlock_weapon(weapon_id: StringName) -> void:
+    unlocked[weapon_id] = true
+
+func cycle_next() -> void:
+    var current_index := ORDER.find(equipped_weapon_id)
+    for offset in range(1, ORDER.size() + 1):
+        var candidate := ORDER[(current_index + offset) % ORDER.size()]
+        if unlocked.get(candidate, false):
+            equipped_weapon_id = candidate
+            equipped_weapon_changed.emit(equipped_weapon_id)
+            return
+```
+
+```gdscript
+class_name PlayerCombat
+extends Node
+
+@export var weapon_database: Dictionary
+
+@onready var inventory: WeaponInventory = $WeaponInventory
+@onready var shot_origin: Marker2D = $"../ShotOrigin"
+
+func fire_pressed(owner_node: Node2D, facing: int) -> void:
+    var weapon_data: WeaponData = weapon_database.get(inventory.equipped_weapon_id)
+    if weapon_data == null:
+        return
+
+    if weapon_data.energy_cost > 0 and not owner_node.consume_weapon_energy(weapon_data.energy_cost):
+        return
+
+    var projectile := weapon_data.projectile_scene.instantiate()
+    projectile.global_position = shot_origin.global_position
+    projectile.setup(owner_node, facing, weapon_data)
+    owner_node.get_tree().current_scene.add_child(projectile)
+
+    AudioManager.play_sfx(&"player_shoot")
+```
+
+```gdscript
+func _unhandled_input(event: InputEvent) -> void:
+    if event.is_action_pressed("weapon_next"):
+        $PlayerCombat/WeaponInventory.cycle_next()
+```
+
+Rules:
+
+- The Buster is always unlocked.
+- Boss weapons are unlocked only through `Progression`.
+- `Progression` restores unlocked weapons into `WeaponInventory` on stage load or player spawn.
+- HUD listens to `equipped_weapon_changed` and updates without owning any combat logic.
 
 #### Design requirements
 
