@@ -113,6 +113,145 @@ Suggested internal grouping:
 
 Exact folder names can evolve, but scene, script, UI, data, and placeholder assets should remain clearly separated.
 
+## Implementation Sketches
+
+The following examples are not final production code. They are reference sketches that show the intended direction for the architecture and the level of separation expected between systems.
+
+### Example player scene composition
+
+The player should be composed from focused child nodes instead of one script owning every responsibility.
+
+```text
+Player.tscn
+- Player (CharacterBody2D)
+  - CollisionShape2D
+  - VisualRoot (Node2D)
+    - PlaceholderSprite or AnimatedSprite2D
+  - Hurtbox (Area2D)
+    - CollisionShape2D
+  - ShotOrigin (Marker2D)
+  - WallCheckLeft (RayCast2D)
+  - WallCheckRight (RayCast2D)
+  - GroundCheck optional if needed
+  - CameraAnchor (Marker2D)
+```
+
+Recommended script ownership:
+
+- `Player.gd` owns locomotion state, motion integration, and high-level action routing.
+- `PlayerCombat.gd` or a child combat component owns weapon firing, charge timing, and projectile spawning.
+- `Hurtbox.gd` receives hit events and forwards valid damage to the player health or state system.
+- A presentation script owns animation-state switching and visual-only reactions.
+
+### Example data-driven tuning resource
+
+Player tuning should live in a `Resource` so feel iteration does not require editing controller logic.
+
+```gdscript
+class_name PlayerTuning
+extends Resource
+
+@export var run_speed: float = 220.0
+@export var ground_accel: float = 1800.0
+@export var ground_decel: float = 2200.0
+@export var air_accel: float = 1200.0
+@export var jump_velocity: float = -360.0
+@export var gravity_scale: float = 1.0
+@export var dash_speed: float = 340.0
+@export var dash_duration: float = 0.18
+@export var wall_slide_speed: float = 70.0
+@export var wall_jump_velocity: Vector2 = Vector2(240.0, -320.0)
+@export var invulnerability_time: float = 1.0
+```
+
+The player scene should reference one tuning resource instance, and the runtime controller should read values from it rather than store duplicate copies in code.
+
+### Example player controller shape
+
+The locomotion script should be state-aware, but it does not need to be a giant inheritance tree or an overly abstract framework.
+
+```gdscript
+extends CharacterBody2D
+
+@export var tuning: PlayerTuning
+@export var can_dash_from_start := false
+
+var facing := 1
+var locomotion_state: StringName = &"idle"
+var dash_unlocked := false
+
+func _physics_process(delta: float) -> void:
+    var move_input := Input.get_axis("move_left", "move_right")
+    var jump_pressed := Input.is_action_just_pressed("jump")
+    var dash_pressed := Input.is_action_just_pressed("dash")
+
+    _update_facing(move_input)
+    _apply_horizontal_movement(move_input, delta)
+    _apply_gravity(delta)
+    _handle_jump(jump_pressed)
+    _handle_dash(dash_pressed)
+
+    move_and_slide()
+    _update_locomotion_state()
+```
+
+Implementation direction:
+
+- Player movement stays in `_physics_process`.
+- Input is read through semantic actions only.
+- Dash unlock rules are resolved through progression state, not hardcoded stage logic.
+- Presentation should observe `locomotion_state` and `facing` instead of recomputing gameplay state from animations.
+
+### Example hit and damage contract
+
+Damage should move through a shared payload so player attacks, enemy attacks, contact damage, and boss weakness checks all speak the same language.
+
+```gdscript
+class_name HitData
+extends RefCounted
+
+var source: Node
+var team: StringName
+var weapon_id: StringName
+var damage: int
+var knockback: Vector2
+```
+
+```gdscript
+class_name Hurtbox
+extends Area2D
+
+signal hit_received(hit: HitData)
+
+@export var owner_team: StringName
+
+func receive_hit(hit: HitData) -> void:
+    if hit.team == owner_team:
+        return
+
+    hit_received.emit(hit)
+```
+
+This is intentionally simple. The actual implementation may add flags like `ignores_iframes`, `hit_pause_scale`, or `damage_kind`, but all damageable entities should still receive one consistent hit payload shape.
+
+### Example weapon definition shape
+
+Weapons should be represented by data plus reusable behavior hooks rather than giant `match` statements inside the player script.
+
+```gdscript
+class_name WeaponData
+extends Resource
+
+@export var weapon_id: StringName
+@export var display_name: String
+@export var energy_cost: int = 0
+@export var projectile_scene: PackedScene
+@export var base_damage: int = 1
+@export var supports_charge := false
+```
+
+At runtime, `PlayerCombat` should read the equipped `WeaponData`, spawn the configured projectile scene if needed, and emit semantic events like `player_shoot` or `buster_charge_full` for presentation and audio.
+
 ## Feature Requirements
 
 ### 1. Input And Control Layer
@@ -392,6 +531,52 @@ An audio system is required even before real assets exist.
 - Gameplay code must trigger audio by meaning, not by file path.
 - Replacing placeholder clips with final assets must not require gameplay rewrites.
 - Missing placeholder clips must fail gracefully without breaking gameplay.
+
+#### Recommended implementation approach
+
+- Implement audio as an autoload such as `AudioManager`.
+- Use Godot audio buses for at least `Master`, `Music`, and `SFX`.
+- Map semantic event IDs to placeholder `AudioStream` assets through data, not hardcoded branches spread across gameplay code.
+- Allow both one-shot SFX playback and persistent music playback through separate methods.
+
+#### Example audio manager shape
+
+```gdscript
+extends Node
+
+var sfx_events: Dictionary = {}
+var music_events: Dictionary = {}
+
+func play_sfx(event_name: StringName) -> void:
+    var stream: AudioStream = sfx_events.get(event_name)
+    if stream == null:
+        return
+
+    var player := AudioStreamPlayer.new()
+    player.bus = "SFX"
+    player.stream = stream
+    add_child(player)
+    player.finished.connect(player.queue_free)
+    player.play()
+
+func play_music(track_name: StringName) -> void:
+    var stream: AudioStream = music_events.get(track_name)
+    if stream == null:
+        return
+
+    $MusicPlayer.stream = stream
+    $MusicPlayer.play()
+```
+
+Example gameplay usage:
+
+```gdscript
+if Input.is_action_just_pressed("jump") and is_on_floor():
+    velocity.y = tuning.jump_velocity
+    AudioManager.play_sfx(&"player_jump")
+```
+
+This is the intended dependency direction: gameplay emits a semantic request, and the audio system decides what stream to play, on what bus, and how to handle missing placeholders.
 
 ### 11. Placeholder Asset Pipeline
 
