@@ -29,64 +29,93 @@ The target is the original single-player campaign:
 
 This section replaces broad architecture talk with the actual class and scene shape the project should use.
 
-### Shared actor inheritance
+### Shared actor structure
 
-Inheritance stays shallow:
+Inheritance stays shallow, and health is a component instead of being owned by a base actor class.
 
-- `ActorBase.gd` for health, team, hurtbox hookup, death flow
-- `EnemyBase.gd` extends `ActorBase.gd`
-- `BossBase.gd` extends `ActorBase.gd`
-- `Player.gd` extends `CharacterBody2D` directly and owns player-specific movement and input
+- `Player.gd` extends `CharacterBody2D`
+- `EnemyBase.gd` extends `CharacterBody2D`
+- `BossBase.gd` extends `CharacterBody2D`
+- `HealthComponent.gd` owns HP and death signaling
+- `Hurtbox.gd` owns damage intake routing
+- `EnemyBrain.gd` owns enemy AI state transitions
 
 ```gdscript
-class_name ActorBase
-extends CharacterBody2D
+class_name HealthComponent
+extends Node
 
-signal died(actor_id: StringName)
+signal damaged(hit: HitData, current_health: int)
+signal died()
 
-@export var actor_id: StringName
-@export var team: StringName
 @export var max_health := 1
+@export var invulnerability_time := 0.0
 
-var health := 0
-
-@onready var hurtbox: Hurtbox = $Hurtbox
+var current_health := 0
+var invulnerable := false
 
 func _ready() -> void:
-    health = max_health
-    hurtbox.hit_received.connect(_on_hit_received)
+    current_health = max_health
 
-func _on_hit_received(hit: HitData) -> void:
-    health -= hit.damage
-    if health <= 0:
-        died.emit(actor_id)
-        queue_free()
+func apply_hit(hit: HitData) -> void:
+    if invulnerable:
+        return
+
+    current_health = max(current_health - hit.damage, 0)
+    damaged.emit(hit, current_health)
+
+    if current_health == 0:
+        died.emit()
 ```
 
 ```gdscript
 class_name EnemyBase
-extends ActorBase
+extends CharacterBody2D
 
+signal died(enemy_id: StringName)
+
+@export var enemy_id: StringName
+@export var team: StringName = &"enemy"
+
+@onready var hurtbox: Hurtbox = $Hurtbox
+@onready var health: HealthComponent = $HealthComponent
 @onready var brain: EnemyBrain = $EnemyBrain
 @onready var drop_spawner: Node = $DropSpawner
 
+func _ready() -> void:
+    hurtbox.hit_received.connect(health.apply_hit)
+    health.died.connect(_on_died)
+
 func _physics_process(delta: float) -> void:
     brain.physics_update(delta)
+
+func _on_died() -> void:
+    died.emit(enemy_id)
+    queue_free()
 ```
 
 ```gdscript
 class_name BossBase
-extends ActorBase
+extends CharacterBody2D
 
 signal boss_defeated(boss_id: StringName)
 
+@export var boss_id: StringName
+@export var team: StringName = &"enemy"
+
+@onready var hurtbox: Hurtbox = $Hurtbox
+@onready var health: HealthComponent = $HealthComponent
 @onready var phase_controller: BossPhaseController = $BossPhaseController
 
+func _ready() -> void:
+    hurtbox.hit_received.connect(_on_hit_received)
+    health.died.connect(_on_died)
+
 func _on_hit_received(hit: HitData) -> void:
-    super._on_hit_received(hit)
+    health.apply_hit(hit)
     phase_controller.update_phase(_health_percent())
-    if health <= 0:
-        boss_defeated.emit(actor_id)
+
+func _on_died() -> void:
+    boss_defeated.emit(boss_id)
 ```
 
 ### Composition in actual scenes
@@ -99,6 +128,7 @@ Player.tscn
   - CollisionShape2D
   - VisualRoot
   - Hurtbox [Hurtbox.gd]
+  - HealthComponent [HealthComponent.gd]
   - PlayerCombat [PlayerCombat.gd]
   - ShotOrigin
   - WallCheckLeft
@@ -112,6 +142,7 @@ Enemy_WalkerBasic.tscn
   - CollisionShape2D
   - VisualRoot
   - Hurtbox [Hurtbox.gd]
+  - HealthComponent [HealthComponent.gd]
   - EnemyBrain [EnemyBrain.gd]
   - DropSpawner [DropSpawner.gd]
   - VisionArea
@@ -124,6 +155,7 @@ Boss_ChillPenguin.tscn
   - CollisionShape2D
   - VisualRoot
   - Hurtbox [Hurtbox.gd]
+  - HealthComponent [HealthComponent.gd]
   - BossPhaseController [BossPhaseController.gd]
   - AttackOrigin
   - IntroMarker
@@ -172,16 +204,6 @@ This project should use a small, explicit set of autoloads. Do not add a generic
 #### `GameFlow`
 
 Owns high-level runtime state and scene transitions.
-
-- Boot sequence.
-- Title flow.
-- Intro stage start.
-- Stage select entry and exit.
-- In-stage state.
-- Pause and unpause flow.
-- Cutscene mode entry and exit.
-- Stage clear flow.
-- Ending flow.
 
 Suggested runtime states:
 
@@ -407,6 +429,8 @@ Pickups and powerups belong in stage scenes, not in global managers.
 
 Use dedicated pickup scenes in `scenes/pickups/` with shared data resources in `data/pickups/`.
 
+The player should receive pickup effects through `PickupReceiver.gd`, not through `Player.gd` directly.
+
 ```gdscript
 class_name PickupData
 extends Resource
@@ -415,8 +439,8 @@ extends Resource
 @export var pickup_type: StringName
 @export var persistent := false
 @export var health_amount := 0
-@export var weapon_energy_amount := 0
-@export var armor_part: StringName
+    @export var weapon_energy_amount := 0
+    @export var armor_part: StringName
 ```
 
 ```gdscript
@@ -424,14 +448,48 @@ extends Area2D
 
 @export var pickup_data: PickupData
 
-func collect(player: Node) -> void:
-    player.apply_pickup(pickup_data)
+func collect(receiver: PickupReceiver) -> void:
+    receiver.apply_pickup(pickup_data)
 
     if pickup_data.persistent:
         Progression.mark_pickup_collected(pickup_data.pickup_id)
 
     queue_free()
 ```
+
+```gdscript
+class_name PickupReceiver
+extends Node
+
+@onready var health: HealthComponent = $"../HealthComponent"
+@onready var combat: PlayerCombat = $"../PlayerCombat"
+
+func apply_pickup(pickup_data: PickupData) -> void:
+    match pickup_data.pickup_type:
+        &"health":
+            health.heal(pickup_data.health_amount)
+        &"weapon_energy":
+            combat.restore_weapon_energy(pickup_data.weapon_energy_amount)
+        &"heart_tank":
+            Progression.unlock_heart_tank(pickup_data.pickup_id)
+        &"sub_tank":
+            Progression.unlock_sub_tank(pickup_data.pickup_id)
+        &"armor_capsule":
+            Progression.unlock_armor_part(pickup_data.armor_part)
+```
+
+Recommended player hookup:
+
+```text
+Player.tscn
+- Player (CharacterBody2D)
+  - HealthComponent
+  - PlayerCombat
+  - PickupReceiver
+  - PlayerSensor
+```
+
+`PlayerSensor` should detect `PICKUP` areas and pass the collected pickup to `PickupReceiver`.
 
 ### Persistent pickup rules
 
@@ -467,7 +525,8 @@ Recommended script ownership:
 
 - `Player.gd` owns locomotion state, motion integration, and high-level action routing.
 - `PlayerCombat.gd` or a child combat component owns weapon firing, charge timing, and projectile spawning.
-- `Hurtbox.gd` receives hit events and forwards valid damage to the player health or state system.
+- `Hurtbox.gd` receives hit events and forwards valid damage to `HealthComponent.gd`.
+- `HealthComponent.gd` owns current HP, damage application, and death signaling.
 - A presentation script owns animation-state switching and visual-only reactions.
 
 ### Example data-driven tuning resource
@@ -688,6 +747,103 @@ The player controller must reproduce the core feel of X-style movement at a mech
 - Core movement logic must not depend on final animation assets.
 - Movement state must be readable by combat, UI, audio, and presentation systems.
 
+#### Player locomotion state machine
+
+The player should use one explicit locomotion state machine in `Player.gd`. This state machine owns movement-facing state only. It does not own charging, firing, or weapon energy logic.
+
+```gdscript
+enum LocomotionState {
+    IDLE,
+    RUN,
+    JUMP,
+    FALL,
+    DASH,
+    WALL_SLIDE,
+    HURT,
+    DEAD,
+}
+```
+
+Recommended runtime fields:
+
+```gdscript
+var locomotion_state: LocomotionState = LocomotionState.IDLE
+var is_dashing := false
+var is_hurt := false
+var is_dead := false
+var facing := 1
+```
+
+The update order should be:
+
+1. Read input.
+2. Apply movement rules.
+3. Apply gravity and jump logic.
+4. Apply dash logic.
+5. Call `move_and_slide()`.
+6. Recompute locomotion state from the final result.
+
+```gdscript
+func _update_locomotion_state() -> void:
+    if is_dead:
+        locomotion_state = LocomotionState.DEAD
+        return
+
+    if is_hurt:
+        locomotion_state = LocomotionState.HURT
+        return
+
+    if is_dashing:
+        locomotion_state = LocomotionState.DASH
+        return
+
+    if _is_wall_sliding():
+        locomotion_state = LocomotionState.WALL_SLIDE
+        return
+
+    if not is_on_floor():
+        locomotion_state = (
+            LocomotionState.JUMP
+            if velocity.y < 0.0
+            else LocomotionState.FALL
+        )
+        return
+
+    locomotion_state = (
+        LocomotionState.RUN
+        if absf(velocity.x) > 0.0
+        else LocomotionState.IDLE
+    )
+```
+
+Priority order:
+
+- `DEAD`
+- `HURT`
+- `DASH`
+- `WALL_SLIDE`
+- `JUMP`
+- `FALL`
+- `RUN`
+- `IDLE`
+
+State transition rules:
+
+- `IDLE <-> RUN` depends on floor contact and horizontal speed.
+- `RUN/IDLE -> JUMP` when jump starts from floor.
+- `JUMP -> FALL` when vertical velocity becomes downward.
+- `FALL -> WALL_SLIDE` when airborne, descending, and touching a valid wall.
+- `RUN/IDLE/FALL/JUMP -> DASH` when dash is pressed and dash is currently allowed.
+- Any non-dead state -> `HURT` when damage is applied and knockback begins.
+- Any state -> `DEAD` when `HealthComponent` emits `died`.
+
+This locomotion state should be consumed by:
+
+- presentation for animation selection
+- audio for movement cues
+- camera for optional dash or landing effects
+- gameplay rules that need to know whether wall jump or dash transitions are allowed
+
 ### 3. Player Combat
 
 The player combat system must support the base buster loop first and remain extensible for Maverick weapons later.
@@ -797,6 +953,122 @@ Rules:
 - Weapon logic must remain separate from locomotion logic.
 - Damage delivery must go through a shared hit and damage contract.
 - Combat events must emit semantic feedback hooks for UI, audio, VFX, and camera effects.
+
+#### Player combat state machine
+
+Combat should use a separate state machine inside `PlayerCombat.gd`. This avoids combining locomotion and weapon behavior into one giant enum.
+
+```gdscript
+enum CombatState {
+    READY,
+    FIRING,
+    CHARGING,
+    CHARGED,
+    COOLDOWN,
+    DISABLED,
+}
+```
+
+Recommended runtime fields:
+
+```gdscript
+var combat_state: CombatState = CombatState.READY
+var charge_time := 0.0
+var equipped_weapon_id: StringName = &"buster"
+var can_fire := true
+```
+
+Meaning of each state:
+
+- `READY`: normal state; fire button can start a shot or charge.
+- `FIRING`: a shot has just been emitted this frame; used for short presentation or recoil windows.
+- `CHARGING`: fire is being held and charge is accumulating.
+- `CHARGED`: the full-charge threshold has been reached and release should emit the charged shot.
+- `COOLDOWN`: short lockout after firing if the weapon requires one.
+- `DISABLED`: used during cutscenes, death, stage transitions, or other moments when combat must be suppressed.
+
+```gdscript
+func physics_update(delta: float) -> void:
+    if combat_state == CombatState.DISABLED:
+        return
+
+    if Input.is_action_pressed("shoot"):
+        _handle_fire_held(delta)
+    elif Input.is_action_just_released("shoot"):
+        _handle_fire_released()
+    elif Input.is_action_just_pressed("shoot"):
+        _handle_fire_pressed()
+
+    _update_cooldown(delta)
+```
+
+Charge behavior:
+
+```gdscript
+func _handle_fire_held(delta: float) -> void:
+    var weapon_data: WeaponData = _get_equipped_weapon_data()
+    if not weapon_data.supports_charge:
+        return
+
+    if combat_state == CombatState.READY:
+        combat_state = CombatState.CHARGING
+        charge_time = 0.0
+        AudioManager.play_sfx(&"buster_charge_start")
+
+    if combat_state == CombatState.CHARGING:
+        charge_time += delta
+        if charge_time >= weapon_data.full_charge_time:
+            combat_state = CombatState.CHARGED
+            AudioManager.play_sfx(&"buster_charge_full")
+```
+
+Fire and release behavior:
+
+```gdscript
+func _handle_fire_pressed() -> void:
+    var weapon_data: WeaponData = _get_equipped_weapon_data()
+    if weapon_data.supports_charge:
+        combat_state = CombatState.CHARGING
+        charge_time = 0.0
+        return
+
+    _spawn_projectile(weapon_data, 0)
+    combat_state = CombatState.FIRING
+
+func _handle_fire_released() -> void:
+    var weapon_data: WeaponData = _get_equipped_weapon_data()
+
+    match combat_state:
+        CombatState.CHARGING:
+            _spawn_projectile(weapon_data, _resolve_partial_charge_level())
+        CombatState.CHARGED:
+            _spawn_projectile(weapon_data, weapon_data.max_charge_level)
+        _:
+            return
+
+    combat_state = CombatState.COOLDOWN
+    charge_time = 0.0
+```
+
+Combat state rules:
+
+- `READY -> CHARGING` when Buster fire is held.
+- `CHARGING -> CHARGED` when full-charge threshold is reached.
+- `CHARGING -> COOLDOWN` when fire is released before full charge and a partial-charge shot is emitted.
+- `CHARGED -> COOLDOWN` when fire is released and a full-charge shot is emitted.
+- `READY -> FIRING -> COOLDOWN` for tap-fired shots or non-charge weapons.
+- Any state -> `DISABLED` during death, cutscene mode, or other forced lockout.
+- `COOLDOWN -> READY` when weapon-specific cooldown ends.
+
+The locomotion and combat state machines run in parallel. Examples that must be supported:
+
+- `RUN + READY`
+- `JUMP + FIRING`
+- `DASH + CHARGING`
+- `WALL_SLIDE + CHARGED`
+- `HURT + DISABLED`
+
+The UI, audio, and presentation layers should read both state machines rather than infer combat behavior from animations or vice versa.
 
 ### 4. Health, Damage, And Collision Rules
 
@@ -925,13 +1197,15 @@ The project needs a reusable enemy framework rather than one-off enemy implement
 
 Use shallow inheritance and composition-heavy actor scenes.
 
-- `ActorBase.gd` for shared actor capabilities like facing, basic health hooks, team identity, and common helpers.
-- `EnemyBase.gd` extends `ActorBase.gd`.
-- `BossBase.gd` extends `ActorBase.gd`.
+- `EnemyBase.gd` extends `CharacterBody2D`.
+- `BossBase.gd` extends `CharacterBody2D`.
+- `HealthComponent.gd` handles HP and death signaling.
+- `Hurtbox.gd` forwards hit payloads to `HealthComponent.gd`.
 
 Enemy and boss scenes should compose behavior from child nodes and helper scripts:
 
 - `Hurtbox`
+- `HealthComponent`
 - `HitboxEmitter`
 - `EnemyBrain`
 - `DropSpawner`
@@ -946,6 +1220,7 @@ Enemy_WalkerBasic.tscn
   - CollisionShape2D
   - VisualRoot
   - Hurtbox
+  - HealthComponent
   - VisionArea
   - AttackOrigin
   - EnemyBrain
@@ -1397,69 +1672,6 @@ Placeholder-first development is part of the spec, not a temporary workaround.
 - A future art or audio pass must be able to replace placeholders without changing gameplay behavior.
 - Character, enemy, projectile, UI, and stage placeholders must all follow consistent naming and scene conventions.
 - Presentation-facing scenes should be swappable while preserving the same gameplay node contracts.
-
-## Public Gameplay Contracts
-
-The implementation should preserve the following high-level contracts so systems remain reusable and replaceable.
-
-### Player state contract
-
-The player system should expose:
-
-- Current locomotion state.
-- Facing direction.
-- Health state and invulnerability state.
-- Charge state.
-- Equipped weapon.
-- Upgrade capability flags such as dash and armor unlocks.
-
-### Weapon contract
-
-Each weapon definition should provide or describe:
-
-- Weapon identity.
-- Fire behavior.
-- Charge behavior if applicable.
-- Energy cost.
-- Damage profile.
-- Projectile or hit behavior.
-- Compatibility with weakness and resistance checks.
-
-### Damageable contract
-
-Enemies, bosses, destructibles, and optionally the player should share a damage intake contract that supports:
-
-- Receiving hit data.
-- Evaluating weakness or resistance modifiers.
-- Triggering hurt and death callbacks.
-- Emitting feedback hooks for UI, audio, VFX, and camera systems.
-
-### Audio contract
-
-Gameplay systems should emit semantic events rather than direct file references. The audio layer owns clip lookup, category routing, and fallback behavior.
-
-### Save and progression contract
-
-The progression layer should be able to track:
-
-- Defeated bosses.
-- Unlocked weapons.
-- Collected upgrades.
-- Health capacity upgrades.
-- Sub tank ownership and fill state.
-- Dash unlock state.
-- Relevant campaign progression flags.
-
-### Stage contract
-
-Each stage should define:
-
-- Player spawn point.
-- Checkpoint data.
-- Boss arena trigger data if applicable.
-- Stage-clear trigger.
-- Stage-specific event hooks.
-- Stage metadata needed for progression and scene flow.
 
 ## Milestones
 
