@@ -1,20 +1,10 @@
 # SPEC.md
 
-## Title
-
-Mega Man X (1993) Mechanics-First Remake in Godot 4.6
-
 ## Summary
 
-This project will recreate the feel, control, combat, and progression structure of *Mega Man X* (1993) in Godot 4.6 as a 2D side-scrolling action platformer. The remake is mechanics-first, not pixel-perfect. The priority is to reproduce responsive movement, combat pacing, stage flow, enemy and boss interactions, and progression beats while using a modern, maintainable Godot architecture.
+Recreate *Mega Man X* (1993) in Godot 4.6 as a mechanics-first 2D action platformer. Use placeholder visuals and placeholder audio, but build the runtime structure so real assets can replace them later without changing gameplay logic.
 
-The project will begin and remain placeholder-first until production assets exist. Placeholder visuals, animation hooks, VFX hooks, SFX, and music placeholders must be supported from day one. Core gameplay logic must never depend on final sprite sheets, final sound files, or specific presentation assets.
-
-This document is an implementation spec. It defines scope, architecture, feature requirements, stable gameplay contracts, milestone boundaries, and acceptance criteria so future implementation work can proceed without making new product decisions.
-
-## Scope Of The Full Remake
-
-The target is the original single-player campaign:
+The target campaign includes:
 
 - `intro_highway`
 - the 8 Maverick stages
@@ -25,196 +15,18 @@ The target is the original single-player campaign:
 - heart tanks
 - sub tanks
 
-## Core Class Layout
+## Runtime Services
 
-This section replaces broad architecture talk with the actual class and scene shape the project should use.
-
-### Shared actor structure
-
-Inheritance stays shallow, and health is a component instead of being owned by a base actor class.
-
-- `Player.gd` extends `CharacterBody2D`
-- `EnemyBase.gd` extends `CharacterBody2D`
-- `BossBase.gd` extends `CharacterBody2D`
-- `HealthComponent.gd` owns HP and death signaling
-- `Hurtbox.gd` owns damage intake routing
-- `EnemyBrain.gd` owns enemy AI state transitions
-
-```gdscript
-class_name HealthComponent
-extends Node
-
-signal damaged(hit: HitData, current_health: int)
-signal died()
-
-@export var max_health := 1
-@export var invulnerability_time := 0.0
-
-var current_health := 0
-var invulnerable := false
-
-func _ready() -> void:
-    current_health = max_health
-
-func apply_hit(hit: HitData) -> void:
-    if invulnerable:
-        return
-
-    current_health = max(current_health - hit.damage, 0)
-    damaged.emit(hit, current_health)
-
-    if current_health == 0:
-        died.emit()
-```
-
-```gdscript
-class_name EnemyBase
-extends CharacterBody2D
-
-signal died(enemy_id: StringName)
-
-@export var enemy_id: StringName
-@export var team: StringName = &"enemy"
-
-@onready var hurtbox: Hurtbox = $Hurtbox
-@onready var health: HealthComponent = $HealthComponent
-@onready var brain: EnemyBrain = $EnemyBrain
-@onready var drop_spawner: Node = $DropSpawner
-
-func _ready() -> void:
-    hurtbox.hit_received.connect(health.apply_hit)
-    health.died.connect(_on_died)
-
-func _physics_process(delta: float) -> void:
-    brain.physics_update(delta)
-
-func _on_died() -> void:
-    died.emit(enemy_id)
-    queue_free()
-```
-
-```gdscript
-class_name BossBase
-extends CharacterBody2D
-
-signal boss_defeated(boss_id: StringName)
-
-@export var boss_id: StringName
-@export var team: StringName = &"enemy"
-
-@onready var hurtbox: Hurtbox = $Hurtbox
-@onready var health: HealthComponent = $HealthComponent
-@onready var phase_controller: BossPhaseController = $BossPhaseController
-
-func _ready() -> void:
-    hurtbox.hit_received.connect(_on_hit_received)
-    health.died.connect(_on_died)
-
-func _on_hit_received(hit: HitData) -> void:
-    health.apply_hit(hit)
-    phase_controller.update_phase(_health_percent())
-
-func _on_died() -> void:
-    boss_defeated.emit(boss_id)
-```
-
-### Composition in actual scenes
-
-Composition happens in scene trees, not in prose:
-
-```text
-Player.tscn
-- Player (CharacterBody2D) [Player.gd]
-  - CollisionShape2D
-  - VisualRoot
-  - Hurtbox [Hurtbox.gd]
-  - HealthComponent [HealthComponent.gd]
-  - PlayerCombat [PlayerCombat.gd]
-  - ShotOrigin
-  - WallCheckLeft
-  - WallCheckRight
-  - CameraAnchor
-```
-
-```text
-Enemy_WalkerBasic.tscn
-- EnemyWalkerBasic (CharacterBody2D) [EnemyBase.gd]
-  - CollisionShape2D
-  - VisualRoot
-  - Hurtbox [Hurtbox.gd]
-  - HealthComponent [HealthComponent.gd]
-  - EnemyBrain [EnemyBrain.gd]
-  - DropSpawner [DropSpawner.gd]
-  - VisionArea
-  - AttackOrigin
-```
-
-```text
-Boss_ChillPenguin.tscn
-- BossChillPenguin (CharacterBody2D) [BossBase.gd]
-  - CollisionShape2D
-  - VisualRoot
-  - Hurtbox [Hurtbox.gd]
-  - HealthComponent [HealthComponent.gd]
-  - BossPhaseController [BossPhaseController.gd]
-  - AttackOrigin
-  - IntroMarker
-  - ArenaMarker
-```
-
-### Core data resources
-
-Use `Resource` files for authored data that should not live inside controller scripts:
-
-```gdscript
-class_name PlayerTuning
-extends Resource
-
-@export var run_speed: float = 220.0
-@export var jump_velocity: float = -360.0
-@export var dash_speed: float = 340.0
-@export var dash_duration: float = 0.18
-@export var wall_slide_speed: float = 70.0
-```
-
-```gdscript
-class_name StageDefinition
-extends Resource
-
-@export var stage_id: StringName
-@export var display_name: String
-@export var stage_scene: PackedScene
-@export var boss_id: StringName
-@export var weapon_reward_id: StringName
-```
-
-## Runtime Services And Interaction Model
-
-This project should use a small, explicit set of autoloads. Do not add a generic global event bus.
-
-### Autoload scripts
+Use these autoloads only:
 
 - `autoloads/game_flow.gd`
 - `autoloads/progression.gd`
 - `autoloads/save_manager.gd`
 - `autoloads/audio_manager.gd`
 
-### Autoload responsibilities
-
-#### `GameFlow`
+### `GameFlow`
 
 Owns high-level runtime state and scene transitions.
-
-Suggested runtime states:
-
-- `BOOT`
-- `TITLE`
-- `STAGE_SELECT`
-- `IN_STAGE`
-- `PAUSED`
-- `CUTSCENE`
-- `STAGE_CLEAR`
-- `ENDING`
 
 ```gdscript
 extends Node
@@ -241,17 +53,19 @@ func request_stage_load(stage_id: StringName) -> void:
     stage_requested.emit(stage_id)
 ```
 
-#### `Progression`
+Responsibilities:
+
+- boot flow
+- title/menu flow
+- stage loading
+- pause/unpause
+- cutscene mode
+- stage clear flow
+- ending flow
+
+### `Progression`
 
 Owns in-memory campaign state.
-
-- Which stages are unlocked.
-- Which bosses are defeated.
-- Which weapons are unlocked.
-- Which persistent pickups are collected.
-- Which armor parts are unlocked.
-- Whether dash is unlocked in campaign progression.
-- Which fortress or ending progression flags are active.
 
 ```gdscript
 extends Node
@@ -259,279 +73,81 @@ extends Node
 signal progression_changed()
 
 var bosses_defeated: Dictionary = {}
-var weapons_unlocked: Dictionary = {}
+var weapons_unlocked: Dictionary = { &"buster": true }
 var collected_pickups: Dictionary = {}
-var armor_parts: Dictionary = {
+var armor_parts := {
     &"helmet": false,
     &"body": false,
     &"arms": false,
     &"legs": false,
 }
 var dash_unlocked := false
+var intro_cleared := false
+var fortress_unlocked := false
 ```
 
-#### `SaveManager`
+Responsibilities:
 
-Owns serialization and deserialization only.
+- unlocked weapons
+- persistent pickups
+- armor parts
+- dash unlock
+- boss defeat flags
+- stage availability flags
 
-- Read save files from `user://`.
-- Write versioned save payloads.
-- Convert `Progression` runtime state to a serializable payload.
-- Validate or migrate save version if needed later.
+### `SaveManager`
 
-`SaveManager` should not own gameplay rules. It only persists and restores state.
+Owns serialization only. It does not own gameplay rules.
 
-#### `AudioManager`
+- save to `user://save_01.json`
+- load from `user://save_01.json`
+- version the payload
+- convert `Progression` to/from save data
 
-Owns audio buses, event-to-stream lookup, one-shot SFX playback, music playback, and volume categories.
+### `AudioManager`
 
-### Script interaction rules
+Owns music playback, SFX playback, buses, and semantic event lookup.
 
-Scripts should interact through three mechanisms only:
+## Player
 
-- Direct node references for tightly related scene-local collaborators.
-- Signals for upward or sideways scene communication.
-- Autoload method calls for global services like flow, progression, save, and audio.
+Keep all player-related implementation here: input, movement, combat, health hookup, pickups, and state machines.
 
-Do not use:
-
-- Arbitrary tree-walking from unrelated scripts.
-- Generic string-based global event buses.
-- Cross-system hard references when a signal or autoload boundary is cleaner.
-
-### Example interaction flow
-
-When a boss is defeated:
-
-1. `BossBase.gd` emits `boss_defeated(boss_id)`.
-2. `StageController.gd` receives the signal.
-3. `StageController.gd` calls `Progression.mark_boss_defeated(boss_id)`.
-4. `StageController.gd` calls `GameFlow.enter_stage_clear(stage_id)`.
-5. `AudioManager` plays `boss_defeat` and then `stage_clear`.
-6. The UI and stage-clear scene read from `Progression` to show rewards.
-
-Example:
-
-```gdscript
-func _on_boss_defeated(boss_id: StringName) -> void:
-    Progression.mark_boss_defeated(boss_id)
-    Progression.unlock_weapon(_stage_data.weapon_reward_id)
-    AudioManager.play_sfx(&"boss_defeat")
-    GameFlow.enter_stage_clear(_stage_data.stage_id)
-```
-
-## Recommended Project Structure
-
-The implementation should grow toward a structure similar to this:
-
-- `scenes/`
-- `scripts/`
-- `data/`
-- `ui/`
-- `assets/placeholders/`
-- `audio/`
-- `autoloads/`
-- `tests/` if automated testing is added
-
-Suggested internal grouping:
-
-- `scenes/player`, `scenes/enemies`, `scenes/bosses`, `scenes/stages`, `scenes/ui`
-- `scripts/components`, `scripts/systems`, `scripts/resources`, `scripts/state`
-- `data/player`, `data/weapons`, `data/enemies`, `data/bosses`, `data/stages`
-
-Exact folder names can evolve, but scene, script, UI, data, and placeholder assets should remain clearly separated.
-
-## Campaign Roster
-
-The remake should target the original Mega Man X campaign structure with these primary boss IDs and stage IDs.
-
-### Stage and boss roster
-
-- `intro_highway` with scripted `vile_ride_armor` encounter and Zero rescue sequence
-- `chill_penguin` with boss `chill_penguin`
-- `spark_mandrill` with boss `spark_mandrill`
-- `armored_armadillo` with boss `armored_armadillo`
-- `launch_octopus` with boss `launch_octopus`
-- `boomer_kuwanger` with boss `boomer_kuwanger`
-- `sting_chameleon` with boss `sting_chameleon`
-- `storm_eagle` with boss `storm_eagle`
-- `flame_mammoth` with boss `flame_mammoth`
-- `sigma_fortress_1` with boss `bospider`
-- `sigma_fortress_2` with boss `rangda_bangda`
-- `sigma_fortress_3` with boss `velguarder`
-- `sigma_fortress_4` with bosses `sigma_first_form` and `sigma_wolf_form`
-
-### Weapon reward IDs
-
-- `shotgun_ice`
-- `electric_spark`
-- `rolling_shield`
-- `homing_torpedo`
-- `boomerang_cutter`
-- `chameleon_sting`
-- `storm_tornado`
-- `fire_wave`
-
-### Enemy naming approach
-
-Boss names should match the original game. Regular enemies should be implemented as reusable families with stable internal IDs such as:
-
-- `walker_basic`
-- `turret_basic`
-- `hopper_basic`
-- `flying_drone_basic`
-- `shield_guard_basic`
-- `mine_dropper_basic`
-
-If exact original enemy-name parity is important later, it should be added in a dedicated content roster document without changing the enemy framework architecture.
-
-## Stage Scene Layout And Pickup Placement
-
-Each playable stage should follow a predictable scene layout.
-
-### Recommended stage composition
-
-```text
-Stage_FlameMammoth.tscn
-- StageController (Node)
-  - TilemapRoot
-  - BackgroundRoot
-  - SpawnPoints
-  - Checkpoints
-  - Enemies
-  - Pickups
-  - Capsules
-  - Triggers
-  - CameraZones
-  - HazardZones
-  - BossArena
-  - MusicAnchor optional
-```
-
-### Where pickups live
-
-Pickups and powerups belong in stage scenes, not in global managers.
-
-- Temporary drops from defeated enemies are spawned at runtime by a `DropSpawner` component or by enemy death logic using a drop table resource.
-- Persistent pickups are authored directly under the stage's `Pickups` or `Capsules` node.
-- Persistent pickups must have unique IDs so collected items do not respawn after save/load.
-
-### Pickup categories
-
-- Temporary health pickups.
-- Temporary weapon-energy pickups.
-- Persistent heart tanks.
-- Persistent sub tanks.
-- Persistent armor capsules.
-- Optional one-off scripted rewards tied to cutscenes or boss defeat flow.
-
-### Pickup implementation direction
-
-Use dedicated pickup scenes in `scenes/pickups/` with shared data resources in `data/pickups/`.
-
-The player should receive pickup effects through `PickupReceiver.gd`, not through `Player.gd` directly.
-
-```gdscript
-class_name PickupData
-extends Resource
-
-@export var pickup_id: StringName
-@export var pickup_type: StringName
-@export var persistent := false
-@export var health_amount := 0
-    @export var weapon_energy_amount := 0
-    @export var armor_part: StringName
-```
-
-```gdscript
-extends Area2D
-
-@export var pickup_data: PickupData
-
-func collect(receiver: PickupReceiver) -> void:
-    receiver.apply_pickup(pickup_data)
-
-    if pickup_data.persistent:
-        Progression.mark_pickup_collected(pickup_data.pickup_id)
-
-    queue_free()
-```
-
-```gdscript
-class_name PickupReceiver
-extends Node
-
-@onready var health: HealthComponent = $"../HealthComponent"
-@onready var combat: PlayerCombat = $"../PlayerCombat"
-
-func apply_pickup(pickup_data: PickupData) -> void:
-    match pickup_data.pickup_type:
-        &"health":
-            health.heal(pickup_data.health_amount)
-        &"weapon_energy":
-            combat.restore_weapon_energy(pickup_data.weapon_energy_amount)
-        &"heart_tank":
-            Progression.unlock_heart_tank(pickup_data.pickup_id)
-        &"sub_tank":
-            Progression.unlock_sub_tank(pickup_data.pickup_id)
-        &"armor_capsule":
-            Progression.unlock_armor_part(pickup_data.armor_part)
-```
-
-Recommended player hookup:
+### Player scene
 
 ```text
 Player.tscn
-- Player (CharacterBody2D)
-  - HealthComponent
-  - PlayerCombat
-  - PickupReceiver
-  - PlayerSensor
-```
-
-`PlayerSensor` should detect `PICKUP` areas and pass the collected pickup to `PickupReceiver`.
-
-### Persistent pickup rules
-
-- Heart tanks, sub tanks, and armor capsules are persistent.
-- Small health and weapon refills are not persistent.
-- Persistent pickups must be keyed by a stable ID such as `flame_mammoth_heart_tank` or `intro_highway_dash_capsule`.
-- Stage load must query `Progression` and omit already-collected persistent pickups.
-
-## Implementation Sketches
-
-The following examples are not final production code. They are reference sketches that show the intended direction for the architecture and the level of separation expected between systems.
-
-### Example player scene composition
-
-The player should be composed from focused child nodes instead of one script owning every responsibility.
-
-```text
-Player.tscn
-- Player (CharacterBody2D)
+- Player (CharacterBody2D) [Player.gd]
   - CollisionShape2D
-  - VisualRoot (Node2D)
-    - PlaceholderSprite or AnimatedSprite2D
-  - Hurtbox (Area2D)
-    - CollisionShape2D
+  - VisualRoot
+  - Hurtbox [Hurtbox.gd]
+  - HealthComponent [HealthComponent.gd]
+  - PlayerCombat [PlayerCombat.gd]
+    - WeaponInventory [WeaponInventory.gd]
+  - PickupReceiver [PickupReceiver.gd]
+  - PlayerSensor (Area2D)
   - ShotOrigin (Marker2D)
   - WallCheckLeft (RayCast2D)
   - WallCheckRight (RayCast2D)
-  - GroundCheck optional if needed
   - CameraAnchor (Marker2D)
 ```
 
-Recommended script ownership:
+### Input
 
-- `Player.gd` owns locomotion state, motion integration, and high-level action routing.
-- `PlayerCombat.gd` or a child combat component owns weapon firing, charge timing, and projectile spawning.
-- `Hurtbox.gd` receives hit events and forwards valid damage to `HealthComponent.gd`.
-- `HealthComponent.gd` owns current HP, damage application, and death signaling.
-- A presentation script owns animation-state switching and visual-only reactions.
+Required actions:
 
-### Example data-driven tuning resource
+- `move_left`
+- `move_right`
+- `jump`
+- `dash`
+- `shoot`
+- `weapon_next`
+- `pause`
+- `menu_confirm`
+- `menu_cancel`
 
-Player tuning should live in a `Resource` so feel iteration does not require editing controller logic.
+Both keyboard and gamepad are required. Gameplay code reads actions only, not raw keys/buttons.
+
+### Player tuning data
 
 ```gdscript
 class_name PlayerTuning
@@ -550,11 +166,9 @@ extends Resource
 @export var invulnerability_time: float = 1.0
 ```
 
-The player scene should reference one tuning resource instance, and the runtime controller should read values from it rather than store duplicate copies in code.
+### Player controller
 
-### Example player controller shape
-
-The locomotion script should be state-aware, but it does not need to be a giant inheritance tree or an overly abstract framework.
+`Player.gd` owns locomotion, facing, and movement-facing state only.
 
 ```gdscript
 extends CharacterBody2D
@@ -563,8 +177,10 @@ extends CharacterBody2D
 @export var can_dash_from_start := false
 
 var facing := 1
-var locomotion_state: StringName = &"idle"
 var dash_unlocked := false
+var is_dashing := false
+var is_hurt := false
+var is_dead := false
 
 func _physics_process(delta: float) -> void:
     var move_input := Input.get_axis("move_left", "move_right")
@@ -581,175 +197,9 @@ func _physics_process(delta: float) -> void:
     _update_locomotion_state()
 ```
 
-Implementation direction:
+### Player locomotion state machine
 
-- Player movement stays in `_physics_process`.
-- Input is read through semantic actions only.
-- Dash unlock rules are resolved through progression state, not hardcoded stage logic.
-- Presentation should observe `locomotion_state` and `facing` instead of recomputing gameplay state from animations.
-
-### Example hit and damage contract
-
-Damage should move through a shared payload so player attacks, enemy attacks, contact damage, and boss weakness checks all speak the same language.
-
-```gdscript
-class_name HitData
-extends RefCounted
-
-var source: Node
-var team: StringName
-var weapon_id: StringName
-var damage: int
-var knockback: Vector2
-```
-
-```gdscript
-class_name Hurtbox
-extends Area2D
-
-signal hit_received(hit: HitData)
-
-@export var owner_team: StringName
-
-func receive_hit(hit: HitData) -> void:
-    if hit.team == owner_team:
-        return
-
-    hit_received.emit(hit)
-```
-
-This is intentionally simple. The actual implementation may add flags like `ignores_iframes`, `hit_pause_scale`, or `damage_kind`, but all damageable entities should still receive one consistent hit payload shape.
-
-### Example weapon definition shape
-
-Weapons should be represented by data plus reusable behavior hooks rather than giant `match` statements inside the player script.
-
-```gdscript
-class_name WeaponData
-extends Resource
-
-@export var weapon_id: StringName
-@export var display_name: String
-@export var energy_cost: int = 0
-@export var projectile_scene: PackedScene
-@export var base_damage: int = 1
-@export var supports_charge := false
-```
-
-At runtime, `PlayerCombat` should read the equipped `WeaponData`, spawn the configured projectile scene if needed, and emit semantic events like `player_shoot` or `buster_charge_full` for presentation and audio.
-
-### Example stage definition shape
-
-Stage metadata should be authored as data and consumed by menus, progression logic, and scene flow.
-
-```gdscript
-class_name StageDefinition
-extends Resource
-
-@export var stage_id: StringName
-@export var display_name: String
-@export var stage_scene: PackedScene
-@export var boss_id: StringName
-@export var weapon_reward_id: StringName
-@export var unlocked_by_default := false
-@export var requires_intro_clear := true
-```
-
-### Example save payload shape
-
-The initial save format should be a versioned JSON file stored at `user://save_01.json`.
-
-```json
-{
-  "version": 1,
-  "bosses_defeated": ["chill_penguin", "storm_eagle"],
-  "weapons_unlocked": ["shotgun_ice", "storm_tornado"],
-  "collected_pickups": [
-    "intro_highway_dash_capsule",
-    "storm_eagle_heart_tank"
-  ],
-  "armor_parts": {
-    "helmet": false,
-    "body": false,
-    "arms": false,
-    "legs": true
-  },
-  "sub_tanks": {
-    "sub_tank_01": 8,
-    "sub_tank_02": 0
-  },
-  "dash_unlocked": true,
-  "intro_cleared": true,
-  "fortress_unlocked": false
-}
-```
-
-The runtime `Progression` autoload should own the live state. `SaveManager` converts that state to and from this payload.
-
-## Feature Requirements
-
-### 1. Input And Control Layer
-
-The project needs a stable input abstraction before movement and combat are implemented.
-
-#### Required input actions
-
-- Move left and right.
-- Jump.
-- Dash.
-- Shoot.
-- Weapon cycle or weapon select.
-- Pause.
-- Menu confirm and cancel.
-
-#### Device support
-
-- Keyboard support is required from the start.
-- Gamepad support is required from the start because the target play feel depends on controller-friendly input.
-- Rebinding is not required for the first vertical slice, but the input action map must be organized so rebinding can be added later without changing gameplay code.
-
-#### Design requirements
-
-- Gameplay systems should read semantic input actions, not hardcoded keys or buttons.
-- Menu input and gameplay input should be separable so pause and stage-select flows remain clean.
-
-### 2. Core Player Controller
-
-The player controller must reproduce the core feel of X-style movement at a mechanics level.
-
-#### Required movement capabilities
-
-- Ground movement with tuned acceleration and deceleration.
-- Jumping with controllable jump height or equivalent variable-jump behavior.
-- Air control that preserves intentional movement without becoming floaty.
-- Dash with full state integration.
-- Wall slide and wall jump.
-- Facing direction updates and turn behavior that support responsive combat.
-- Stable transitions between idle, run, jump, fall, dash, wall slide, hurt, and death states.
-
-#### Survivability and interaction
-
-- Damage intake with knockback.
-- Temporary invulnerability after damage.
-- Death handling and respawn behavior.
-- Collision against terrain, moving platforms, and stage hazards.
-- Ladder support is part of the full game architecture, but it is not required in Phase 1 unless the first stage slice needs it.
-
-#### Campaign gating decision
-
-- The movement system must support dash from Phase 1 for tuning and testing.
-- In campaign progression, dash should be gated behind the intro-stage upgrade event by default, matching the original progression beat.
-- Test scenes and debug stages may enable dash from the start to speed iteration.
-
-#### Design requirements
-
-- Movement tuning must be data-driven or otherwise isolated for fast iteration.
-- Core movement logic must not depend on final animation assets.
-- Movement state must be readable by combat, UI, audio, and presentation systems.
-
-#### Player locomotion state machine
-
-The player should use one explicit locomotion state machine in `Player.gd`. This state machine owns movement-facing state only. It does not own charging, firing, or weapon energy logic.
+Use a single locomotion state machine in `Player.gd`.
 
 ```gdscript
 enum LocomotionState {
@@ -764,24 +214,20 @@ enum LocomotionState {
 }
 ```
 
-Recommended runtime fields:
-
 ```gdscript
 var locomotion_state: LocomotionState = LocomotionState.IDLE
-var is_dashing := false
-var is_hurt := false
-var is_dead := false
-var facing := 1
 ```
 
-The update order should be:
+Priority order:
 
-1. Read input.
-2. Apply movement rules.
-3. Apply gravity and jump logic.
-4. Apply dash logic.
-5. Call `move_and_slide()`.
-6. Recompute locomotion state from the final result.
+- `DEAD`
+- `HURT`
+- `DASH`
+- `WALL_SLIDE`
+- `JUMP`
+- `FALL`
+- `RUN`
+- `IDLE`
 
 ```gdscript
 func _update_locomotion_state() -> void:
@@ -816,62 +262,32 @@ func _update_locomotion_state() -> void:
     )
 ```
 
-Priority order:
+Rules:
 
-- `DEAD`
-- `HURT`
-- `DASH`
-- `WALL_SLIDE`
-- `JUMP`
-- `FALL`
-- `RUN`
-- `IDLE`
+- dash exists in code from Phase 1
+- campaign dash unlock is gated by the intro-stage capsule
+- debug scenes can enable dash immediately
+- ladder support is part of the full game but not required in the first slice unless needed by the chosen test stage
 
-State transition rules:
+### Player combat
 
-- `IDLE <-> RUN` depends on floor contact and horizontal speed.
-- `RUN/IDLE -> JUMP` when jump starts from floor.
-- `JUMP -> FALL` when vertical velocity becomes downward.
-- `FALL -> WALL_SLIDE` when airborne, descending, and touching a valid wall.
-- `RUN/IDLE/FALL/JUMP -> DASH` when dash is pressed and dash is currently allowed.
-- Any non-dead state -> `HURT` when damage is applied and knockback begins.
-- Any state -> `DEAD` when `HealthComponent` emits `died`.
+`PlayerCombat.gd` owns weapon firing, charging, cooldown, and projectile spawning. It does not own locomotion.
 
-This locomotion state should be consumed by:
+```gdscript
+class_name WeaponData
+extends Resource
 
-- presentation for animation selection
-- audio for movement cues
-- camera for optional dash or landing effects
-- gameplay rules that need to know whether wall jump or dash transitions are allowed
+@export var weapon_id: StringName
+@export var display_name: String
+@export var energy_cost: int = 0
+@export var projectile_scene: PackedScene
+@export var base_damage: int = 1
+@export var supports_charge := false
+@export var full_charge_time := 1.0
+@export var max_charge_level := 2
+```
 
-### 3. Player Combat
-
-The player combat system must support the base buster loop first and remain extensible for Maverick weapons later.
-
-#### Required combat capabilities
-
-- Basic buster firing.
-- Charge accumulation with at least neutral, partial-charge, and full-charge states.
-- Charged shot release behavior.
-- Projectile spawning, ownership, travel, lifetime, despawn, and collision.
-- Distinction between player projectiles, enemy projectiles, and contact damage.
-
-#### Extensibility requirements
-
-- Weapon switching model for future boss weapons.
-- Weapon energy model for non-buster weapons.
-- Expandable weapon definitions using shared data and shared behavior contracts.
-- Hooks for destructible world objects and breakable entities.
-
-#### Combat behavior requirements
-
-- The player must be able to fire while grounded and airborne.
-- Charge state feedback must exist even with placeholder visuals and placeholder audio.
-- The system must support boss weakness calculations without special-case boss code in the player weapon logic.
-
-#### Weapon switching implementation
-
-Weapon switching should be owned by a dedicated child node on the player, not by `GameFlow`, UI code, or giant `match` statements in `Player.gd`.
+#### Weapon switching
 
 ```gdscript
 class_name WeaponInventory
@@ -935,28 +351,9 @@ func fire_pressed(owner_node: Node2D, facing: int) -> void:
     AudioManager.play_sfx(&"player_shoot")
 ```
 
-```gdscript
-func _unhandled_input(event: InputEvent) -> void:
-    if event.is_action_pressed("weapon_next"):
-        $PlayerCombat/WeaponInventory.cycle_next()
-```
+#### Combat state machine
 
-Rules:
-
-- The Buster is always unlocked.
-- Boss weapons are unlocked only through `Progression`.
-- `Progression` restores unlocked weapons into `WeaponInventory` on stage load or player spawn.
-- HUD listens to `equipped_weapon_changed` and updates without owning any combat logic.
-
-#### Design requirements
-
-- Weapon logic must remain separate from locomotion logic.
-- Damage delivery must go through a shared hit and damage contract.
-- Combat events must emit semantic feedback hooks for UI, audio, VFX, and camera effects.
-
-#### Player combat state machine
-
-Combat should use a separate state machine inside `PlayerCombat.gd`. This avoids combining locomotion and weapon behavior into one giant enum.
+Use a separate combat state machine in `PlayerCombat.gd`.
 
 ```gdscript
 enum CombatState {
@@ -969,23 +366,10 @@ enum CombatState {
 }
 ```
 
-Recommended runtime fields:
-
 ```gdscript
 var combat_state: CombatState = CombatState.READY
 var charge_time := 0.0
-var equipped_weapon_id: StringName = &"buster"
-var can_fire := true
 ```
-
-Meaning of each state:
-
-- `READY`: normal state; fire button can start a shot or charge.
-- `FIRING`: a shot has just been emitted this frame; used for short presentation or recoil windows.
-- `CHARGING`: fire is being held and charge is accumulating.
-- `CHARGED`: the full-charge threshold has been reached and release should emit the charged shot.
-- `COOLDOWN`: short lockout after firing if the weapon requires one.
-- `DISABLED`: used during cutscenes, death, stage transitions, or other moments when combat must be suppressed.
 
 ```gdscript
 func physics_update(delta: float) -> void:
@@ -1001,8 +385,6 @@ func physics_update(delta: float) -> void:
 
     _update_cooldown(delta)
 ```
-
-Charge behavior:
 
 ```gdscript
 func _handle_fire_held(delta: float) -> void:
@@ -1022,19 +404,7 @@ func _handle_fire_held(delta: float) -> void:
             AudioManager.play_sfx(&"buster_charge_full")
 ```
 
-Fire and release behavior:
-
 ```gdscript
-func _handle_fire_pressed() -> void:
-    var weapon_data: WeaponData = _get_equipped_weapon_data()
-    if weapon_data.supports_charge:
-        combat_state = CombatState.CHARGING
-        charge_time = 0.0
-        return
-
-    _spawn_projectile(weapon_data, 0)
-    combat_state = CombatState.FIRING
-
 func _handle_fire_released() -> void:
     var weapon_data: WeaponData = _get_equipped_weapon_data()
 
@@ -1050,17 +420,7 @@ func _handle_fire_released() -> void:
     charge_time = 0.0
 ```
 
-Combat state rules:
-
-- `READY -> CHARGING` when Buster fire is held.
-- `CHARGING -> CHARGED` when full-charge threshold is reached.
-- `CHARGING -> COOLDOWN` when fire is released before full charge and a partial-charge shot is emitted.
-- `CHARGED -> COOLDOWN` when fire is released and a full-charge shot is emitted.
-- `READY -> FIRING -> COOLDOWN` for tap-fired shots or non-charge weapons.
-- Any state -> `DISABLED` during death, cutscene mode, or other forced lockout.
-- `COOLDOWN -> READY` when weapon-specific cooldown ends.
-
-The locomotion and combat state machines run in parallel. Examples that must be supported:
+Locomotion and combat run in parallel. These combinations must work:
 
 - `RUN + READY`
 - `JUMP + FIRING`
@@ -1068,29 +428,96 @@ The locomotion and combat state machines run in parallel. Examples that must be 
 - `WALL_SLIDE + CHARGED`
 - `HURT + DISABLED`
 
-The UI, audio, and presentation layers should read both state machines rather than infer combat behavior from animations or vice versa.
+### Player pickups
 
-### 4. Health, Damage, And Collision Rules
+Pickups should apply effects through `PickupReceiver.gd`, not through `Player.gd`.
 
-Combat needs a stable shared contract before enemy and boss content scales up.
+```gdscript
+class_name PickupReceiver
+extends Node
 
-#### Required shared rules
+@onready var health: HealthComponent = $"../HealthComponent"
+@onready var combat: PlayerCombat = $"../PlayerCombat"
 
-- A consistent damage payload or hit description that includes at least source, damage amount, damage type or weapon identity, knockback intent, and team ownership.
-- Distinct collision layers or collision groups for terrain, player body, enemy body, player projectiles, enemy projectiles, hurtboxes, hitboxes, pickups, and triggers.
-- Clear ownership rules so entities cannot damage allies unless explicitly intended.
+func apply_pickup(pickup_data: PickupData) -> void:
+    match pickup_data.pickup_type:
+        &"health":
+            health.heal(pickup_data.health_amount)
+        &"weapon_energy":
+            combat.restore_weapon_energy(pickup_data.weapon_energy_amount)
+        &"heart_tank":
+            Progression.unlock_heart_tank(pickup_data.pickup_id)
+        &"sub_tank":
+            Progression.unlock_sub_tank(pickup_data.pickup_id)
+        &"armor_capsule":
+            Progression.unlock_armor_part(pickup_data.armor_part)
+```
 
-#### Required outcomes
+`PlayerSensor` should detect pickup `Area2D`s and pass them to `PickupReceiver`.
 
-- Hurt reactions.
-- Invulnerability windows where applicable.
-- Death callbacks.
-- Drop spawning hooks.
-- Feedback events for UI, audio, and presentation.
+## Shared Gameplay Systems
 
-#### Collision layer plan
+This section contains systems shared by player, enemies, bosses, and the world.
 
-Use explicit named layers from the start. The exact layer numbers below should remain stable.
+### Health and damage
+
+Use one shared hit payload shape and one shared health component.
+
+```gdscript
+class_name HitData
+extends RefCounted
+
+var source: Node
+var team: StringName
+var weapon_id: StringName
+var damage: int
+var knockback: Vector2
+```
+
+```gdscript
+class_name Hurtbox
+extends Area2D
+
+signal hit_received(hit: HitData)
+
+@export var owner_team: StringName
+
+func receive_hit(hit: HitData) -> void:
+    if hit.team == owner_team:
+        return
+    hit_received.emit(hit)
+```
+
+```gdscript
+class_name HealthComponent
+extends Node
+
+signal damaged(hit: HitData, current_health: int)
+signal died()
+
+@export var max_health := 1
+@export var invulnerability_time := 0.0
+
+var current_health := 0
+var invulnerable := false
+
+func _ready() -> void:
+    current_health = max_health
+
+func apply_hit(hit: HitData) -> void:
+    if invulnerable:
+        return
+
+    current_health = max(current_health - hit.damage, 0)
+    damaged.emit(hit, current_health)
+
+    if current_health == 0:
+        died.emit()
+```
+
+### Collision layers
+
+Keep these layer numbers stable:
 
 | Layer | Name |
 | --- | --- |
@@ -1107,15 +534,6 @@ Use explicit named layers from the start. The exact layer numbers below should r
 | 11 | `HAZARD` |
 | 12 | `CAMERA_ZONE` |
 | 13 | `PLAYER_SENSOR` |
-
-Recommended usage:
-
-- `CharacterBody2D` nodes should mainly collide with `WORLD_SOLID` and `WORLD_ONE_WAY`.
-- Damage detection should use `Area2D` hitboxes and hurtboxes, not body collisions.
-- Pickups, checkpoints, cutscene triggers, and camera zones should be implemented as `Area2D` triggers.
-- Hazards like spikes should generally use `Area2D` and deliver damage or instant death through the same hit or hazard pipeline.
-
-#### Collision constants example
 
 ```gdscript
 class_name CollisionLayers
@@ -1139,84 +557,65 @@ static func bit(layer_index: int) -> int:
     return 1 << (layer_index - 1)
 ```
 
-#### Collision setup examples
+Recommended usage:
 
-```gdscript
-# Player body
-collision_layer = CollisionLayers.bit(CollisionLayers.PLAYER_BODY)
-collision_mask = (
-    CollisionLayers.bit(CollisionLayers.WORLD_SOLID)
-    | CollisionLayers.bit(CollisionLayers.WORLD_ONE_WAY)
-)
-```
+- bodies collide with world layers
+- hitboxes and hurtboxes are `Area2D`
+- pickups/checkpoints/cutscene triggers/camera zones are `Area2D`
+- hazards use `Area2D` and the same hit/hazard pipeline
 
-```gdscript
-# Player hurtbox
-collision_layer = CollisionLayers.bit(CollisionLayers.PLAYER_HURTBOX)
-collision_mask = (
-    CollisionLayers.bit(CollisionLayers.ENEMY_HITBOX)
-    | CollisionLayers.bit(CollisionLayers.HAZARD)
-)
-```
+## Enemies And Bosses
 
-```gdscript
-# Player sensor for pickups and triggers
-collision_layer = CollisionLayers.bit(CollisionLayers.PLAYER_SENSOR)
-collision_mask = (
-    CollisionLayers.bit(CollisionLayers.PICKUP)
-    | CollisionLayers.bit(CollisionLayers.TRIGGER)
-    | CollisionLayers.bit(CollisionLayers.CAMERA_ZONE)
-)
-```
+### Campaign roster
 
-### 5. Enemy Framework
+Stages and bosses:
 
-The project needs a reusable enemy framework rather than one-off enemy implementations.
+- `intro_highway` with scripted `vile_ride_armor`
+- `chill_penguin`
+- `spark_mandrill`
+- `armored_armadillo`
+- `launch_octopus`
+- `boomer_kuwanger`
+- `sting_chameleon`
+- `storm_eagle`
+- `flame_mammoth`
+- `sigma_fortress_1` with `bospider`
+- `sigma_fortress_2` with `rangda_bangda`
+- `sigma_fortress_3` with `velguarder`
+- `sigma_fortress_4` with `sigma_first_form` and `sigma_wolf_form`
 
-#### Shared enemy contract
+Weapon rewards:
 
-- Health and death handling.
-- Hurt reactions.
-- Contact damage.
-- Projectile or attack behavior support.
-- Optional drop behavior.
-- Spawn, off-screen suspension, and despawn rules tied to stage flow.
+- `shotgun_ice`
+- `electric_spark`
+- `rolling_shield`
+- `homing_torpedo`
+- `boomerang_cutter`
+- `chameleon_sting`
+- `storm_tornado`
+- `fire_wave`
 
-#### Behavior model
+Regular enemy families should use stable internal IDs such as:
 
-- Enemies should use a clear behavior model such as state machines or modular action patterns.
-- The framework must support simple enemies, patrol enemies, turrets, flying enemies, and encounter-specific enemies.
-- Enemy-specific behavior should reuse the shared health, damage, and drop systems.
+- `walker_basic`
+- `turret_basic`
+- `hopper_basic`
+- `flying_drone_basic`
+- `shield_guard_basic`
+- `mine_dropper_basic`
 
-#### Presentation requirements
+### Enemy scene and logic
 
-- Placeholder visuals must communicate facing, attack state, hurt state, and death state clearly.
-- Hit flash, death feedback, and spawn effects must exist as semantic hooks even if the first pass uses simple color flashes or temporary shapes.
+Enemy inheritance stays shallow:
 
-#### Inheritance and composition plan
-
-Use shallow inheritance and composition-heavy actor scenes.
-
-- `EnemyBase.gd` extends `CharacterBody2D`.
-- `BossBase.gd` extends `CharacterBody2D`.
-- `HealthComponent.gd` handles HP and death signaling.
-- `Hurtbox.gd` forwards hit payloads to `HealthComponent.gd`.
-
-Enemy and boss scenes should compose behavior from child nodes and helper scripts:
-
-- `Hurtbox`
-- `HealthComponent`
-- `HitboxEmitter`
-- `EnemyBrain`
-- `DropSpawner`
-- `PresentationController`
-- `BossPhaseController` for bosses only
-
-Recommended enemy scene shape:
+- `EnemyBase.gd` extends `CharacterBody2D`
+- `HealthComponent.gd` handles HP
+- `Hurtbox.gd` handles incoming hit routing
+- `EnemyBrain.gd` handles AI state transitions
 
 ```text
 Enemy_WalkerBasic.tscn
-- EnemyWalkerBasic (CharacterBody2D)
+- EnemyWalkerBasic (CharacterBody2D) [EnemyBase.gd]
   - CollisionShape2D
   - VisualRoot
   - Hurtbox
@@ -1227,9 +626,34 @@ Enemy_WalkerBasic.tscn
   - DropSpawner
 ```
 
-#### AI logic approach
+```gdscript
+class_name EnemyBase
+extends CharacterBody2D
 
-Enemy AI should be implemented with small state-machine nodes or state scripts, not one huge `_physics_process` full of conditionals.
+signal died(enemy_id: StringName)
+
+@export var enemy_id: StringName
+@export var team: StringName = &"enemy"
+
+@onready var hurtbox: Hurtbox = $Hurtbox
+@onready var health: HealthComponent = $HealthComponent
+@onready var brain: EnemyBrain = $EnemyBrain
+
+func _ready() -> void:
+    hurtbox.hit_received.connect(health.apply_hit)
+    health.died.connect(_on_died)
+
+func _physics_process(delta: float) -> void:
+    brain.physics_update(delta)
+
+func _on_died() -> void:
+    died.emit(enemy_id)
+    queue_free()
+```
+
+### Enemy AI
+
+Use small state scripts, not one giant `_physics_process()`.
 
 ```gdscript
 class_name EnemyState
@@ -1264,7 +688,7 @@ func physics_update(delta: float) -> void:
         current_state.physics_update(delta)
 ```
 
-Typical reusable enemy states:
+Reusable state types:
 
 - `IdleState`
 - `PatrolState`
@@ -1273,52 +697,47 @@ Typical reusable enemy states:
 - `RecoverState`
 - `DeadState`
 
-### 6. Boss Framework
+### Boss scene and logic
 
-Bosses need a dedicated encounter framework layered on top of the shared enemy and combat systems.
-
-#### Boss encounter requirements
-
-- Boss intro sequence hook.
-- Boss arena activation and lock-in flow.
-- Boss health bar support.
-- Multi-phase or state-driven attack behavior.
-- Boss defeat sequence and reward flow.
-
-#### Combat requirements
-
-- Weakness and resistance support for special weapons.
-- Shared damage handling compatible with the global combat contract.
-- Explicit boss state transitions for intro, active combat, recovery or stagger if used, defeat, and post-fight reward resolution.
-
-#### Reward requirements
-
-- Boss defeat must update progression data.
-- Boss reward flow must support weapon unlocks and stage-clear resolution.
-
-#### Boss scene composition
-
-Bosses should share the same shallow-architecture philosophy as enemies, but with extra phase and arena control.
+Bosses use the same shared systems plus a phase controller.
 
 ```text
 Boss_ChillPenguin.tscn
-- BossChillPenguin (CharacterBody2D)
+- BossChillPenguin (CharacterBody2D) [BossBase.gd]
   - CollisionShape2D
   - VisualRoot
   - Hurtbox
-  - AttackOrigin
+  - HealthComponent
   - BossPhaseController
-  - ArenaAnchor
+  - AttackOrigin
   - IntroMarker
+  - ArenaMarker
 ```
 
-#### Boss AI approach
+```gdscript
+class_name BossBase
+extends CharacterBody2D
 
-- Bosses should use a phase controller that selects attack states based on health thresholds, cooldown windows, and context.
-- Attack behaviors should be individual reusable scripts or nodes when practical.
-- Weakness reactions should be driven by data and hooks in the damage pipeline, not duplicated boss-specific weapon checks.
+signal boss_defeated(boss_id: StringName)
 
-Example:
+@export var boss_id: StringName
+@export var team: StringName = &"enemy"
+
+@onready var hurtbox: Hurtbox = $Hurtbox
+@onready var health: HealthComponent = $HealthComponent
+@onready var phase_controller: BossPhaseController = $BossPhaseController
+
+func _ready() -> void:
+    hurtbox.hit_received.connect(_on_hit_received)
+    health.died.connect(_on_died)
+
+func _on_hit_received(hit: HitData) -> void:
+    health.apply_hit(hit)
+    phase_controller.update_phase(_health_percent())
+
+func _on_died() -> void:
+    boss_defeated.emit(boss_id)
+```
 
 ```gdscript
 class_name BossPhaseController
@@ -1332,101 +751,193 @@ func update_phase(current_health_percent: int) -> void:
         current_phase += 1
 ```
 
-### 7. Stage, Camera, And World Systems
+Boss requirements:
 
-The world layer must support traversal, encounter orchestration, and readable camera behavior.
+- intro hook
+- health bar
+- arena lock
+- weakness/resistance handling
+- reward flow through `Progression`
 
-#### Stage requirements
+## Stages, Camera, And Pickups
 
-- Stage scenes with clear entry and exit flow.
-- Spawn points and checkpoints.
-- Hazards such as pits, spikes, damage volumes, and moving threats.
-- Moving platforms and reusable environment interaction patterns.
-- Event triggers for encounters, boss intros, gates, tutorials, scripted transitions, and stage completion.
+### Stage data
 
-#### Camera requirements
+```gdscript
+class_name StageDefinition
+extends Resource
 
-- A side-scrolling gameplay camera with stable follow behavior.
-- Camera constraints and zone overrides for traversal and boss encounters.
-- Room-lock behavior for boss arenas and other set-piece encounters.
-- Support for camera shake hooks driven by gameplay events.
+@export var stage_id: StringName
+@export var display_name: String
+@export var stage_scene: PackedScene
+@export var boss_id: StringName
+@export var weapon_reward_id: StringName
+@export var unlocked_by_default := false
+@export var requires_intro_clear := true
+```
 
-#### Authoring requirements
+### Stage scene layout
 
-- Stages should be built from reusable gameplay building blocks where practical.
-- Stage-specific scripting should remain simple and explicit.
-- Intro stage support is required because it drives dash upgrade progression.
+```text
+Stage_FlameMammoth.tscn
+- StageController (Node)
+  - CameraController (Camera2D)
+  - TilemapRoot
+  - BackgroundRoot
+  - SpawnPoints
+  - Checkpoints
+  - Enemies
+  - Pickups
+  - Capsules
+  - Triggers
+  - CameraZones
+  - HazardZones
+  - BossArena
+```
 
-#### Stage controller responsibilities
+### Stage controller
 
-Each stage scene should have a `StageController.gd` root script that owns:
+`StageController.gd` owns stage-local flow:
 
-- Spawn and respawn routing.
-- Checkpoint activation.
-- Stage-local boss references.
-- Trigger wiring.
-- Camera-zone activation.
-- Stage-complete signaling.
-- Stage-local cutscene entry points.
-
-Example:
+- player spawn
+- checkpoint activation
+- trigger wiring
+- stage-local boss references
+- camera zone activation
+- stage complete signaling
+- stage-local cutscene entry points
 
 ```gdscript
 extends Node
 
 @export var stage_data: StageDefinition
 @export var player_spawn_root: NodePath
+@export var debug_spawn_id: StringName = &""
+@export var debug_use_test_progression := true
+
+func _ready() -> void:
+    if GameFlow.current_state == GameFlow.GameState.BOOT:
+        _start_standalone_test_mode()
+    else:
+        start_stage()
 
 func start_stage() -> void:
     _spawn_player_at_default_spawn()
     AudioManager.play_music(stage_data.stage_id)
+
+func _start_standalone_test_mode() -> void:
+    if debug_use_test_progression:
+        Progression.apply_debug_profile(&"all_movement_unlocked")
+    _spawn_player_at_spawn(debug_spawn_id if debug_spawn_id != &"" else &"start")
+    AudioManager.play_music(stage_data.stage_id)
 ```
 
-### 8. Progression And Game Flow
+This allows direct stage testing from the editor without going through the full boot flow.
 
-The game-wide progression layer must support both single-stage play and campaign continuity.
+### Camera
 
-#### Front-end flow
+Use one gameplay camera per stage, not multiple active gameplay cameras.
 
-- Title screen.
-- Main menu.
-- Intro stage entry.
-- Stage select flow after intro stage completion.
-- Pause flow.
-- Stage completion flow.
-- Endgame or fortress flow after the Maverick progression loop is satisfied.
+Use camera modes:
 
-#### Progression systems
+- `FOLLOW`
+- `ZONE_LOCK`
+- `BOSS_LOCK`
+- `CUTSCENE`
 
-- Intro-stage dash unlock gating.
-- Boss defeat tracking.
-- Weapon unlock tracking.
-- Armor upgrade tracking.
-- Heart tank tracking.
-- Sub tank ownership and fill state tracking.
-- Save and load of long-term progression.
+```gdscript
+class_name CameraController
+extends Camera2D
 
-#### Save model decision
+enum CameraMode {
+    FOLLOW,
+    ZONE_LOCK,
+    BOSS_LOCK,
+    CUTSCENE,
+}
 
-- Use one local save profile for the initial implementation.
-- Save data must include defeated bosses, unlocked weapons, collected upgrades, health expansion state, sub tank ownership and fill state, and relevant campaign progression flags.
-- Checkpoints are stage-session state and should not be treated as permanent long-term save data unless a later feature explicitly expands save behavior.
+@export var follow_target: Node2D
+@export var horizontal_smooth := 8.0
+@export var vertical_smooth := 4.0
 
-#### Retry model decision
+var camera_mode := CameraMode.FOLLOW
+var camera_bounds := Rect2()
 
-- Early development and the first vertical slice will use immediate retry from checkpoint or stage start instead of replicating the original life economy in full detail.
-- Lives and continues are not required for the first implementation milestones.
-- If a classic lives system is added later, it must be layered on top of the existing stage retry flow rather than entangled with core movement or combat logic.
+func _process(delta: float) -> void:
+    if follow_target == null:
+        return
 
-#### Level selection implementation
+    var target_pos := follow_target.global_position
+    global_position.x = lerp(global_position.x, target_pos.x, delta * horizontal_smooth)
+    global_position.y = lerp(global_position.y, target_pos.y, delta * vertical_smooth)
+    global_position = _clamp_to_bounds(global_position)
+```
 
-The stage-select screen should be a dedicated scene such as `scenes/ui/stage_select_menu.tscn`.
+Rules:
 
-- It should render a fixed roster of stage cards based on `StageDefinition` resources.
-- Stage order should be explicit, not inferred from filesystem order.
-- `Progression` determines whether a stage is unlocked, cleared, or still locked.
-- After intro stage clear, the eight Maverick stages become selectable.
-- After the required Maverick progression flags are complete, fortress stages become available.
+- follow `Player/CameraAnchor`
+- clamp to stage or zone bounds
+- boss fights switch to `BOSS_LOCK`
+- cutscenes temporarily take camera control
+- use light additive shake, not heavy cinematic motion
+
+### Pickups and powerups
+
+Persistent pickups live in the stage scene under `Pickups` or `Capsules`. Temporary drops are spawned at runtime.
+
+Pickup categories:
+
+- health refill
+- weapon-energy refill
+- heart tank
+- sub tank
+- armor capsule
+
+```gdscript
+class_name PickupData
+extends Resource
+
+@export var pickup_id: StringName
+@export var pickup_type: StringName
+@export var persistent := false
+@export var health_amount := 0
+@export var weapon_energy_amount := 0
+@export var armor_part: StringName
+```
+
+```gdscript
+extends Area2D
+
+@export var pickup_data: PickupData
+
+func collect(receiver: PickupReceiver) -> void:
+    receiver.apply_pickup(pickup_data)
+
+    if pickup_data.persistent:
+        Progression.mark_pickup_collected(pickup_data.pickup_id)
+
+    queue_free()
+```
+
+Persistent pickup rules:
+
+- heart tanks, sub tanks, and armor capsules are persistent
+- health and weapon-energy refills are not persistent
+- use stable IDs like `intro_highway_dash_capsule` or `storm_eagle_heart_tank`
+- stage load should skip already-collected persistent pickups
+
+## Progression, Stage Select, And Save
+
+### Stage select
+
+Use a dedicated scene such as `scenes/ui/stage_select_menu.tscn`.
+
+Rules:
+
+- render a fixed roster from `StageDefinition` resources
+- stage order is explicit, not filesystem-derived
+- after intro clear, unlock the 8 Maverick stages
+- unlock fortress stages only when the required progression flags are set
 
 ```gdscript
 extends Control
@@ -1441,9 +952,14 @@ func _on_stage_selected(stage_id: StringName) -> void:
     GameFlow.request_stage_load(stage_id)
 ```
 
-#### Save serialization implementation
+### Save system
 
-The first implementation should use JSON for readability and easy debugging. The save file should be versioned and stored in `user://save_01.json`.
+Initial save format:
+
+- JSON
+- versioned
+- stored at `user://save_01.json`
+- one local save profile in the initial implementation
 
 ```gdscript
 extends Node
@@ -1464,51 +980,74 @@ func load_game() -> void:
     Progression.load_from_save_payload(payload)
 ```
 
-The serialized payload should include:
+Serialized fields:
 
-- Save format version.
-- Boss defeat flags.
-- Weapon unlock flags.
-- Persistent pickup collection IDs.
-- Armor unlock flags.
-- Dash unlock flag.
-- Sub tank ownership and fill values.
-- Intro-clear flag.
-- Fortress-unlock flag.
-- Any ending-unlock flags required later.
+- save format version
+- boss defeat flags
+- weapon unlock flags
+- persistent pickup collection IDs
+- armor unlock flags
+- dash unlock flag
+- sub tank ownership and fill values
+- intro-clear flag
+- fortress-unlock flag
 
-The serialized payload should not include:
+Do not serialize:
 
-- Live enemy instances.
-- Temporary health pickups.
-- Current checkpoint as a permanent campaign fact.
-- Moment-to-moment player HP or weapon energy unless a future suspend-save system is added.
+- live enemy instances
+- temporary pickups
+- current checkpoint as a permanent campaign fact
+- moment-to-moment HP or weapon energy, unless a suspend-save system is added later
 
-#### Script interaction with save and progression
+Example payload:
 
-- Stages read `Progression` at load time to decide which persistent pickups to spawn and which gates or routes should be open.
-- `SaveManager` reads from and writes to `Progression`.
-- `GameFlow` decides when saves should be triggered, such as after stage clear or after an explicit menu save action.
+```json
+{
+  "version": 1,
+  "bosses_defeated": ["chill_penguin", "storm_eagle"],
+  "weapons_unlocked": ["shotgun_ice", "storm_tornado"],
+  "collected_pickups": [
+    "intro_highway_dash_capsule",
+    "storm_eagle_heart_tank"
+  ],
+  "armor_parts": {
+    "helmet": false,
+    "body": false,
+    "arms": false,
+    "legs": true
+  },
+  "sub_tanks": {
+    "sub_tank_01": 8,
+    "sub_tank_02": 0
+  },
+  "dash_unlocked": true,
+  "intro_cleared": true,
+  "fortress_unlocked": false
+}
+```
 
-### 8A. Cutscenes
+### Retry model
 
-Cutscenes should be data-driven and controlled by stage or flow logic, not hardcoded inside player scripts.
+For the first implementation:
 
-#### Cutscene use cases
+- retry from checkpoint or stage start
+- no full lives/continues system required yet
+- lives can be added later on top of this, not inside core movement/combat logic
 
-- Intro stage opening.
-- Zero rescue sequence.
-- Dr. Light capsule sequences.
-- Boss intro stingers.
-- Stage-clear weapon reward flow.
-- Ending and fortress transitions.
+## Cutscenes And Dialogue
 
-#### Cutscene architecture
+### Cutscenes
 
-- `GameFlow` enters `CUTSCENE` state and suppresses gameplay input.
-- `CutsceneDirector.gd` owns timeline playback.
-- `CutsceneStep` resources describe discrete actions.
-- Actors expose simple cutscene-safe methods such as `set_input_enabled`, `play_presentation_state`, `move_to_marker`, or `look_at_direction`.
+Use a data-driven `CutsceneDirector.gd`. Do not hardcode cutscenes inside player scripts.
+
+Use cases:
+
+- intro stage opening
+- Zero rescue
+- Dr. Light capsule sequences
+- boss intro stingers
+- stage clear reward flow
+- ending and fortress transitions
 
 ```gdscript
 class_name CutsceneStep
@@ -1534,7 +1073,7 @@ func play() -> void:
     GameFlow.exit_cutscene_mode()
 ```
 
-Supported cutscene actions in the first implementation:
+First-pass cutscene actions:
 
 - `move_actor`
 - `play_animation_state`
@@ -1545,22 +1084,16 @@ Supported cutscene actions in the first implementation:
 - `unlock_dash`
 - `end_stage`
 
-Cutscenes should interact with gameplay state through `GameFlow`, `Progression`, and stage-local script APIs. They should not mutate unrelated systems directly.
+### Dialogue
 
-### 8B. Dialogue System
+Dialogue is a subsystem used by cutscenes. It should not own progression changes or camera movement.
 
-Dialogue should be implemented as a reusable UI and data layer used primarily by cutscenes, capsules, boss intros, and ending sequences.
-
-#### Dialogue scene and scripts
-
-Use a dedicated dialogue UI scene instead of embedding text logic directly into `CutsceneDirector.gd`.
+Files:
 
 - `scenes/ui/dialogue_box.tscn`
 - `scripts/ui/dialogue_box.gd`
 - `scripts/systems/dialogue_controller.gd`
 - `data/dialogue/*.tres` or `data/dialogue/*.json`
-
-Recommended scene shape:
 
 ```text
 DialogueBox.tscn
@@ -1572,19 +1105,6 @@ DialogueBox.tscn
   - PortraitRight optional
   - AdvanceIndicator
 ```
-
-#### Dialogue ownership
-
-- `DialogueController.gd` should own dialogue playback state.
-- `DialogueBox.gd` should own rendering and input affordances only.
-- `CutsceneDirector.gd` should call `DialogueController.show_sequence(dialogue_id)` and wait for completion.
-- `GameFlow` should remain in `CUTSCENE` while dialogue is active.
-
-The initial implementation does not need a separate `DialogueManager` autoload. `DialogueController.gd` can exist in the current stage scene or UI root and be referenced by `CutsceneDirector.gd`.
-
-#### Dialogue data shape
-
-Dialogue should be keyed by `dialogue_id` or `text_id`, not hardcoded inline in cutscene scripts.
 
 ```gdscript
 class_name DialogueLine
@@ -1604,15 +1124,6 @@ extends Resource
 @export var sequence_id: StringName
 @export var lines: Array[DialogueLine]
 ```
-
-Examples of dialogue IDs:
-
-- `intro_zero_rescue`
-- `dr_light_dash_capsule`
-- `boss_intro_sigma`
-- `ending_zero_message`
-
-#### Dialogue controller flow
 
 ```gdscript
 class_name DialogueController
@@ -1651,96 +1162,26 @@ func _advance_line() -> void:
     dialogue_box.show_line(line)
 ```
 
-#### Dialogue input behavior
+Input rules:
 
-- `menu_confirm` should advance the current line.
-- `menu_cancel` may skip the current sequence only for skippable cutscenes.
-- Gameplay input should be disabled while dialogue is open.
-- Stage or cutscene scripts should decide whether a sequence is skippable.
+- `menu_confirm` advances dialogue
+- `menu_cancel` may skip only skippable sequences
+- gameplay input stays disabled while dialogue is active
 
-```gdscript
-func _unhandled_input(event: InputEvent) -> void:
-    if not is_active:
-        return
+Capsule flow example:
 
-    if event.is_action_pressed("menu_confirm"):
-        advance()
-```
+1. player enters capsule trigger
+2. `StageController` starts a cutscene
+3. `CutsceneDirector` runs `show_text(dr_light_dash_capsule)`
+4. `DialogueController` presents the sequence
+5. cutscene executes `unlock_dash`
+6. `Progression` marks the capsule collected
 
-#### Dialogue rendering rules
+## Audio
 
-- Text should appear immediately in the first implementation.
-- Typewriter text can be added later without changing the data format.
-- Speaker name and portrait are optional per line.
-- `voice_event` can trigger placeholder voice blips through `AudioManager`.
+Audio is event-driven. Gameplay code triggers semantic events, not raw file paths.
 
-#### Capsule dialogue behavior
-
-Dr. Light capsule sequences should be regular dialogue sequences plus scripted side effects.
-
-Example flow:
-
-1. Player enters capsule trigger.
-2. `StageController` starts a cutscene.
-3. `CutsceneDirector` runs `show_text(dr_light_dash_capsule)`.
-4. `DialogueController` presents the sequence.
-5. On completion, the cutscene executes `unlock_dash`.
-6. `Progression` marks the capsule pickup as collected.
-
-#### Boss intro and ending dialogue behavior
-
-- Boss intros can use short dialogue or text stingers if needed.
-- Ending sequences should use the same dialogue system, not a separate one-off implementation.
-- Zero rescue and Dr. Light capsule scenes should also use the same dialogue system.
-
-#### Relationship to cutscenes
-
-- Dialogue is a subsystem used by cutscenes.
-- A `show_text` cutscene step should resolve a `DialogueSequence` and await `dialogue_finished`.
-- Dialogue should not own camera movement, actor movement, or progression changes directly.
-- Progression-changing side effects should remain in cutscene steps or stage scripts.
-
-### 9. UI And Feedback
-
-UI should present gameplay state clearly while remaining decoupled from gameplay logic.
-
-#### Required UI areas
-
-- Title and main menu UI.
-- Player HUD for health.
-- Weapon energy display when non-buster weapons are active.
-- Boss health display.
-- Pause menu.
-- Stage select UI.
-- Save or profile UI if needed for the single-profile flow.
-
-#### Feedback systems
-
-- Hit flashes.
-- Charge indicators.
-- Damage feedback.
-- Screen shake hooks.
-- Placeholder animation and VFX support for movement and combat states.
-- Stage clear and weapon unlock feedback hooks.
-
-#### Design requirements
-
-- UI widgets should observe gameplay state rather than own gameplay decisions.
-- Feedback triggers should use semantic events so they remain stable when assets change later.
-
-### 10. Audio System
-
-An audio system is required even before real assets exist.
-
-#### Audio architecture requirements
-
-- Separate routing for music and sound effects.
-- Semantic event-driven playback API for gameplay and UI events.
-- Support for placeholder clips and placeholder music loops.
-- Category-based volume control.
-- Support for scene-local effects and cross-scene music control.
-
-#### Required semantic events
+Required semantic events:
 
 - `player_jump`
 - `player_dash`
@@ -1756,20 +1197,12 @@ An audio system is required even before real assets exist.
 - `menu_confirm`
 - `menu_cancel`
 
-#### Design requirements
+Implementation:
 
-- Gameplay code must trigger audio by meaning, not by file path.
-- Replacing placeholder clips with final assets must not require gameplay rewrites.
-- Missing placeholder clips must fail gracefully without breaking gameplay.
-
-#### Recommended implementation approach
-
-- Implement audio as an autoload such as `AudioManager`.
-- Use Godot audio buses for at least `Master`, `Music`, and `SFX`.
-- Map semantic event IDs to placeholder `AudioStream` assets through data, not hardcoded branches spread across gameplay code.
-- Allow both one-shot SFX playback and persistent music playback through separate methods.
-
-#### Example audio manager shape
+- one autoload: `AudioManager`
+- buses: `Master`, `Music`, `SFX`
+- data-driven event-to-stream mapping
+- missing placeholder clips should fail silently
 
 ```gdscript
 extends Node
@@ -1798,138 +1231,86 @@ func play_music(track_name: StringName) -> void:
     $MusicPlayer.play()
 ```
 
-Example gameplay usage:
+## UI
 
-```gdscript
-if Input.is_action_just_pressed("jump") and is_on_floor():
-    velocity.y = tuning.jump_velocity
-    AudioManager.play_sfx(&"player_jump")
-```
+Required UI:
 
-This is the intended dependency direction: gameplay emits a semantic request, and the audio system decides what stream to play, on what bus, and how to handle missing placeholders.
+- title/menu UI
+- player HUD
+- weapon energy display
+- boss health display
+- pause menu
+- stage select UI
+- dialogue box
 
-### 11. Placeholder Asset Pipeline
+UI rules:
 
-Placeholder-first development is part of the spec, not a temporary workaround.
+- UI reads gameplay state
+- UI does not own gameplay logic
+- stage clear and weapon unlock feedback should use the same UI system
 
-#### Placeholder requirements
+## Placeholder Asset Rules
 
-- Use clearly named placeholder sprites, shapes, animations, VFX markers, and audio placeholders.
-- Keep placeholder asset naming stable across systems.
-- Build animation and state hookups around semantic states, not asset-specific assumptions.
-- Keep collision shapes, hurtboxes, and hitboxes authored independently from final art.
-- Use simple, readable color and shape language so placeholder entities are visually distinguishable during gameplay testing.
-
-#### Swap-readiness requirements
-
-- A future art or audio pass must be able to replace placeholders without changing gameplay behavior.
-- Character, enemy, projectile, UI, and stage placeholders must all follow consistent naming and scene conventions.
-- Presentation-facing scenes should be swappable while preserving the same gameplay node contracts.
+- use stable placeholder names
+- keep collision/hitboxes separate from visuals
+- drive visuals from semantic states like `idle`, `run`, `dash`, `hurt`, `charge_small`, `charge_full`
+- keep character, enemy, projectile, UI, and stage placeholder conventions consistent
 
 ## Milestones
 
-### Phase 1: Foundation
+### Phase 1
 
-Build the reusable technical foundation required for repeatable feature work.
+- project structure
+- player movement
+- player combat
+- shared health/damage/collision
+- one enemy family
+- boss skeleton
+- audio manager
+- HUD shell
+- one test stage
+- standalone stage testing
 
-- Establish project structure for scenes, scripts, data, UI, audio, and placeholders.
-- Define the input action map and baseline device support.
-- Implement the player controller with run, jump, fall, wall interaction, dash support, damage, death, and respawn.
-- Implement the base combat system with basic buster fire and charge states.
-- Create the shared health, damage, hit, and collision conventions.
-- Create reusable enemy and boss skeletons.
-- Create the gameplay camera foundation and boss-room constraint support.
-- Create the audio manager and semantic event routing with placeholder support.
-- Create the initial HUD shell.
-- Define placeholder asset conventions and swap rules.
+### Phase 2
 
-### Phase 2: Vertical Slice
+- one full vertical slice
+- hazards
+- checkpoints
+- one boss fight
+- stage clear flow
+- dash unlock flow
+- stage-local cutscene
+- dialogue flow
 
-Build one playable end-to-end slice that proves the architecture.
+### Phase 3
 
-- Create one complete stage slice with traversal, hazards, checkpoints, and stage completion flow.
-- Add at least one reusable enemy family.
-- Add one boss encounter using the boss framework.
-- Connect player, combat, enemies, boss, HUD, progression hooks, camera, and audio end-to-end.
-- Validate death, respawn, boss defeat, dash unlock gating, and stage clear flow using placeholders only.
+- stage select
+- boss weapons
+- weaknesses
+- armor parts
+- heart tanks
+- sub tanks
+- save/load
+- multiple stages
+- fortress unlock flow
 
-### Phase 3: Full Game Systems
+### Phase 4
 
-Expand from the vertical slice into the campaign-wide structure.
+- full campaign content
+- final Sigma flow
+- movement/combat tuning
+- placeholder replacement
+- bug fixing and optimization
 
-- Build title flow, intro stage flow, and stage select flow.
-- Add special weapon switching and energy usage.
-- Add boss weakness tables.
-- Add armor upgrades, heart tanks, and sub tanks.
-- Add save/load progression.
-- Expand reusable stage authoring patterns for multiple stages.
-- Build enough endgame flow to support fortress progression and final boss sequencing.
+## Acceptance Criteria
 
-### Phase 4: Completion And Polish
-
-Finish the full remake content and improve overall feel.
-
-- Add the remaining stages and bosses.
-- Tune movement, combat, camera, and boss pacing across the whole game.
-- Improve placeholder feedback or replace it with production assets.
-- Improve readability, usability, and accessibility where practical.
-- Perform optimization, bug fixing, and content consistency passes.
-
-## Out Of Scope For Initial Implementation
-
-- Pixel-perfect audiovisual recreation.
-- Exact emulation of every SNES-era timing detail.
-- Final art production, final audio production, and full polish before core systems are proven.
-- Multiplayer and online features.
-- Modding support.
-- Mobile support.
-- General-purpose editor tooling beyond what directly supports this game.
-
-## Validation And Acceptance Scenarios
-
-The implementation should be considered on track when the following scenarios are possible.
-
-### Mechanics baseline
-
-- The player can run, jump, wall jump, dash, shoot, charge, take damage, die, and respawn reliably.
-- Core movement and combat values can be tuned without rewriting major systems.
-- The player controller works with keyboard and gamepad through the same action map.
-
-### Placeholder-first workflow
-
-- Placeholder art and audio can be swapped without rewriting gameplay logic.
-- Core collisions and behaviors remain stable when presentation assets change.
-- Presentation scenes can be updated without changing movement, combat, or progression code.
-
-### Vertical slice validation
-
-- One stage slice can be played from start to boss clear using only placeholder assets.
-- The slice includes traversal, hazards, checkpoints, at least one enemy family, one boss, death and respawn, and stage completion.
-- The intro-stage upgrade flow can unlock dash for campaign progression while debug scenes can still test dash immediately.
-
-### Progression validation
-
-- Boss defeat updates progression state and unlock hooks.
-- Save/load restores progression-related unlocks and collected upgrades correctly.
-- Retry from checkpoint or stage start functions without relying on a lives system.
-
-### Audio, camera, and UI validation
-
-- Audio responds to gameplay and menu events through semantic triggers.
-- The camera handles normal traversal, encounter locking, and boss arenas cleanly.
-- The HUD reflects player health, weapon state, charge state, and boss health correctly.
-
-### Extensibility validation
-
-- Adding a new enemy, boss, weapon, or stage follows existing framework patterns rather than bespoke one-off implementations.
-- Adding a new placeholder presentation asset does not require changes to gameplay contracts.
-
-## Assumptions
-
-- The project is a 2D side-scrolling action platformer in Godot 4.6.
-- Mechanics fidelity is prioritized over pixel-perfect recreation.
-- Placeholder-first development is a hard architectural requirement until production assets exist.
-- The first implementation target is a vertical slice, not full-game content breadth.
-- Dash is technically available in the player controller from Phase 1 but is campaign-gated by intro progression.
-- The first save implementation uses a single local profile.
-- The first retry model uses checkpoint or stage restart, not a full lives economy.
+- player can run, jump, wall jump, dash, shoot, charge, take damage, die, and respawn
+- keyboard and gamepad both work through the same action map
+- locomotion and combat state machines run in parallel without conflicts
+- pickups and capsules apply effects through `PickupReceiver`
+- one stage can be run directly from the editor for mid-level testing
+- one stage vertical slice is playable from start to boss clear using placeholders only
+- boss defeat updates progression and unlocks the proper weapon reward
+- save/load restores persistent campaign state correctly
+- audio responds to semantic gameplay events
+- dialogue and cutscene flow work without embedding story logic into player scripts
