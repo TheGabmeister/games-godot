@@ -19,6 +19,35 @@ The target campaign includes:
 - heart tanks
 - sub tanks
 
+## Project Layout
+
+Use a consistent top-level structure from the start.
+
+Recommended folders:
+
+- `autoloads/` for the four runtime services only
+- `scenes/player/` for player scenes
+- `scenes/enemies/` for enemy scenes
+- `scenes/bosses/` for boss scenes
+- `scenes/stages/` for stage scenes and stage-local helpers
+- `scenes/ui/` for menus, HUD, dialogue, and overlays
+- `scripts/components/` for reusable gameplay components such as health, hurtboxes, projectiles, and checkpoints
+- `scripts/player/` for player-specific logic
+- `scripts/enemies/` for enemy-specific logic and AI states
+- `scripts/bosses/` for boss-specific logic and phase controllers
+- `scripts/systems/` for reusable runtime systems that are not autoloads
+- `data/stages/` for `StageDefinition` resources
+- `data/weapons/` for weapon data resources
+- `data/dialogue/` for dialogue sequences and cutscene-adjacent text data
+- `audio/` for placeholder and final audio assets
+- `assets/placeholders/` for temporary art and effects
+
+Rules:
+
+- scenes live under `scenes/`, reusable logic under `scripts/`, and authorable data under `data/`
+- stage-local content may live with the stage scene when it is not intended to be reused elsewhere
+- use stable `res://` paths from the beginning so future asset swaps do not require path churn
+
 ## Runtime Services
 
 Use these autoloads only:
@@ -27,6 +56,32 @@ Use these autoloads only:
 - `autoloads/progression.gd`
 - `autoloads/save_manager.gd`
 - `autoloads/audio_manager.gd`
+
+### Application shell
+
+Use one non-autoload runtime shell scene to host the active game content.
+
+Recommended structure:
+
+```text
+Main.tscn
+- Main
+  - WorldRoot
+  - UIRoot
+  - OverlayRoot
+```
+
+Responsibilities:
+
+- `WorldRoot` holds the active stage scene
+- `UIRoot` holds persistent gameplay UI such as HUD
+- `OverlayRoot` holds modal layers such as pause, dialogue, and stage-clear overlays
+
+Rules:
+
+- `GameFlow` coordinates transitions, but the runtime shell owns actual scene instancing and teardown
+- only one stage scene should be active in `WorldRoot` at a time
+- runtime UI should be layered without adding more autoloads
 
 ### `GameFlow`
 
@@ -52,6 +107,7 @@ Rules:
 - stage requests should flow through `GameFlow`
 - stage scenes should not own the global boot or menu flow
 - cutscenes should switch the game into a dedicated cutscene mode
+- pause and resume should be mediated through `GameFlow`, not handled independently by stage scenes
 
 ### `Progression`
 
@@ -70,12 +126,22 @@ Tracks:
 - intro clear flag
 - fortress unlock state
 - sub tank ownership and fill state
-- stage availability flags
+- campaign unlock markers used to derive stage availability
 
 Rules:
 
 - `Progression` owns campaign facts, not moment-to-moment gameplay state
 - systems that award permanent progress should update `Progression`
+- stage availability should be derived from progression facts where possible instead of duplicated as separate saved booleans
+
+Campaign unlock rules:
+
+- a new save starts with `intro_highway` as the only required entry point
+- clearing `intro_highway` unlocks dash and the 8 Maverick stages
+- defeating a Maverick boss unlocks that boss weapon immediately
+- Sigma Fortress unlocks only after all 8 Maverick bosses are defeated
+- fortress stages unlock sequentially from `sigma_fortress_1` through `sigma_fortress_4`
+- persistent pickups stay collected on replay once recorded in `Progression`
 
 ### `SaveManager`
 
@@ -89,6 +155,7 @@ Rules:
 - use a versioned payload
 - convert between save data and `Progression`
 - do not place gameplay rules in `SaveManager`
+- save triggers should be defined centrally rather than scattered across gameplay scripts
 
 ### `AudioManager`
 
@@ -113,6 +180,7 @@ Player responsibilities are divided across:
 - `PlayerCombat.gd` for firing, charge behavior, and weapon usage
 - `HealthComponent.gd` for HP, damage intake, invulnerability, and death signaling
 - `PickupReceiver.gd` for applying pickup effects
+- visual and animation nodes for presentation only
 
 ### Player scene
 
@@ -283,6 +351,22 @@ These combinations must be supported:
 - `WALL_SLIDE + CHARGED`
 - `HURT + DISABLED`
 
+### Player presentation
+
+Player visuals should read gameplay state, not define it.
+
+Presentation responsibilities:
+
+- facing-based sprite or animation flipping
+- locomotion-state presentation
+- combat-state presentation
+- hurt, invulnerability, and charge feedback
+
+Rules:
+
+- visual nodes should derive their state from locomotion and combat state machines
+- animation playback should not become the authoritative source of gameplay state
+
 ### Player pickups
 
 Pickups should apply effects through `PickupReceiver.gd`, not through `Player.gd`.
@@ -294,6 +378,16 @@ Pickups should apply effects through `PickupReceiver.gd`, not through `Player.gd
 - persistent reward routing into `Progression`
 
 `PlayerSensor` should detect pickup `Area2D`s and pass them to `PickupReceiver`.
+
+### Player death and respawn
+
+Death and respawn are stage-flow concerns, not self-contained player logic.
+
+Rules:
+
+- `HealthComponent` signals player death
+- `StageController` decides whether to respawn at checkpoint or restart the stage
+- player scripts should not reload scenes directly on death
 
 ## Shared Gameplay Systems
 
@@ -313,6 +407,35 @@ Rules:
 
 - use the same damage pipeline for player, enemies, and bosses
 - hazards should integrate with the same damage model where practical
+
+### Projectiles
+
+Use one shared projectile contract for player and enemy attacks.
+
+Projectile data or configuration should define:
+
+- owner team
+- weapon ID
+- damage payload
+- movement behavior
+- lifetime
+- hit behavior against world and targets
+
+Rules:
+
+- projectiles own travel and lifetime, not progression logic
+- projectile hits should produce the same shared hit payload used elsewhere
+- player and enemy projectile scenes may differ visually, but they should follow the same damage-routing model
+
+### Damage modifiers and weaknesses
+
+Use data-driven damage modifiers for bosses and, when useful, for enemies.
+
+Rules:
+
+- default damage comes from weapon data unless an enemy or boss overrides it
+- weakness and resistance tables should be keyed by stable weapon IDs
+- weapon weakness logic should live on the target side or shared combat data, not inside player movement scripts
 
 ### Collision layers
 
@@ -464,6 +587,7 @@ Rules:
 
 - boss phase changes should be controlled by explicit thresholds or conditions
 - boss rewards should not bypass progression systems
+- bosses should expose stable IDs for progression, weakness tables, and UI hookup
 
 ## Stages, Camera, And Pickups
 
@@ -478,8 +602,11 @@ Stage data should identify:
 - stage scene
 - boss ID
 - weapon reward ID
+- music event or track ID
+- default spawn ID
 - default unlock behavior
 - intro-clear requirements
+- optional intro or stage-clear cutscene IDs
 
 ### Stage scene layout
 
@@ -521,6 +648,24 @@ Rules:
 - stage scenes should be runnable directly for testing
 - standalone stage testing should not require the full boot flow
 - stage-local debug progression is allowed for development convenience
+- stage completion should award progression updates before leaving the stage
+- stage-local systems should report upward to `StageController` rather than changing global flow directly
+
+### Checkpoints and hazards
+
+Checkpoints are stage-local retry anchors.
+
+Checkpoint rules:
+
+- checkpoints use stable stage-local IDs
+- `StageController` owns the active checkpoint for the current run
+- checkpoints are not permanent campaign progression facts and should not be stored in the save file
+
+Hazard rules:
+
+- hazards may either apply standard damage or cause an instant death or fall reset depending on the hazard type
+- hazards should use shared systems where possible instead of bespoke per-stage logic
+- out-of-bounds or pit recovery should route through `StageController`
 
 ### Camera
 
@@ -566,6 +711,7 @@ Persistent pickup rules:
 - health and weapon-energy refills are not persistent
 - use stable IDs like `intro_highway_dash_capsule` or `storm_eagle_heart_tank`
 - stage load should skip already collected persistent pickups
+- persistent pickup collection should trigger a save opportunity once the pickup is confirmed
 
 ## Progression, Stage Select, And Save
 
@@ -579,6 +725,8 @@ Rules:
 - stage order is explicit, not derived from the filesystem
 - after intro clear, unlock the 8 Maverick stages
 - unlock fortress stages only when the required progression flags are set
+- `intro_highway` does not need to appear in the normal stage select flow after it has been cleared
+- fortress stage ordering is explicit and should not be inferred from filenames
 
 ### Save system
 
@@ -607,6 +755,12 @@ Do not serialize:
 - temporary pickups
 - current checkpoint as a permanent campaign fact
 - moment-to-moment HP or weapon energy unless a suspend-save system is added later
+
+Save trigger policy:
+
+- save after stage clear and reward payout
+- save after newly collected persistent pickups or capsules
+- do not save on temporary pickups or every checkpoint touch by default
 
 ### Retry model
 
@@ -648,6 +802,7 @@ Rules:
 
 - cutscenes should coordinate actors, camera, audio, and dialogue
 - progression changes triggered by story moments should still route through the proper gameplay systems
+- stage scripts may start cutscenes, but the cutscene system owns sequence execution once started
 
 ### Dialogue
 
@@ -668,6 +823,7 @@ Dialogue data should support:
 - body text
 - portrait references
 - optional voice or SFX events
+- skippable versus unskippable sequence behavior
 
 Input rules:
 
@@ -710,6 +866,7 @@ Implementation rules:
 - use buses such as `Master`, `Music`, and `SFX`
 - use data-driven event-to-stream mapping
 - missing placeholder clips should fail silently
+- stages, bosses, UI, and cutscenes all use the same semantic event vocabulary
 
 ## UI
 
@@ -728,6 +885,23 @@ UI rules:
 - UI reads gameplay state
 - UI does not own gameplay logic
 - stage clear and weapon unlock feedback should use the same UI system
+- HUD should expose player HP, equipped weapon, weapon energy, and boss HP when relevant
+- pause, dialogue, and stage-clear screens should behave as overlay UI, not separate gameplay scenes
+
+## Validation Strategy
+
+Before broader content production starts, the project should be able to validate these loops cheaply:
+
+- headless project boot
+- direct stage launch from the editor
+- player spawn, movement, combat, damage, death, and retry in a test stage
+- boss defeat into progression update
+- persistent pickup collection into save and reload
+
+Validation rules:
+
+- prefer the narrowest useful validation first
+- direct stage testing should remain a first-class workflow throughout development
 
 ## Placeholder Asset Rules
 
@@ -794,3 +968,4 @@ UI rules:
 - save and load restore persistent campaign state correctly
 - audio responds to semantic gameplay events
 - dialogue and cutscene flow work without embedding story logic into player scripts
+- project structure supports one active stage plus layered runtime UI without adding extra autoloads
