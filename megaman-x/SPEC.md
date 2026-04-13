@@ -1547,6 +1547,159 @@ Supported cutscene actions in the first implementation:
 
 Cutscenes should interact with gameplay state through `GameFlow`, `Progression`, and stage-local script APIs. They should not mutate unrelated systems directly.
 
+### 8B. Dialogue System
+
+Dialogue should be implemented as a reusable UI and data layer used primarily by cutscenes, capsules, boss intros, and ending sequences.
+
+#### Dialogue scene and scripts
+
+Use a dedicated dialogue UI scene instead of embedding text logic directly into `CutsceneDirector.gd`.
+
+- `scenes/ui/dialogue_box.tscn`
+- `scripts/ui/dialogue_box.gd`
+- `scripts/systems/dialogue_controller.gd`
+- `data/dialogue/*.tres` or `data/dialogue/*.json`
+
+Recommended scene shape:
+
+```text
+DialogueBox.tscn
+- DialogueBox (CanvasLayer)
+  - Panel
+  - SpeakerNameLabel
+  - BodyLabel
+  - PortraitLeft optional
+  - PortraitRight optional
+  - AdvanceIndicator
+```
+
+#### Dialogue ownership
+
+- `DialogueController.gd` should own dialogue playback state.
+- `DialogueBox.gd` should own rendering and input affordances only.
+- `CutsceneDirector.gd` should call `DialogueController.show_sequence(dialogue_id)` and wait for completion.
+- `GameFlow` should remain in `CUTSCENE` while dialogue is active.
+
+The initial implementation does not need a separate `DialogueManager` autoload. `DialogueController.gd` can exist in the current stage scene or UI root and be referenced by `CutsceneDirector.gd`.
+
+#### Dialogue data shape
+
+Dialogue should be keyed by `dialogue_id` or `text_id`, not hardcoded inline in cutscene scripts.
+
+```gdscript
+class_name DialogueLine
+extends Resource
+
+@export var line_id: StringName
+@export var speaker_id: StringName
+@export_multiline var text: String
+@export var portrait_id: StringName
+@export var voice_event: StringName
+```
+
+```gdscript
+class_name DialogueSequence
+extends Resource
+
+@export var sequence_id: StringName
+@export var lines: Array[DialogueLine]
+```
+
+Examples of dialogue IDs:
+
+- `intro_zero_rescue`
+- `dr_light_dash_capsule`
+- `boss_intro_sigma`
+- `ending_zero_message`
+
+#### Dialogue controller flow
+
+```gdscript
+class_name DialogueController
+extends Node
+
+signal dialogue_started(sequence_id: StringName)
+signal dialogue_finished(sequence_id: StringName)
+
+@onready var dialogue_box: DialogueBox = $DialogueBox
+
+var current_sequence: DialogueSequence
+var current_index := -1
+var is_active := false
+
+func show_sequence(sequence: DialogueSequence) -> void:
+    current_sequence = sequence
+    current_index = -1
+    is_active = true
+    dialogue_started.emit(sequence.sequence_id)
+    _advance_line()
+
+func advance() -> void:
+    if not is_active:
+        return
+    _advance_line()
+
+func _advance_line() -> void:
+    current_index += 1
+    if current_index >= current_sequence.lines.size():
+        is_active = false
+        dialogue_box.hide_dialogue()
+        dialogue_finished.emit(current_sequence.sequence_id)
+        return
+
+    var line := current_sequence.lines[current_index]
+    dialogue_box.show_line(line)
+```
+
+#### Dialogue input behavior
+
+- `menu_confirm` should advance the current line.
+- `menu_cancel` may skip the current sequence only for skippable cutscenes.
+- Gameplay input should be disabled while dialogue is open.
+- Stage or cutscene scripts should decide whether a sequence is skippable.
+
+```gdscript
+func _unhandled_input(event: InputEvent) -> void:
+    if not is_active:
+        return
+
+    if event.is_action_pressed("menu_confirm"):
+        advance()
+```
+
+#### Dialogue rendering rules
+
+- Text should appear immediately in the first implementation.
+- Typewriter text can be added later without changing the data format.
+- Speaker name and portrait are optional per line.
+- `voice_event` can trigger placeholder voice blips through `AudioManager`.
+
+#### Capsule dialogue behavior
+
+Dr. Light capsule sequences should be regular dialogue sequences plus scripted side effects.
+
+Example flow:
+
+1. Player enters capsule trigger.
+2. `StageController` starts a cutscene.
+3. `CutsceneDirector` runs `show_text(dr_light_dash_capsule)`.
+4. `DialogueController` presents the sequence.
+5. On completion, the cutscene executes `unlock_dash`.
+6. `Progression` marks the capsule pickup as collected.
+
+#### Boss intro and ending dialogue behavior
+
+- Boss intros can use short dialogue or text stingers if needed.
+- Ending sequences should use the same dialogue system, not a separate one-off implementation.
+- Zero rescue and Dr. Light capsule scenes should also use the same dialogue system.
+
+#### Relationship to cutscenes
+
+- Dialogue is a subsystem used by cutscenes.
+- A `show_text` cutscene step should resolve a `DialogueSequence` and await `dialogue_finished`.
+- Dialogue should not own camera movement, actor movement, or progression changes directly.
+- Progression-changing side effects should remain in cutscene steps or stage scripts.
+
 ### 9. UI And Feedback
 
 UI should present gameplay state clearly while remaining decoupled from gameplay logic.
