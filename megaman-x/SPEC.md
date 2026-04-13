@@ -2,7 +2,11 @@
 
 ## Summary
 
-Recreate *Mega Man X* (1993) in Godot 4.6 as a mechanics-first 2D action platformer. Use placeholder visuals and placeholder audio, but build the runtime structure so real assets can replace them later without changing gameplay logic.
+Recreate *Mega Man X* (1993) in Godot 4.6 as a mechanics-first 2D action platformer.
+
+This spec is intentionally architecture-first. It defines system ownership, runtime structure, scene boundaries, state machines, data responsibilities, and project rules. It should not serve as a code template.
+
+Use placeholder visuals and placeholder audio early, but organize the project so final assets can replace them without changing gameplay logic.
 
 The target campaign includes:
 
@@ -26,91 +30,89 @@ Use these autoloads only:
 
 ### `GameFlow`
 
-Owns high-level runtime state and scene transitions.
+Purpose:
 
-```gdscript
-extends Node
+- own high-level runtime state
+- own scene transitions
+- coordinate boot, menus, stage entry, pause, cutscenes, and ending flow
 
-enum GameState {
-    BOOT,
-    TITLE,
-    STAGE_SELECT,
-    IN_STAGE,
-    PAUSED,
-    CUTSCENE,
-    STAGE_CLEAR,
-    ENDING,
-}
+Runtime states:
 
-signal game_state_changed(previous: int, current: int)
-signal stage_requested(stage_id: StringName)
+- `BOOT`
+- `TITLE`
+- `STAGE_SELECT`
+- `IN_STAGE`
+- `PAUSED`
+- `CUTSCENE`
+- `STAGE_CLEAR`
+- `ENDING`
 
-var current_state := GameState.BOOT
-var current_stage_id: StringName
+Rules:
 
-func request_stage_load(stage_id: StringName) -> void:
-    current_stage_id = stage_id
-    stage_requested.emit(stage_id)
-```
-
-Responsibilities:
-
-- boot flow
-- title/menu flow
-- stage loading
-- pause/unpause
-- cutscene mode
-- stage clear flow
-- ending flow
+- stage requests should flow through `GameFlow`
+- stage scenes should not own the global boot or menu flow
+- cutscenes should switch the game into a dedicated cutscene mode
 
 ### `Progression`
 
-Owns in-memory campaign state.
+Purpose:
 
-```gdscript
-extends Node
+- own in-memory campaign state
+- track what the player has unlocked or permanently collected
 
-signal progression_changed()
+Tracks:
 
-var bosses_defeated: Dictionary = {}
-var weapons_unlocked: Dictionary = { &"buster": true }
-var collected_pickups: Dictionary = {}
-var armor_parts := {
-    &"helmet": false,
-    &"body": false,
-    &"arms": false,
-    &"legs": false,
-}
-var dash_unlocked := false
-var intro_cleared := false
-var fortress_unlocked := false
-```
-
-Responsibilities:
-
+- defeated bosses
 - unlocked weapons
-- persistent pickups
+- collected persistent pickups
 - armor parts
 - dash unlock
-- boss defeat flags
+- intro clear flag
+- fortress unlock state
+- sub tank ownership and fill state
 - stage availability flags
+
+Rules:
+
+- `Progression` owns campaign facts, not moment-to-moment gameplay state
+- systems that award permanent progress should update `Progression`
 
 ### `SaveManager`
 
-Owns serialization only. It does not own gameplay rules.
+Purpose:
+
+- serialize and deserialize progression data only
+
+Rules:
 
 - save to `user://save_01.json`
-- load from `user://save_01.json`
-- version the payload
-- convert `Progression` to/from save data
+- use a versioned payload
+- convert between save data and `Progression`
+- do not place gameplay rules in `SaveManager`
 
 ### `AudioManager`
 
-Owns music playback, SFX playback, buses, and semantic event lookup.
+Purpose:
+
+- own music playback
+- own SFX playback
+- own bus routing
+- map semantic audio events to streams
+
+Rules:
+
+- gameplay systems should request semantic events, not raw file paths
 
 ## Player
 
-Keep all player-related implementation here: input, movement, combat, health hookup, pickups, and state machines.
+Keep all player-related implementation in the player area of the project, but keep responsibilities split by subsystem.
+
+Player responsibilities are divided across:
+
+- `Player.gd` for locomotion, facing, and movement state
+- `PlayerCombat.gd` for firing, charge behavior, and weapon usage
+- `HealthComponent.gd` for HP, damage intake, invulnerability, and death signaling
+- `PickupReceiver.gd` for applying pickup effects
 
 ### Player scene
 
@@ -119,16 +121,16 @@ Player.tscn
 - Player (CharacterBody2D) [Player.gd]
   - CollisionShape2D
   - VisualRoot
-  - Hurtbox [Hurtbox.gd]
-  - HealthComponent [HealthComponent.gd]
-  - PlayerCombat [PlayerCombat.gd]
-    - WeaponInventory [WeaponInventory.gd]
-  - PickupReceiver [PickupReceiver.gd]
-  - PlayerSensor (Area2D)
-  - ShotOrigin (Marker2D)
-  - WallCheckLeft (RayCast2D)
-  - WallCheckRight (RayCast2D)
-  - CameraAnchor (Marker2D)
+  - Hurtbox
+  - HealthComponent
+  - PlayerCombat
+    - WeaponInventory
+  - PickupReceiver
+  - PlayerSensor
+  - ShotOrigin
+  - WallCheckLeft
+  - WallCheckRight
+  - CameraAnchor
 ```
 
 ### Input
@@ -145,78 +147,63 @@ Required actions:
 - `menu_confirm`
 - `menu_cancel`
 
-Both keyboard and gamepad are required. Gameplay code reads actions only, not raw keys/buttons.
+Rules:
+
+- support both keyboard and gamepad
+- gameplay code reads input actions only
+- gameplay code should not depend on raw keys or buttons
 
 ### Player tuning data
 
-```gdscript
-class_name PlayerTuning
-extends Resource
+Use a dedicated data resource for player tuning values.
 
-@export var run_speed: float = 220.0
-@export var ground_accel: float = 1800.0
-@export var ground_decel: float = 2200.0
-@export var air_accel: float = 1200.0
-@export var jump_velocity: float = -360.0
-@export var gravity_scale: float = 1.0
-@export var dash_speed: float = 340.0
-@export var dash_duration: float = 0.18
-@export var wall_slide_speed: float = 70.0
-@export var wall_jump_velocity: Vector2 = Vector2(240.0, -320.0)
-@export var invulnerability_time: float = 1.0
-```
+It should hold movement and combat-adjacent tuning such as:
+
+- run speed
+- acceleration and deceleration
+- air control
+- jump velocity
+- gravity scale
+- dash speed and duration
+- wall slide speed
+- wall jump force
+- invulnerability time
+
+Rules:
+
+- balance values should live in data, not be hardcoded into logic
 
 ### Player controller
 
-`Player.gd` owns locomotion, facing, and movement-facing state only.
+`Player.gd` owns:
 
-```gdscript
-extends CharacterBody2D
+- locomotion
+- facing direction
+- grounded and airborne movement handling
+- wall movement handling
+- movement-side state evaluation
 
-@export var tuning: PlayerTuning
-@export var can_dash_from_start := false
+`Player.gd` should not own:
 
-var facing := 1
-var dash_unlocked := false
-var is_dashing := false
-var is_hurt := false
-var is_dead := false
-
-func _physics_process(delta: float) -> void:
-    var move_input := Input.get_axis("move_left", "move_right")
-    var jump_pressed := Input.is_action_just_pressed("jump")
-    var dash_pressed := Input.is_action_just_pressed("dash")
-
-    _update_facing(move_input)
-    _apply_horizontal_movement(move_input, delta)
-    _apply_gravity(delta)
-    _handle_jump(jump_pressed)
-    _handle_dash(dash_pressed)
-
-    move_and_slide()
-    _update_locomotion_state()
-```
+- weapon inventory rules
+- projectile spawning rules
+- pickup application logic
+- cutscene logic
 
 ### Player locomotion state machine
 
 Use a single locomotion state machine in `Player.gd`.
 
-```gdscript
-enum LocomotionState {
-    IDLE,
-    RUN,
-    JUMP,
-    FALL,
-    DASH,
-    WALL_SLIDE,
-    HURT,
-    DEAD,
-}
-```
+States:
 
-```gdscript
-var locomotion_state: LocomotionState = LocomotionState.IDLE
-```
+- `IDLE`
+- `RUN`
+- `JUMP`
+- `FALL`
+- `DASH`
+- `WALL_SLIDE`
+- `HURT`
+- `DEAD`
 
 Priority order:
 
@@ -229,198 +216,66 @@ Priority order:
 - `RUN`
 - `IDLE`
 
-```gdscript
-func _update_locomotion_state() -> void:
-    if is_dead:
-        locomotion_state = LocomotionState.DEAD
-        return
-
-    if is_hurt:
-        locomotion_state = LocomotionState.HURT
-        return
-
-    if is_dashing:
-        locomotion_state = LocomotionState.DASH
-        return
-
-    if _is_wall_sliding():
-        locomotion_state = LocomotionState.WALL_SLIDE
-        return
-
-    if not is_on_floor():
-        locomotion_state = (
-            LocomotionState.JUMP
-            if velocity.y < 0.0
-            else LocomotionState.FALL
-        )
-        return
-
-    locomotion_state = (
-        LocomotionState.RUN
-        if absf(velocity.x) > 0.0
-        else LocomotionState.IDLE
-    )
-```
-
 Rules:
 
-- dash exists in code from Phase 1
+- dash exists in code from the start
 - campaign dash unlock is gated by the intro-stage capsule
-- debug scenes can enable dash immediately
-- ladder support is part of the full game but not required in the first slice unless needed by the chosen test stage
+- debug stages may enable dash immediately
+- ladder support belongs to the full game plan, but it does not need to block the first playable slice
 
 ### Player combat
 
-`PlayerCombat.gd` owns weapon firing, charging, cooldown, and projectile spawning. It does not own locomotion.
+`PlayerCombat.gd` owns:
 
-```gdscript
-class_name WeaponData
-extends Resource
+- weapon firing
+- shot timing and cooldown
+- charge behavior
+- projectile spawning requests
+- weapon energy consumption and restoration
 
-@export var weapon_id: StringName
-@export var display_name: String
-@export var energy_cost: int = 0
-@export var projectile_scene: PackedScene
-@export var base_damage: int = 1
-@export var supports_charge := false
-@export var full_charge_time := 1.0
-@export var max_charge_level := 2
-```
+`PlayerCombat.gd` does not own locomotion.
 
-#### Weapon switching
+Use weapon data resources for:
 
-```gdscript
-class_name WeaponInventory
-extends Node
+- weapon ID
+- display name
+- energy cost
+- projectile scene reference
+- base damage
+- charge support
+- charge thresholds or max charge level
 
-signal equipped_weapon_changed(weapon_id: StringName)
+### Weapon switching
 
-const ORDER: Array[StringName] = [
-    &"buster",
-    &"shotgun_ice",
-    &"electric_spark",
-    &"rolling_shield",
-    &"homing_torpedo",
-    &"boomerang_cutter",
-    &"chameleon_sting",
-    &"storm_tornado",
-    &"fire_wave",
-]
+Use a dedicated `WeaponInventory` node under `PlayerCombat`.
 
-var unlocked := {
-    &"buster": true,
-}
+Rules:
 
-var equipped_weapon_id: StringName = &"buster"
+- the weapon order is explicit
+- `buster` starts unlocked
+- unlocked boss weapons are added through progression
+- cycling should skip locked weapons
 
-func unlock_weapon(weapon_id: StringName) -> void:
-    unlocked[weapon_id] = true
-
-func cycle_next() -> void:
-    var current_index := ORDER.find(equipped_weapon_id)
-    for offset in range(1, ORDER.size() + 1):
-        var candidate := ORDER[(current_index + offset) % ORDER.size()]
-        if unlocked.get(candidate, false):
-            equipped_weapon_id = candidate
-            equipped_weapon_changed.emit(equipped_weapon_id)
-            return
-```
-
-```gdscript
-class_name PlayerCombat
-extends Node
-
-@export var weapon_database: Dictionary
-
-@onready var inventory: WeaponInventory = $WeaponInventory
-@onready var shot_origin: Marker2D = $"../ShotOrigin"
-
-func fire_pressed(owner_node: Node2D, facing: int) -> void:
-    var weapon_data: WeaponData = weapon_database.get(inventory.equipped_weapon_id)
-    if weapon_data == null:
-        return
-
-    if weapon_data.energy_cost > 0 and not owner_node.consume_weapon_energy(weapon_data.energy_cost):
-        return
-
-    var projectile := weapon_data.projectile_scene.instantiate()
-    projectile.global_position = shot_origin.global_position
-    projectile.setup(owner_node, facing, weapon_data)
-    owner_node.get_tree().current_scene.add_child(projectile)
-
-    AudioManager.play_sfx(&"player_shoot")
-```
-
-#### Combat state machine
+### Combat state machine
 
 Use a separate combat state machine in `PlayerCombat.gd`.
 
-```gdscript
-enum CombatState {
-    READY,
-    FIRING,
-    CHARGING,
-    CHARGED,
-    COOLDOWN,
-    DISABLED,
-}
-```
+States:
 
-```gdscript
-var combat_state: CombatState = CombatState.READY
-var charge_time := 0.0
-```
+- `READY`
+- `FIRING`
+- `CHARGING`
+- `CHARGED`
+- `COOLDOWN`
+- `DISABLED`
 
-```gdscript
-func physics_update(delta: float) -> void:
-    if combat_state == CombatState.DISABLED:
-        return
+Rules:
 
-    if Input.is_action_pressed("shoot"):
-        _handle_fire_held(delta)
-    elif Input.is_action_just_released("shoot"):
-        _handle_fire_released()
-    elif Input.is_action_just_pressed("shoot"):
-        _handle_fire_pressed()
+- locomotion and combat run in parallel
+- movement state should not block valid combat state changes by default
+- combat may be disabled temporarily during hurt, death, or cutscenes when needed
 
-    _update_cooldown(delta)
-```
-
-```gdscript
-func _handle_fire_held(delta: float) -> void:
-    var weapon_data: WeaponData = _get_equipped_weapon_data()
-    if not weapon_data.supports_charge:
-        return
-
-    if combat_state == CombatState.READY:
-        combat_state = CombatState.CHARGING
-        charge_time = 0.0
-        AudioManager.play_sfx(&"buster_charge_start")
-
-    if combat_state == CombatState.CHARGING:
-        charge_time += delta
-        if charge_time >= weapon_data.full_charge_time:
-            combat_state = CombatState.CHARGED
-            AudioManager.play_sfx(&"buster_charge_full")
-```
-
-```gdscript
-func _handle_fire_released() -> void:
-    var weapon_data: WeaponData = _get_equipped_weapon_data()
-
-    match combat_state:
-        CombatState.CHARGING:
-            _spawn_projectile(weapon_data, _resolve_partial_charge_level())
-        CombatState.CHARGED:
-            _spawn_projectile(weapon_data, weapon_data.max_charge_level)
-        _:
-            return
-
-    combat_state = CombatState.COOLDOWN
-    charge_time = 0.0
-```
-
-Locomotion and combat run in parallel. These combinations must work:
+These combinations must be supported:
 
 - `RUN + READY`
 - `JUMP + FIRING`
@@ -432,88 +287,32 @@ Locomotion and combat run in parallel. These combinations must work:
 
 Pickups should apply effects through `PickupReceiver.gd`, not through `Player.gd`.
 
-```gdscript
-class_name PickupReceiver
-extends Node
+`PickupReceiver` owns:
 
-@onready var health: HealthComponent = $"../HealthComponent"
-@onready var combat: PlayerCombat = $"../PlayerCombat"
-
-func apply_pickup(pickup_data: PickupData) -> void:
-    match pickup_data.pickup_type:
-        &"health":
-            health.heal(pickup_data.health_amount)
-        &"weapon_energy":
-            combat.restore_weapon_energy(pickup_data.weapon_energy_amount)
-        &"heart_tank":
-            Progression.unlock_heart_tank(pickup_data.pickup_id)
-        &"sub_tank":
-            Progression.unlock_sub_tank(pickup_data.pickup_id)
-        &"armor_capsule":
-            Progression.unlock_armor_part(pickup_data.armor_part)
-```
+- health refill application
+- weapon energy refill application
+- persistent reward routing into `Progression`
 
 `PlayerSensor` should detect pickup `Area2D`s and pass them to `PickupReceiver`.
 
 ## Shared Gameplay Systems
 
-This section contains systems shared by player, enemies, bosses, and the world.
+This section defines systems shared by player, enemies, bosses, hazards, and world interactions.
 
 ### Health and damage
 
 Use one shared hit payload shape and one shared health component.
 
-```gdscript
-class_name HitData
-extends RefCounted
+Shared concepts:
 
-var source: Node
-var team: StringName
-var weapon_id: StringName
-var damage: int
-var knockback: Vector2
-```
+- hit payload contains the source, team, weapon identity, damage, and knockback
+- hurtboxes filter incoming hits by team
+- health components process damage, invulnerability, death, and health signals
 
-```gdscript
-class_name Hurtbox
-extends Area2D
+Rules:
 
-signal hit_received(hit: HitData)
-
-@export var owner_team: StringName
-
-func receive_hit(hit: HitData) -> void:
-    if hit.team == owner_team:
-        return
-    hit_received.emit(hit)
-```
-
-```gdscript
-class_name HealthComponent
-extends Node
-
-signal damaged(hit: HitData, current_health: int)
-signal died()
-
-@export var max_health := 1
-@export var invulnerability_time := 0.0
-
-var current_health := 0
-var invulnerable := false
-
-func _ready() -> void:
-    current_health = max_health
-
-func apply_hit(hit: HitData) -> void:
-    if invulnerable:
-        return
-
-    current_health = max(current_health - hit.damage, 0)
-    damaged.emit(hit, current_health)
-
-    if current_health == 0:
-        died.emit()
-```
+- use the same damage pipeline for player, enemies, and bosses
+- hazards should integrate with the same damage model where practical
 
 ### Collision layers
 
@@ -535,34 +334,12 @@ Keep these layer numbers stable:
 | 12 | `CAMERA_ZONE` |
 | 13 | `PLAYER_SENSOR` |
 
-```gdscript
-class_name CollisionLayers
-extends RefCounted
-
-const WORLD_SOLID := 1
-const WORLD_ONE_WAY := 2
-const PLAYER_BODY := 3
-const ENEMY_BODY := 4
-const PLAYER_HITBOX := 5
-const ENEMY_HITBOX := 6
-const PLAYER_HURTBOX := 7
-const ENEMY_HURTBOX := 8
-const PICKUP := 9
-const TRIGGER := 10
-const HAZARD := 11
-const CAMERA_ZONE := 12
-const PLAYER_SENSOR := 13
-
-static func bit(layer_index: int) -> int:
-    return 1 << (layer_index - 1)
-```
-
 Recommended usage:
 
-- bodies collide with world layers
-- hitboxes and hurtboxes are `Area2D`
-- pickups/checkpoints/cutscene triggers/camera zones are `Area2D`
-- hazards use `Area2D` and the same hit/hazard pipeline
+- character bodies collide with world layers
+- hitboxes and hurtboxes use `Area2D`
+- pickups, checkpoints, cutscene triggers, and camera zones use `Area2D`
+- hazards use `Area2D` and plug into the shared hit or hazard pipeline
 
 ## Enemies And Bosses
 
@@ -595,7 +372,7 @@ Weapon rewards:
 - `storm_tornado`
 - `fire_wave`
 
-Regular enemy families should use stable internal IDs such as:
+Use stable internal IDs for regular enemy families such as:
 
 - `walker_basic`
 - `turret_basic`
@@ -606,12 +383,17 @@ Regular enemy families should use stable internal IDs such as:
 
 ### Enemy scene and logic
 
-Enemy inheritance stays shallow:
+Enemy inheritance stays shallow.
 
-- `EnemyBase.gd` extends `CharacterBody2D`
-- `HealthComponent.gd` handles HP
-- `Hurtbox.gd` handles incoming hit routing
-- `EnemyBrain.gd` handles AI state transitions
+Core enemy parts:
+
+- `EnemyBase.gd` as the main scene script
+- `HealthComponent.gd` for HP
+- `Hurtbox.gd` for incoming hit routing
+- `EnemyBrain.gd` for AI state transitions
+- `DropSpawner` or equivalent for temporary drops
+
+Example structure:
 
 ```text
 Enemy_WalkerBasic.tscn
@@ -626,69 +408,17 @@ Enemy_WalkerBasic.tscn
   - DropSpawner
 ```
 
-```gdscript
-class_name EnemyBase
-extends CharacterBody2D
+Rules:
 
-signal died(enemy_id: StringName)
-
-@export var enemy_id: StringName
-@export var team: StringName = &"enemy"
-
-@onready var hurtbox: Hurtbox = $Hurtbox
-@onready var health: HealthComponent = $HealthComponent
-@onready var brain: EnemyBrain = $EnemyBrain
-
-func _ready() -> void:
-    hurtbox.hit_received.connect(health.apply_hit)
-    health.died.connect(_on_died)
-
-func _physics_process(delta: float) -> void:
-    brain.physics_update(delta)
-
-func _on_died() -> void:
-    died.emit(enemy_id)
-    queue_free()
-```
+- avoid deep enemy inheritance trees
+- keep common combat and health behavior shared
+- keep enemy-specific behavior in data, states, or small scripts
 
 ### Enemy AI
 
-Use small state scripts, not one giant `_physics_process()`.
+Use small state scripts, not one giant enemy update loop.
 
-```gdscript
-class_name EnemyState
-extends Node
-
-func enter(_context: Dictionary = {}) -> void:
-    pass
-
-func physics_update(_delta: float) -> void:
-    pass
-
-func exit() -> void:
-    pass
-```
-
-```gdscript
-class_name EnemyBrain
-extends Node
-
-@export var initial_state: NodePath
-
-var current_state: EnemyState
-
-func transition_to(state: EnemyState, context: Dictionary = {}) -> void:
-    if current_state:
-        current_state.exit()
-    current_state = state
-    current_state.enter(context)
-
-func physics_update(delta: float) -> void:
-    if current_state:
-        current_state.physics_update(delta)
-```
-
-Reusable state types:
+Reusable enemy state types:
 
 - `IdleState`
 - `PatrolState`
@@ -697,9 +427,17 @@ Reusable state types:
 - `RecoverState`
 - `DeadState`
 
+Rules:
+
+- `EnemyBrain` owns transitions between states
+- individual states own localized behavior
+- enemy behavior should be composable, not hardwired into one monolithic class
+
 ### Boss scene and logic
 
-Bosses use the same shared systems plus a phase controller.
+Bosses use the shared combat and health systems plus a boss-specific phase controller.
+
+Example structure:
 
 ```text
 Boss_ChillPenguin.tscn
@@ -714,74 +452,43 @@ Boss_ChillPenguin.tscn
   - ArenaMarker
 ```
 
-```gdscript
-class_name BossBase
-extends CharacterBody2D
-
-signal boss_defeated(boss_id: StringName)
-
-@export var boss_id: StringName
-@export var team: StringName = &"enemy"
-
-@onready var hurtbox: Hurtbox = $Hurtbox
-@onready var health: HealthComponent = $HealthComponent
-@onready var phase_controller: BossPhaseController = $BossPhaseController
-
-func _ready() -> void:
-    hurtbox.hit_received.connect(_on_hit_received)
-    health.died.connect(_on_died)
-
-func _on_hit_received(hit: HitData) -> void:
-    health.apply_hit(hit)
-    phase_controller.update_phase(_health_percent())
-
-func _on_died() -> void:
-    boss_defeated.emit(boss_id)
-```
-
-```gdscript
-class_name BossPhaseController
-extends Node
-
-@export var phase_thresholds: Array[int] = [100, 60, 30]
-var current_phase := 0
-
-func update_phase(current_health_percent: int) -> void:
-    if current_phase + 1 < phase_thresholds.size() and current_health_percent <= phase_thresholds[current_phase + 1]:
-        current_phase += 1
-```
-
 Boss requirements:
 
 - intro hook
-- health bar
-- arena lock
-- weakness/resistance handling
+- health bar integration
+- arena lock behavior
+- weakness and resistance handling
 - reward flow through `Progression`
+
+Rules:
+
+- boss phase changes should be controlled by explicit thresholds or conditions
+- boss rewards should not bypass progression systems
 
 ## Stages, Camera, And Pickups
 
 ### Stage data
 
-```gdscript
-class_name StageDefinition
-extends Resource
+Use a stage definition resource for stage metadata.
 
-@export var stage_id: StringName
-@export var display_name: String
-@export var stage_scene: PackedScene
-@export var boss_id: StringName
-@export var weapon_reward_id: StringName
-@export var unlocked_by_default := false
-@export var requires_intro_clear := true
-```
+Stage data should identify:
+
+- stage ID
+- display name
+- stage scene
+- boss ID
+- weapon reward ID
+- default unlock behavior
+- intro-clear requirements
 
 ### Stage scene layout
 
+Use a consistent stage root structure.
+
 ```text
 Stage_FlameMammoth.tscn
-- StageController (Node)
-  - CameraController (Camera2D)
+- StageController
+  - CameraController
   - TilemapRoot
   - BackgroundRoot
   - SpawnPoints
@@ -797,7 +504,9 @@ Stage_FlameMammoth.tscn
 
 ### Stage controller
 
-`StageController.gd` owns stage-local flow:
+`StageController.gd` owns stage-local flow.
+
+Responsibilities:
 
 - player spawn
 - checkpoint activation
@@ -807,83 +516,34 @@ Stage_FlameMammoth.tscn
 - stage complete signaling
 - stage-local cutscene entry points
 
-```gdscript
-extends Node
+Rules:
 
-@export var stage_data: StageDefinition
-@export var player_spawn_root: NodePath
-@export var debug_spawn_id: StringName = &""
-@export var debug_use_test_progression := true
-
-func _ready() -> void:
-    if GameFlow.current_state == GameFlow.GameState.BOOT:
-        _start_standalone_test_mode()
-    else:
-        start_stage()
-
-func start_stage() -> void:
-    _spawn_player_at_default_spawn()
-    AudioManager.play_music(stage_data.stage_id)
-
-func _start_standalone_test_mode() -> void:
-    if debug_use_test_progression:
-        Progression.apply_debug_profile(&"all_movement_unlocked")
-    _spawn_player_at_spawn(debug_spawn_id if debug_spawn_id != &"" else &"start")
-    AudioManager.play_music(stage_data.stage_id)
-```
-
-This allows direct stage testing from the editor without going through the full boot flow.
+- stage scenes should be runnable directly for testing
+- standalone stage testing should not require the full boot flow
+- stage-local debug progression is allowed for development convenience
 
 ### Camera
 
 Use one gameplay camera per stage, not multiple active gameplay cameras.
 
-Use camera modes:
+Camera modes:
 
 - `FOLLOW`
 - `ZONE_LOCK`
 - `BOSS_LOCK`
 - `CUTSCENE`
 
-```gdscript
-class_name CameraController
-extends Camera2D
-
-enum CameraMode {
-    FOLLOW,
-    ZONE_LOCK,
-    BOSS_LOCK,
-    CUTSCENE,
-}
-
-@export var follow_target: Node2D
-@export var horizontal_smooth := 8.0
-@export var vertical_smooth := 4.0
-
-var camera_mode := CameraMode.FOLLOW
-var camera_bounds := Rect2()
-
-func _process(delta: float) -> void:
-    if follow_target == null:
-        return
-
-    var target_pos := follow_target.global_position
-    global_position.x = lerp(global_position.x, target_pos.x, delta * horizontal_smooth)
-    global_position.y = lerp(global_position.y, target_pos.y, delta * vertical_smooth)
-    global_position = _clamp_to_bounds(global_position)
-```
-
 Rules:
 
 - follow `Player/CameraAnchor`
-- clamp to stage or zone bounds
+- clamp to stage bounds or zone bounds
 - boss fights switch to `BOSS_LOCK`
 - cutscenes temporarily take camera control
 - use light additive shake, not heavy cinematic motion
 
 ### Pickups and powerups
 
-Persistent pickups live in the stage scene under `Pickups` or `Capsules`. Temporary drops are spawned at runtime.
+Persistent pickups live in the stage scene. Temporary drops spawn at runtime.
 
 Pickup categories:
 
@@ -893,64 +553,32 @@ Pickup categories:
 - sub tank
 - armor capsule
 
-```gdscript
-class_name PickupData
-extends Resource
+Pickup data should identify:
 
-@export var pickup_id: StringName
-@export var pickup_type: StringName
-@export var persistent := false
-@export var health_amount := 0
-@export var weapon_energy_amount := 0
-@export var armor_part: StringName
-```
-
-```gdscript
-extends Area2D
-
-@export var pickup_data: PickupData
-
-func collect(receiver: PickupReceiver) -> void:
-    receiver.apply_pickup(pickup_data)
-
-    if pickup_data.persistent:
-        Progression.mark_pickup_collected(pickup_data.pickup_id)
-
-    queue_free()
-```
+- pickup ID
+- pickup type
+- whether it is persistent
+- effect payload such as health, weapon energy, or armor part
 
 Persistent pickup rules:
 
 - heart tanks, sub tanks, and armor capsules are persistent
 - health and weapon-energy refills are not persistent
 - use stable IDs like `intro_highway_dash_capsule` or `storm_eagle_heart_tank`
-- stage load should skip already-collected persistent pickups
+- stage load should skip already collected persistent pickups
 
 ## Progression, Stage Select, And Save
 
 ### Stage select
 
-Use a dedicated scene such as `scenes/ui/stage_select_menu.tscn`.
+Use a dedicated stage select scene such as `scenes/ui/stage_select_menu.tscn`.
 
 Rules:
 
 - render a fixed roster from `StageDefinition` resources
-- stage order is explicit, not filesystem-derived
+- stage order is explicit, not derived from the filesystem
 - after intro clear, unlock the 8 Maverick stages
 - unlock fortress stages only when the required progression flags are set
-
-```gdscript
-extends Control
-
-@export var stage_definitions: Array[StageDefinition]
-
-func _ready() -> void:
-    for stage_def in stage_definitions:
-        _add_stage_card(stage_def, Progression.is_stage_unlocked(stage_def.stage_id))
-
-func _on_stage_selected(stage_id: StringName) -> void:
-    GameFlow.request_stage_load(stage_id)
-```
 
 ### Save system
 
@@ -960,25 +588,6 @@ Initial save format:
 - versioned
 - stored at `user://save_01.json`
 - one local save profile in the initial implementation
-
-```gdscript
-extends Node
-
-const SAVE_PATH := "user://save_01.json"
-
-func save_game() -> void:
-    var payload := Progression.to_save_payload()
-    var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-    file.store_string(JSON.stringify(payload, "\t"))
-
-func load_game() -> void:
-    if not FileAccess.file_exists(SAVE_PATH):
-        return
-
-    var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-    var payload := JSON.parse_string(file.get_as_text())
-    Progression.load_from_save_payload(payload)
-```
 
 Serialized fields:
 
@@ -997,50 +606,25 @@ Do not serialize:
 - live enemy instances
 - temporary pickups
 - current checkpoint as a permanent campaign fact
-- moment-to-moment HP or weapon energy, unless a suspend-save system is added later
-
-Example payload:
-
-```json
-{
-  "version": 1,
-  "bosses_defeated": ["chill_penguin", "storm_eagle"],
-  "weapons_unlocked": ["shotgun_ice", "storm_tornado"],
-  "collected_pickups": [
-    "intro_highway_dash_capsule",
-    "storm_eagle_heart_tank"
-  ],
-  "armor_parts": {
-    "helmet": false,
-    "body": false,
-    "arms": false,
-    "legs": true
-  },
-  "sub_tanks": {
-    "sub_tank_01": 8,
-    "sub_tank_02": 0
-  },
-  "dash_unlocked": true,
-  "intro_cleared": true,
-  "fortress_unlocked": false
-}
-```
+- moment-to-moment HP or weapon energy unless a suspend-save system is added later
 
 ### Retry model
 
 For the first implementation:
 
 - retry from checkpoint or stage start
-- no full lives/continues system required yet
-- lives can be added later on top of this, not inside core movement/combat logic
+- no full lives or continues system required yet
+- lives can be layered on later without changing movement or combat architecture
 
 ## Cutscenes And Dialogue
 
 ### Cutscenes
 
-Use a data-driven `CutsceneDirector.gd`. Do not hardcode cutscenes inside player scripts.
+Use a data-driven `CutsceneDirector.gd`.
 
-Use cases:
+Cutscene logic should not live in player scripts.
+
+Primary use cases:
 
 - intro stage opening
 - Zero rescue
@@ -1048,30 +632,6 @@ Use cases:
 - boss intro stingers
 - stage clear reward flow
 - ending and fortress transitions
-
-```gdscript
-class_name CutsceneStep
-extends Resource
-
-@export var action: StringName
-@export var target_path: NodePath
-@export var duration: float = 0.0
-@export var text_id: StringName
-@export var marker_name: StringName
-```
-
-```gdscript
-class_name CutsceneDirector
-extends Node
-
-@export var steps: Array[CutsceneStep]
-
-func play() -> void:
-    GameFlow.enter_cutscene_mode()
-    for step in steps:
-        await _run_step(step)
-    GameFlow.exit_cutscene_mode()
-```
 
 First-pass cutscene actions:
 
@@ -1084,6 +644,11 @@ First-pass cutscene actions:
 - `unlock_dash`
 - `end_stage`
 
+Rules:
+
+- cutscenes should coordinate actors, camera, audio, and dialogue
+- progression changes triggered by story moments should still route through the proper gameplay systems
+
 ### Dialogue
 
 Dialogue is a subsystem used by cutscenes. It should not own progression changes or camera movement.
@@ -1095,72 +660,14 @@ Files:
 - `scripts/systems/dialogue_controller.gd`
 - `data/dialogue/*.tres` or `data/dialogue/*.json`
 
-```text
-DialogueBox.tscn
-- DialogueBox (CanvasLayer)
-  - Panel
-  - SpeakerNameLabel
-  - BodyLabel
-  - PortraitLeft optional
-  - PortraitRight optional
-  - AdvanceIndicator
-```
+Dialogue data should support:
 
-```gdscript
-class_name DialogueLine
-extends Resource
-
-@export var line_id: StringName
-@export var speaker_id: StringName
-@export_multiline var text: String
-@export var portrait_id: StringName
-@export var voice_event: StringName
-```
-
-```gdscript
-class_name DialogueSequence
-extends Resource
-
-@export var sequence_id: StringName
-@export var lines: Array[DialogueLine]
-```
-
-```gdscript
-class_name DialogueController
-extends Node
-
-signal dialogue_started(sequence_id: StringName)
-signal dialogue_finished(sequence_id: StringName)
-
-@onready var dialogue_box: DialogueBox = $DialogueBox
-
-var current_sequence: DialogueSequence
-var current_index := -1
-var is_active := false
-
-func show_sequence(sequence: DialogueSequence) -> void:
-    current_sequence = sequence
-    current_index = -1
-    is_active = true
-    dialogue_started.emit(sequence.sequence_id)
-    _advance_line()
-
-func advance() -> void:
-    if not is_active:
-        return
-    _advance_line()
-
-func _advance_line() -> void:
-    current_index += 1
-    if current_index >= current_sequence.lines.size():
-        is_active = false
-        dialogue_box.hide_dialogue()
-        dialogue_finished.emit(current_sequence.sequence_id)
-        return
-
-    var line := current_sequence.lines[current_index]
-    dialogue_box.show_line(line)
-```
+- sequence IDs
+- line IDs
+- speaker IDs
+- body text
+- portrait references
+- optional voice or SFX events
 
 Input rules:
 
@@ -1170,12 +677,12 @@ Input rules:
 
 Capsule flow example:
 
-1. player enters capsule trigger
-2. `StageController` starts a cutscene
-3. `CutsceneDirector` runs `show_text(dr_light_dash_capsule)`
-4. `DialogueController` presents the sequence
-5. cutscene executes `unlock_dash`
-6. `Progression` marks the capsule collected
+1. Player enters a capsule trigger.
+2. `StageController` starts a cutscene.
+3. `CutsceneDirector` shows the related dialogue sequence.
+4. `DialogueController` presents the sequence.
+5. The cutscene awards the unlock through gameplay systems.
+6. `Progression` marks the capsule collected.
 
 ## Audio
 
@@ -1197,45 +704,18 @@ Required semantic events:
 - `menu_confirm`
 - `menu_cancel`
 
-Implementation:
+Implementation rules:
 
 - one autoload: `AudioManager`
-- buses: `Master`, `Music`, `SFX`
-- data-driven event-to-stream mapping
+- use buses such as `Master`, `Music`, and `SFX`
+- use data-driven event-to-stream mapping
 - missing placeholder clips should fail silently
-
-```gdscript
-extends Node
-
-var sfx_events: Dictionary = {}
-var music_events: Dictionary = {}
-
-func play_sfx(event_name: StringName) -> void:
-    var stream: AudioStream = sfx_events.get(event_name)
-    if stream == null:
-        return
-
-    var player := AudioStreamPlayer.new()
-    player.bus = "SFX"
-    player.stream = stream
-    add_child(player)
-    player.finished.connect(player.queue_free)
-    player.play()
-
-func play_music(track_name: StringName) -> void:
-    var stream: AudioStream = music_events.get(track_name)
-    if stream == null:
-        return
-
-    $MusicPlayer.stream = stream
-    $MusicPlayer.play()
-```
 
 ## UI
 
 Required UI:
 
-- title/menu UI
+- title and menu UI
 - player HUD
 - weapon energy display
 - boss health display
@@ -1252,8 +732,8 @@ UI rules:
 ## Placeholder Asset Rules
 
 - use stable placeholder names
-- keep collision/hitboxes separate from visuals
-- drive visuals from semantic states like `idle`, `run`, `dash`, `hurt`, `charge_small`, `charge_full`
+- keep collision and hitboxes separate from visuals
+- drive visuals from semantic states such as `idle`, `run`, `dash`, `hurt`, `charge_small`, and `charge_full`
 - keep character, enemy, projectile, UI, and stage placeholder conventions consistent
 
 ## Milestones
@@ -1263,7 +743,7 @@ UI rules:
 - project structure
 - player movement
 - player combat
-- shared health/damage/collision
+- shared health, damage, and collision
 - one enemy family
 - boss skeleton
 - audio manager
@@ -1290,7 +770,7 @@ UI rules:
 - armor parts
 - heart tanks
 - sub tanks
-- save/load
+- save and load
 - multiple stages
 - fortress unlock flow
 
@@ -1298,7 +778,7 @@ UI rules:
 
 - full campaign content
 - final Sigma flow
-- movement/combat tuning
+- movement and combat tuning
 - placeholder replacement
 - bug fixing and optimization
 
@@ -1311,6 +791,6 @@ UI rules:
 - one stage can be run directly from the editor for mid-level testing
 - one stage vertical slice is playable from start to boss clear using placeholders only
 - boss defeat updates progression and unlocks the proper weapon reward
-- save/load restores persistent campaign state correctly
+- save and load restore persistent campaign state correctly
 - audio responds to semantic gameplay events
 - dialogue and cutscene flow work without embedding story logic into player scripts
