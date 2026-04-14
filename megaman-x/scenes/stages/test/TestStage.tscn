@@ -1,0 +1,60 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/test_stage.gd" id="1_test_stage"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/shared/grid_backdrop.svg" id="2_backdrop"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/stage/test_floor_256x32.svg" id="3_floor"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/shared/spawn_marker_32.svg" id="4_spawn_marker"]
+
+[sub_resource type="RectangleShape2D" id="1_ground_shape"]
+size = Vector2(256, 32)
+
+[node name="TestStage" type="Node2D"]
+script = ExtResource("1_test_stage")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(320, 180)
+enabled = true
+
+[node name="Backdrop" type="Sprite2D" parent="."]
+position = Vector2(320, 180)
+texture = ExtResource("2_backdrop")
+
+[node name="GroundVisual" type="Sprite2D" parent="."]
+position = Vector2(320, 296)
+texture = ExtResource("3_floor")
+
+[node name="Ground" type="StaticBody2D" parent="."]
+position = Vector2(320, 296)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+shape = SubResource("1_ground_shape")
+
+[node name="SpawnMarker" type="Sprite2D" parent="."]
+position = Vector2(128, 240)
+texture = ExtResource("4_spawn_marker")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Overlay" type="Control" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Header" type="Label" parent="CanvasLayer/Overlay"]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 280.0
+offset_bottom = 54.0
+theme_override_colors/font_color = Color(0.898039, 0.956863, 1, 1)
+text = "Phase 1 Test Stage"
+
+[node name="Body" type="Label" parent="CanvasLayer/Overlay"]
+offset_left = 24.0
+offset_top = 56.0
+offset_right = 404.0
+offset_bottom = 118.0
+theme_override_colors/font_color = Color(0.713726, 0.803922, 0.909804, 1)
+text = "Loading..."

@@ -13,6 +13,14 @@ config_version=5
 config/name="megaman-x"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
+run/main_scene="res://scenes/Main.tscn"
+
+[autoload]
+
+GameFlow="*res://autoloads/game_flow.gd"
+Progression="*res://autoloads/progression.gd"
+SaveManager="*res://autoloads/save_manager.gd"
+AudioManager="*res://autoloads/audio_manager.gd"
 
 [physics]
 

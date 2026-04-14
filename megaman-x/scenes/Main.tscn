@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/runtime_shell.gd" id="1_runtime_shell"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_runtime_shell")
+
+[node name="WorldRoot" type="Node" parent="."]
+unique_name_in_owner = true
+
+[node name="UIRoot" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+layer = 1
+
+[node name="OverlayRoot" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+layer = 2

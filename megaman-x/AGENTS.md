@@ -55,6 +55,10 @@ This repository is an early-stage Godot project for `megaman-x`.
 - If Godot is available, prefer a headless smoke check after meaningful changes:
   - `godot --path . --headless --quit`
 - If `godot` is not on `PATH`, use the local Godot executable configured on the machine.
+- Phase 1 harness-backed checks live at `tests/smoke/phase_1_harness.gd` and currently support:
+  - `-- main_layers`
+  - `-- autoloads`
+  - `-- test_stage`
 - If new GDScript files are added, run the narrowest available script check or project startup check instead of relying only on static inspection.
 - Prefer `Console-ready` checks first, then harness-backed automated checks, and leave `Manual validation` items for the user.
 - Report which automated checks were run, which passed, and which were blocked by missing infrastructure or environment limits.

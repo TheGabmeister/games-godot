@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="StageDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/stage_definition.gd" id="1_stage_definition"]
+
+[resource]
+script = ExtResource("1_stage_definition")
+stage_id = &"test_stage"
+display_name = "Test Stage"
+scene_path = "res://scenes/stages/test/TestStage.tscn"
+allow_direct_launch = true
