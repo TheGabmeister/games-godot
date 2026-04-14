@@ -364,6 +364,16 @@ func _check_player_retry() -> int:
 		push_error("Player remained in DEAD state after retry.")
 		return 1
 
+	var second_lethal_hit := HIT_PAYLOAD_SCRIPT.create(self, &"enemy", &"fatal_retry_repeat_hit", int(health_component.get("max_health")), Vector2.ZERO)
+	if not bool(player.call("apply_hit_payload", second_lethal_hit)):
+		push_error("Player did not accept damage after retry.")
+		return 1
+
+	await process_frame
+	if not await _wait_for_retry_count(stage_controller, 2, 90):
+		push_error("StageController did not retry the stage after a second death.")
+		return 1
+
 	return 0
 
 
