@@ -83,6 +83,21 @@ Rules:
 - only one stage scene should be active in `WorldRoot` at a time
 - runtime UI should be layered without adding more autoloads
 
+State-to-scene mapping:
+
+- `BOOT` initializes the runtime shell and then hands off to title flow
+- `TITLE` shows the title menu in `UIRoot` with no active stage in `WorldRoot`
+- `STAGE_SELECT` shows stage selection in `UIRoot` with no active stage in `WorldRoot`
+- `IN_STAGE` loads one stage scene into `WorldRoot` and the gameplay HUD into `UIRoot`
+- `PAUSED`, `CUTSCENE`, and `STAGE_CLEAR` are overlay states layered on top of `IN_STAGE`
+- `ENDING` may use either a full-screen UI scene or a controlled ending sequence, but it is not a normal gameplay stage
+
+Handoff contract:
+
+- `GameFlow` decides the next runtime state and semantic destination
+- the runtime shell resolves that destination into scene instances, loads them, and tears down the previous content
+- stage lookup must come from explicit stage data or an explicit registry, never from filesystem discovery
+
 ### `GameFlow`
 
 Purpose:
@@ -108,6 +123,14 @@ Rules:
 - stage scenes should not own the global boot or menu flow
 - cutscenes should switch the game into a dedicated cutscene mode
 - pause and resume should be mediated through `GameFlow`, not handled independently by stage scenes
+
+Flow rules:
+
+- a new game always starts by entering `intro_highway`
+- continue uses saved progression but does not resume an in-progress room or checkpoint
+- if intro has not been cleared, continue returns the player to `intro_highway` from its start
+- if intro has been cleared, continue returns the player to stage select
+- stage restart and return-to-stage-select requests should also route through `GameFlow`
 
 ### `Progression`
 
@@ -313,6 +336,14 @@ Use weapon data resources for:
 - charge support
 - charge thresholds or max charge level
 
+Combat behavior rules:
+
+- only one weapon is equipped at a time
+- weapon data should define any active projectile limit for that weapon
+- for the first implementation, `buster` is the only weapon that needs charge behavior
+- charge release samples the equipped weapon and facing at the moment the shot is spawned
+- entering `DISABLED`, `HURT`, `DEAD`, or cutscene control cancels any in-progress charge unless a specific weapon later opts into different behavior
+
 ### Weapon switching
 
 Use a dedicated `WeaponInventory` node under `PlayerCombat`.
@@ -323,6 +354,8 @@ Rules:
 - `buster` starts unlocked
 - unlocked boss weapons are added through progression
 - cycling should skip locked weapons
+- weapon switching updates the HUD through combat or inventory signals rather than direct UI polling of input
+- for the first implementation, weapon switching is ignored while a charge is being held
 
 ### Combat state machine
 
@@ -342,6 +375,7 @@ Rules:
 - locomotion and combat run in parallel
 - movement state should not block valid combat state changes by default
 - combat may be disabled temporarily during hurt, death, or cutscenes when needed
+- combat cooldown rules should be owned by weapon or combat data, not spread across player and projectile scripts
 
 These combinations must be supported:
 
@@ -407,6 +441,7 @@ Rules:
 
 - use the same damage pipeline for player, enemies, and bosses
 - hazards should integrate with the same damage model where practical
+- the source of a hit defines intended damage and knockback, but the target decides how that knockback is resolved in its own movement logic
 
 ### Projectiles
 
@@ -426,6 +461,9 @@ Rules:
 - projectiles own travel and lifetime, not progression logic
 - projectile hits should produce the same shared hit payload used elsewhere
 - player and enemy projectile scenes may differ visually, but they should follow the same damage-routing model
+- the default projectile behavior is single-hit and destroy-on-hit unless projectile data says otherwise
+- world collision should be data-driven so weapons can choose whether they stop on solid tiles, ignore one-way surfaces, pierce, or explode
+- multi-hit or lingering projectiles must define their per-target hit interval explicitly to avoid accidental rapid-hit behavior
 
 ### Damage modifiers and weaknesses
 
@@ -436,6 +474,7 @@ Rules:
 - default damage comes from weapon data unless an enemy or boss overrides it
 - weakness and resistance tables should be keyed by stable weapon IDs
 - weapon weakness logic should live on the target side or shared combat data, not inside player movement scripts
+- target-side damage modifiers should support immunity, resistance, normal damage, and weakness without special-casing individual player weapons
 
 ### Collision layers
 
@@ -515,6 +554,7 @@ Core enemy parts:
 - `Hurtbox.gd` for incoming hit routing
 - `EnemyBrain.gd` for AI state transitions
 - `DropSpawner` or equivalent for temporary drops
+- enemy data resource or equivalent authored configuration
 
 Example structure:
 
@@ -536,6 +576,17 @@ Rules:
 - avoid deep enemy inheritance trees
 - keep common combat and health behavior shared
 - keep enemy-specific behavior in data, states, or small scripts
+- placed enemies should be authored from explicit scene instances or spawn definitions, not discovered dynamically at runtime
+
+Enemy authored data should cover at least:
+
+- enemy ID
+- max health
+- contact damage or touch-hit behavior
+- optional projectile or attack references
+- optional drop behavior
+- activation range or activation policy
+- reset behavior on retry
 
 ### Enemy AI
 
@@ -555,6 +606,14 @@ Rules:
 - `EnemyBrain` owns transitions between states
 - individual states own localized behavior
 - enemy behavior should be composable, not hardwired into one monolithic class
+- non-boss enemies should use a clear activation policy so off-screen behavior is predictable
+
+Activation and reset policy:
+
+- default stage enemies wake when the player enters their activation range or camera-relevant area
+- enemies outside the active gameplay area should not continue running expensive AI unnecessarily
+- defeated enemies and temporary enemy drops are stage-run state only and reset on retry
+- retrying from a checkpoint rebuilds enemies and temporary stage objects from authored state for the current run
 
 ### Boss scene and logic
 
@@ -588,6 +647,15 @@ Rules:
 - boss phase changes should be controlled by explicit thresholds or conditions
 - boss rewards should not bypass progression systems
 - bosses should expose stable IDs for progression, weakness tables, and UI hookup
+- bosses should remain stage-owned encounters and should not use the generic off-screen despawn policy used by normal enemies
+
+Boss phase authoring should define:
+
+- ordered phase list
+- entry condition for each phase
+- attacks or behaviors enabled in each phase
+- one-time transition actions
+- end-of-fight handoff back to `StageController`
 
 ## Stages, Camera, And Pickups
 
@@ -607,6 +675,11 @@ Stage data should identify:
 - default unlock behavior
 - intro-clear requirements
 - optional intro or stage-clear cutscene IDs
+
+Rules:
+
+- stage IDs are the canonical keys used by `GameFlow`, progression, stage select, save data, and audio lookup
+- stage metadata should be authored explicitly and reused across title flow, stage select, and stage loading
 
 ### Stage scene layout
 
@@ -651,6 +724,13 @@ Rules:
 - stage completion should award progression updates before leaving the stage
 - stage-local systems should report upward to `StageController` rather than changing global flow directly
 
+Stage completion rules:
+
+- stage clear is a stage-controller decision, not just a boss death signal
+- for Maverick and fortress stages, defeating the stage boss starts the stage-clear flow
+- progression rewards, cutscene outcomes, and save triggers occur before exiting the cleared stage
+- once stage-clear flow begins, normal gameplay input should not resume unless the flow explicitly returns control
+
 ### Checkpoints and hazards
 
 Checkpoints are stage-local retry anchors.
@@ -660,12 +740,15 @@ Checkpoint rules:
 - checkpoints use stable stage-local IDs
 - `StageController` owns the active checkpoint for the current run
 - checkpoints are not permanent campaign progression facts and should not be stored in the save file
+- activating a checkpoint updates the respawn anchor for the current run only
+- retrying from checkpoint respawns the player at that checkpoint and rebuilds temporary stage state from authored content
 
 Hazard rules:
 
 - hazards may either apply standard damage or cause an instant death or fall reset depending on the hazard type
 - hazards should use shared systems where possible instead of bespoke per-stage logic
 - out-of-bounds or pit recovery should route through `StageController`
+- retry should reset temporary pickups, temporary drops, breakable objects, and enemy state unless a stage-specific rule intentionally says otherwise
 
 ### Camera
 
@@ -761,6 +844,7 @@ Save trigger policy:
 - save after stage clear and reward payout
 - save after newly collected persistent pickups or capsules
 - do not save on temporary pickups or every checkpoint touch by default
+- continuing from save restores campaign progression only, then re-enters the appropriate front-end flow rather than reconstructing an in-progress stage snapshot
 
 ### Retry model
 
@@ -803,6 +887,16 @@ Rules:
 - cutscenes should coordinate actors, camera, audio, and dialogue
 - progression changes triggered by story moments should still route through the proper gameplay systems
 - stage scripts may start cutscenes, but the cutscene system owns sequence execution once started
+- only one cutscene should be active at a time
+- entering a cutscene disables normal gameplay input and any combat actions that should not run during scripted control
+- exiting a cutscene must restore player control, camera ownership, and gameplay state in a defined order
+
+Cutscene skip and interruption rules:
+
+- skippability is authored per cutscene or per sequence
+- skipping a cutscene must still apply any required progression or stage-state outcomes
+- if a cutscene is unskippable, dialogue skipping rules cannot bypass it
+- stage-critical cutscenes should start only when the stage is in a safe state for control handoff
 
 ### Dialogue
 
@@ -830,6 +924,7 @@ Input rules:
 - `menu_confirm` advances dialogue
 - `menu_cancel` may skip only skippable sequences
 - gameplay input stays disabled while dialogue is active
+- dialogue completion should return control to the active cutscene or stage flow explicitly rather than implicitly assuming gameplay resumes
 
 Capsule flow example:
 
@@ -887,6 +982,9 @@ UI rules:
 - stage clear and weapon unlock feedback should use the same UI system
 - HUD should expose player HP, equipped weapon, weapon energy, and boss HP when relevant
 - pause, dialogue, and stage-clear screens should behave as overlay UI, not separate gameplay scenes
+- gameplay HUD is owned by the runtime shell and shown only during gameplay states
+- boss UI is driven by the currently active boss encounter selected by `StageController`
+- UI should consume state through signals, explicit references, or read-only queries, not by duplicating gameplay state internally
 
 ## Validation Strategy
 
@@ -902,6 +1000,20 @@ Validation rules:
 
 - prefer the narrowest useful validation first
 - direct stage testing should remain a first-class workflow throughout development
+
+Recommended validation order:
+
+1. Run a headless project boot check.
+2. Launch the current stage scene directly in the editor.
+3. Verify spawn, movement, combat, damage, death, and retry in that stage.
+4. Verify one persistent pickup and one checkpoint flow.
+5. Verify boss defeat, reward payout, save, and return to front-end flow.
+
+Validation expectations for new work:
+
+- new player or shared-system work should be validated in the narrowest possible test stage
+- new progression or save work should include a save-load smoke check
+- new cutscene or dialogue work should include both normal completion and skip-path checks
 
 ## Placeholder Asset Rules
 
