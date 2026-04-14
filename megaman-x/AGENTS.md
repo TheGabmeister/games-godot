@@ -43,6 +43,12 @@ This repository is an early-stage Godot project for `megaman-x`.
 
 - Prefer stage scenes to be runnable directly for iteration; do not assume the full boot/title flow is required for every test.
 - If you add gameplay scenes or scripts, prefer the narrowest useful validation first: script check, stage smoke test, then broader project launch if needed.
+- Follow the validation split in `SPEC.md`:
+  - `Automated checks` are owned by the agent.
+  - `Manual validation` is owned by the user.
+- When a phase or feature includes `Automated checks`, the agent should run them without asking the user to perform them.
+- If an `Automated check` cannot run yet because the required harness does not exist, treat that missing harness as implementation work when feasible instead of pushing the check onto the user.
+- Only leave validation to the user when the relevant item is explicitly listed under `Manual validation` or is otherwise subjective.
 
 ## Validation
 
@@ -50,6 +56,9 @@ This repository is an early-stage Godot project for `megaman-x`.
   - `godot --path . --headless --quit`
 - If `godot` is not on `PATH`, use the local Godot executable configured on the machine.
 - If new GDScript files are added, run the narrowest available script check or project startup check instead of relying only on static inspection.
+- Prefer `Console-ready` checks first, then harness-backed automated checks, and leave `Manual validation` items for the user.
+- Report which automated checks were run, which passed, and which were blocked by missing infrastructure or environment limits.
+- Do not ask the user to run console-based automated checks that the agent can run locally.
 
 ## Notes for future agents
 

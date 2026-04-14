@@ -97,6 +97,7 @@ Handoff contract:
 - `GameFlow` decides the next runtime state and semantic destination
 - the runtime shell resolves that destination into scene instances, loads them, and tears down the previous content
 - stage lookup must come from explicit stage data or an explicit registry, never from filesystem discovery
+- `GameFlow` owns the runtime stage registry used for stage loading order, stage select, and fortress progression checks
 
 ### `GameFlow`
 
@@ -131,6 +132,7 @@ Flow rules:
 - if intro has not been cleared, continue returns the player to `intro_highway` from its start
 - if intro has been cleared, continue returns the player to stage select
 - stage restart and return-to-stage-select requests should also route through `GameFlow`
+- the initial implementation does not use a lives or continue-count system, so no separate `GAME_OVER` state is required yet
 
 ### `Progression`
 
@@ -144,7 +146,8 @@ Tracks:
 - defeated bosses
 - unlocked weapons
 - collected persistent pickups
-- armor parts
+- collected heart tanks
+- armor parts by explicit part ID
 - dash unlock
 - intro clear flag
 - fortress unlock state
@@ -165,6 +168,8 @@ Campaign unlock rules:
 - Sigma Fortress unlocks only after all 8 Maverick bosses are defeated
 - fortress stages unlock sequentially from `sigma_fortress_1` through `sigma_fortress_4`
 - persistent pickups stay collected on replay once recorded in `Progression`
+- collected heart tanks increase the player's maximum HP through progression-derived bonuses
+- armor parts use explicit IDs: `helmet`, `body`, `arms`, and `legs`
 
 ### `SaveManager`
 
@@ -233,7 +238,10 @@ Required actions:
 - `jump`
 - `dash`
 - `shoot`
+- `interact`
 - `weapon_next`
+- `weapon_prev`
+- `sub_tank_use`
 - `pause`
 - `menu_confirm`
 - `menu_cancel`
@@ -250,6 +258,7 @@ Use a dedicated data resource for player tuning values.
 
 It should hold movement and combat-adjacent tuning such as:
 
+- base max HP
 - run speed
 - acceleration and deceleration
 - air control
@@ -258,6 +267,9 @@ It should hold movement and combat-adjacent tuning such as:
 - dash speed and duration
 - wall slide speed
 - wall jump force
+- hurt knockback
+- hurt duration
+- death delay
 - invulnerability time
 
 Rules:
@@ -312,6 +324,8 @@ Rules:
 - dash exists in code from the start
 - campaign dash unlock is gated by the intro-stage capsule
 - debug stages may enable dash immediately
+- wall jump is supported but does not use a separate locomotion state; a wall jump transitions back into `JUMP`
+- dash does not grant invulnerability frames in the default implementation
 - ladder support belongs to the full game plan, but it does not need to block the first playable slice
 
 ### Player combat
@@ -331,16 +345,19 @@ Use weapon data resources for:
 - weapon ID
 - display name
 - energy cost
+- max weapon energy capacity when applicable
 - projectile scene reference
 - base damage
 - charge support
-- charge thresholds or max charge level
+- charge tier thresholds and charge-shot outputs
 
 Combat behavior rules:
 
 - only one weapon is equipped at a time
 - weapon data should define any active projectile limit for that weapon
 - for the first implementation, `buster` is the only weapon that needs charge behavior
+- the buster supports three shot tiers: uncharged, partial charge, and full charge
+- `CHARGING` is the build-up state, partial charge is still part of `CHARGING`, and `CHARGED` means full charge is ready
 - charge release samples the equipped weapon and facing at the moment the shot is spawned
 - entering `DISABLED`, `HURT`, `DEAD`, or cutscene control cancels any in-progress charge unless a specific weapon later opts into different behavior
 
@@ -399,6 +416,7 @@ Presentation responsibilities:
 Rules:
 
 - visual nodes should derive their state from locomotion and combat state machines
+- presentation should support uncharged, `charge_small`, and `charge_full` feedback tiers for the buster
 - animation playback should not become the authoritative source of gameplay state
 
 ### Player pickups
@@ -410,6 +428,9 @@ Pickups should apply effects through `PickupReceiver.gd`, not through `Player.gd
 - health refill application
 - weapon energy refill application
 - persistent reward routing into `Progression`
+- heart tank routing into progression-derived max HP growth
+- armor capsule routing by explicit armor part ID
+- sub tank refill routing
 
 `PlayerSensor` should detect pickup `Area2D`s and pass them to `PickupReceiver`.
 
@@ -422,6 +443,7 @@ Rules:
 - `HealthComponent` signals player death
 - `StageController` decides whether to respawn at checkpoint or restart the stage
 - player scripts should not reload scenes directly on death
+- death should lock player input immediately, play the configured death timing, and then hand off to `StageController` for fade and respawn flow
 
 ## Shared Gameplay Systems
 
@@ -520,8 +542,8 @@ Stages and bosses:
 - `flame_mammoth`
 - `sigma_fortress_1` with `bospider`
 - `sigma_fortress_2` with `rangda_bangda`
-- `sigma_fortress_3` with `velguarder`
-- `sigma_fortress_4` with `sigma_first_form` and `sigma_wolf_form`
+- `sigma_fortress_3` with boss rematch teleporter gauntlet
+- `sigma_fortress_4` with `velguarder`, `sigma_first_form`, and `sigma_wolf_form`
 
 Weapon rewards:
 
@@ -612,6 +634,7 @@ Activation and reset policy:
 
 - default stage enemies wake when the player enters their activation range or camera-relevant area
 - enemies outside the active gameplay area should not continue running expensive AI unnecessarily
+- by default, non-boss enemies do not respawn just because the player leaves and re-enters an area during the same run
 - defeated enemies and temporary enemy drops are stage-run state only and reset on retry
 - retrying from a checkpoint rebuilds enemies and temporary stage objects from authored state for the current run
 
@@ -657,6 +680,33 @@ Boss phase authoring should define:
 - one-time transition actions
 - end-of-fight handoff back to `StageController`
 
+### Boss rematch gauntlet
+
+`sigma_fortress_3` uses a staged boss-rematch flow rather than one new single boss encounter.
+
+Rules:
+
+- the fortress-3 source of truth is an explicit ordered list of rematch boss IDs in stage data
+- rematch encounters do not award duplicate boss weapons
+- stage clear occurs only after the required rematch set has been completed
+- teleporter availability and completion state are stage-run state, not permanent save data
+
+### Vehicles and ride armor
+
+Ride armor is a separate gameplay system from normal player locomotion.
+
+Use cases:
+
+- scripted enemy ride armor in `intro_highway`
+- player-pilotable ride armor in later campaign content such as `flame_mammoth`
+
+Rules:
+
+- ride armor uses its own movement and attack rules instead of reusing the normal player locomotion state machine directly
+- entering or exiting ride armor uses the `interact` action
+- while mounted, the player temporarily delegates locomotion and combat authority to the ride armor controller
+- ride armor availability and destruction are stage-run state unless a specific campaign unlock is later added
+
 ## Stages, Camera, And Pickups
 
 ### Stage data
@@ -669,6 +719,7 @@ Stage data should identify:
 - display name
 - stage scene
 - boss ID
+- optional ordered boss list for multi-encounter stages such as fortress rematches
 - weapon reward ID
 - music event or track ID
 - default spawn ID
@@ -680,6 +731,7 @@ Rules:
 
 - stage IDs are the canonical keys used by `GameFlow`, progression, stage select, save data, and audio lookup
 - stage metadata should be authored explicitly and reused across title flow, stage select, and stage loading
+- the ordered list of `StageDefinition` resources owned by `GameFlow` is the source of truth for stage select order and fortress ordering
 
 ### Stage scene layout
 
@@ -748,6 +800,7 @@ Hazard rules:
 - hazards may either apply standard damage or cause an instant death or fall reset depending on the hazard type
 - hazards should use shared systems where possible instead of bespoke per-stage logic
 - out-of-bounds or pit recovery should route through `StageController`
+- pits and out-of-bounds volumes are instant-death hazards by default, not damage-and-continue hazards
 - retry should reset temporary pickups, temporary drops, breakable objects, and enemy state unless a stage-specific rule intentionally says otherwise
 
 ### Camera
@@ -758,6 +811,7 @@ Camera modes:
 
 - `FOLLOW`
 - `ZONE_LOCK`
+- `SCREEN_SCROLL`
 - `BOSS_LOCK`
 - `CUTSCENE`
 
@@ -765,6 +819,8 @@ Rules:
 
 - follow `Player/CameraAnchor`
 - clamp to stage bounds or zone bounds
+- use `SCREEN_SCROLL` for room-to-room or screen-boundary transitions that temporarily take control away from normal follow behavior
+- during `SCREEN_SCROLL`, gameplay input is locked by default until the camera handoff finishes
 - boss fights switch to `BOSS_LOCK`
 - cutscenes temporarily take camera control
 - use light additive shake, not heavy cinematic motion
@@ -796,6 +852,20 @@ Persistent pickup rules:
 - stage load should skip already collected persistent pickups
 - persistent pickup collection should trigger a save opportunity once the pickup is confirmed
 
+Sub tank rules:
+
+- sub tanks are persistent inventory items with separate ownership and fill state
+- `sub_tank_use` attempts to heal the player from owned filled sub tanks
+- sub tank usage is available from the pause menu in the full campaign and may also be bound directly through `sub_tank_use`
+- sub tank healing routes through `HealthComponent` and cannot exceed the current max HP
+
+Armor part effect domains:
+
+- `helmet` covers exploration or utility upgrades
+- `body` covers defense or damage mitigation upgrades
+- `arms` covers buster or charge upgrades
+- `legs` covers movement upgrades that stack on top of the baseline dash rules
+
 ## Progression, Stage Select, And Save
 
 ### Stage select
@@ -810,6 +880,7 @@ Rules:
 - unlock fortress stages only when the required progression flags are set
 - `intro_highway` does not need to appear in the normal stage select flow after it has been cleared
 - fortress stage ordering is explicit and should not be inferred from filenames
+- the stage select scene reads order and lock state from the same `GameFlow` stage registry used for stage loading
 
 ### Save system
 
@@ -826,11 +897,16 @@ Serialized fields:
 - boss defeat flags
 - weapon unlock flags
 - persistent pickup collection IDs
-- armor unlock flags
+- armor part unlock flags for `helmet`, `body`, `arms`, and `legs`
 - dash unlock flag
 - sub tank ownership and fill values
 - intro-clear flag
 - fortress-unlock flag
+
+Derived values instead of serialized values:
+
+- max HP bonus is derived from collected heart tank IDs rather than a separate `max_hp_extensions` field
+- weapon max-energy capacity is defined in combat or weapon data rather than saved as progression state
 
 Do not serialize:
 
@@ -846,6 +922,11 @@ Save trigger policy:
 - do not save on temporary pickups or every checkpoint touch by default
 - continuing from save restores campaign progression only, then re-enters the appropriate front-end flow rather than reconstructing an in-progress stage snapshot
 
+Migration policy:
+
+- every save payload version change must define an upgrade path from older supported versions
+- if a payload is too old or invalid to migrate safely, loading should fail gracefully and preserve the existing file until the user chooses how to proceed
+
 ### Retry model
 
 For the first implementation:
@@ -853,6 +934,7 @@ For the first implementation:
 - retry from checkpoint or stage start
 - no full lives or continues system required yet
 - lives can be layered on later without changing movement or combat architecture
+- until a lives system exists, death flows directly into retry handling rather than a separate game-over screen
 
 ## Cutscenes And Dialogue
 
@@ -962,6 +1044,7 @@ Implementation rules:
 - use data-driven event-to-stream mapping
 - missing placeholder clips should fail silently
 - stages, bosses, UI, and cutscenes all use the same semantic event vocabulary
+- boss encounters should support a boss-intro stinger transition into a boss loop and a return or handoff after the encounter ends
 
 ## UI
 
@@ -983,8 +1066,72 @@ UI rules:
 - HUD should expose player HP, equipped weapon, weapon energy, and boss HP when relevant
 - pause, dialogue, and stage-clear screens should behave as overlay UI, not separate gameplay scenes
 - gameplay HUD is owned by the runtime shell and shown only during gameplay states
-- boss UI is driven by the currently active boss encounter selected by `StageController`
+- the pause menu is the full-campaign source for weapon selection and sub tank usage, while `weapon_next` and `weapon_prev` are allowed as direct shortcuts
+- boss UI is instantiated by the runtime shell in `UIRoot` and is driven by the currently active boss encounter selected by `StageController`
 - UI should consume state through signals, explicit references, or read-only queries, not by duplicating gameplay state internally
+
+## Test Infrastructure
+
+Validation goals are not enough by themselves. The project also needs a lightweight testing architecture so automated checks can actually be run repeatedly from the console where appropriate.
+
+Test categories:
+
+- `Console-ready` checks can run immediately through a headless Godot command without a custom harness beyond the project itself
+- `Needs harness` checks require dedicated test scenes, test scripts, fixtures, or a test runner before they can be run from the console
+- `Manual only` checks cover feel, readability, pacing, and other human judgment tasks that should stay outside automation
+
+Test types:
+
+- smoke tests for project boot, scene load, and basic startup safety
+- integration tests for player, stage, progression, save-load, and encounter flows
+- regression tests for bugs that should never come back once fixed
+- manual validation passes for control feel, camera behavior, UI clarity, and cutscene readability
+
+Recommended test layout:
+
+- `tests/smoke/` for narrow startup and scene-load checks
+- `tests/integration/` for gameplay-flow verification
+- `tests/regression/` for targeted bug repro coverage
+- `tests/fixtures/` for save payloads, progression presets, and reusable authored test data
+- `scenes/test/` for dedicated test stages and encounter setups
+- `scripts/test/` for test helpers, assertions, and a shared test runner
+
+Test runner rules:
+
+- keep one dedicated test runner entry point for scripted checks rather than scattering ad hoc scripts across the repo
+- console automation should return a clear pass or fail exit code
+- test output should identify the failing phase, test name, or fixture clearly enough for quick triage
+- headless smoke checks should remain runnable even before the full test harness exists
+
+Command conventions:
+
+- keep `godot --path . --headless --quit` as the base smoke check
+- add dedicated console commands for smoke and integration suites once the test runner exists
+- prefer deterministic test commands that do not require title-flow navigation or editor-only setup
+
+Fixture strategy:
+
+- use explicit progression presets for locked, partially unlocked, and fully unlocked campaign states
+- use explicit save fixtures for save-load round-trip tests and migration tests
+- use dedicated test stages for movement, combat, hazards, checkpoints, pickups, and boss encounters
+- test fixtures may enable debug conveniences, but those conveniences must stay out of normal gameplay flow
+
+Debug helper policy:
+
+- test-only helpers are allowed when they reduce setup cost for repeatable validation
+- test helpers should be isolated behind clearly named scripts, scenes, or debug flags
+- gameplay systems should not depend on test helpers to function in normal play
+
+Automation boundaries:
+
+- `Console-ready` checks should be favored for boot, scene load, save-load, state transitions, reward payout, and retry flows
+- `Needs harness` checks should cover stateful gameplay interactions such as locomotion transitions, combat behavior, checkpoint resets, cutscene sequencing, and boss phase flow
+- `Manual only` checks should remain the default for movement feel, camera feel, UI readability, and pacing judgments
+
+Regression policy:
+
+- every bug fixed during development should be considered for either a regression test or a documented manual checklist item
+- once a harness-backed automated test exists for a system, later milestone work should extend that suite instead of replacing it
 
 ## Validation Strategy
 
@@ -1014,6 +1161,7 @@ Validation expectations for new work:
 - new player or shared-system work should be validated in the narrowest possible test stage
 - new progression or save work should include a save-load smoke check
 - new cutscene or dialogue work should include both normal completion and skip-path checks
+- milestone-level automated checks should be tagged as either `Console-ready` or `Needs harness`
 
 ## Placeholder Asset Rules
 
@@ -1028,7 +1176,8 @@ The original milestone buckets were too large to reliably complete in a single t
 
 Validation format for every phase:
 
-- automated checks should be the narrowest useful headless or script-driven verification for the systems added in that phase
+- automated checks should be the narrowest useful verification for the systems added in that phase
+- each automated check should be labeled `Console-ready` or `Needs harness`
 - manual validation should focus on feel, control flow, and visible state changes that are difficult to assert purely through automation
 - each phase should add to the regression checklist rather than replacing it
 
@@ -1044,10 +1193,10 @@ Scope:
 
 Automated checks:
 
-- headless project boot succeeds
-- `Main.tscn` loads with the expected root layers
-- required autoloads exist and initialize without errors
-- test stage can be instanced directly without going through title flow
+- `Console-ready`: headless project boot succeeds
+- `Needs harness`: `Main.tscn` loads with the expected root layers
+- `Needs harness`: required autoloads exist and initialize without errors
+- `Console-ready`: test stage can be instanced directly without going through title flow
 
 Manual validation:
 
@@ -1071,9 +1220,9 @@ Scope:
 
 Automated checks:
 
-- locomotion states transition correctly for idle, run, jump, and fall
-- player spawn creates a controllable player instance in the test stage
-- camera follows the player anchor without null-reference errors
+- `Needs harness`: locomotion states transition correctly for idle, run, jump, and fall
+- `Needs harness`: player spawn creates a controllable player instance in the test stage
+- `Needs harness`: camera follows the player anchor without null-reference errors
 
 Manual validation:
 
@@ -1097,9 +1246,9 @@ Scope:
 
 Automated checks:
 
-- hit payload damages valid targets and ignores same-team hits
-- player death signal triggers retry flow from stage start
-- stage retry reconstructs temporary run state from authored content
+- `Needs harness`: hit payload damages valid targets and ignores same-team hits
+- `Needs harness`: player death signal triggers retry flow from stage start
+- `Needs harness`: stage retry reconstructs temporary run state from authored content
 
 Manual validation:
 
@@ -1124,11 +1273,11 @@ Scope:
 
 Automated checks:
 
-- firing spawns projectiles from the correct origin
-- projectile limits and cooldown rules are enforced
-- charge start and release follow expected combat state changes
-- HUD receives weapon and health updates
-- semantic audio events resolve without runtime errors
+- `Needs harness`: firing spawns projectiles from the correct origin
+- `Needs harness`: projectile limits and cooldown rules are enforced
+- `Needs harness`: charge start and release follow expected combat state changes
+- `Needs harness`: HUD receives weapon and health updates
+- `Console-ready`: semantic audio events resolve without runtime errors
 
 Manual validation:
 
@@ -1153,9 +1302,9 @@ Scope:
 
 Automated checks:
 
-- enemy activation range wakes the enemy correctly
-- defeated enemy state resets on retry
-- temporary drops from the enemy are removed on retry
+- `Needs harness`: enemy activation range wakes the enemy correctly
+- `Needs harness`: defeated enemy state resets on retry
+- `Needs harness`: temporary drops from the enemy are removed on retry
 
 Manual validation:
 
@@ -1179,9 +1328,9 @@ Scope:
 
 Automated checks:
 
-- touching a checkpoint updates the current respawn anchor
-- retry from checkpoint uses the latest active checkpoint
-- hazard types trigger the expected damage or instant-death behavior
+- `Needs harness`: touching a checkpoint updates the current respawn anchor
+- `Needs harness`: retry from checkpoint uses the latest active checkpoint
+- `Needs harness`: hazard types trigger the expected damage or instant-death behavior
 
 Manual validation:
 
@@ -1204,9 +1353,9 @@ Scope:
 
 Automated checks:
 
-- stage clear transitions through `StageController` exactly once
-- gameplay input is disabled during stage-clear flow
-- stage-clear overlay or handoff state appears without leaving stale gameplay state behind
+- `Needs harness`: stage clear transitions through `StageController` exactly once
+- `Needs harness`: gameplay input is disabled during stage-clear flow
+- `Needs harness`: stage-clear overlay or handoff state appears without leaving stale gameplay state behind
 
 Manual validation:
 
@@ -1229,9 +1378,9 @@ Scope:
 
 Automated checks:
 
-- cutscene start and end transitions occur in the expected order
-- dialogue advances and skip rules behave as authored
-- dash unlock updates progression and becomes available after the event
+- `Needs harness`: cutscene start and end transitions occur in the expected order
+- `Needs harness`: dialogue advances and skip rules behave as authored
+- `Needs harness`: dash unlock updates progression and becomes available after the event
 
 Manual validation:
 
@@ -1255,9 +1404,9 @@ Scope:
 
 Automated checks:
 
-- save payload round-trips cleanly through save and load
-- persistent pickup collection updates progression and survives reload
-- continuing from save returns to the correct front-end flow
+- `Needs harness`: save payload round-trips cleanly through save and load
+- `Needs harness`: persistent pickup collection updates progression and survives reload
+- `Needs harness`: continuing from save returns to the correct front-end flow
 
 Manual validation:
 
@@ -1280,9 +1429,9 @@ Scope:
 
 Automated checks:
 
-- stage select roster reflects progression-derived unlock state
-- selecting an unlocked stage loads the correct stage scene
-- fortress unlock conditions evaluate correctly
+- `Needs harness`: stage select roster reflects progression-derived unlock state
+- `Needs harness`: selecting an unlocked stage loads the correct stage scene
+- `Needs harness`: fortress unlock conditions evaluate correctly
 
 Manual validation:
 
@@ -1305,9 +1454,9 @@ Scope:
 
 Automated checks:
 
-- defeated-boss reward weapon is added to the inventory
-- weakness and resistance tables change damage as expected
-- weapon energy costs apply correctly for newly added weapons
+- `Needs harness`: defeated-boss reward weapon is added to the inventory
+- `Needs harness`: weakness and resistance tables change damage as expected
+- `Needs harness`: weapon energy costs apply correctly for newly added weapons
 
 Manual validation:
 
@@ -1331,9 +1480,9 @@ Scope:
 
 Automated checks:
 
-- each persistent upgrade type records correctly in progression
-- heart tank and armor upgrades survive save and load
-- sub tank ownership and fill state serialize correctly
+- `Needs harness`: each persistent upgrade type records correctly in progression
+- `Needs harness`: heart tank and armor upgrades survive save and load
+- `Needs harness`: sub tank ownership and fill state serialize correctly
 
 Manual validation:
 
@@ -1355,9 +1504,9 @@ Scope:
 
 Automated checks:
 
-- entering a boss arena activates boss UI and arena lock behavior
-- retry resets the boss encounter to its initial state
-- boss UI hides cleanly when the encounter ends or resets
+- `Needs harness`: entering a boss arena activates boss UI and arena lock behavior
+- `Needs harness`: retry resets the boss encounter to its initial state
+- `Needs harness`: boss UI hides cleanly when the encounter ends or resets
 
 Manual validation:
 
@@ -1379,9 +1528,9 @@ Scope:
 
 Automated checks:
 
-- first boss defeat triggers the expected reward and stage-clear flow
-- boss phase transitions fire in the intended order
-- boss defeat updates progression exactly once
+- `Needs harness`: first boss defeat triggers the expected reward and stage-clear flow
+- `Needs harness`: boss phase transitions fire in the intended order
+- `Needs harness`: boss defeat updates progression exactly once
 
 Manual validation:
 
@@ -1402,8 +1551,8 @@ Scope:
 
 Automated checks:
 
-- regression suite covers shared boss framework behavior across all implemented bosses
-- each added boss reports reward, UI, and reset behavior correctly
+- `Needs harness`: regression suite covers shared boss framework behavior across all implemented bosses
+- `Needs harness`: each added boss reports reward, UI, and reset behavior correctly
 
 Manual validation:
 
@@ -1423,9 +1572,9 @@ Scope:
 
 Automated checks:
 
-- campaign progression can unlock all required stages in order
-- final Sigma flow triggers only when prerequisite progression is complete
-- ending flow can be reached from a valid completed campaign state
+- `Needs harness`: campaign progression can unlock all required stages in order
+- `Needs harness`: final Sigma flow triggers only when prerequisite progression is complete
+- `Needs harness`: ending flow can be reached from a valid completed campaign state
 
 Manual validation:
 
@@ -1448,9 +1597,10 @@ Scope:
 
 Automated checks:
 
-- full smoke suite passes across boot, stage load, combat, save-load, and one boss encounter
-- placeholder asset swaps do not break scene references
-- no new runtime errors are introduced by tuning passes
+- `Console-ready`: full smoke suite passes across boot and stage load
+- `Needs harness`: regression suite passes across combat, save-load, and one boss encounter
+- `Needs harness`: placeholder asset swaps do not break scene references
+- `Console-ready`: no new runtime errors are introduced by tuning passes
 
 Manual validation:
 
