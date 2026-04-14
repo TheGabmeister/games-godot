@@ -1024,49 +1024,444 @@ Validation expectations for new work:
 
 ## Milestones
 
+The original milestone buckets were too large to reliably complete in a single turn. Use the smaller phases below instead.
+
+Validation format for every phase:
+
+- automated checks should be the narrowest useful headless or script-driven verification for the systems added in that phase
+- manual validation should focus on feel, control flow, and visible state changes that are difficult to assert purely through automation
+- each phase should add to the regression checklist rather than replacing it
+
 ### Phase 1
 
+Scope:
+
 - project structure
-- player movement
-- player combat
-- shared health, damage, and collision
-- one enemy family
-- boss skeleton
-- audio manager
-- HUD shell
+- runtime shell
+- autoload registration
 - one test stage
 - standalone stage testing
 
+Automated checks:
+
+- headless project boot succeeds
+- `Main.tscn` loads with the expected root layers
+- required autoloads exist and initialize without errors
+- test stage can be instanced directly without going through title flow
+
+Manual validation:
+
+- launch the project normally and confirm title flow appears
+- launch the test stage directly from the editor
+- confirm only one gameplay stage is active at a time
+
+Bug watch:
+
+- missing or duplicate autoload registration
+- runtime shell loading the wrong scene layer
+- test stage depending on title flow to boot correctly
+
 ### Phase 2
 
-- one full vertical slice
+Scope:
+
+- player movement
+- player locomotion state machine
+- camera follow hookup
+
+Automated checks:
+
+- locomotion states transition correctly for idle, run, jump, and fall
+- player spawn creates a controllable player instance in the test stage
+- camera follows the player anchor without null-reference errors
+
+Manual validation:
+
+- run left and right, jump, fall, and stop repeatedly
+- verify facing direction changes cleanly
+- verify camera follow feels stable during jumps and landings
+
+Bug watch:
+
+- stuck locomotion states
+- frame-rate-dependent movement
+- camera jitter, lag spikes, or wrong follow target
+
+### Phase 3
+
+Scope:
+
+- shared health, damage, and collision
+- player death and respawn flow
+- retry from stage start
+
+Automated checks:
+
+- hit payload damages valid targets and ignores same-team hits
+- player death signal triggers retry flow from stage start
+- stage retry reconstructs temporary run state from authored content
+
+Manual validation:
+
+- take damage from an enemy or hazard
+- die and confirm restart from the stage start anchor
+- verify the stage looks reset after retry
+
+Bug watch:
+
+- invulnerability not respected
+- duplicate death or retry triggers
+- stale temporary objects surviving across retry
+
+### Phase 4
+
+Scope:
+
+- player combat
+- projectile pipeline
+- audio manager
+- HUD shell
+
+Automated checks:
+
+- firing spawns projectiles from the correct origin
+- projectile limits and cooldown rules are enforced
+- charge start and release follow expected combat state changes
+- HUD receives weapon and health updates
+- semantic audio events resolve without runtime errors
+
+Manual validation:
+
+- fire repeatedly while grounded and airborne
+- charge and release the buster
+- take damage while charging
+- confirm HUD and placeholder SFX react correctly
+
+Bug watch:
+
+- duplicate projectiles or ignored projectile limits
+- charge state getting stuck
+- HUD desync from gameplay state
+- leaked or overlapping audio playback nodes
+
+### Phase 5
+
+Scope:
+
+- one enemy family
+- enemy activation and reset behavior
+
+Automated checks:
+
+- enemy activation range wakes the enemy correctly
+- defeated enemy state resets on retry
+- temporary drops from the enemy are removed on retry
+
+Manual validation:
+
+- approach and leave an enemy activation area
+- defeat the enemy and retry the stage
+- verify the enemy and any drop behavior reset correctly
+
+Bug watch:
+
+- off-screen enemies running AI forever
+- enemies not resetting after retry
+- drops persisting incorrectly across resets
+
+### Phase 6
+
+Scope:
+
 - hazards
 - checkpoints
-- one boss fight
+- retry from checkpoint
+
+Automated checks:
+
+- touching a checkpoint updates the current respawn anchor
+- retry from checkpoint uses the latest active checkpoint
+- hazard types trigger the expected damage or instant-death behavior
+
+Manual validation:
+
+- activate multiple checkpoints in order
+- die to hazards before and after checkpoint activation
+- verify respawn location and stage reset behavior
+
+Bug watch:
+
+- wrong respawn anchor used after death
+- hazards applying damage too often or not at all
+- checkpoint state not updating reliably
+
+### Phase 7
+
+Scope:
+
 - stage clear flow
+- one full non-boss stage slice
+
+Automated checks:
+
+- stage clear transitions through `StageController` exactly once
+- gameplay input is disabled during stage-clear flow
+- stage-clear overlay or handoff state appears without leaving stale gameplay state behind
+
+Manual validation:
+
+- complete the non-boss stage slice from start to finish
+- confirm stage-clear presentation appears and control does not return unexpectedly
+
+Bug watch:
+
+- duplicate stage-clear triggers
+- lingering gameplay input after clear
+- temporary stage objects surviving into post-clear flow
+
+### Phase 8
+
+Scope:
+
 - dash unlock flow
 - stage-local cutscene
 - dialogue flow
 
-### Phase 3
+Automated checks:
+
+- cutscene start and end transitions occur in the expected order
+- dialogue advances and skip rules behave as authored
+- dash unlock updates progression and becomes available after the event
+
+Manual validation:
+
+- trigger the dash capsule flow
+- play the cutscene normally once and skip it once if skippable
+- confirm control returns correctly and dash is available afterward
+
+Bug watch:
+
+- control not restored after cutscene
+- duplicate unlock rewards
+- camera ownership not restored after dialogue or cutscene completion
+
+### Phase 9
+
+Scope:
+
+- save and load
+- progression plumbing
+- persistent pickup save triggers
+
+Automated checks:
+
+- save payload round-trips cleanly through save and load
+- persistent pickup collection updates progression and survives reload
+- continuing from save returns to the correct front-end flow
+
+Manual validation:
+
+- collect a persistent pickup, save, reload, and verify it stays collected
+- test a fresh save and an existing save path
+
+Bug watch:
+
+- corrupted or partial save payloads
+- progression flags not restored consistently
+- persistent pickups reappearing after reload
+
+### Phase 10
+
+Scope:
 
 - stage select
+- multiple stage loading
+- fortress unlock flow
+
+Automated checks:
+
+- stage select roster reflects progression-derived unlock state
+- selecting an unlocked stage loads the correct stage scene
+- fortress unlock conditions evaluate correctly
+
+Manual validation:
+
+- navigate the stage select UI with keyboard and gamepad
+- attempt to enter locked and unlocked stages
+- verify fortress progression unlock timing
+
+Bug watch:
+
+- locked stages shown as selectable
+- wrong stage scene loading from a valid selection
+- fortress stages unlocking too early or too late
+
+### Phase 11
+
+Scope:
+
 - boss weapons
 - weaknesses
+
+Automated checks:
+
+- defeated-boss reward weapon is added to the inventory
+- weakness and resistance tables change damage as expected
+- weapon energy costs apply correctly for newly added weapons
+
+Manual validation:
+
+- switch between unlocked weapons
+- use a boss weapon against normal targets and weakness-enabled targets
+- verify HUD weapon energy updates
+
+Bug watch:
+
+- wrong weapon unlock reward
+- weakness tables keyed to the wrong IDs
+- weapon energy draining or restoring incorrectly
+
+### Phase 12
+
+Scope:
+
 - armor parts
 - heart tanks
 - sub tanks
-- save and load
-- multiple stages
-- fortress unlock flow
 
-### Phase 4
+Automated checks:
+
+- each persistent upgrade type records correctly in progression
+- heart tank and armor upgrades survive save and load
+- sub tank ownership and fill state serialize correctly
+
+Manual validation:
+
+- collect one of each upgrade type
+- reload the game and confirm ownership and effects remain
+
+Bug watch:
+
+- duplicate collection of persistent upgrades
+- upgrade effects applied without persistence or persisted without effects
+- sub tank fill values not restoring correctly
+
+### Phase 13
+
+Scope:
+
+- boss encounter framework
+- boss UI
+
+Automated checks:
+
+- entering a boss arena activates boss UI and arena lock behavior
+- retry resets the boss encounter to its initial state
+- boss UI hides cleanly when the encounter ends or resets
+
+Manual validation:
+
+- enter and leave the boss arena through the intended flow
+- die during the encounter and retry
+- verify boss UI appears only during the encounter
+
+Bug watch:
+
+- arena locks not releasing
+- boss UI persisting outside the encounter
+- encounter state not resetting cleanly on retry
+
+### Phase 14
+
+Scope:
+
+- first boss fight vertical slice
+
+Automated checks:
+
+- first boss defeat triggers the expected reward and stage-clear flow
+- boss phase transitions fire in the intended order
+- boss defeat updates progression exactly once
+
+Manual validation:
+
+- play the full first boss fight from encounter start to reward payout
+- test death during the fight and a full successful clear
+
+Bug watch:
+
+- boss phase softlocks
+- reward payout not triggering or triggering twice
+- boss death leaving the arena in an invalid state
+
+### Phase 15
+
+Scope:
+
+- additional boss fights
+
+Automated checks:
+
+- regression suite covers shared boss framework behavior across all implemented bosses
+- each added boss reports reward, UI, and reset behavior correctly
+
+Manual validation:
+
+- spot-check each new boss encounter for intro, phase flow, death handling, and reward flow
+
+Bug watch:
+
+- shared boss framework regressions affecting older bosses
+- per-boss exceptions bypassing progression or UI cleanup
+
+### Phase 16
+
+Scope:
 
 - full campaign content
 - final Sigma flow
+
+Automated checks:
+
+- campaign progression can unlock all required stages in order
+- final Sigma flow triggers only when prerequisite progression is complete
+- ending flow can be reached from a valid completed campaign state
+
+Manual validation:
+
+- test representative progression paths across Maverick, fortress, and final flow content
+- verify endgame transitions and front-end return paths
+
+Bug watch:
+
+- progression dead ends
+- campaign unlock order mismatches
+- final flow transitions breaking save or return flow
+
+### Phase 17
+
+Scope:
+
 - movement and combat tuning
 - placeholder replacement
 - bug fixing and optimization
+
+Automated checks:
+
+- full smoke suite passes across boot, stage load, combat, save-load, and one boss encounter
+- placeholder asset swaps do not break scene references
+- no new runtime errors are introduced by tuning passes
+
+Manual validation:
+
+- run a full feel pass on movement, combat pacing, camera, UI responsiveness, and encounter readability
+- verify placeholder replacements preserve collisions, anchors, and hitboxes
+
+Bug watch:
+
+- tuning changes causing regressions in earlier mechanics
+- asset swaps breaking offsets, collisions, or references
+- late optimization changing gameplay timing or state behavior
 
 ## Acceptance Criteria
 
