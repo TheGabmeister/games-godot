@@ -1,10 +1,14 @@
 extends Node2D
 
-const STAGE_NOTE := "Phase 5 enemy slice.\nMove with A/D. Shoot with J. Approach the walker to wake it, defeat it, then retry to verify reset."
+const STAGE_NOTE := "Phase 6 checkpoint slice.\nMove with A/D. Shoot with J. Touch checkpoints, test both hazards, then retry to confirm the latest anchor is used."
 
 @onready var player: Node = $Player
 @onready var player_combat: Node = $Player/PlayerCombat
 @onready var walker_enemy: Node = $WalkerBasic
+@onready var checkpoint_alpha: Node = $CheckpointAlpha
+@onready var checkpoint_bravo: Node = $CheckpointBravo
+@onready var damage_hazard: Node = $DamageHazard
+@onready var instant_hazard: Node = $InstantDeathHazard
 @onready var follow_camera: Camera2D = $Camera2D
 @onready var stage_controller: Node = $StageController
 @onready var body_label: Label = $CanvasLayer/Overlay/Body
@@ -22,6 +26,9 @@ func _ready() -> void:
 	walker_enemy.connect("enemy_defeated", _on_walker_enemy_changed)
 	walker_enemy.connect("drop_spawned", _on_walker_enemy_changed)
 	walker_enemy.get_node("HealthComponent").connect("health_changed", _on_walker_enemy_health_changed)
+	checkpoint_alpha.connect("activated", _on_checkpoint_changed)
+	checkpoint_bravo.connect("activated", _on_checkpoint_changed)
+	stage_controller.connect("checkpoint_activated", _on_checkpoint_changed)
 	stage_controller.connect("retry_completed", _on_retry_completed)
 	_refresh_overlay()
 
@@ -43,6 +50,10 @@ func _on_player_health_changed(_current_health: int, _max_health: int) -> void:
 
 
 func _on_retry_completed(_retry_count: int) -> void:
+	_refresh_overlay()
+
+
+func _on_checkpoint_changed(_value = null, _respawn_position := Vector2.ZERO) -> void:
 	_refresh_overlay()
 
 
@@ -68,7 +79,8 @@ func _on_walker_enemy_health_changed(_current_health: int, _max_health: int) -> 
 
 func _refresh_overlay() -> void:
 	var health_component: Node = player.call("get_health_component")
-	body_label.text = "%s\nMove: %s | Facing: %s | Combat: %s | Charge: %s\nHP: %d/%d | Shots: %d | Retries: %d\nEnemy: %s" % [
+	var respawn_position: Vector2 = stage_controller.call("get_current_respawn_position")
+	body_label.text = "%s\nMove: %s | Facing: %s | Combat: %s | Charge: %s\nHP: %d/%d | Shots: %d | Retries: %d\nCheckpoint: %s @ (%.0f, %.0f)\nHazards: damage=%s | instant=%s\nEnemy: %s" % [
 		STAGE_NOTE,
 		player.call("get_locomotion_state_name"),
 		player.call("get_facing_name"),
@@ -78,5 +90,10 @@ func _refresh_overlay() -> void:
 		health_component.get("max_health"),
 		player_combat.call("get_active_projectile_count"),
 		stage_controller.get("retry_count"),
+		stage_controller.call("get_active_checkpoint_id"),
+		respawn_position.x,
+		respawn_position.y,
+		damage_hazard.get("damage"),
+		instant_hazard.get("weapon_id"),
 		walker_enemy.call("get_debug_summary"),
 	]

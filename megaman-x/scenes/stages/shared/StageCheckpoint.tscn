@@ -1,0 +1,37 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/stage_checkpoint.gd" id="1_checkpoint"]
+
+[sub_resource type="RectangleShape2D" id="1_trigger_shape"]
+size = Vector2(28, 48)
+
+[node name="StageCheckpoint" type="Area2D"]
+collision_layer = 512
+collision_mask = 4
+monitoring = true
+monitorable = false
+script = ExtResource("1_checkpoint")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -24)
+shape = SubResource("1_trigger_shape")
+
+[node name="Base" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-10, 0, 10, 0, 16, 8, -16, 8)
+color = Color(0.290196, 0.364706, 0.486275, 1)
+
+[node name="Beacon" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, -44, 10, -28, 12, -10, 8, 8, -8, 8, -12, -10, -10, -28)
+color = Color(0.529412, 0.741176, 0.94902, 0.45)
+
+[node name="RespawnAnchor" type="Marker2D" parent="."]
+position = Vector2(0, -8)
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -56.0
+offset_top = -72.0
+offset_right = 56.0
+offset_bottom = -48.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.921569, 0.952941, 1, 1)
+text = "checkpoint"

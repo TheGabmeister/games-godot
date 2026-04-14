@@ -51,6 +51,12 @@ func _run() -> void:
 			exit_code = await _check_enemy_reset()
 		"enemy_drop_reset":
 			exit_code = await _check_enemy_drop_reset()
+		"checkpoint_activation":
+			exit_code = await _check_checkpoint_activation()
+		"checkpoint_retry":
+			exit_code = await _check_checkpoint_retry()
+		"hazard_modes":
+			exit_code = await _check_hazard_modes()
 		"projectile_spawn":
 			exit_code = await _check_projectile_spawn()
 		"projectile_rules":
@@ -353,6 +359,115 @@ func _check_stage_reset() -> int:
 
 	if bool(dummy_health.get("is_dead")) or not dummy.visible:
 		push_error("Temporary dummy was not reconstructed on retry.")
+		return 1
+
+	return 0
+
+
+func _check_checkpoint_activation() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var player: Node2D = stage.get_node_or_null("Player") as Node2D
+	var checkpoint_alpha: Node2D = stage.get_node_or_null("CheckpointAlpha") as Node2D
+	var checkpoint_bravo: Node2D = stage.get_node_or_null("CheckpointBravo") as Node2D
+	if stage_controller == null or player == null or checkpoint_alpha == null or checkpoint_bravo == null:
+		push_error("TestStage is missing StageController, Player, or checkpoint instances.")
+		return 1
+
+	if stage_controller.call("get_active_checkpoint_id") != StringName():
+		push_error("StageController should start with no active checkpoint.")
+		return 1
+
+	player.global_position = checkpoint_alpha.global_position
+	if not await _wait_for_active_checkpoint(stage_controller, &"checkpoint_alpha", 12):
+		push_error("Checkpoint Alpha did not become active.")
+		return 1
+
+	player.global_position = checkpoint_bravo.global_position
+	if not await _wait_for_active_checkpoint(stage_controller, &"checkpoint_bravo", 12):
+		push_error("Checkpoint Bravo did not override the earlier checkpoint.")
+		return 1
+
+	return 0
+
+
+func _check_checkpoint_retry() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var player: Node = stage.get_node_or_null("Player")
+	var checkpoint_bravo: Node = stage.get_node_or_null("CheckpointBravo")
+	if stage_controller == null or player == null or checkpoint_bravo == null:
+		push_error("TestStage is missing StageController, Player, or CheckpointBravo.")
+		return 1
+
+	player.global_position = checkpoint_bravo.global_position
+	if not await _wait_for_active_checkpoint(stage_controller, &"checkpoint_bravo", 12):
+		push_error("Checkpoint Bravo did not activate before retry verification.")
+		return 1
+
+	var respawn_anchor: Marker2D = checkpoint_bravo.get_node_or_null("RespawnAnchor") as Marker2D
+	if respawn_anchor == null:
+		push_error("CheckpointBravo is missing RespawnAnchor.")
+		return 1
+
+	var player_health: Node = player.call("get_health_component")
+	var lethal_hit := HIT_PAYLOAD_SCRIPT.create(self, &"hazard", &"checkpoint_retry_test", int(player_health.get("max_health")), Vector2.ZERO)
+	player.call("apply_hit_payload", lethal_hit)
+
+	if not await _wait_for_retry_count(stage_controller, 1, 90):
+		push_error("StageController did not retry after checkpoint death.")
+		return 1
+
+	if player.global_position.distance_to(respawn_anchor.global_position) > 0.1:
+		push_error("Player did not respawn at the active checkpoint anchor.")
+		return 1
+
+	return 0
+
+
+func _check_hazard_modes() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node2D = stage.get_node_or_null("Player") as Node2D
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var damage_hazard: Node2D = stage.get_node_or_null("DamageHazard") as Node2D
+	var instant_hazard: Node2D = stage.get_node_or_null("InstantDeathHazard") as Node2D
+	if player == null or stage_controller == null or damage_hazard == null or instant_hazard == null:
+		push_error("TestStage is missing Player, StageController, or Phase 6 hazards.")
+		return 1
+
+	var health_component: Node = player.call("get_health_component")
+	health_component.set("invulnerability_duration", 0.0)
+	health_component.call("reset")
+
+	player.global_position = damage_hazard.global_position
+	await _await_physics_frames(2)
+	var expected_health := int(health_component.get("max_health")) - int(damage_hazard.get("damage"))
+	if int(health_component.get("current_health")) != expected_health:
+		push_error("Damage hazard did not apply the expected nonlethal damage.")
+		return 1
+
+	set_meta(&"hazard_instant_death_seen", false)
+	health_component.connect("died", func() -> void:
+		set_meta(&"hazard_instant_death_seen", true)
+	, CONNECT_ONE_SHOT)
+	player.global_position = instant_hazard.global_position
+	await process_frame
+
+	if not await _wait_for_retry_count(stage_controller, 1, 90):
+		push_error("Instant-death hazard did not drive the player into retry.")
+		return 1
+
+	if not bool(get_meta(&"hazard_instant_death_seen", false)):
+		push_error("Instant-death hazard did not kill the player.")
 		return 1
 
 	return 0
@@ -743,6 +858,16 @@ func _defeat_walker_enemy(enemy: Node) -> void:
 func _wait_for_retry_count(stage_controller: Node, expected_retry_count: int, max_frames: int) -> bool:
 	for _frame in range(max_frames):
 		if int(stage_controller.get("retry_count")) >= expected_retry_count:
+			return true
+
+		await _await_physics_frames(1)
+
+	return false
+
+
+func _wait_for_active_checkpoint(stage_controller: Node, expected_checkpoint_id: StringName, max_frames: int) -> bool:
+	for _frame in range(max_frames):
+		if stage_controller.call("get_active_checkpoint_id") == expected_checkpoint_id:
 			return true
 
 		await _await_physics_frames(1)
