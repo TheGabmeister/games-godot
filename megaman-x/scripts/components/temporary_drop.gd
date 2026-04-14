@@ -10,6 +10,7 @@ var _bob_time := 0.0
 
 func _ready() -> void:
 	add_to_group(&"stage_resettable")
+	add_to_group(&"stage_clear_cleanup")
 	_base_position = global_position
 
 

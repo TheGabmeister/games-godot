@@ -1,0 +1,49 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/stage_clear_overlay.gd" id="1_stage_clear"]
+
+[node name="StageClearOverlay" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_stage_clear")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0313725, 0.054902, 0.105882, 0.72)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(420, 220)
+
+[node name="Content" type="VBoxContainer" parent="Center/Panel"]
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Center/Panel/Content"]
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.870588, 0.447059, 1)
+text = "STAGE CLEAR"
+
+[node name="BodyLabel" type="Label" parent="Center/Panel/Content"]
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.929412, 0.968627, 1, 1)
+text = "Stage complete."
+
+[node name="DetailLabel" type="Label" parent="Center/Panel/Content"]
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_colors/font_color = Color(0.698039, 0.803922, 0.921569, 1)
+text = "Locked gameplay."

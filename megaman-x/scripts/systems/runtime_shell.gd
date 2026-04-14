@@ -1,6 +1,7 @@
 extends Node
 
 const GAMEPLAY_HUD_SCENE_PATH := "res://scenes/ui/GameplayHUD.tscn"
+const STAGE_CLEAR_OVERLAY_SCENE_PATH := "res://scenes/ui/StageClearOverlay.tscn"
 
 @onready var world_root: Node = $WorldRoot
 @onready var ui_root: CanvasLayer = $UIRoot
@@ -8,6 +9,7 @@ const GAMEPLAY_HUD_SCENE_PATH := "res://scenes/ui/GameplayHUD.tscn"
 
 var _active_stage: Node = null
 var _active_hud: Control = null
+var _active_overlay: Control = null
 
 
 func _ready() -> void:
@@ -55,6 +57,25 @@ func get_active_hud() -> Control:
 	return _active_hud
 
 
+func get_active_overlay() -> Control:
+	return _active_overlay
+
+
+func show_stage_clear_overlay(payload: Dictionary) -> void:
+	_clear_branch(ui_root)
+	_clear_branch(overlay_root)
+
+	var overlay_scene := load(STAGE_CLEAR_OVERLAY_SCENE_PATH) as PackedScene
+	if overlay_scene == null:
+		push_error("RuntimeShell failed to load StageClearOverlay at '%s'." % STAGE_CLEAR_OVERLAY_SCENE_PATH)
+		return
+
+	_active_overlay = overlay_scene.instantiate() as Control
+	overlay_root.add_child(_active_overlay)
+	if _active_overlay != null and _active_overlay.has_method("configure"):
+		_active_overlay.configure(payload)
+
+
 func _clear_branch(branch: Node) -> void:
 	for child in branch.get_children():
 		branch.remove_child(child)
@@ -64,6 +85,8 @@ func _clear_branch(branch: Node) -> void:
 		_active_stage = null
 	elif branch == ui_root:
 		_active_hud = null
+	elif branch == overlay_root:
+		_active_overlay = null
 
 
 func _install_gameplay_hud() -> void:

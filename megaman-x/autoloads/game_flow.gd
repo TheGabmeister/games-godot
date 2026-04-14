@@ -18,6 +18,7 @@ const STAGE_REGISTRY_PATHS := [
 
 signal state_changed(previous_state: int, new_state: int)
 signal stage_changed(stage_id: StringName)
+signal stage_clear_started(stage_id: StringName)
 
 var current_state: int = RuntimeState.BOOT
 var current_stage_id: StringName = &""
@@ -68,6 +69,28 @@ func request_stage(stage_id: StringName) -> void:
 		_runtime_shell.load_stage(stage_definition)
 
 	stage_changed.emit(current_stage_id)
+
+
+func request_stage_clear(stage_id: StringName, payload: Dictionary = {}) -> void:
+	if current_state == RuntimeState.STAGE_CLEAR and current_stage_id == stage_id:
+		return
+
+	var stage_definition := get_registered_stage(stage_id)
+	current_stage_id = stage_id
+	_set_state(RuntimeState.STAGE_CLEAR)
+
+	var overlay_payload := payload.duplicate(true)
+	overlay_payload["stage_id"] = stage_id
+	overlay_payload["display_name"] = stage_definition.display_name if stage_definition != null else String(stage_id)
+
+	var audio_manager := get_node_or_null("/root/AudioManager")
+	if audio_manager != null and audio_manager.has_method("play_sfx"):
+		audio_manager.play_sfx(&"stage_clear_fanfare")
+
+	if _runtime_shell != null and _runtime_shell.has_method("show_stage_clear_overlay"):
+		_runtime_shell.show_stage_clear_overlay(overlay_payload)
+
+	stage_clear_started.emit(current_stage_id)
 
 
 func _enter_boot_flow() -> void:

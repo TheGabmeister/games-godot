@@ -70,6 +70,9 @@ This repository is an early-stage Godot project for `megaman-x`.
   - `-- enemy_reset`
   - `-- enemy_drop_reset`
   - `-- enemy_projectile_hit`
+  - `-- stage_clear_once`
+  - `-- stage_clear_input_lock`
+  - `-- stage_clear_overlay`
   - `-- checkpoint_activation`
   - `-- checkpoint_retry`
   - `-- hazard_modes`

@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/Enemy_WalkerBasic.tscn" id="9_enemy"]
 [ext_resource type="PackedScene" path="res://scenes/stages/test/TestDummy.tscn" id="10_test_dummy"]
 [ext_resource type="PackedScene" path="res://scenes/stages/shared/StageCheckpoint.tscn" id="11_checkpoint"]
+[ext_resource type="PackedScene" path="res://scenes/stages/shared/StageClearTrigger.tscn" id="12_clear_trigger"]
 
 [sub_resource type="RectangleShape2D" id="1_ground_shape"]
 size = Vector2(256, 32)
@@ -40,6 +41,10 @@ texture = ExtResource("3_floor")
 position = Vector2(1200, 476)
 texture = ExtResource("3_floor")
 
+[node name="GroundVisualGoal" type="Sprite2D" parent="." unique_id=204560644]
+position = Vector2(1456, 476)
+texture = ExtResource("3_floor")
+
 [node name="Ground" type="StaticBody2D" parent="." unique_id=1861250021]
 position = Vector2(640, 476)
 
@@ -56,6 +61,12 @@ shape = SubResource("1_ground_shape")
 position = Vector2(1200, 476)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GroundFarEast" unique_id=368732462]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundGoal" type="StaticBody2D" parent="." unique_id=1393283709]
+position = Vector2(1456, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundGoal" unique_id=1368732462]
 shape = SubResource("1_ground_shape")
 
 [node name="SpawnMarker" type="Sprite2D" parent="." unique_id=658135512]
@@ -78,7 +89,7 @@ position = Vector2(624, 468)
 checkpoint_id = &"checkpoint_alpha"
 
 [node name="DamageHazard" type="Area2D" parent="." unique_id=893747111]
-position = Vector2(696, 464)
+position = Vector2(469, 461)
 collision_layer = 1024
 collision_mask = 64
 script = ExtResource("8_hazard")
@@ -119,6 +130,10 @@ polygon = PackedVector2Array(-48, 10, 48, 10, 48, -10, -48, -10)
 position = Vector2(1256, 468)
 checkpoint_id = &"checkpoint_bravo"
 
+[node name="GoalTrigger" parent="." unique_id=1018569847 instance=ExtResource("12_clear_trigger")]
+position = Vector2(1456, 468)
+trigger_id = &"goal_gate"
+
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1202001734]
 
 [node name="Overlay" type="Control" parent="CanvasLayer" unique_id=282180812]
@@ -135,7 +150,7 @@ layout_mode = 0
 offset_left = 916.0
 offset_top = 20.0
 offset_right = 1256.0
-offset_bottom = 236.0
+offset_bottom = 268.0
 color = Color(0.0705882, 0.145098, 0.231373, 0.9)
 
 [node name="Header" type="Label" parent="CanvasLayer/Overlay" unique_id=547381357]
@@ -145,14 +160,14 @@ offset_top = 24.0
 offset_right = 1232.0
 offset_bottom = 50.0
 theme_override_colors/font_color = Color(0.898039, 0.956863, 1, 1)
-text = "Phase 6 Test Stage"
+text = "Phase 7 Test Stage"
 
 [node name="Body" type="Label" parent="CanvasLayer/Overlay" unique_id=801757937]
 layout_mode = 0
 offset_left = 938.0
 offset_top = 56.0
 offset_right = 1232.0
-offset_bottom = 216.0
+offset_bottom = 248.0
 theme_override_colors/font_color = Color(0.713726, 0.803922, 0.909804, 1)
 text = "Loading..."
 autowrap_mode = 3

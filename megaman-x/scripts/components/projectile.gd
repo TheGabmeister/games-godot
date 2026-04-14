@@ -18,6 +18,7 @@ var spawn_position := Vector2.ZERO
 
 func _ready() -> void:
 	add_to_group(&"stage_resettable")
+	add_to_group(&"stage_clear_cleanup")
 	area_entered.connect(_on_area_entered)
 	body_entered.connect(_on_body_entered)
 

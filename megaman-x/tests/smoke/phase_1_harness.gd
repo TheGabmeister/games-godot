@@ -53,6 +53,12 @@ func _run() -> void:
 			exit_code = await _check_enemy_drop_reset()
 		"enemy_projectile_hit":
 			exit_code = await _check_enemy_projectile_hit()
+		"stage_clear_once":
+			exit_code = await _check_stage_clear_once()
+		"stage_clear_input_lock":
+			exit_code = await _check_stage_clear_input_lock()
+		"stage_clear_overlay":
+			exit_code = await _check_stage_clear_overlay()
 		"checkpoint_activation":
 			exit_code = await _check_checkpoint_activation()
 		"checkpoint_retry":
@@ -504,6 +510,129 @@ func _check_enemy_projectile_hit() -> int:
 	return 0
 
 
+func _check_stage_clear_once() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node2D = stage.get_node_or_null("Player") as Node2D
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var clear_trigger: Node2D = stage.get_node_or_null("GoalTrigger") as Node2D
+	if player == null or stage_controller == null or clear_trigger == null:
+		push_error("TestStage is missing Player, StageController, or GoalTrigger.")
+		return 1
+
+	set_meta(&"stage_clear_signal_count", 0)
+	stage_controller.connect("stage_clear_started", func(_stage_id: StringName, _clear_count: int) -> void:
+		set_meta(&"stage_clear_signal_count", int(get_meta(&"stage_clear_signal_count", 0)) + 1)
+	)
+
+	player.global_position = clear_trigger.global_position
+	await _await_physics_frames(2)
+	stage_controller.begin_stage_clear(&"duplicate_attempt")
+	await process_frame
+
+	if not bool(stage_controller.call("is_stage_clear_active")):
+		push_error("StageController did not enter stage-clear state.")
+		return 1
+
+	if int(stage_controller.get("stage_clear_count")) != 1:
+		push_error("Stage clear transitioned more than once.")
+		return 1
+
+	if int(get_meta(&"stage_clear_signal_count", 0)) != 1:
+		push_error("Stage clear signal did not fire exactly once.")
+		return 1
+
+	return 0
+
+
+func _check_stage_clear_input_lock() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node2D = stage.get_node_or_null("Player") as Node2D
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var combat: Node = player.get_node_or_null("PlayerCombat") if player != null else null
+	if player == null or stage_controller == null or combat == null:
+		push_error("TestStage is missing Player, StageController, or PlayerCombat.")
+		return 1
+
+	player.global_position = Vector2(1456.0, 460.0)
+	player.set("velocity", Vector2.ZERO)
+	stage_controller.begin_stage_clear(&"input_lock_test")
+	await _await_physics_frames(2)
+
+	var start_x: float = player.global_position.x
+	Input.action_press("move_left")
+	Input.action_press("shoot")
+	await _await_physics_frames(10)
+	_release_test_actions()
+
+	if absf(player.global_position.x - start_x) > 0.1:
+		push_error("Player movement continued after stage clear locked gameplay.")
+		return 1
+
+	if bool(player.call("is_gameplay_enabled")):
+		push_error("Player gameplay state remained enabled during stage clear.")
+		return 1
+
+	if bool(combat.get("combat_enabled")) or int(combat.call("get_active_projectile_count")) != 0:
+		push_error("Combat remained active during stage clear.")
+		return 1
+
+	return 0
+
+
+func _check_stage_clear_overlay() -> int:
+	var loaded := await _load_test_stage_via_main()
+	if loaded.is_empty():
+		return 1
+
+	var main: Node = loaded["main"]
+	var stage: Node = loaded["stage"]
+	var player: Node2D = loaded["player"] as Node2D
+	var hud: Node = loaded["hud"]
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var clear_trigger: Node2D = stage.get_node_or_null("GoalTrigger") as Node2D
+	var combat: Node = player.get_node_or_null("PlayerCombat") if player != null else null
+	if main == null or stage_controller == null or clear_trigger == null or combat == null:
+		push_error("Main stage load is missing StageController, GoalTrigger, or PlayerCombat.")
+		return 1
+
+	await _tap_shoot()
+	if not await _wait_for_projectile_count(combat, 1, 20):
+		push_error("Stage-clear overlay test failed to spawn a projectile before clear.")
+		return 1
+
+	player.global_position = clear_trigger.global_position
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.STAGE_CLEAR, 20):
+		push_error("GameFlow did not enter STAGE_CLEAR.")
+		return 1
+
+	await _await_physics_frames(2)
+	var overlay: Node = main.call("get_active_overlay")
+	if overlay == null:
+		push_error("RuntimeShell did not install the StageClear overlay.")
+		return 1
+
+	var snapshot := overlay.call("get_snapshot") as Dictionary
+	if snapshot.get("title_text", "") != "STAGE CLEAR":
+		push_error("StageClear overlay did not expose the expected title.")
+		return 1
+
+	if main.call("get_active_hud") != null or is_instance_valid(hud):
+		push_error("Gameplay HUD was left behind after stage clear.")
+		return 1
+
+	if int(combat.call("get_active_projectile_count")) != 0:
+		push_error("Transient projectiles survived into stage-clear flow.")
+		return 1
+
+	return 0
+
+
 func _check_enemy_activation() -> int:
 	var stage := await _instantiate_test_stage()
 	if stage == null:
@@ -775,7 +904,7 @@ func _check_audio_events() -> int:
 		push_error("AudioManager autoload is unavailable.")
 		return 1
 
-	for event_id in [&"player_buster_shot", &"player_charge_start", &"player_charge_full", &"player_charge_release", &"player_hurt"]:
+	for event_id in [&"player_buster_shot", &"player_charge_start", &"player_charge_full", &"player_charge_release", &"player_hurt", &"stage_clear_fanfare"]:
 		if not audio_manager.has_sfx_event(event_id):
 			push_error("AudioManager is missing semantic SFX event '%s'." % event_id)
 			return 1
@@ -899,6 +1028,17 @@ func _wait_for_retry_count(stage_controller: Node, expected_retry_count: int, ma
 func _wait_for_active_checkpoint(stage_controller: Node, expected_checkpoint_id: StringName, max_frames: int) -> bool:
 	for _frame in range(max_frames):
 		if stage_controller.call("get_active_checkpoint_id") == expected_checkpoint_id:
+			return true
+
+		await _await_physics_frames(1)
+
+	return false
+
+
+func _wait_for_gameflow_state(expected_state: int, max_frames: int) -> bool:
+	for _frame in range(max_frames):
+		var game_flow := root.get_node_or_null("/root/GameFlow")
+		if game_flow != null and int(game_flow.get("current_state")) == expected_state:
 			return true
 
 		await _await_physics_frames(1)

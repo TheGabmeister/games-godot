@@ -11,6 +11,7 @@ const DEFAULT_SFX_EVENTS := {
 	&"player_charge_full": {"duration": 0.32, "mix_rate": 22050.0},
 	&"player_charge_release": {"duration": 0.2, "mix_rate": 22050.0},
 	&"player_hurt": {"duration": 0.18, "mix_rate": 22050.0},
+	&"stage_clear_fanfare": {"duration": 0.6, "mix_rate": 22050.0},
 }
 
 var _music_player: AudioStreamPlayer

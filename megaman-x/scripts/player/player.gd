@@ -30,6 +30,7 @@ var locomotion_state: int = LocomotionState.IDLE
 var facing_direction := 1
 var _default_gravity := 980.0
 var _input_locked := false
+var _gameplay_enabled := true
 var _hurt_timer := 0.0
 var _death_timer := 0.0
 var _death_notified := false
@@ -60,7 +61,7 @@ func _physics_process(delta: float) -> void:
 	_update_damage_timers(delta)
 
 	var input_axis := 0.0
-	if not _input_locked:
+	if not _input_locked and _gameplay_enabled:
 		input_axis = Input.get_axis("move_left", "move_right")
 
 	var horizontal_acceleration := tuning.acceleration if is_on_floor() else tuning.air_control
@@ -82,7 +83,7 @@ func _physics_process(delta: float) -> void:
 	elif velocity.y > 0.0:
 		velocity.y = 0.0
 
-	if not _input_locked and Input.is_action_just_pressed("jump") and is_on_floor():
+	if not _input_locked and _gameplay_enabled and Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = tuning.jump_velocity
 
 	move_and_slide()
@@ -139,9 +140,27 @@ func get_player_combat() -> PlayerCombat:
 	return player_combat
 
 
+func is_gameplay_enabled() -> bool:
+	return _gameplay_enabled
+
+
+func set_gameplay_enabled(is_enabled: bool, _reason: StringName = &"") -> void:
+	_gameplay_enabled = is_enabled
+	if not _gameplay_enabled:
+		_input_locked = true
+		if player_combat != null:
+			player_combat.set_combat_enabled(false, &"gameplay_disabled")
+	else:
+		if locomotion_state != LocomotionState.DEAD and _hurt_timer == 0.0:
+			_input_locked = false
+			if player_combat != null:
+				player_combat.set_combat_enabled(true, &"gameplay_enabled")
+
+
 func reset_to_spawn(spawn_position: Vector2) -> void:
 	global_position = spawn_position
 	velocity = Vector2.ZERO
+	_gameplay_enabled = true
 	_input_locked = false
 	_hurt_timer = 0.0
 	_death_timer = 0.0
@@ -187,8 +206,8 @@ func _update_damage_timers(delta: float) -> void:
 	if _hurt_timer > 0.0:
 		_hurt_timer = maxf(_hurt_timer - delta, 0.0)
 		if _hurt_timer == 0.0 and locomotion_state != LocomotionState.DEAD:
-			_input_locked = false
-			if player_combat != null:
+			_input_locked = not _gameplay_enabled
+			if player_combat != null and _gameplay_enabled:
 				player_combat.set_combat_enabled(true, &"recovered")
 
 	if _death_timer > 0.0:
