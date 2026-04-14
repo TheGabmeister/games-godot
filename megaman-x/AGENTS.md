@@ -66,6 +66,11 @@ This repository is an early-stage Godot project for `megaman-x`.
   - `-- damage_pipeline`
   - `-- player_retry`
   - `-- stage_reset`
+  - `-- projectile_spawn`
+  - `-- projectile_rules`
+  - `-- charge_flow`
+  - `-- hud_updates`
+  - `-- audio_events`
 - If new GDScript files are added, run the narrowest available script check or project startup check instead of relying only on static inspection.
 - Prefer `Console-ready` checks first, then harness-backed automated checks, and leave `Manual validation` items for the user.
 - Report which automated checks were run, which passed, and which were blocked by missing infrastructure or environment limits.

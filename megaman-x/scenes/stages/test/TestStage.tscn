@@ -85,18 +85,26 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="DiagnosticPanel" type="ColorRect" parent="CanvasLayer/Overlay"]
+offset_left = 916.0
+offset_top = 20.0
+offset_right = 1256.0
+offset_bottom = 186.0
+color = Color(0.0705882, 0.145098, 0.231373, 0.9)
+
 [node name="Header" type="Label" parent="CanvasLayer/Overlay"]
-offset_left = 24.0
+offset_left = 938.0
 offset_top = 24.0
-offset_right = 280.0
-offset_bottom = 54.0
+offset_right = 1232.0
+offset_bottom = 50.0
 theme_override_colors/font_color = Color(0.898039, 0.956863, 1, 1)
-text = "Phase 3 Test Stage"
+text = "Phase 4 Test Stage"
 
 [node name="Body" type="Label" parent="CanvasLayer/Overlay"]
-offset_left = 24.0
+offset_left = 938.0
 offset_top = 56.0
-offset_right = 404.0
-offset_bottom = 118.0
+offset_right = 1232.0
+offset_bottom = 166.0
+autowrap_mode = 3
 theme_override_colors/font_color = Color(0.713726, 0.803922, 0.909804, 1)
 text = "Loading..."

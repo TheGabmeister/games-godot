@@ -1,0 +1,69 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/gameplay_hud.gd" id="1_hud"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/ui/hud_panel_320x96.svg" id="2_panel"]
+
+[node name="GameplayHUD" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="Anchor" type="MarginContainer" parent="."]
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 340.0
+offset_bottom = 114.0
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="PanelRoot" type="TextureRect" parent="Anchor"]
+expand_mode = 1
+stretch_mode = 3
+texture = ExtResource("2_panel")
+
+[node name="Content" type="GridContainer" parent="Anchor/PanelRoot"]
+offset_left = 18.0
+offset_top = 16.0
+offset_right = 286.0
+offset_bottom = 68.0
+columns = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 6
+
+[node name="HealthLabel" type="Label" parent="Anchor/PanelRoot/Content"]
+theme_override_colors/font_color = Color(0.682353, 0.811765, 0.937255, 1)
+text = "HP"
+
+[node name="HealthValue" type="Label" parent="Anchor/PanelRoot/Content"]
+theme_override_colors/font_color = Color(0.976471, 0.988235, 1, 1)
+text = "-- / --"
+
+[node name="WeaponLabel" type="Label" parent="Anchor/PanelRoot/Content"]
+theme_override_colors/font_color = Color(0.682353, 0.811765, 0.937255, 1)
+text = "Weapon"
+
+[node name="WeaponValue" type="Label" parent="Anchor/PanelRoot/Content"]
+theme_override_colors/font_color = Color(0.976471, 0.988235, 1, 1)
+text = "Offline"
+
+[node name="StateLabel" type="Label" parent="Anchor/PanelRoot/Content"]
+theme_override_colors/font_color = Color(0.682353, 0.811765, 0.937255, 1)
+text = "Combat"
+
+[node name="StateValue" type="Label" parent="Anchor/PanelRoot/Content"]
+theme_override_colors/font_color = Color(0.976471, 0.988235, 1, 1)
+text = "OFFLINE"
+
+[node name="ChargeLabel" type="Label" parent="Anchor/PanelRoot/Content"]
+theme_override_colors/font_color = Color(0.682353, 0.811765, 0.937255, 1)
+text = "Charge"
+
+[node name="ChargeValue" type="Label" parent="Anchor/PanelRoot/Content"]
+theme_override_colors/font_color = Color(0.976471, 0.988235, 1, 1)
+text = "none"

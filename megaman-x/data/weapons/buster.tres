@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/weapon_data.gd" id="1_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/projectiles/PlayerBusterShot.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_weapon")
+weapon_id = &"buster"
+display_name = "X-Buster"
+projectile_scene = ExtResource("2_projectile")
+base_damage = 1
+shot_cooldown = 0.18
+active_projectile_limit = 3
+projectile_speed = 420.0
+projectile_lifetime = 1.2
+supports_charge = true
+partial_charge_time = 0.35
+full_charge_time = 0.8
+partial_charge_damage = 2
+full_charge_damage = 4
+uncharged_color = Color(0.619608, 0.921569, 1, 1)
+partial_charge_color = Color(0.533333, 0.984314, 0.764706, 1)
+full_charge_color = Color(1, 0.882353, 0.47451, 1)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="Resource" path="res://data/player/default_player_tuning.tres" id="2_tuning"]
@@ -7,10 +7,13 @@
 [ext_resource type="Texture2D" path="res://assets/placeholders/player/player_run_32x48.svg" id="5_run"]
 [ext_resource type="Texture2D" path="res://assets/placeholders/player/player_jump_32x48.svg" id="6_jump"]
 [ext_resource type="Texture2D" path="res://assets/placeholders/player/player_fall_32x48.svg" id="7_fall"]
-[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="8_health"]
-[ext_resource type="Script" path="res://scripts/player/player_combat.gd" id="9_combat"]
-[ext_resource type="Script" path="res://scripts/player/pickup_receiver.gd" id="10_pickup"]
-[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="11_hurtbox"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/player/player_hurt_32x48.svg" id="8_hurt"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/player/player_dead_32x48.svg" id="9_dead"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="10_health"]
+[ext_resource type="Script" path="res://scripts/player/player_combat.gd" id="11_combat"]
+[ext_resource type="Script" path="res://scripts/player/pickup_receiver.gd" id="12_pickup"]
+[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="13_hurtbox"]
+[ext_resource type="Script" path="res://scripts/player/weapon_inventory.gd" id="14_inventory"]
 
 [sub_resource type="RectangleShape2D" id="1_body_shape"]
 size = Vector2(18, 36)
@@ -39,8 +42,15 @@ idle_texture = ExtResource("4_idle")
 run_texture = ExtResource("5_run")
 jump_texture = ExtResource("6_jump")
 fall_texture = ExtResource("7_fall")
+hurt_texture = ExtResource("8_hurt")
+dead_texture = ExtResource("9_dead")
 
 [node name="Sprite2D" type="Sprite2D" parent="VisualRoot"]
+
+[node name="ChargeGlow" type="Polygon2D" parent="VisualRoot"]
+visible = false
+polygon = PackedVector2Array(0, -26, 18, -10, 22, 0, 18, 10, 0, 26, -18, 10, -22, 0, -18, -10)
+color = Color(0.364706, 0.862745, 0.933333, 0.3)
 
 [node name="StateLabel" type="Label" parent="VisualRoot"]
 offset_left = -44.0
@@ -55,7 +65,7 @@ collision_layer = 64
 collision_mask = 0
 monitoring = false
 monitorable = true
-script = ExtResource("11_hurtbox")
+script = ExtResource("13_hurtbox")
 health_component_path = NodePath("../HealthComponent")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
@@ -63,16 +73,17 @@ position = Vector2(0, -18)
 shape = SubResource("2_area_shape")
 
 [node name="HealthComponent" type="Node" parent="."]
-script = ExtResource("8_health")
+script = ExtResource("10_health")
 team = &"player"
 
 [node name="PlayerCombat" type="Node" parent="."]
-script = ExtResource("9_combat")
+script = ExtResource("11_combat")
 
 [node name="WeaponInventory" type="Node" parent="PlayerCombat"]
+script = ExtResource("14_inventory")
 
 [node name="PickupReceiver" type="Node" parent="."]
-script = ExtResource("10_pickup")
+script = ExtResource("12_pickup")
 
 [node name="PlayerSensor" type="Area2D" parent="."]
 collision_layer = 4096

@@ -23,6 +23,7 @@ signal death_sequence_finished
 
 @onready var hurtbox: Node = $Hurtbox
 @onready var health_component: Node = $HealthComponent
+@onready var player_combat: PlayerCombat = $PlayerCombat as PlayerCombat
 @onready var camera_anchor: Marker2D = $CameraAnchor
 
 var locomotion_state: int = LocomotionState.IDLE
@@ -134,6 +135,10 @@ func get_health_component() -> Node:
 	return health_component
 
 
+func get_player_combat() -> PlayerCombat:
+	return player_combat
+
+
 func reset_to_spawn(spawn_position: Vector2) -> void:
 	global_position = spawn_position
 	velocity = Vector2.ZERO
@@ -142,6 +147,8 @@ func reset_to_spawn(spawn_position: Vector2) -> void:
 	_death_timer = 0.0
 	_death_notified = false
 	health_component.call("reset")
+	if player_combat != null:
+		player_combat.reset_combat()
 	_set_locomotion_state(LocomotionState.IDLE)
 
 
@@ -181,6 +188,8 @@ func _update_damage_timers(delta: float) -> void:
 		_hurt_timer = maxf(_hurt_timer - delta, 0.0)
 		if _hurt_timer == 0.0 and locomotion_state != LocomotionState.DEAD:
 			_input_locked = false
+			if player_combat != null:
+				player_combat.set_combat_enabled(true, &"recovered")
 
 	if _death_timer > 0.0:
 		_death_timer = maxf(_death_timer - delta, 0.0)
@@ -197,6 +206,9 @@ func _on_health_component_damaged(payload: Dictionary, _current_health: int) -> 
 	_hurt_timer = tuning.hurt_duration
 	var knockback: Vector2 = payload.get("knockback", Vector2.ZERO)
 	velocity = knockback
+	if player_combat != null:
+		player_combat.set_combat_enabled(false, &"hurt")
+	_play_audio_event(&"player_hurt")
 	_set_locomotion_state(LocomotionState.HURT)
 	if knockback.x != 0.0:
 		_set_facing_direction(1 if knockback.x > 0.0 else -1)
@@ -208,4 +220,12 @@ func _on_health_component_died() -> void:
 	_death_timer = tuning.death_delay
 	_death_notified = false
 	velocity = Vector2.ZERO
+	if player_combat != null:
+		player_combat.set_combat_enabled(false, &"dead")
 	_set_locomotion_state(LocomotionState.DEAD)
+
+
+func _play_audio_event(event_id: StringName) -> void:
+	var audio_manager := get_node_or_null("/root/AudioManager")
+	if audio_manager != null:
+		audio_manager.play_sfx(event_id)

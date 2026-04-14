@@ -1,6 +1,7 @@
 extends SceneTree
 
 const PLAYER_SCRIPT = preload("res://scripts/player/player.gd")
+const PLAYER_COMBAT_SCRIPT = preload("res://scripts/player/player_combat.gd")
 const HIT_PAYLOAD_SCRIPT = preload("res://scripts/components/hit_payload.gd")
 
 const REQUIRED_AUTOLOADS := {
@@ -44,9 +45,20 @@ func _run() -> void:
 			exit_code = await _check_player_retry()
 		"stage_reset":
 			exit_code = await _check_stage_reset()
+		"projectile_spawn":
+			exit_code = await _check_projectile_spawn()
+		"projectile_rules":
+			exit_code = await _check_projectile_rules()
+		"charge_flow":
+			exit_code = await _check_charge_flow()
+		"hud_updates":
+			exit_code = await _check_hud_updates()
+		"audio_events":
+			exit_code = await _check_audio_events()
 		_:
 			push_error("Unknown harness mode: %s" % arguments[0])
 
+	await _cleanup_loaded_nodes()
 	quit(exit_code)
 
 
@@ -340,6 +352,202 @@ func _check_stage_reset() -> int:
 	return 0
 
 
+func _check_projectile_spawn() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node = stage.get_node_or_null("Player")
+	var combat: Node = player.get_node_or_null("PlayerCombat")
+	var shot_origin: Marker2D = player.get_node_or_null("ShotOrigin") as Marker2D
+	if player == null or combat == null or shot_origin == null:
+		push_error("TestStage is missing PlayerCombat or ShotOrigin.")
+		return 1
+
+	set_meta(&"projectile_spawn_position", Vector2.INF)
+	combat.connect("projectile_spawned", func(_projectile: Node, spawn_position: Vector2, _tier: StringName) -> void:
+		set_meta(&"projectile_spawn_position", spawn_position)
+	, CONNECT_ONE_SHOT)
+
+	await _tap_shoot()
+	if not await _wait_for_projectile_count(combat, 1, 20):
+		push_error("Firing did not spawn a projectile.")
+		return 1
+
+	var spawn_position := get_meta(&"projectile_spawn_position", Vector2.INF) as Vector2
+	if spawn_position == Vector2.INF:
+		push_error("Combat did not report a projectile spawn event.")
+		return 1
+
+	if spawn_position.distance_to(shot_origin.global_position) > 0.1:
+		push_error("Projectile spawn did not use ShotOrigin.")
+		return 1
+
+	return 0
+
+
+func _check_projectile_rules() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node = stage.get_node_or_null("Player")
+	var combat: Node = player.get_node_or_null("PlayerCombat")
+	var weapon: Resource = combat.call("get_current_weapon") as Resource
+	if player == null or combat == null or weapon == null:
+		push_error("TestStage is missing combat or weapon data.")
+		return 1
+
+	var projectile_limit := int(weapon.get("active_projectile_limit"))
+	var cooldown_frames := _physics_frames_for_seconds(float(weapon.get("shot_cooldown"))) + 2
+
+	await _tap_shoot()
+	if not await _wait_for_projectile_count(combat, 1, 20):
+		push_error("Initial shot did not spawn.")
+		return 1
+
+	await _tap_shoot()
+	await _await_physics_frames(4)
+	if combat.call("get_active_projectile_count") != 1:
+		push_error("Combat cooldown allowed an early second projectile.")
+		return 1
+
+	for expected_count in range(2, projectile_limit + 1):
+		await _await_physics_frames(cooldown_frames)
+		await _tap_shoot()
+		if not await _wait_for_projectile_count(combat, expected_count, 20):
+			push_error("Combat did not reach projectile count %d." % expected_count)
+			return 1
+
+	await _await_physics_frames(cooldown_frames)
+	await _tap_shoot()
+	await _await_physics_frames(4)
+	if combat.call("get_active_projectile_count") != projectile_limit:
+		push_error("Projectile limit was not enforced.")
+		return 1
+
+	return 0
+
+
+func _check_charge_flow() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node = stage.get_node_or_null("Player")
+	var combat: Node = player.get_node_or_null("PlayerCombat")
+	var weapon: Resource = combat.call("get_current_weapon") as Resource
+	if player == null or combat == null or weapon == null:
+		push_error("TestStage is missing combat or weapon data.")
+		return 1
+
+	var state_history: Array[String] = []
+	combat.connect("combat_state_changed", func(_previous_state: int, new_state: int) -> void:
+		state_history.append(_combat_state_name_from_value(new_state))
+	)
+
+	Input.action_press("shoot")
+	await _await_physics_frames(_physics_frames_for_seconds(float(weapon.get("full_charge_time"))) + 4)
+	if int(combat.get("combat_state")) != PLAYER_COMBAT_SCRIPT.CombatState.CHARGED:
+		push_error("Combat did not reach CHARGED after holding shoot.")
+		_release_test_actions()
+		return 1
+
+	if combat.call("get_charge_feedback_name") != "charge_full":
+		push_error("Charge feedback did not reach charge_full.")
+		_release_test_actions()
+		return 1
+
+	Input.action_release("shoot")
+	await _await_physics_frames(18)
+
+	if not _history_contains_order(state_history, ["CHARGING", "CHARGED", "FIRING", "COOLDOWN", "READY"]):
+		push_error("Charge release did not follow the expected combat state flow.")
+		return 1
+
+	return 0
+
+
+func _check_hud_updates() -> int:
+	var loaded := await _load_test_stage_via_main()
+	if loaded.is_empty():
+		return 1
+
+	var hud: Node = loaded["hud"]
+	var player: Node = loaded["player"]
+	if hud == null or player == null:
+		push_error("Main stage load did not expose HUD and player.")
+		return 1
+
+	var health_component: Node = player.call("get_health_component")
+	if health_component == null:
+		push_error("HUD test player is missing HealthComponent.")
+		return 1
+
+	var initial_snapshot := hud.call("get_snapshot") as Dictionary
+	if initial_snapshot.get("weapon_text", "") != "X-Buster":
+		push_error("HUD did not receive the equipped weapon label.")
+		return 1
+
+	var expected_initial_health := "%d / %d" % [health_component.get("current_health"), health_component.get("max_health")]
+	if initial_snapshot.get("health_text", "") != expected_initial_health:
+		push_error("HUD did not receive the initial health values.")
+		return 1
+
+	Input.action_press("shoot")
+	await _await_physics_frames(24)
+	var charge_snapshot := hud.call("get_snapshot") as Dictionary
+	Input.action_release("shoot")
+	if charge_snapshot.get("charge_text", "") != "charge_small":
+		push_error("HUD did not reflect charge feedback while charging.")
+		return 1
+
+	health_component.set("invulnerability_duration", 0.0)
+	var enemy_hit := HIT_PAYLOAD_SCRIPT.create(self, &"enemy", &"hud_damage_test", 2, Vector2.ZERO)
+	player.call("apply_hit_payload", enemy_hit)
+	await _await_physics_frames(2)
+
+	var damaged_snapshot := hud.call("get_snapshot") as Dictionary
+	var expected_health := "%d / %d" % [health_component.get("current_health"), health_component.get("max_health")]
+	if damaged_snapshot.get("health_text", "") != expected_health:
+		push_error("HUD did not refresh after player damage.")
+		return 1
+
+	return 0
+
+
+func _check_audio_events() -> int:
+	await process_frame
+	var audio_manager := root.get_node_or_null("/root/AudioManager")
+	if audio_manager == null:
+		push_error("AudioManager autoload is unavailable.")
+		return 1
+
+	for event_id in [&"player_buster_shot", &"player_charge_start", &"player_charge_full", &"player_charge_release", &"player_hurt"]:
+		if not audio_manager.has_sfx_event(event_id):
+			push_error("AudioManager is missing semantic SFX event '%s'." % event_id)
+			return 1
+
+	for event_id in [&"title_theme", &"test_stage_theme"]:
+		if not audio_manager.has_music_event(event_id):
+			push_error("AudioManager is missing semantic music event '%s'." % event_id)
+			return 1
+
+	audio_manager.play_sfx(&"player_buster_shot")
+	audio_manager.play_music(&"test_stage_theme")
+	await process_frame
+
+	if audio_manager.last_sfx_event != &"player_buster_shot":
+		push_error("AudioManager did not record the semantic SFX playback request.")
+		return 1
+
+	if audio_manager.last_music_event != &"test_stage_theme":
+		push_error("AudioManager did not record the semantic music playback request.")
+		return 1
+
+	return 0
+
+
 func _instantiate_test_stage() -> Node2D:
 	var stage_scene := load("res://scenes/stages/test/TestStage.tscn") as PackedScene
 	if stage_scene == null:
@@ -351,6 +559,67 @@ func _instantiate_test_stage() -> Node2D:
 	await process_frame
 	await _await_physics_frames(2)
 	return instance
+
+
+func _cleanup_loaded_nodes() -> void:
+	for child in root.get_children():
+		if child == null:
+			continue
+
+		var child_path := child.get_path()
+		if str(child_path).begins_with("/root/GameFlow") \
+			or str(child_path).begins_with("/root/Progression") \
+			or str(child_path).begins_with("/root/SaveManager") \
+			or str(child_path).begins_with("/root/AudioManager"):
+			continue
+
+		child.queue_free()
+
+	await process_frame
+	await physics_frame
+	await process_frame
+
+
+func _instantiate_main_scene() -> Node:
+	var main_scene := load("res://scenes/Main.tscn") as PackedScene
+	if main_scene == null:
+		push_error("Unable to load Main.tscn.")
+		return null
+
+	var instance := main_scene.instantiate()
+	root.add_child(instance)
+	await process_frame
+	await process_frame
+	return instance
+
+
+func _load_test_stage_via_main() -> Dictionary:
+	var main := await _instantiate_main_scene()
+	if main == null:
+		return {}
+
+	var game_flow := root.get_node_or_null("/root/GameFlow")
+	if game_flow == null:
+		push_error("GameFlow autoload is unavailable.")
+		return {}
+
+	game_flow.request_stage(&"test_stage")
+	await process_frame
+	await _await_physics_frames(3)
+
+	var stage := main.get_node_or_null("WorldRoot/test_stage")
+	var hud := main.get_node_or_null("UIRoot/GameplayHUD")
+	var player := stage.get_node_or_null("Player") if stage != null else null
+	if stage == null or hud == null or player == null:
+		push_error("Main scene did not load the test stage HUD stack.")
+		return {}
+
+	return {
+		"main": main,
+		"stage": stage,
+		"hud": hud,
+		"player": player,
+	}
 
 
 func _wait_for_retry_count(stage_controller: Node, expected_retry_count: int, max_frames: int) -> bool:
@@ -373,11 +642,61 @@ func _wait_for_player_state(player: Node, expected_state: int, max_frames: int) 
 	return false
 
 
+func _wait_for_projectile_count(combat: Node, expected_count: int, max_frames: int) -> bool:
+	for _frame in range(max_frames):
+		if int(combat.call("get_active_projectile_count")) >= expected_count:
+			return true
+
+		await _await_physics_frames(1)
+
+	return false
+
+
 func _await_physics_frames(frame_count: int) -> void:
 	for _frame in range(frame_count):
 		await physics_frame
 
 
+func _tap_shoot(hold_frames: int = 1) -> void:
+	Input.action_press("shoot")
+	await _await_physics_frames(hold_frames)
+	Input.action_release("shoot")
+	await _await_physics_frames(1)
+
+
+func _physics_frames_for_seconds(duration: float) -> int:
+	return maxi(1, ceili(duration * float(Engine.physics_ticks_per_second)))
+
+
+func _history_contains_order(history: Array[String], expected_order: Array[String]) -> bool:
+	var current_index := 0
+	for entry in history:
+		if current_index >= expected_order.size():
+			return true
+		if entry == expected_order[current_index]:
+			current_index += 1
+
+	return current_index >= expected_order.size()
+
+
+func _combat_state_name_from_value(state: int) -> String:
+	match state:
+		PLAYER_COMBAT_SCRIPT.CombatState.READY:
+			return "READY"
+		PLAYER_COMBAT_SCRIPT.CombatState.FIRING:
+			return "FIRING"
+		PLAYER_COMBAT_SCRIPT.CombatState.CHARGING:
+			return "CHARGING"
+		PLAYER_COMBAT_SCRIPT.CombatState.CHARGED:
+			return "CHARGED"
+		PLAYER_COMBAT_SCRIPT.CombatState.COOLDOWN:
+			return "COOLDOWN"
+		PLAYER_COMBAT_SCRIPT.CombatState.DISABLED:
+			return "DISABLED"
+		_:
+			return "UNKNOWN"
+
+
 func _release_test_actions() -> void:
-	for action_name in ["move_left", "move_right", "jump", "dash"]:
+	for action_name in ["move_left", "move_right", "jump", "dash", "shoot"]:
 		Input.action_release(action_name)
