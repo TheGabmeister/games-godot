@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/pickups/persistent_upgrade_pickup.gd" id="1_pickup"]
+
+[sub_resource type="CircleShape2D" id="1_pickup_shape"]
+radius = 12.0
+
+[node name="PersistentUpgradePickup" type="Area2D"]
+collision_layer = 256
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_pickup")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1_pickup_shape")
+
+[node name="Ring" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, -12, 8, -8, 12, 0, 8, 8, 0, 12, -8, 8, -12, 0, -8, -8)
+color = Color(0.145098, 0.239216, 0.333333, 1)
+
+[node name="Core" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, -7, 5, -5, 7, 0, 5, 5, 0, 7, -5, 5, -7, 0, -5, -5)
+color = Color(0.988235, 0.807843, 0.423529, 1)
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -34.0
+offset_top = -30.0
+offset_right = 34.0
+offset_bottom = -14.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.976471, 0.945098, 0.854902, 1)
+text = "UPGRADE"

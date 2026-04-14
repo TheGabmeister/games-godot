@@ -49,10 +49,12 @@ func _ready() -> void:
 		tuning = load(DEFAULT_TUNING_PATH) as PlayerTuningData
 
 	_default_gravity = float(ProjectSettings.get_setting("physics/2d/default_gravity"))
-	health_component.set("max_health", tuning.base_max_hp)
 	health_component.set("invulnerability_duration", tuning.invulnerability_time)
 	health_component.set("team", &"player")
-	health_component.call("reset")
+	var progression := _get_progression()
+	if progression != null and progression.has_signal("progression_changed"):
+		progression.progression_changed.connect(_on_progression_changed)
+	apply_progression_upgrades(true)
 	health_component.connect("damaged", _on_health_component_damaged)
 	health_component.connect("died", _on_health_component_died)
 	if player_sensor != null:
@@ -100,6 +102,9 @@ func _physics_process(delta: float) -> void:
 	if not _input_locked and _gameplay_enabled and Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = tuning.jump_velocity
 
+	if not _input_locked and _gameplay_enabled and Input.is_action_just_pressed("sub_tank_use") and pickup_receiver != null:
+		pickup_receiver.use_sub_tank()
+
 	move_and_slide()
 
 	if locomotion_state == LocomotionState.DEAD:
@@ -113,7 +118,16 @@ func _physics_process(delta: float) -> void:
 
 
 func apply_hit_payload(payload: Dictionary) -> bool:
-	return hurtbox.call("apply_hit_payload", payload)
+	if payload == null:
+		return false
+
+	var adjusted_payload := payload
+	var progression := _get_progression()
+	if progression != null and progression.has_method("has_armor_part") and progression.has_armor_part(&"body"):
+		adjusted_payload = payload.duplicate(true)
+		adjusted_payload["damage"] = maxi(1, int(payload.get("damage", 0)) - 1)
+
+	return hurtbox.call("apply_hit_payload", adjusted_payload)
 
 
 func get_camera_anchor() -> Marker2D:
@@ -195,10 +209,38 @@ func reset_to_spawn(spawn_position: Vector2) -> void:
 	_death_timer = 0.0
 	_death_notified = false
 	_dash_timer = 0.0
-	health_component.call("reset")
+	apply_progression_upgrades(true)
 	if player_combat != null:
 		player_combat.reset_combat()
 	_set_locomotion_state(LocomotionState.IDLE)
+
+
+func apply_progression_upgrades(fill_to_full := false) -> void:
+	if tuning == null or health_component == null:
+		return
+
+	var desired_max_health := tuning.base_max_hp
+	var progression := _get_progression()
+	if progression != null and progression.has_method("get_heart_tank_health_bonus"):
+		desired_max_health += int(progression.get_heart_tank_health_bonus())
+
+	var previous_max_health := int(health_component.get("max_health"))
+	health_component.set("invulnerability_duration", tuning.invulnerability_time)
+	if health_component.has_method("set_max_health_value"):
+		health_component.set_max_health_value(
+			desired_max_health,
+			fill_to_full,
+			maxi(desired_max_health - previous_max_health, 0)
+		)
+	elif fill_to_full:
+		health_component.set("max_health", desired_max_health)
+		health_component.call("reset")
+	else:
+		health_component.set("max_health", desired_max_health)
+
+
+func _get_progression() -> Node:
+	return get_node_or_null("/root/Progression")
 
 
 func _update_locomotion_state() -> void:
@@ -308,6 +350,10 @@ func _play_audio_event(event_id: StringName) -> void:
 	var audio_manager := get_node_or_null("/root/AudioManager")
 	if audio_manager != null:
 		audio_manager.play_sfx(event_id)
+
+
+func _on_progression_changed() -> void:
+	apply_progression_upgrades(false)
 
 
 func _on_player_sensor_area_entered(area: Area2D) -> void:

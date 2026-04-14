@@ -101,6 +101,12 @@ func _run() -> void:
 			exit_code = await _check_weapon_energy_costs()
 		"unlock_all_weapons_shortcut":
 			exit_code = await _check_unlock_all_weapons_shortcut()
+		"persistent_upgrade_types":
+			exit_code = await _check_persistent_upgrade_types()
+		"upgrade_save_reload":
+			exit_code = await _check_upgrade_save_reload()
+		"sub_tank_round_trip":
+			exit_code = await _check_sub_tank_round_trip()
 		"pickup_collision":
 			exit_code = await _check_pickup_collision()
 		_:
@@ -1689,6 +1695,171 @@ func _check_unlock_all_weapons_shortcut() -> int:
 		push_error("Unlock-all-weapons shortcut did not populate the expected progression unlocks.")
 		return 1
 
+	return 0
+
+
+func _check_persistent_upgrade_types() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("Persistent upgrade type check requires Progression.")
+		return 1
+
+	progression.reset_for_new_game()
+	var stage := await _instantiate_test_stage()
+	var player := stage.get_node_or_null("Player")
+	var pickup_receiver := player.get_node_or_null("PickupReceiver") if player != null else null
+	var heart_pickup := stage.get_node_or_null("HeartTankPickup")
+	var armor_pickup := stage.get_node_or_null("ArmorCapsulePickup")
+	var sub_tank_pickup := stage.get_node_or_null("SubTankPickup")
+	if player == null or pickup_receiver == null or heart_pickup == null or armor_pickup == null or sub_tank_pickup == null:
+		push_error("Persistent upgrade type check could not resolve the test-stage pickup nodes.")
+		return 1
+
+	var initial_max_health := int(player.get_node("HealthComponent").get("max_health"))
+	if not bool(heart_pickup.call("collect", pickup_receiver)):
+		push_error("Heart tank pickup did not collect through PickupReceiver.")
+		return 1
+
+	if not progression.has_collected_pickup(&"test_stage_heart_tank") or not progression.has_heart_tank_collected(&"test_stage_heart_tank"):
+		push_error("Heart tank pickup did not record its persistent progression facts.")
+		return 1
+
+	if int(player.get_node("HealthComponent").get("max_health")) != initial_max_health + 2:
+		push_error("Heart tank pickup did not increase the player's maximum HP.")
+		return 1
+
+	if bool(heart_pickup.call("collect", pickup_receiver)):
+		push_error("Heart tank pickup collected twice instead of remaining persistent.")
+		return 1
+
+	if not bool(armor_pickup.call("collect", pickup_receiver)):
+		push_error("Armor capsule pickup did not collect through PickupReceiver.")
+		return 1
+
+	if not progression.has_collected_pickup(&"test_stage_body_capsule") or not progression.has_armor_part(&"body"):
+		push_error("Armor capsule pickup did not record the body armor progression facts.")
+		return 1
+
+	if not bool(sub_tank_pickup.call("collect", pickup_receiver)):
+		push_error("Sub tank pickup did not collect through PickupReceiver.")
+		return 1
+
+	if not progression.has_collected_pickup(&"test_stage_sub_tank") or not progression.has_sub_tank(&"sub_tank_alpha"):
+		push_error("Sub tank pickup did not record ownership in progression.")
+		return 1
+
+	if int(progression.get_sub_tank_fill(&"sub_tank_alpha")) != 10:
+		push_error("Sub tank pickup did not apply the expected initial fill amount.")
+		return 1
+
+	return 0
+
+
+func _check_upgrade_save_reload() -> int:
+	var progression := _get_progression()
+	var save_manager := _get_save_manager()
+	if progression == null or save_manager == null:
+		push_error("Upgrade save/reload check requires Progression and SaveManager.")
+		return 1
+
+	_use_harness_save_path(save_manager)
+	save_manager.call("delete_save")
+	progression.reset_for_new_game()
+
+	var stage := await _instantiate_test_stage()
+	var player := stage.get_node_or_null("Player")
+	var pickup_receiver := player.get_node_or_null("PickupReceiver") if player != null else null
+	var heart_pickup := stage.get_node_or_null("HeartTankPickup")
+	var armor_pickup := stage.get_node_or_null("ArmorCapsulePickup")
+	if player == null or pickup_receiver == null or heart_pickup == null or armor_pickup == null:
+		push_error("Upgrade save/reload check could not resolve the test-stage pickup nodes.")
+		return 1
+
+	heart_pickup.call("collect", pickup_receiver)
+	armor_pickup.call("collect", pickup_receiver)
+	if not bool(save_manager.call("has_save")):
+		push_error("Collecting heart tank and armor capsule did not trigger a save.")
+		return 1
+
+	progression.reset_for_new_game()
+	if not bool(save_manager.load_game()):
+		push_error("Upgrade save/reload check failed to load the saved progression payload.")
+		return 1
+
+	var reloaded_stage := await _instantiate_test_stage()
+	var reloaded_player := reloaded_stage.get_node_or_null("Player")
+	var reloaded_heart := reloaded_stage.get_node_or_null("HeartTankPickup")
+	var reloaded_armor := reloaded_stage.get_node_or_null("ArmorCapsulePickup")
+	if reloaded_player == null or reloaded_heart == null or reloaded_armor == null:
+		push_error("Reloaded test stage is missing the player, heart tank, or armor capsule.")
+		return 1
+
+	if int(reloaded_player.get_node("HealthComponent").get("max_health")) != 18:
+		push_error("Heart tank bonus did not survive save/load into the player's maximum HP.")
+		return 1
+
+	if not bool(reloaded_heart.call("is_collected")) or not bool(reloaded_armor.call("is_collected")):
+		push_error("Persistent upgrade pickups reappeared after save/load reload.")
+		return 1
+
+	var reloaded_health: Node = reloaded_player.get_node_or_null("HealthComponent")
+	reloaded_player.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"enemy", &"body_armor_test", 4, Vector2.ZERO))
+	await _await_physics_frames(1)
+	if reloaded_health == null or int(reloaded_health.get("current_health")) != 15:
+		push_error("Body armor mitigation did not survive save/load.")
+		return 1
+
+	save_manager.call("delete_save")
+	_clear_harness_save_path(save_manager)
+	return 0
+
+
+func _check_sub_tank_round_trip() -> int:
+	var progression := _get_progression()
+	var save_manager := _get_save_manager()
+	if progression == null or save_manager == null:
+		push_error("Sub tank round-trip check requires Progression and SaveManager.")
+		return 1
+
+	_use_harness_save_path(save_manager)
+	save_manager.call("delete_save")
+	progression.reset_for_new_game()
+
+	var stage := await _instantiate_test_stage()
+	var player := stage.get_node_or_null("Player")
+	var pickup_receiver := player.get_node_or_null("PickupReceiver") if player != null else null
+	var sub_tank_pickup := stage.get_node_or_null("SubTankPickup")
+	var player_health := player.get_node_or_null("HealthComponent") if player != null else null
+	if player == null or pickup_receiver == null or sub_tank_pickup == null or player_health == null:
+		push_error("Sub tank round-trip check could not resolve the test-stage sub tank nodes.")
+		return 1
+
+	sub_tank_pickup.call("collect", pickup_receiver)
+	player_health.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"enemy", &"sub_tank_damage_test", 6, Vector2.ZERO))
+	await _await_physics_frames(1)
+	if not bool(pickup_receiver.call("use_sub_tank")):
+		push_error("Sub tank round-trip check could not use the owned filled sub tank.")
+		return 1
+
+	if int(progression.get_sub_tank_fill(&"sub_tank_alpha")) != 4:
+		push_error("Sub tank usage did not update the remaining fill correctly before save.")
+		return 1
+
+	if not bool(save_manager.save_game(&"sub_tank_round_trip_test")):
+		push_error("Sub tank round-trip check failed to write the save payload.")
+		return 1
+
+	progression.reset_for_new_game()
+	if not bool(save_manager.load_game()):
+		push_error("Sub tank round-trip check failed to load the saved progression payload.")
+		return 1
+
+	if not progression.has_sub_tank(&"sub_tank_alpha") or int(progression.get_sub_tank_fill(&"sub_tank_alpha")) != 4:
+		push_error("Sub tank ownership or fill state did not survive save/load.")
+		return 1
+
+	save_manager.call("delete_save")
+	_clear_harness_save_path(save_manager)
 	return 0
 
 

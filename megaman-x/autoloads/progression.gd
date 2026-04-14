@@ -3,6 +3,8 @@ extends Node
 const WEAPON_CATALOG_SCRIPT = preload("res://scripts/player/weapon_catalog.gd")
 
 const ARMOR_PART_IDS := [&"helmet", &"body", &"arms", &"legs"]
+const HEART_TANK_HEALTH_BONUS := 2
+const SUB_TANK_MAX_FILL := 32
 
 signal progression_changed
 
@@ -89,6 +91,28 @@ func collect_pickup(pickup_id: StringName) -> bool:
 	return true
 
 
+func has_heart_tank_collected(pickup_id: StringName) -> bool:
+	return bool(collected_heart_tanks.get(pickup_id, false))
+
+
+func collect_heart_tank(pickup_id: StringName) -> bool:
+	if pickup_id.is_empty() or has_heart_tank_collected(pickup_id):
+		return false
+
+	collected_heart_tanks[pickup_id] = true
+	collected_pickups[pickup_id] = true
+	progression_changed.emit()
+	return true
+
+
+func get_heart_tank_count() -> int:
+	return collected_heart_tanks.size()
+
+
+func get_heart_tank_health_bonus() -> int:
+	return get_heart_tank_count() * HEART_TANK_HEALTH_BONUS
+
+
 func unlock_dash() -> bool:
 	if dash_unlocked:
 		return false
@@ -162,6 +186,102 @@ func unlock_all_weapons() -> bool:
 		progression_changed.emit()
 
 	return changed
+
+
+func has_armor_part(part_id: StringName) -> bool:
+	return bool(armor_parts.get(part_id, false))
+
+
+func unlock_armor_part(part_id: StringName, pickup_id: StringName = &"") -> bool:
+	if part_id.is_empty() or has_armor_part(part_id):
+		return false
+
+	armor_parts[part_id] = true
+	if not pickup_id.is_empty():
+		collected_pickups[pickup_id] = true
+	progression_changed.emit()
+	return true
+
+
+func has_sub_tank(sub_tank_id: StringName) -> bool:
+	return bool((sub_tanks.get(sub_tank_id, {}) as Dictionary).get("owned", false))
+
+
+func get_sub_tank_fill(sub_tank_id: StringName) -> int:
+	return int((sub_tanks.get(sub_tank_id, {}) as Dictionary).get("fill", 0))
+
+
+func get_owned_sub_tank_ids() -> Array[StringName]:
+	var owned_ids: Array[StringName] = []
+	for key in sub_tanks.keys():
+		var sub_tank_id := key as StringName
+		if has_sub_tank(sub_tank_id):
+			owned_ids.append(sub_tank_id)
+
+	return owned_ids
+
+
+func acquire_sub_tank(sub_tank_id: StringName, pickup_id: StringName = &"", initial_fill := 0) -> bool:
+	if sub_tank_id.is_empty() or has_sub_tank(sub_tank_id):
+		return false
+
+	sub_tanks[sub_tank_id] = {
+		"owned": true,
+		"fill": clampi(initial_fill, 0, SUB_TANK_MAX_FILL),
+	}
+	if not pickup_id.is_empty():
+		collected_pickups[pickup_id] = true
+	progression_changed.emit()
+	return true
+
+
+func refill_sub_tank(sub_tank_id: StringName, amount: int) -> int:
+	if amount <= 0 or not has_sub_tank(sub_tank_id):
+		return 0
+
+	var sub_tank := (sub_tanks.get(sub_tank_id, {}) as Dictionary).duplicate(true)
+	var previous_fill := int(sub_tank.get("fill", 0))
+	var next_fill := clampi(previous_fill + amount, 0, SUB_TANK_MAX_FILL)
+	if next_fill == previous_fill:
+		return 0
+
+	sub_tank["owned"] = true
+	sub_tank["fill"] = next_fill
+	sub_tanks[sub_tank_id] = sub_tank
+	progression_changed.emit()
+	return next_fill - previous_fill
+
+
+func use_sub_tank_heal(requested_heal: int) -> Dictionary:
+	var result := {
+		"used": false,
+		"sub_tank_id": StringName(),
+		"heal_amount": 0,
+		"remaining_fill": 0,
+	}
+	if requested_heal <= 0:
+		return result
+
+	var owned_ids := get_owned_sub_tank_ids()
+	owned_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
+	for sub_tank_id in owned_ids:
+		var current_fill := get_sub_tank_fill(sub_tank_id)
+		if current_fill <= 0:
+			continue
+
+		var used_amount := mini(current_fill, requested_heal)
+		var sub_tank := (sub_tanks.get(sub_tank_id, {}) as Dictionary).duplicate(true)
+		sub_tank["owned"] = true
+		sub_tank["fill"] = current_fill - used_amount
+		sub_tanks[sub_tank_id] = sub_tank
+		progression_changed.emit()
+		result["used"] = true
+		result["sub_tank_id"] = sub_tank_id
+		result["heal_amount"] = used_amount
+		result["remaining_fill"] = int(sub_tank["fill"])
+		return result
+
+	return result
 
 
 func grant_dash_unlock(pickup_id: StringName) -> bool:

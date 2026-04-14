@@ -97,6 +97,18 @@ func heal(amount: int) -> int:
 	return healed_amount
 
 
+func set_max_health_value(new_max_health: int, fill_to_full := false, heal_delta := 0) -> void:
+	max_health = maxi(1, new_max_health)
+	if fill_to_full:
+		current_health = max_health
+	elif heal_delta > 0:
+		current_health = mini(current_health + heal_delta, max_health)
+	else:
+		current_health = mini(current_health, max_health)
+
+	health_changed.emit(current_health, max_health)
+
+
 func _apply_damage_multiplier(base_damage: int, damage_multiplier: float) -> int:
 	if base_damage <= 0 or damage_multiplier <= 0.0:
 		return 0

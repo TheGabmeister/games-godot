@@ -1,6 +1,6 @@
 extends Node2D
 
-const STAGE_NOTE := "Phase 11 weapon slice.\nMove with A/D. Jump with Space. Shoot with J. Dash with K after the capsule unlock.\nPress U to unlock all boss weapons for this session.\nSwitch weapons with Q/E or shoulder buttons once boss weapons are unlocked.\nWeak dummy: Shotgun Ice hits harder, Fire Wave hits softer, Storm Tornado is ignored."
+const STAGE_NOTE := "Phase 12 upgrade slice.\nMove with A/D. Jump with Space. Shoot with J. Dash with K after the capsule unlock.\nPress U to unlock all boss weapons for this session. Press V or Tab to use a filled sub tank.\nSwitch weapons with Q/E or shoulder buttons once boss weapons are unlocked.\nWeak dummy: Shotgun Ice hits harder, Fire Wave hits softer, Storm Tornado is ignored."
 const DASH_CAPSULE_DIALOGUE := preload("res://data/dialogue/test_stage_dash_capsule.tres")
 const DASH_CAPSULE_PICKUP_ID := &"test_stage_dash_capsule"
 
@@ -9,6 +9,9 @@ const DASH_CAPSULE_PICKUP_ID := &"test_stage_dash_capsule"
 @onready var walker_enemy: Node = $WalkerBasic
 @onready var checkpoint_alpha: Node = $CheckpointAlpha
 @onready var checkpoint_bravo: Node = $CheckpointBravo
+@onready var heart_tank_pickup: Node = $HeartTankPickup
+@onready var armor_capsule_pickup: Node = $ArmorCapsulePickup
+@onready var sub_tank_pickup: Node = $SubTankPickup
 @onready var dash_capsule: Node = $DashCapsule
 @onready var damage_hazard: Node = $DamageHazard
 @onready var instant_hazard: Node = $InstantDeathHazard
@@ -42,6 +45,8 @@ func _ready() -> void:
 	walker_enemy.get_node("HealthComponent").connect("health_changed", _on_walker_enemy_health_changed)
 	checkpoint_alpha.connect("activated", _on_checkpoint_changed)
 	checkpoint_bravo.connect("activated", _on_checkpoint_changed)
+	if Progression != null and Progression.has_signal("progression_changed"):
+		Progression.progression_changed.connect(_on_progression_changed)
 	dash_capsule.connect("triggered", _on_dash_capsule_triggered)
 	dash_capsule.connect("collected", _on_dash_capsule_collected)
 	stage_controller.connect("checkpoint_activated", _on_checkpoint_changed)
@@ -141,6 +146,10 @@ func _on_dash_capsule_collected(_pickup_id: StringName) -> void:
 	_refresh_overlay()
 
 
+func _on_progression_changed() -> void:
+	_refresh_overlay()
+
+
 func _on_dash_capsule_triggered(_pickup_id: StringName) -> void:
 	if stage_controller == null or cutscene_director == null:
 		return
@@ -191,7 +200,7 @@ func _unlock_all_weapons_shortcut() -> void:
 func _refresh_overlay() -> void:
 	var health_component: Node = player.call("get_health_component")
 	var respawn_position: Vector2 = stage_controller.call("get_current_respawn_position")
-	body_label.text = "%s\nMove: %s | Facing: %s | Combat: %s | Charge: %s\nHP: %d/%d | Weapon: %s | Energy: %s\nUnlocked weapons: %d | Shots: %d | Retries: %d\nCutscene: %s | Dash: unlocked=%s | pickup=%s\nCheckpoint: %s @ (%.0f, %.0f)\nClear: active=%s | count=%d | goal=%s\nNormal dummy: %s\nWeak dummy: %s\nEnemy: %s" % [
+	body_label.text = "%s\nMove: %s | Facing: %s | Combat: %s | Charge: %s\nHP: %d/%d | Weapon: %s | Energy: %s\nUnlocked weapons: %d | Heart bonus: +%d | Body armor: %s\nSub tank: %s | Shots: %d | Retries: %d\nCutscene: %s | Dash: unlocked=%s | pickup=%s\nCheckpoint: %s @ (%.0f, %.0f)\nClear: active=%s | count=%d | goal=%s\nPickups: heart=%s body=%s sub=%s\nNormal dummy: %s\nWeak dummy: %s\nEnemy: %s" % [
 		STAGE_NOTE,
 		player.call("get_locomotion_state_name"),
 		player.call("get_facing_name"),
@@ -202,6 +211,9 @@ func _refresh_overlay() -> void:
 		player_combat.call("get_current_weapon_name"),
 		_format_weapon_energy(),
 		player_combat.get_node("WeaponInventory").call("get_unlocked_weapon_count"),
+		_get_heart_tank_bonus(),
+		_has_body_armor(),
+		_get_sub_tank_summary(),
 		player_combat.call("get_active_projectile_count"),
 		stage_controller.get("retry_count"),
 		stage_controller.call("get_active_cutscene_id"),
@@ -213,6 +225,9 @@ func _refresh_overlay() -> void:
 		stage_controller.call("is_stage_clear_active"),
 		stage_controller.get("stage_clear_count"),
 		clear_trigger.get("trigger_id"),
+		heart_tank_pickup.call("is_collected"),
+		armor_capsule_pickup.call("is_collected"),
+		sub_tank_pickup.call("is_collected"),
 		test_dummy.get_node("HealthComponent").get("current_health"),
 		weakness_dummy.get_node("HealthComponent").get("current_health"),
 		walker_enemy.call("get_debug_summary"),
@@ -228,3 +243,24 @@ func _format_weapon_energy() -> String:
 		int(player_combat.call("get_current_weapon_energy")),
 		max_energy,
 	]
+
+
+func _get_heart_tank_bonus() -> int:
+	if Progression == null or not Progression.has_method("get_heart_tank_health_bonus"):
+		return 0
+
+	return int(Progression.get_heart_tank_health_bonus())
+
+
+func _has_body_armor() -> bool:
+	return bool(Progression != null and Progression.has_method("has_armor_part") and Progression.has_armor_part(&"body"))
+
+
+func _get_sub_tank_summary() -> String:
+	if Progression == null or not Progression.has_method("has_sub_tank"):
+		return "none"
+
+	if not Progression.has_sub_tank(&"sub_tank_alpha"):
+		return "none"
+
+	return "%d fill" % int(Progression.get_sub_tank_fill(&"sub_tank_alpha"))
