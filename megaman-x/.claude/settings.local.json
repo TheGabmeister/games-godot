@@ -14,7 +14,9 @@
       "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --headless --path . _test_ready_timing.tscn)",
       "WebSearch",
       "WebFetch(domain:support.claude.com)",
-      "WebFetch(domain:portkey.ai)"
+      "WebFetch(domain:portkey.ai)",
+      "Bash(wc -l \"c:\\\\dev\\\\games-godot\\\\megaman-x\\\\autoloads\\\\\"*.gd \"c:\\\\dev\\\\games-godot\\\\megaman-x\\\\scripts\\\\systems\\\\\"*.gd \"c:\\\\dev\\\\games-godot\\\\megaman-x\\\\scripts\\\\player\\\\\"*.gd \"c:\\\\dev\\\\games-godot\\\\megaman-x\\\\scripts\\\\components\\\\\"*.gd \"c:\\\\dev\\\\games-godot\\\\megaman-x\\\\scripts\\\\enemies\\\\\"*.gd \"c:\\\\dev\\\\games-godot\\\\megaman-x\\\\scripts\\\\enemies\\\\states\\\\\"*.gd \"c:\\\\dev\\\\games-godot\\\\megaman-x\\\\scripts\\\\stages\\\\\"*.gd \"c:\\\\dev\\\\games-godot\\\\megaman-x\\\\scripts\\\\camera\\\\\"*.gd \"c:\\\\dev\\\\games-godot\\\\megaman-x\\\\scripts\\\\ui\\\\\"*.gd)",
+      "Bash(find \"c:/dev/games-godot/megaman-x\" -name \"*.gd\" -not -path \"*/.godot/*\" -exec wc -l {} +)"
     ]
   }
 }

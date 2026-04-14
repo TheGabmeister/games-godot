@@ -65,13 +65,12 @@ func begin_stage_clear(source_id: StringName = &"goal") -> void:
 		player.set_gameplay_enabled(false, &"stage_clear")
 
 	stage_clear_started.emit(stage_id if not stage_id.is_empty() else &"stage", stage_clear_count)
-	if Engine.has_singleton("GameFlow") or get_node_or_null("/root/GameFlow") != null:
-		var game_flow := get_node_or_null("/root/GameFlow")
-		if game_flow != null and game_flow.has_method("request_stage_clear"):
-			game_flow.request_stage_clear(stage_id if not stage_id.is_empty() else &"stage", {
-				"source_id": source_id,
-				"clear_count": stage_clear_count,
-			})
+	var game_flow := get_node_or_null("/root/GameFlow")
+	if game_flow != null and game_flow.has_method("request_stage_clear"):
+		game_flow.request_stage_clear(stage_id if not stage_id.is_empty() else &"stage", {
+			"source_id": source_id,
+			"clear_count": stage_clear_count,
+		})
 
 
 func retry_stage() -> void:

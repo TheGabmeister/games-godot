@@ -750,6 +750,9 @@ func _check_projectile_spawn() -> int:
 		set_meta(&"projectile_spawn_position", spawn_position)
 	, CONNECT_ONE_SHOT)
 
+	player.set("facing_direction", -1)
+	if player.has_signal("facing_changed"):
+		player.emit_signal("facing_changed", -1)
 	await _tap_shoot()
 	if not await _wait_for_projectile_count(combat, 1, 20):
 		push_error("Firing did not spawn a projectile.")
@@ -760,8 +763,9 @@ func _check_projectile_spawn() -> int:
 		push_error("Combat did not report a projectile spawn event.")
 		return 1
 
-	if spawn_position.distance_to(shot_origin.global_position) > 0.1:
-		push_error("Projectile spawn did not use ShotOrigin.")
+	var expected_spawn_position := (player as Node2D).to_global(Vector2(-shot_origin.position.x, shot_origin.position.y))
+	if spawn_position.distance_to(expected_spawn_position) > 0.1:
+		push_error("Projectile spawn did not mirror ShotOrigin for left-facing fire.")
 		return 1
 
 	return 0

@@ -232,8 +232,9 @@ func _fire_current_weapon(tier: StringName) -> bool:
 
 	var projectile := projectile_scene.instantiate()
 	var projectile_parent := _resolve_projectile_parent()
+	var spawn_position := _get_shot_spawn_position()
 	projectile_parent.add_child(projectile)
-	projectile.global_position = shot_origin.global_position
+	projectile.global_position = spawn_position
 
 	var projectile_setup := _build_projectile_setup(current_weapon, tier)
 	if projectile.has_method("configure"):
@@ -241,7 +242,7 @@ func _fire_current_weapon(tier: StringName) -> bool:
 
 	projectile.tree_exited.connect(_on_projectile_tree_exited.bind(projectile), CONNECT_ONE_SHOT)
 	_tracked_projectiles.append(projectile)
-	projectile_spawned.emit(projectile, shot_origin.global_position, tier)
+	projectile_spawned.emit(projectile, spawn_position, tier)
 	shot_fired.emit(current_weapon.weapon_id, tier)
 
 	if tier == &"partial" or tier == &"full":
@@ -253,6 +254,20 @@ func _fire_current_weapon(tier: StringName) -> bool:
 	_cooldown_remaining = current_weapon.shot_cooldown
 	_set_combat_state(CombatState.FIRING)
 	return true
+
+
+func _get_shot_spawn_position() -> Vector2:
+	var player_node := player as Node2D
+	if player_node == null:
+		return shot_origin.global_position
+
+	var facing_direction := 1
+	if int(player.get("facing_direction")) < 0:
+		facing_direction = -1
+
+	var mirrored_offset := shot_origin.position
+	mirrored_offset.x *= float(facing_direction)
+	return player_node.to_global(mirrored_offset)
 
 
 func _build_projectile_setup(current_weapon: WeaponData, tier: StringName) -> Dictionary:
