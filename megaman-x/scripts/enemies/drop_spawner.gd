@@ -16,10 +16,9 @@ func spawn_drop(drop_scene: PackedScene, spawn_position: Vector2) -> Node2D:
 	if parent_node != null and parent_node.get_parent() != null:
 		parent_node = parent_node.get_parent()
 
-	parent_node.add_child(drop)
-	drop.global_position = spawn_position
 	_active_drops.append(drop)
 	drop.tree_exited.connect(_on_drop_tree_exited.bind(drop), CONNECT_ONE_SHOT)
+	call_deferred("_attach_drop_deferred", parent_node, drop, spawn_position)
 	return drop
 
 
@@ -48,3 +47,12 @@ func _prune_drops() -> void:
 
 func _on_drop_tree_exited(drop: Node) -> void:
 	_active_drops.erase(drop)
+
+
+func _attach_drop_deferred(parent_node: Node, drop: Node2D, spawn_position: Vector2) -> void:
+	if not is_instance_valid(drop) or not is_instance_valid(parent_node):
+		_active_drops.erase(drop)
+		return
+
+	parent_node.add_child(drop)
+	drop.global_position = spawn_position

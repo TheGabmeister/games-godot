@@ -23,7 +23,7 @@ func reset_for_stage_retry() -> void:
 
 func _on_health_component_died() -> void:
 	visible = false
-	hurtbox.monitorable = false
+	hurtbox.set_deferred("monitorable", false)
 	defeated.emit()
 
 

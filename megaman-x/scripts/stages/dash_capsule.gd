@@ -55,8 +55,9 @@ func _on_body_entered(body: Node) -> void:
 
 
 func _apply_state() -> void:
-	monitoring = not _collected and not _triggered
-	monitorable = monitoring
+	var is_active := not _collected and not _triggered
+	set_deferred("monitoring", is_active)
+	set_deferred("monitorable", is_active)
 	visible = not _collected
 	if status_label == null:
 		return

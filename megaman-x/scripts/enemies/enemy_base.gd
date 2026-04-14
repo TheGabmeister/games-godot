@@ -207,13 +207,13 @@ func _on_health_component_died() -> void:
 	visible = false
 
 	if collision_shape != null:
-		collision_shape.disabled = true
+		collision_shape.set_deferred("disabled", true)
 	if hurtbox != null:
-		hurtbox.monitorable = false
+		hurtbox.set_deferred("monitorable", false)
 	if vision_area != null:
-		vision_area.monitoring = false
+		vision_area.set_deferred("monitoring", false)
 	if contact_area != null:
-		contact_area.monitoring = false
+		contact_area.set_deferred("monitoring", false)
 	if enemy_brain != null:
 		enemy_brain.call("notify_enemy_defeated")
 
