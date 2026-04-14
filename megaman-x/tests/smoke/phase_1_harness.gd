@@ -59,6 +59,12 @@ func _run() -> void:
 			exit_code = await _check_stage_clear_input_lock()
 		"stage_clear_overlay":
 			exit_code = await _check_stage_clear_overlay()
+		"boss_encounter_activation":
+			exit_code = await _check_boss_encounter_activation()
+		"boss_encounter_retry_reset":
+			exit_code = await _check_boss_encounter_retry_reset()
+		"boss_ui_cleanup":
+			exit_code = await _check_boss_ui_cleanup()
 		"checkpoint_activation":
 			exit_code = await _check_checkpoint_activation()
 		"checkpoint_retry":
@@ -600,12 +606,13 @@ func _check_stage_clear_input_lock() -> int:
 
 	var player: Node2D = stage.get_node_or_null("Player") as Node2D
 	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var clear_trigger: Node2D = stage.get_node_or_null("GoalTrigger") as Node2D
 	var combat: Node = player.get_node_or_null("PlayerCombat") if player != null else null
-	if player == null or stage_controller == null or combat == null:
-		push_error("TestStage is missing Player, StageController, or PlayerCombat.")
+	if player == null or stage_controller == null or clear_trigger == null or combat == null:
+		push_error("TestStage is missing Player, StageController, GoalTrigger, or PlayerCombat.")
 		return 1
 
-	player.global_position = Vector2(1456.0, 460.0)
+	player.global_position = clear_trigger.global_position
 	player.set("velocity", Vector2.ZERO)
 	stage_controller.begin_stage_clear(&"input_lock_test")
 	await _await_physics_frames(2)
@@ -674,6 +681,130 @@ func _check_stage_clear_overlay() -> int:
 
 	if int(combat.call("get_active_projectile_count")) != 0:
 		push_error("Transient projectiles survived into stage-clear flow.")
+		return 1
+
+	return 0
+
+
+func _check_boss_encounter_activation() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node2D = stage.get_node_or_null("Player") as Node2D
+	var boss_encounter: Node = stage.get_node_or_null("BossEncounterController")
+	var boss_trigger: Area2D = stage.get_node_or_null("BossArenaTrigger") as Area2D
+	var boss_hud: Control = stage.get_node_or_null("BossLayer/BossHUD") as Control
+	if player == null or boss_encounter == null or boss_trigger == null or boss_hud == null:
+		push_error("TestStage is missing Player, BossEncounterController, BossArenaTrigger, or BossHUD.")
+		return 1
+
+	player.global_position = boss_trigger.global_position - Vector2(96.0, -8.0)
+	player.set("velocity", Vector2.ZERO)
+	await _await_physics_frames(2)
+	player.global_position = boss_trigger.global_position
+	await _await_physics_frames(3)
+
+	if not bool(boss_encounter.call("is_encounter_active")):
+		push_error("Boss encounter did not activate when the player entered the arena trigger.")
+		return 1
+
+	if not bool(boss_encounter.call("is_arena_locked")):
+		push_error("Boss arena did not lock when the encounter activated.")
+		return 1
+
+	if not boss_hud.visible:
+		push_error("Boss HUD did not appear when the encounter activated.")
+		return 1
+
+	var snapshot := boss_hud.call("get_snapshot") as Dictionary
+	if snapshot.get("name_text", "") != "Sigma Shell":
+		push_error("Boss HUD did not expose the expected boss name.")
+		return 1
+
+	return 0
+
+
+func _check_boss_encounter_retry_reset() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node2D = stage.get_node_or_null("Player") as Node2D
+	var boss_encounter: Node = stage.get_node_or_null("BossEncounterController")
+	var boss_trigger: Area2D = stage.get_node_or_null("BossArenaTrigger") as Area2D
+	var boss_hud: Control = stage.get_node_or_null("BossLayer/BossHUD") as Control
+	var boss_health: Node = stage.get_node_or_null("BossDummy/HealthComponent")
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	if player == null or boss_encounter == null or boss_trigger == null or boss_hud == null or boss_health == null or stage_controller == null:
+		push_error("Boss retry reset check requires Player, BossEncounterController, BossArenaTrigger, BossHUD, BossDummy, and StageController.")
+		return 1
+
+	player.global_position = boss_trigger.global_position
+	await _await_physics_frames(3)
+	boss_health.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"boss_retry_chip", 3, Vector2.ZERO))
+	await process_frame
+	var lethal_hit := HIT_PAYLOAD_SCRIPT.create(self, &"enemy", &"boss_retry_test", int(player.call("get_health_component").get("max_health")), Vector2.ZERO)
+	player.call("apply_hit_payload", lethal_hit)
+
+	if not await _wait_for_retry_count(stage_controller, 1, 90):
+		push_error("Boss retry reset check did not trigger a stage retry.")
+		return 1
+
+	await _await_physics_frames(3)
+	if bool(boss_encounter.call("is_encounter_active")):
+		push_error("Boss encounter remained active after retry.")
+		return 1
+
+	if bool(boss_encounter.call("has_encounter_completed")):
+		push_error("Boss encounter stayed marked complete after retry.")
+		return 1
+
+	if bool(boss_encounter.call("is_arena_locked")):
+		push_error("Boss arena remained locked after retry.")
+		return 1
+
+	if boss_hud.visible:
+		push_error("Boss HUD remained visible after retry reset.")
+		return 1
+
+	if int(boss_health.get("current_health")) != int(boss_health.get("max_health")):
+		push_error("Boss health did not reset to full after retry.")
+		return 1
+
+	return 0
+
+
+func _check_boss_ui_cleanup() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node2D = stage.get_node_or_null("Player") as Node2D
+	var boss_encounter: Node = stage.get_node_or_null("BossEncounterController")
+	var boss_trigger: Area2D = stage.get_node_or_null("BossArenaTrigger") as Area2D
+	var boss_hud: Control = stage.get_node_or_null("BossLayer/BossHUD") as Control
+	var boss_health: Node = stage.get_node_or_null("BossDummy/HealthComponent")
+	var boss_hurtbox: Node = stage.get_node_or_null("BossDummy/Hurtbox")
+	if player == null or boss_encounter == null or boss_trigger == null or boss_hud == null or boss_health == null or boss_hurtbox == null:
+		push_error("Boss UI cleanup check requires Player, BossEncounterController, BossArenaTrigger, BossHUD, and BossDummy.")
+		return 1
+
+	player.global_position = boss_trigger.global_position
+	await _await_physics_frames(3)
+	boss_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"boss_cleanup_test", int(boss_health.get("max_health")), Vector2.ZERO))
+	await _await_physics_frames(3)
+
+	if not bool(boss_encounter.call("has_encounter_completed")):
+		push_error("Boss encounter did not complete after the boss was defeated.")
+		return 1
+
+	if bool(boss_encounter.call("is_arena_locked")):
+		push_error("Boss arena stayed locked after the boss was defeated.")
+		return 1
+
+	if boss_hud.visible:
+		push_error("Boss HUD did not hide after the encounter ended.")
 		return 1
 
 	return 0

@@ -1,0 +1,59 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/boss_hud.gd" id="1_boss_hud"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/ui/hud_panel_320x96.svg" id="2_panel"]
+
+[node name="BossHUD" type="Control"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_boss_hud")
+
+[node name="BossAnchor" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -190.0
+offset_top = 22.0
+offset_right = 190.0
+offset_bottom = 132.0
+grow_horizontal = 2
+
+[node name="Panel" type="TextureRect" parent="BossAnchor"]
+custom_minimum_size = Vector2(380, 110)
+expand_mode = 1
+stretch_mode = 3
+texture = ExtResource("2_panel")
+
+[node name="Content" type="VBoxContainer" parent="BossAnchor/Panel"]
+offset_left = 26.0
+offset_top = 18.0
+offset_right = 354.0
+offset_bottom = 92.0
+theme_override_constants/separation = 6
+
+[node name="Header" type="Label" parent="BossAnchor/Panel/Content"]
+theme_override_colors/font_color = Color(0.988235, 0.866667, 0.541176, 1)
+text = "BOSS ENCOUNTER"
+horizontal_alignment = 1
+
+[node name="NameValue" type="Label" parent="BossAnchor/Panel/Content"]
+theme_override_colors/font_color = Color(0.956863, 0.980392, 1, 1)
+text = "Boss Target"
+horizontal_alignment = 1
+
+[node name="HealthBar" type="ProgressBar" parent="BossAnchor/Panel/Content"]
+custom_minimum_size = Vector2(0, 18)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="HealthValue" type="Label" parent="BossAnchor/Panel/Content"]
+theme_override_colors/font_color = Color(0.780392, 0.901961, 1, 1)
+text = "0 / 0"
+horizontal_alignment = 1

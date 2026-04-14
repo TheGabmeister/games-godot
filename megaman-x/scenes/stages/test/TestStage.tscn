@@ -16,12 +16,18 @@
 [ext_resource type="Script" uid="uid://cgpkaftiuatqq" path="res://scripts/systems/cutscene_director.gd" id="14_cutscene_director"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/TemporaryDropSmall.tscn" id="15_a0vfq"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/PersistentUpgradePickup.tscn" id="16_upgrade_pickup"]
+[ext_resource type="Script" path="res://scripts/stages/boss_encounter_controller.gd" id="17_boss_encounter"]
+[ext_resource type="PackedScene" path="res://scenes/ui/BossHUD.tscn" id="18_boss_hud"]
+[ext_resource type="PackedScene" path="res://scenes/stages/shared/BossArenaBarrier.tscn" id="19_boss_barrier"]
 
 [sub_resource type="RectangleShape2D" id="1_ground_shape"]
 size = Vector2(256, 32)
 
 [sub_resource type="RectangleShape2D" id="2_hazard_shape"]
 size = Vector2(96, 24)
+
+[sub_resource type="RectangleShape2D" id="3_boss_trigger_shape"]
+size = Vector2(72, 96)
 
 [node name="TestStage" type="Node2D" unique_id=771922021]
 script = ExtResource("1_test_stage")
@@ -71,6 +77,26 @@ shape = SubResource("1_ground_shape")
 position = Vector2(1456, 476)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GroundGoal" unique_id=1368732462]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundVisualBossRoom" type="Sprite2D" parent="." unique_id=214560644]
+position = Vector2(1712, 476)
+texture = ExtResource("3_floor")
+
+[node name="GroundBossRoom" type="StaticBody2D" parent="." unique_id=1493283709]
+position = Vector2(1712, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBossRoom" unique_id=1468732462]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundVisualGoalFinal" type="Sprite2D" parent="." unique_id=224560644]
+position = Vector2(1968, 476)
+texture = ExtResource("3_floor")
+
+[node name="GroundGoalFinal" type="StaticBody2D" parent="." unique_id=1593283709]
+position = Vector2(1968, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundGoalFinal" unique_id=1568732462]
 shape = SubResource("1_ground_shape")
 
 [node name="SpawnMarker" type="Sprite2D" parent="." unique_id=658135512]
@@ -152,6 +178,29 @@ polygon = PackedVector2Array(-48, 10, 48, 10, 48, -10, -48, -10)
 position = Vector2(1256, 468)
 checkpoint_id = &"checkpoint_bravo"
 
+[node name="BossArenaTrigger" type="Area2D" parent="." unique_id=2418569847]
+position = Vector2(1572, 428)
+collision_layer = 2048
+collision_mask = 4
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BossArenaTrigger" unique_id=2117244013]
+shape = SubResource("3_boss_trigger_shape")
+
+[node name="TriggerVisual" type="Polygon2D" parent="BossArenaTrigger" unique_id=2061722615]
+color = Color(0.976471, 0.760784, 0.435294, 0.24)
+polygon = PackedVector2Array(-36, 32, 36, 32, 36, -32, -36, -32)
+
+[node name="StatusLabel" type="Label" parent="BossArenaTrigger" unique_id=201757937]
+offset_left = -64.0
+offset_top = -58.0
+offset_right = 64.0
+offset_bottom = -36.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.929412, 0.772549, 1)
+text = "BOSS GATE"
+
 [node name="HeartTankPickup" parent="." unique_id=2118569847 instance=ExtResource("16_upgrade_pickup")]
 position = Vector2(760, 420)
 pickup_id = &"test_stage_heart_tank"
@@ -201,11 +250,46 @@ text = "SUB"
 position = Vector2(1368, 436)
 pickup_id = &"test_stage_dash_capsule"
 
+[node name="BossBarrierLeft" parent="." unique_id=2518569847 instance=ExtResource("19_boss_barrier")]
+position = Vector2(1528, 476)
+
+[node name="BossBarrierRight" parent="." unique_id=2618569847 instance=ExtResource("19_boss_barrier")]
+position = Vector2(1880, 476)
+
+[node name="BossDummy" parent="." unique_id=2718569847 instance=ExtResource("10_test_dummy")]
+position = Vector2(1724, 428)
+dummy_name = "Sigma Shell"
+
+[node name="Outer" parent="BossDummy/VisualRoot"]
+color = Color(0.278431, 0.262745, 0.376471, 1)
+
+[node name="Inner" parent="BossDummy/VisualRoot"]
+color = Color(1, 0.643137, 0.360784, 1)
+
+[node name="StatusLabel" parent="BossDummy/VisualRoot"]
+theme_override_colors/font_color = Color(1, 0.937255, 0.780392, 1)
+
+[node name="HealthComponent" parent="BossDummy"]
+max_health = 12
+
+[node name="BossEncounterController" type="Node" parent="." unique_id=2818569847]
+script = ExtResource("17_boss_encounter")
+player_path = NodePath("../Player")
+entry_trigger_path = NodePath("../BossArenaTrigger")
+boss_path = NodePath("../BossDummy")
+barrier_paths = [NodePath("../BossBarrierLeft"), NodePath("../BossBarrierRight")]
+boss_id = &"test_boss_encounter"
+boss_display_name = "Sigma Shell"
+
 [node name="GoalTrigger" parent="." unique_id=1018569847 instance=ExtResource("12_clear_trigger")]
-position = Vector2(1456, 468)
+position = Vector2(1968, 468)
 trigger_id = &"goal_gate"
 
 [node name="CutsceneLayer" type="CanvasLayer" parent="." unique_id=1822001734]
+
+[node name="BossLayer" type="CanvasLayer" parent="." unique_id=1922001734]
+
+[node name="BossHUD" parent="BossLayer" unique_id=2918569847 instance=ExtResource("18_boss_hud")]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1202001734]
 
@@ -233,7 +317,7 @@ offset_top = 24.0
 offset_right = 1232.0
 offset_bottom = 50.0
 theme_override_colors/font_color = Color(0.898039, 0.956863, 1, 1)
-text = "Phase 8 Test Stage"
+text = "Phase 13 Test Stage"
 
 [node name="Body" type="Label" parent="CanvasLayer/Overlay" unique_id=801757937]
 layout_mode = 0

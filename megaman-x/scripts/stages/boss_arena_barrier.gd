@@ -1,0 +1,19 @@
+extends Node2D
+class_name BossArenaBarrier
+
+@onready var blocker: StaticBody2D = $Blocker
+@onready var collision_shape: CollisionShape2D = $Blocker/CollisionShape2D
+
+
+func _ready() -> void:
+	set_locked(false)
+
+
+func set_locked(is_locked: bool) -> void:
+	visible = is_locked
+	if collision_shape != null:
+		collision_shape.disabled = not is_locked
+
+
+func is_locked() -> bool:
+	return collision_shape != null and not collision_shape.disabled
