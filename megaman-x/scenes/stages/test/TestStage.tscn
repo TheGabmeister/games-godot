@@ -16,7 +16,7 @@
 [ext_resource type="Script" uid="uid://cgpkaftiuatqq" path="res://scripts/systems/cutscene_director.gd" id="14_cutscene_director"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/TemporaryDropSmall.tscn" id="15_a0vfq"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/PersistentUpgradePickup.tscn" id="16_upgrade_pickup"]
-[ext_resource type="Script" path="res://scripts/stages/boss_encounter_controller.gd" id="17_boss_encounter"]
+[ext_resource type="Script" uid="uid://db27nyjbblo4d" path="res://scripts/stages/boss_encounter_controller.gd" id="17_boss_encounter"]
 [ext_resource type="PackedScene" path="res://scenes/ui/BossHUD.tscn" id="18_boss_hud"]
 [ext_resource type="PackedScene" path="res://scenes/stages/shared/BossArenaBarrier.tscn" id="19_boss_barrier"]
 
@@ -28,6 +28,9 @@ size = Vector2(96, 24)
 
 [sub_resource type="RectangleShape2D" id="3_boss_trigger_shape"]
 size = Vector2(72, 96)
+
+[sub_resource type="RectangleShape2D" id="4_wall_test_shape"]
+size = Vector2(28, 220)
 
 [node name="TestStage" type="Node2D" unique_id=771922021]
 script = ExtResource("1_test_stage")
@@ -146,14 +149,6 @@ dummy_name = "Normal"
 position = Vector2(1108, 428)
 dummy_name = "Weak"
 
-[node name="HealthComponent" parent="WeaknessDummy"]
-max_health = 6
-damage_modifiers_by_weapon = {
-"fire_wave": 0.5,
-"shotgun_ice": 2.0,
-"storm_tornado": 0.0
-}
-
 [node name="WalkerBasic" parent="." unique_id=2088580161 instance=ExtResource("9_enemy")]
 position = Vector2(944, 460)
 
@@ -178,11 +173,10 @@ polygon = PackedVector2Array(-48, 10, 48, 10, 48, -10, -48, -10)
 position = Vector2(1256, 468)
 checkpoint_id = &"checkpoint_bravo"
 
-[node name="BossArenaTrigger" type="Area2D" parent="." unique_id=2418569847]
+[node name="BossArenaTrigger" type="Area2D" parent="." unique_id=-1876397449]
 position = Vector2(1572, 428)
 collision_layer = 2048
 collision_mask = 4
-monitoring = true
 monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="BossArenaTrigger" unique_id=2117244013]
@@ -197,87 +191,69 @@ offset_left = -64.0
 offset_top = -58.0
 offset_right = 64.0
 offset_bottom = -36.0
-horizontal_alignment = 1
 theme_override_colors/font_color = Color(1, 0.929412, 0.772549, 1)
 text = "BOSS GATE"
+horizontal_alignment = 1
 
 [node name="HeartTankPickup" parent="." unique_id=2118569847 instance=ExtResource("16_upgrade_pickup")]
 position = Vector2(760, 420)
 pickup_id = &"test_stage_heart_tank"
-pickup_kind = &"heart_tank"
 
-[node name="Ring" parent="HeartTankPickup"]
-color = Color(0.192157, 0.25098, 0.356863, 1)
-
-[node name="Core" parent="HeartTankPickup"]
-color = Color(1, 0.482353, 0.482353, 1)
-
-[node name="StatusLabel" parent="HeartTankPickup"]
-text = "HEART"
-
-[node name="ArmorCapsulePickup" parent="." unique_id=2218569847 instance=ExtResource("16_upgrade_pickup")]
+[node name="ArmorCapsulePickup" parent="." unique_id=-2076397449 instance=ExtResource("16_upgrade_pickup")]
 position = Vector2(1088, 420)
 pickup_id = &"test_stage_body_capsule"
 pickup_kind = &"armor_capsule"
-armor_part_id = &"body"
 
-[node name="Ring" parent="ArmorCapsulePickup"]
-color = Color(0.188235, 0.235294, 0.321569, 1)
-
-[node name="Core" parent="ArmorCapsulePickup"]
-color = Color(0.611765, 0.905882, 1, 1)
-
-[node name="StatusLabel" parent="ArmorCapsulePickup"]
-text = "BODY"
-
-[node name="SubTankPickup" parent="." unique_id=2318569847 instance=ExtResource("16_upgrade_pickup")]
+[node name="SubTankPickup" parent="." unique_id=-1976397449 instance=ExtResource("16_upgrade_pickup")]
 position = Vector2(1328, 420)
 pickup_id = &"test_stage_sub_tank"
 pickup_kind = &"sub_tank"
-sub_tank_id = &"sub_tank_alpha"
 initial_sub_tank_fill = 10
-
-[node name="Ring" parent="SubTankPickup"]
-color = Color(0.172549, 0.223529, 0.329412, 1)
-
-[node name="Core" parent="SubTankPickup"]
-color = Color(0.552941, 1, 0.709804, 1)
-
-[node name="StatusLabel" parent="SubTankPickup"]
-text = "SUB"
 
 [node name="DashCapsule" parent="." unique_id=1718569847 instance=ExtResource("13_dash_capsule")]
 position = Vector2(1368, 436)
 pickup_id = &"test_stage_dash_capsule"
 
-[node name="BossBarrierLeft" parent="." unique_id=2518569847 instance=ExtResource("19_boss_barrier")]
+[node name="WallTestObstacle" type="StaticBody2D" parent="." unique_id=-1276397449]
+position = Vector2(517, 408)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallTestObstacle" unique_id=-1176397449]
+position = Vector2(0, -110)
+shape = SubResource("4_wall_test_shape")
+
+[node name="WallVisual" type="Polygon2D" parent="WallTestObstacle" unique_id=-1076397449]
+color = Color(0.376471, 0.584314, 0.811765, 1)
+polygon = PackedVector2Array(-14, 0, 14, 0, 14, -220, -14, -220)
+
+[node name="CoreStripe" type="Polygon2D" parent="WallTestObstacle" unique_id=-976397449]
+color = Color(0.92549, 0.972549, 1, 0.85)
+polygon = PackedVector2Array(-6, -8, 6, -8, 6, -212, -6, -212)
+
+[node name="StatusLabel" type="Label" parent="WallTestObstacle" unique_id=-876397449]
+offset_left = -56.0
+offset_top = -250.0
+offset_right = 56.0
+offset_bottom = -228.0
+theme_override_colors/font_color = Color(0.92549, 0.964706, 1, 1)
+text = "WALL TEST"
+horizontal_alignment = 1
+
+[node name="BossBarrierLeft" parent="." unique_id=-1776397449 instance=ExtResource("19_boss_barrier")]
 position = Vector2(1528, 476)
 
-[node name="BossBarrierRight" parent="." unique_id=2618569847 instance=ExtResource("19_boss_barrier")]
+[node name="BossBarrierRight" parent="." unique_id=-1676397449 instance=ExtResource("19_boss_barrier")]
 position = Vector2(1880, 476)
 
-[node name="BossDummy" parent="." unique_id=2718569847 instance=ExtResource("10_test_dummy")]
+[node name="BossDummy" parent="." unique_id=-1576397449 instance=ExtResource("10_test_dummy")]
 position = Vector2(1724, 428)
 dummy_name = "Sigma Shell"
 
-[node name="Outer" parent="BossDummy/VisualRoot"]
-color = Color(0.278431, 0.262745, 0.376471, 1)
-
-[node name="Inner" parent="BossDummy/VisualRoot"]
-color = Color(1, 0.643137, 0.360784, 1)
-
-[node name="StatusLabel" parent="BossDummy/VisualRoot"]
-theme_override_colors/font_color = Color(1, 0.937255, 0.780392, 1)
-
-[node name="HealthComponent" parent="BossDummy"]
-max_health = 12
-
-[node name="BossEncounterController" type="Node" parent="." unique_id=2818569847]
+[node name="BossEncounterController" type="Node" parent="." unique_id=-1476397449]
 script = ExtResource("17_boss_encounter")
 player_path = NodePath("../Player")
 entry_trigger_path = NodePath("../BossArenaTrigger")
 boss_path = NodePath("../BossDummy")
-barrier_paths = [NodePath("../BossBarrierLeft"), NodePath("../BossBarrierRight")]
+barrier_paths = Array[NodePath]([NodePath("../BossBarrierLeft"), NodePath("../BossBarrierRight")])
 boss_id = &"test_boss_encounter"
 boss_display_name = "Sigma Shell"
 
@@ -289,7 +265,8 @@ trigger_id = &"goal_gate"
 
 [node name="BossLayer" type="CanvasLayer" parent="." unique_id=1922001734]
 
-[node name="BossHUD" parent="BossLayer" unique_id=2918569847 instance=ExtResource("18_boss_hud")]
+[node name="BossHUD" parent="BossLayer" unique_id=-1376397449 instance=ExtResource("18_boss_hud")]
+layout_mode = 3
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1202001734]
 

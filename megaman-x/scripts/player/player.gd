@@ -28,6 +28,8 @@ signal death_sequence_finished
 @onready var pickup_receiver: PickupReceiver = $PickupReceiver as PickupReceiver
 @onready var player_sensor: Area2D = $PlayerSensor
 @onready var camera_anchor: Marker2D = $CameraAnchor
+@onready var wall_check_left: RayCast2D = $WallCheckLeft
+@onready var wall_check_right: RayCast2D = $WallCheckRight
 
 var locomotion_state: int = LocomotionState.IDLE
 var facing_direction := 1
@@ -79,6 +81,13 @@ func _physics_process(delta: float) -> void:
 	if _can_start_dash():
 		_start_dash()
 
+	var wall_contact_direction := _get_wall_contact_direction()
+	var wall_slide_active := _is_wall_slide_active(input_axis, wall_contact_direction)
+	if wall_slide_active and not is_on_floor() and Input.is_action_just_pressed("jump"):
+		_start_wall_jump(wall_contact_direction)
+		wall_contact_direction = 0
+		wall_slide_active = false
+
 	var horizontal_acceleration := tuning.acceleration if is_on_floor() else tuning.air_control
 	var horizontal_deceleration := tuning.deceleration if is_on_floor() else tuning.air_control
 	var target_speed := input_axis * tuning.run_speed
@@ -89,6 +98,8 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, horizontal_deceleration * 0.4 * delta)
 	elif _dash_timer > 0.0:
 		velocity.x = float(facing_direction) * tuning.dash_speed
+	elif wall_slide_active and _is_pressing_into_wall(input_axis, wall_contact_direction):
+		velocity.x = 0.0
 	elif absf(input_axis) > 0.01:
 		velocity.x = move_toward(velocity.x, target_speed, horizontal_acceleration * delta)
 	else:
@@ -102,6 +113,9 @@ func _physics_process(delta: float) -> void:
 	if not _input_locked and _gameplay_enabled and Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = tuning.jump_velocity
 
+	if wall_slide_active:
+		velocity.y = minf(velocity.y, tuning.wall_slide_speed)
+
 	if not _input_locked and _gameplay_enabled and Input.is_action_just_pressed("sub_tank_use") and pickup_receiver != null:
 		pickup_receiver.use_sub_tank()
 
@@ -114,7 +128,7 @@ func _physics_process(delta: float) -> void:
 		_set_locomotion_state(LocomotionState.HURT)
 		return
 
-	_update_locomotion_state()
+	_update_locomotion_state(input_axis)
 
 
 func apply_hit_payload(payload: Dictionary) -> bool:
@@ -243,9 +257,13 @@ func _get_progression() -> Node:
 	return get_node_or_null("/root/Progression")
 
 
-func _update_locomotion_state() -> void:
+func _update_locomotion_state(input_axis: float) -> void:
 	if _dash_timer > 0.0 and is_on_floor():
 		_set_locomotion_state(LocomotionState.DASH)
+		return
+
+	if _is_wall_slide_active(input_axis, _get_wall_contact_direction()):
+		_set_locomotion_state(LocomotionState.WALL_SLIDE)
 		return
 
 	if not is_on_floor():
@@ -298,6 +316,48 @@ func _update_dash_timer(delta: float) -> void:
 		return
 
 	_dash_timer = maxf(_dash_timer - delta, 0.0)
+
+
+func _get_wall_contact_direction() -> int:
+	if wall_check_left != null:
+		wall_check_left.force_raycast_update()
+	if wall_check_right != null:
+		wall_check_right.force_raycast_update()
+
+	var left_colliding := wall_check_left != null and wall_check_left.is_colliding()
+	var right_colliding := wall_check_right != null and wall_check_right.is_colliding()
+	if left_colliding == right_colliding:
+		return 0
+
+	return -1 if left_colliding else 1
+
+
+func _is_pressing_into_wall(input_axis: float, wall_contact_direction: int) -> bool:
+	if wall_contact_direction == 0:
+		return false
+
+	return input_axis < -0.01 if wall_contact_direction < 0 else input_axis > 0.01
+
+
+func _is_wall_slide_active(input_axis: float, wall_contact_direction: int) -> bool:
+	return wall_contact_direction != 0 \
+		and not is_on_floor() \
+		and velocity.y >= 0.0 \
+		and _dash_timer == 0.0 \
+		and locomotion_state != LocomotionState.DEAD \
+		and locomotion_state != LocomotionState.HURT \
+		and _gameplay_enabled \
+		and not _input_locked \
+		and _is_pressing_into_wall(input_axis, wall_contact_direction)
+
+
+func _start_wall_jump(wall_contact_direction: int) -> void:
+	if wall_contact_direction == 0:
+		return
+
+	velocity = Vector2(absf(tuning.wall_jump_force.x) * float(-wall_contact_direction), tuning.wall_jump_force.y)
+	_set_facing_direction(-wall_contact_direction)
+	_set_locomotion_state(LocomotionState.JUMP)
 
 
 func _can_start_dash() -> bool:

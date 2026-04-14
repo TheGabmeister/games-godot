@@ -65,6 +65,8 @@ func _get_texture_for_state(state: int) -> Texture2D:
 			return run_texture
 		PLAYER_SCRIPT.LocomotionState.JUMP:
 			return jump_texture
+		PLAYER_SCRIPT.LocomotionState.WALL_SLIDE:
+			return fall_texture
 		PLAYER_SCRIPT.LocomotionState.FALL:
 			return fall_texture
 		PLAYER_SCRIPT.LocomotionState.HURT:

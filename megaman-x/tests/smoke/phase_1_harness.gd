@@ -35,6 +35,8 @@ func _run() -> void:
 			exit_code = await _check_test_stage()
 		"locomotion":
 			exit_code = await _check_locomotion()
+		"wall_jump":
+			exit_code = await _check_wall_jump()
 		"player_spawn":
 			exit_code = await _check_player_spawn()
 		"camera_follow":
@@ -205,8 +207,9 @@ func _check_locomotion() -> int:
 		return 1
 
 	var player: Node = stage.get_node_or_null("Player")
-	if player == null:
-		push_error("TestStage is missing Player.")
+	var wall_test: Node2D = stage.get_node_or_null("WallTestObstacle") as Node2D
+	if player == null or wall_test == null:
+		push_error("TestStage is missing Player or WallTestObstacle.")
 		return 1
 
 	if not await _wait_for_player_state(player, PLAYER_SCRIPT.LocomotionState.IDLE, 20):
@@ -231,6 +234,57 @@ func _check_locomotion() -> int:
 
 	if not await _wait_for_player_state(player, PLAYER_SCRIPT.LocomotionState.FALL, 40):
 		push_error("Expected player to reach FALL during descent.")
+		_release_test_actions()
+		return 1
+
+	_release_test_actions()
+	player.global_position = wall_test.global_position + Vector2(-52.0, -180.0)
+	player.set("velocity", Vector2.ZERO)
+	await _await_physics_frames(2)
+	Input.action_press("move_right")
+	if not await _wait_for_player_state(player, PLAYER_SCRIPT.LocomotionState.WALL_SLIDE, 40):
+		push_error("Expected player to reach WALL_SLIDE while pressing into the wall.")
+		_release_test_actions()
+		return 1
+
+	_release_test_actions()
+	return 0
+
+
+func _check_wall_jump() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node = stage.get_node_or_null("Player")
+	var wall_test: Node2D = stage.get_node_or_null("WallTestObstacle") as Node2D
+	if player == null or wall_test == null:
+		push_error("TestStage is missing Player or WallTestObstacle.")
+		return 1
+
+	player.global_position = wall_test.global_position + Vector2(-52.0, -180.0)
+	player.set("velocity", Vector2.ZERO)
+	await _await_physics_frames(2)
+
+	Input.action_press("move_right")
+	if not await _wait_for_player_state(player, PLAYER_SCRIPT.LocomotionState.WALL_SLIDE, 40):
+		push_error("Wall jump check could not reach WALL_SLIDE setup state.")
+		_release_test_actions()
+		return 1
+
+	Input.action_press("jump")
+	await _await_physics_frames(1)
+	Input.action_release("jump")
+	await _await_physics_frames(1)
+
+	var velocity: Vector2 = player.get("velocity")
+	if player.get("locomotion_state") != PLAYER_SCRIPT.LocomotionState.JUMP:
+		push_error("Wall jump did not transition back to JUMP.")
+		_release_test_actions()
+		return 1
+
+	if velocity.x >= -0.1:
+		push_error("Wall jump did not launch the player away from the wall.")
 		_release_test_actions()
 		return 1
 
