@@ -16,6 +16,7 @@ const DEFAULT_TUNING_PATH := "res://data/player/default_player_tuning.tres"
 
 signal locomotion_state_changed(previous_state: int, new_state: int)
 signal facing_changed(facing_direction: int)
+signal dash_unlocked_changed(is_unlocked: bool)
 signal death_sequence_finished
 
 @export var tuning: PlayerTuningData
@@ -34,6 +35,7 @@ var _gameplay_enabled := true
 var _hurt_timer := 0.0
 var _death_timer := 0.0
 var _death_notified := false
+var _dash_timer := 0.0
 
 
 func _enter_tree() -> void:
@@ -59,10 +61,17 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_update_damage_timers(delta)
+	_update_dash_timer(delta)
 
 	var input_axis := 0.0
 	if not _input_locked and _gameplay_enabled:
 		input_axis = Input.get_axis("move_left", "move_right")
+
+	if absf(input_axis) > 0.01 and _dash_timer == 0.0:
+		_set_facing_direction(1 if input_axis > 0.0 else -1)
+
+	if _can_start_dash():
+		_start_dash()
 
 	var horizontal_acceleration := tuning.acceleration if is_on_floor() else tuning.air_control
 	var horizontal_deceleration := tuning.deceleration if is_on_floor() else tuning.air_control
@@ -72,9 +81,10 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, horizontal_deceleration * delta)
 	elif locomotion_state == LocomotionState.HURT:
 		velocity.x = move_toward(velocity.x, 0.0, horizontal_deceleration * 0.4 * delta)
+	elif _dash_timer > 0.0:
+		velocity.x = float(facing_direction) * tuning.dash_speed
 	elif absf(input_axis) > 0.01:
 		velocity.x = move_toward(velocity.x, target_speed, horizontal_acceleration * delta)
-		_set_facing_direction(1 if input_axis > 0.0 else -1)
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, horizontal_deceleration * delta)
 
@@ -140,6 +150,20 @@ func get_player_combat() -> PlayerCombat:
 	return player_combat
 
 
+func is_dash_unlocked() -> bool:
+	return dash_unlocked
+
+
+func set_dash_unlocked(is_unlocked: bool) -> void:
+	if dash_unlocked == is_unlocked:
+		return
+
+	dash_unlocked = is_unlocked
+	if not dash_unlocked:
+		_dash_timer = 0.0
+	dash_unlocked_changed.emit(dash_unlocked)
+
+
 func is_gameplay_enabled() -> bool:
 	return _gameplay_enabled
 
@@ -148,6 +172,7 @@ func set_gameplay_enabled(is_enabled: bool, _reason: StringName = &"") -> void:
 	_gameplay_enabled = is_enabled
 	if not _gameplay_enabled:
 		_input_locked = true
+		_dash_timer = 0.0
 		if player_combat != null:
 			player_combat.set_combat_enabled(false, &"gameplay_disabled")
 	else:
@@ -165,6 +190,7 @@ func reset_to_spawn(spawn_position: Vector2) -> void:
 	_hurt_timer = 0.0
 	_death_timer = 0.0
 	_death_notified = false
+	_dash_timer = 0.0
 	health_component.call("reset")
 	if player_combat != null:
 		player_combat.reset_combat()
@@ -172,6 +198,10 @@ func reset_to_spawn(spawn_position: Vector2) -> void:
 
 
 func _update_locomotion_state() -> void:
+	if _dash_timer > 0.0 and is_on_floor():
+		_set_locomotion_state(LocomotionState.DASH)
+		return
+
 	if not is_on_floor():
 		if velocity.y < 0.0:
 			_set_locomotion_state(LocomotionState.JUMP)
@@ -217,12 +247,37 @@ func _update_damage_timers(delta: float) -> void:
 			death_sequence_finished.emit()
 
 
+func _update_dash_timer(delta: float) -> void:
+	if _dash_timer <= 0.0:
+		return
+
+	_dash_timer = maxf(_dash_timer - delta, 0.0)
+
+
+func _can_start_dash() -> bool:
+	return dash_unlocked \
+		and _dash_timer == 0.0 \
+		and not _input_locked \
+		and _gameplay_enabled \
+		and locomotion_state != LocomotionState.DEAD \
+		and locomotion_state != LocomotionState.HURT \
+		and is_on_floor() \
+		and Input.is_action_just_pressed("dash")
+
+
+func _start_dash() -> void:
+	_dash_timer = tuning.dash_duration
+	velocity.x = float(facing_direction) * tuning.dash_speed
+	_set_locomotion_state(LocomotionState.DASH)
+
+
 func _on_health_component_damaged(payload: Dictionary, _current_health: int) -> void:
 	if health_component.get("is_dead"):
 		return
 
 	_input_locked = true
 	_hurt_timer = tuning.hurt_duration
+	_dash_timer = 0.0
 	var knockback: Vector2 = payload.get("knockback", Vector2.ZERO)
 	velocity = knockback
 	if player_combat != null:
@@ -238,6 +293,7 @@ func _on_health_component_died() -> void:
 	_hurt_timer = 0.0
 	_death_timer = tuning.death_delay
 	_death_notified = false
+	_dash_timer = 0.0
 	velocity = Vector2.ZERO
 	if player_combat != null:
 		player_combat.set_combat_enabled(false, &"dead")

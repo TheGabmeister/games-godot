@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/dialogue_sequence.gd" id="1_sequence"]
+[ext_resource type="Script" path="res://scripts/systems/dialogue_line.gd" id="2_line"]
+
+[sub_resource type="Resource" id="1_line_data"]
+script = ExtResource("2_line")
+line_id = &"entry"
+speaker_id = &"Dr. Light"
+body_text = "Mega Man X, this capsule carries the leg upgrade. With it, you can dash across danger and close the gap on your enemies."
+
+[sub_resource type="Resource" id="2_line_data"]
+script = ExtResource("2_line")
+line_id = &"instruction"
+speaker_id = &"Dr. Light"
+body_text = "Use the dash to cross ground faster, maintain momentum, and recover after taking space. Your systems are now ready."
+
+[resource]
+script = ExtResource("1_sequence")
+sequence_id = &"test_stage_dash_capsule"
+allow_skip = true
+lines = Array[Resource("res://scripts/systems/dialogue_line.gd")]([SubResource("1_line_data"), SubResource("2_line_data")])

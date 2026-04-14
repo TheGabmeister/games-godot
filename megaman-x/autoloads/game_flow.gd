@@ -18,6 +18,8 @@ const STAGE_REGISTRY_PATHS := [
 
 signal state_changed(previous_state: int, new_state: int)
 signal stage_changed(stage_id: StringName)
+signal cutscene_started(stage_id: StringName, cutscene_id: StringName)
+signal cutscene_finished(stage_id: StringName, cutscene_id: StringName)
 signal stage_clear_started(stage_id: StringName)
 
 var current_state: int = RuntimeState.BOOT
@@ -69,6 +71,22 @@ func request_stage(stage_id: StringName) -> void:
 		_runtime_shell.load_stage(stage_definition)
 
 	stage_changed.emit(current_stage_id)
+
+
+func request_cutscene(stage_id: StringName, payload: Dictionary = {}) -> void:
+	if not stage_id.is_empty():
+		current_stage_id = stage_id
+
+	_set_state(RuntimeState.CUTSCENE)
+	cutscene_started.emit(current_stage_id, payload.get("cutscene_id", &"") as StringName)
+
+
+func finish_cutscene(stage_id: StringName = &"", payload: Dictionary = {}) -> void:
+	if not stage_id.is_empty():
+		current_stage_id = stage_id
+
+	_set_state(RuntimeState.IN_STAGE)
+	cutscene_finished.emit(current_stage_id, payload.get("cutscene_id", &"") as StringName)
 
 
 func request_stage_clear(stage_id: StringName, payload: Dictionary = {}) -> void:

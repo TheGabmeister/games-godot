@@ -75,6 +75,12 @@ func _run() -> void:
 			exit_code = await _check_hud_updates()
 		"audio_events":
 			exit_code = await _check_audio_events()
+		"cutscene_flow":
+			exit_code = await _check_cutscene_flow()
+		"dialogue_flow":
+			exit_code = await _check_dialogue_flow()
+		"dash_unlock":
+			exit_code = await _check_dash_unlock()
 		_:
 			push_error("Unknown harness mode: %s" % arguments[0])
 
@@ -933,6 +939,199 @@ func _check_audio_events() -> int:
 	return 0
 
 
+func _check_cutscene_flow() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("Progression autoload is unavailable.")
+		return 1
+	progression.reset_for_new_game()
+	var loaded := await _load_test_stage_via_main()
+	if loaded.is_empty():
+		return 1
+
+	var main: Node = loaded.get("main")
+	var stage: Node = loaded.get("stage")
+	var player: Node = loaded.get("player")
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var cutscene_director: Node = stage.get_node_or_null("CutsceneDirector")
+	var dash_capsule: Node2D = stage.get_node_or_null("DashCapsule") as Node2D
+	var camera: Camera2D = stage.get_node_or_null("Camera2D") as Camera2D
+	if stage_controller == null or cutscene_director == null or dash_capsule == null or camera == null:
+		push_error("Cutscene flow check is missing StageController, CutsceneDirector, DashCapsule, or Camera2D.")
+		return 1
+
+	var history: Array[String] = []
+	stage_controller.connect("cutscene_started", func(cutscene_id: StringName) -> void:
+		history.append("stage_started:%s" % cutscene_id)
+	)
+	cutscene_director.connect("cutscene_started", func(cutscene_id: StringName) -> void:
+		history.append("director_started:%s" % cutscene_id)
+	)
+	cutscene_director.connect("cutscene_finished", func(cutscene_id: StringName, was_skipped: bool) -> void:
+		history.append("director_finished:%s:%s" % [cutscene_id, was_skipped])
+	)
+	stage_controller.connect("cutscene_finished", func(cutscene_id: StringName, was_skipped: bool) -> void:
+		history.append("stage_finished:%s:%s" % [cutscene_id, was_skipped])
+	)
+
+	player.global_position = dash_capsule.global_position
+	await _await_physics_frames(4)
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.CUTSCENE, 20):
+		push_error("GameFlow did not enter CUTSCENE when the dash capsule triggered.")
+		return 1
+
+	var overlay := await _wait_for_active_overlay(main, 20)
+	if overlay == null:
+		push_error("Cutscene flow did not mount the dialogue overlay.")
+		return 1
+
+	var snapshot := overlay.call("get_snapshot") as Dictionary
+	if snapshot.get("title_text", "") != "DR. LIGHT":
+		push_error("Dialogue overlay did not show the expected speaker during the cutscene.")
+		return 1
+
+	await _tap_menu_confirm()
+	await _tap_menu_confirm()
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.IN_STAGE, 20):
+		push_error("GameFlow did not return to IN_STAGE after dialogue completion.")
+		return 1
+
+	if stage_controller.call("get_active_cutscene_id") != StringName():
+		push_error("StageController still reports an active cutscene after completion.")
+		return 1
+
+	if camera.get_target() != player.call("get_camera_anchor"):
+		push_error("Camera target was not restored to the player after the cutscene.")
+		return 1
+
+	if not bool(player.call("is_gameplay_enabled")):
+		push_error("Player gameplay was not restored after the cutscene.")
+		return 1
+
+	if not _history_contains_order(history, [
+		"stage_started:dash_capsule_unlock",
+		"director_started:dash_capsule_unlock",
+		"director_finished:dash_capsule_unlock:False",
+		"stage_finished:dash_capsule_unlock:False",
+	]):
+		push_error("Cutscene start/end signals did not fire in the expected order.")
+		return 1
+
+	return 0
+
+
+func _check_dialogue_flow() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("Progression autoload is unavailable.")
+		return 1
+	progression.reset_for_new_game()
+	var loaded := await _load_test_stage_via_main()
+	if loaded.is_empty():
+		return 1
+
+	var main: Node = loaded.get("main")
+	var stage: Node = loaded.get("stage")
+	var player: Node2D = loaded.get("player") as Node2D
+	var dash_capsule: Node2D = stage.get_node_or_null("DashCapsule") as Node2D
+	if player == null or dash_capsule == null:
+		push_error("Dialogue flow check is missing the player or dash capsule.")
+		return 1
+
+	player.global_position = dash_capsule.global_position
+	await _await_physics_frames(4)
+
+	var overlay := await _wait_for_active_overlay(main, 20)
+	if overlay == null:
+		push_error("Dialogue flow did not spawn the dialogue overlay.")
+		return 1
+
+	var first_snapshot := overlay.call("get_snapshot") as Dictionary
+	if not String(first_snapshot.get("footer_text", "")).contains("Cancel: skip"):
+		push_error("Dialogue footer did not advertise the authored skip rule.")
+		return 1
+
+	await _tap_menu_confirm()
+	await _await_physics_frames(2)
+	overlay = main.call("get_active_overlay")
+	if overlay == null:
+		push_error("Dialogue overlay disappeared before confirm advance could be observed.")
+		return 1
+
+	var second_snapshot := overlay.call("get_snapshot") as Dictionary
+	if first_snapshot.get("body_text", "") == second_snapshot.get("body_text", ""):
+		push_error("menu_confirm did not advance to the next dialogue line.")
+		return 1
+
+	await _tap_menu_cancel()
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.IN_STAGE, 20):
+		push_error("Dialogue skip did not return gameplay to IN_STAGE.")
+		return 1
+
+	if main.call("get_active_overlay") != null:
+		push_error("Dialogue overlay was not cleared after skip.")
+		return 1
+
+	return 0
+
+
+func _check_dash_unlock() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("Progression autoload is unavailable.")
+		return 1
+	progression.reset_for_new_game()
+	var loaded := await _load_test_stage_via_main()
+	if loaded.is_empty():
+		return 1
+
+	var stage: Node = loaded.get("stage")
+	var player: Node = loaded.get("player")
+	var dash_capsule: Node2D = stage.get_node_or_null("DashCapsule") as Node2D
+	if player == null or dash_capsule == null:
+		push_error("Dash unlock check is missing the player or dash capsule.")
+		return 1
+
+	if bool(player.call("is_dash_unlocked")) or bool(progression.get("dash_unlocked")):
+		push_error("Dash should start locked before the capsule cutscene.")
+		return 1
+
+	await _tap_dash()
+	if player.get("locomotion_state") == PLAYER_SCRIPT.LocomotionState.DASH:
+		push_error("Player entered DASH before the upgrade was unlocked.")
+		return 1
+
+	player.global_position = dash_capsule.global_position
+	await _await_physics_frames(4)
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.CUTSCENE, 20):
+		push_error("Dash unlock check never entered CUTSCENE.")
+		return 1
+
+	await _tap_menu_cancel()
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.IN_STAGE, 20):
+		push_error("Dash unlock check did not restore IN_STAGE after skipping the capsule dialogue.")
+		return 1
+
+	if not bool(progression.get("dash_unlocked")):
+		push_error("Progression did not record the dash unlock.")
+		return 1
+
+	if not progression.call("has_collected_pickup", &"test_stage_dash_capsule"):
+		push_error("Progression did not record the dash capsule pickup.")
+		return 1
+
+	if not bool(player.call("is_dash_unlocked")):
+		push_error("Player dash availability was not updated after the capsule cutscene.")
+		return 1
+
+	await _tap_dash()
+	if not await _wait_for_player_state(player, PLAYER_SCRIPT.LocomotionState.DASH, 10):
+		push_error("Unlocked dash did not enter the DASH locomotion state.")
+		return 1
+
+	return 0
+
+
 func _instantiate_test_stage() -> Node2D:
 	var stage_scene := load("res://scenes/stages/test/TestStage.tscn") as PackedScene
 	if stage_scene == null:
@@ -1070,16 +1269,47 @@ func _wait_for_projectile_count(combat: Node, expected_count: int, max_frames: i
 	return false
 
 
+func _wait_for_active_overlay(main: Node, max_frames: int) -> Control:
+	for _frame in range(max_frames):
+		var overlay := main.call("get_active_overlay") as Control
+		if overlay != null:
+			return overlay
+
+		await _await_physics_frames(1)
+
+	return null
+
+
+func _get_progression() -> Node:
+	return root.get_node_or_null("/root/Progression")
+
+
 func _await_physics_frames(frame_count: int) -> void:
 	for _frame in range(frame_count):
 		await physics_frame
 
 
-func _tap_shoot(hold_frames: int = 1) -> void:
-	Input.action_press("shoot")
+func _tap_action(action_name: StringName, hold_frames: int = 1) -> void:
+	Input.action_press(action_name)
 	await _await_physics_frames(hold_frames)
-	Input.action_release("shoot")
+	Input.action_release(action_name)
 	await _await_physics_frames(1)
+
+
+func _tap_shoot(hold_frames: int = 1) -> void:
+	await _tap_action(&"shoot", hold_frames)
+
+
+func _tap_dash(hold_frames: int = 1) -> void:
+	await _tap_action(&"dash", hold_frames)
+
+
+func _tap_menu_confirm(hold_frames: int = 1) -> void:
+	await _tap_action(&"menu_confirm", hold_frames)
+
+
+func _tap_menu_cancel(hold_frames: int = 1) -> void:
+	await _tap_action(&"menu_cancel", hold_frames)
 
 
 func _physics_frames_for_seconds(duration: float) -> int:
@@ -1116,5 +1346,5 @@ func _combat_state_name_from_value(state: int) -> String:
 
 
 func _release_test_actions() -> void:
-	for action_name in ["move_left", "move_right", "jump", "dash", "shoot"]:
+	for action_name in ["move_left", "move_right", "jump", "dash", "shoot", "menu_confirm", "menu_cancel"]:
 		Input.action_release(action_name)

@@ -4,6 +4,8 @@ class_name StageController
 signal retry_started(retry_count: int)
 signal retry_completed(retry_count: int)
 signal checkpoint_activated(checkpoint_id: StringName, respawn_position: Vector2)
+signal cutscene_started(cutscene_id: StringName)
+signal cutscene_finished(cutscene_id: StringName, was_skipped: bool)
 signal stage_clear_started(stage_id: StringName, clear_count: int)
 
 @export var player_path: NodePath
@@ -17,6 +19,7 @@ var active_checkpoint_id: StringName = &""
 var _current_respawn_position := Vector2.ZERO
 var stage_clear_count := 0
 var _is_stage_clear_active := false
+var _active_cutscene_id: StringName = &""
 
 @onready var player: Node2D = get_node_or_null(player_path) as Node2D
 @onready var spawn_point: Node2D = get_node_or_null(spawn_point_path) as Node2D
@@ -54,8 +57,50 @@ func is_stage_clear_active() -> bool:
 	return _is_stage_clear_active
 
 
+func is_cutscene_active() -> bool:
+	return not _active_cutscene_id.is_empty()
+
+
+func get_active_cutscene_id() -> StringName:
+	return _active_cutscene_id
+
+
+func begin_cutscene(cutscene_id: StringName) -> bool:
+	if cutscene_id.is_empty() or _is_stage_clear_active or is_cutscene_active():
+		return false
+
+	_active_cutscene_id = cutscene_id
+	if player != null and player.has_method("set_gameplay_enabled"):
+		player.set_gameplay_enabled(false, &"cutscene")
+
+	cutscene_started.emit(_active_cutscene_id)
+	var game_flow := get_node_or_null("/root/GameFlow")
+	if game_flow != null and game_flow.has_method("request_cutscene"):
+		game_flow.request_cutscene(stage_id if not stage_id.is_empty() else &"stage", {
+			"cutscene_id": _active_cutscene_id,
+		})
+
+	return true
+
+
+func finish_cutscene(cutscene_id: StringName, was_skipped := false) -> void:
+	if _active_cutscene_id != cutscene_id:
+		return
+
+	_active_cutscene_id = &""
+	if player != null and player.has_method("set_gameplay_enabled") and not _is_stage_clear_active:
+		player.set_gameplay_enabled(true, &"cutscene_complete")
+
+	cutscene_finished.emit(cutscene_id, was_skipped)
+	var game_flow := get_node_or_null("/root/GameFlow")
+	if game_flow != null and game_flow.has_method("finish_cutscene"):
+		game_flow.finish_cutscene(stage_id if not stage_id.is_empty() else &"stage", {
+			"cutscene_id": cutscene_id,
+		})
+
+
 func begin_stage_clear(source_id: StringName = &"goal") -> void:
-	if _is_stage_clear_active:
+	if _is_stage_clear_active or is_cutscene_active():
 		return
 
 	_is_stage_clear_active = true
@@ -74,7 +119,7 @@ func begin_stage_clear(source_id: StringName = &"goal") -> void:
 
 
 func retry_stage() -> void:
-	if _is_stage_clear_active:
+	if _is_stage_clear_active or is_cutscene_active():
 		return
 
 	retry_count += 1

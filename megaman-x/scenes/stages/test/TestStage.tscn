@@ -12,6 +12,8 @@
 [ext_resource type="PackedScene" path="res://scenes/stages/test/TestDummy.tscn" id="10_test_dummy"]
 [ext_resource type="PackedScene" path="res://scenes/stages/shared/StageCheckpoint.tscn" id="11_checkpoint"]
 [ext_resource type="PackedScene" path="res://scenes/stages/shared/StageClearTrigger.tscn" id="12_clear_trigger"]
+[ext_resource type="PackedScene" path="res://scenes/stages/shared/DashCapsule.tscn" id="13_dash_capsule"]
+[ext_resource type="Script" path="res://scripts/systems/cutscene_director.gd" id="14_cutscene_director"]
 
 [sub_resource type="RectangleShape2D" id="1_ground_shape"]
 size = Vector2(256, 32)
@@ -75,11 +77,16 @@ texture = ExtResource("4_spawn_marker")
 
 [node name="Player" parent="." unique_id=1808638162 instance=ExtResource("5_player")]
 position = Vector2(560, 460)
+dash_unlocked = false
 
 [node name="StageController" type="Node" parent="." unique_id=33145286]
 script = ExtResource("7_stage_controller")
 player_path = NodePath("../Player")
 spawn_point_path = NodePath("../PlayerSpawnPoint")
+
+[node name="CutsceneDirector" type="Node" parent="." unique_id=13145286]
+script = ExtResource("14_cutscene_director")
+fallback_overlay_host_path = NodePath("../CutsceneLayer")
 
 [node name="PlayerSpawnPoint" type="Marker2D" parent="." unique_id=1610809844]
 position = Vector2(560, 460)
@@ -130,9 +137,15 @@ polygon = PackedVector2Array(-48, 10, 48, 10, 48, -10, -48, -10)
 position = Vector2(1256, 468)
 checkpoint_id = &"checkpoint_bravo"
 
+[node name="DashCapsule" parent="." unique_id=1718569847 instance=ExtResource("13_dash_capsule")]
+position = Vector2(1368, 436)
+pickup_id = &"test_stage_dash_capsule"
+
 [node name="GoalTrigger" parent="." unique_id=1018569847 instance=ExtResource("12_clear_trigger")]
 position = Vector2(1456, 468)
 trigger_id = &"goal_gate"
+
+[node name="CutsceneLayer" type="CanvasLayer" parent="." unique_id=1822001734]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1202001734]
 
@@ -160,7 +173,7 @@ offset_top = 24.0
 offset_right = 1232.0
 offset_bottom = 50.0
 theme_override_colors/font_color = Color(0.898039, 0.956863, 1, 1)
-text = "Phase 7 Test Stage"
+text = "Phase 8 Test Stage"
 
 [node name="Body" type="Label" parent="CanvasLayer/Overlay" unique_id=801757937]
 layout_mode = 0

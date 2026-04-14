@@ -61,6 +61,23 @@ func get_active_overlay() -> Control:
 	return _active_overlay
 
 
+func get_overlay_root() -> CanvasLayer:
+	return overlay_root
+
+
+func mount_overlay(overlay: Control) -> void:
+	if overlay == null:
+		return
+
+	_clear_branch(overlay_root)
+	_active_overlay = overlay
+	overlay_root.add_child(_active_overlay)
+
+
+func clear_overlay() -> void:
+	_clear_branch(overlay_root)
+
+
 func show_stage_clear_overlay(payload: Dictionary) -> void:
 	_clear_branch(ui_root)
 	_clear_branch(overlay_root)

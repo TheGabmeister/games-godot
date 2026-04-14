@@ -1,0 +1,44 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/dash_capsule.gd" id="1_capsule"]
+
+[sub_resource type="RectangleShape2D" id="1_trigger_shape"]
+size = Vector2(72, 84)
+
+[node name="DashCapsule" type="Area2D"]
+collision_layer = 512
+collision_mask = 4
+script = ExtResource("1_capsule")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -20)
+shape = SubResource("1_trigger_shape")
+
+[node name="CapsuleShell" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-28, 18, -28, -62, 28, -62, 28, 18)
+color = Color(0.92549, 0.905882, 0.709804, 1)
+
+[node name="CapsuleTrim" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-34, 22, -34, -68, 34, -68, 34, 22)
+color = Color(0.396078, 0.843137, 0.945098, 0.85)
+
+[node name="Beam" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-14, -6, -24, 76, 24, 76, 14, -6)
+color = Color(0.8, 0.960784, 1, 0.35)
+
+[node name="Core" type="Polygon2D" parent="."]
+position = Vector2(0, -28)
+polygon = PackedVector2Array(0, -18, 18, 0, 0, 18, -18, 0)
+color = Color(1, 0.847059, 0.34902, 1)
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -54.0
+offset_top = -106.0
+offset_right = 54.0
+offset_bottom = -72.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.941176, 0.980392, 1, 1)
+text = "LEG CAPSULE"
+
+[node name="CameraFocus" type="Marker2D" parent="."]
+position = Vector2(0, -46)

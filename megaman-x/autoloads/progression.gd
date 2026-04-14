@@ -2,6 +2,8 @@ extends Node
 
 const ARMOR_PART_IDS := [&"helmet", &"body", &"arms", &"legs"]
 
+signal progression_changed
+
 var intro_cleared := false
 var dash_unlocked := false
 var defeated_bosses: Dictionary = {}
@@ -31,6 +33,8 @@ func reset_for_new_game() -> void:
 	armor_parts.clear()
 	for part_id in ARMOR_PART_IDS:
 		armor_parts[part_id] = false
+
+	progression_changed.emit()
 
 
 func to_dict() -> Dictionary:
@@ -62,6 +66,37 @@ func from_dict(payload: Dictionary) -> void:
 
 	if not unlocked_weapons.has(&"buster"):
 		unlocked_weapons[&"buster"] = true
+
+	progression_changed.emit()
+
+
+func has_collected_pickup(pickup_id: StringName) -> bool:
+	return bool(collected_pickups.get(pickup_id, false))
+
+
+func collect_pickup(pickup_id: StringName) -> bool:
+	if pickup_id.is_empty() or has_collected_pickup(pickup_id):
+		return false
+
+	collected_pickups[pickup_id] = true
+	progression_changed.emit()
+	return true
+
+
+func unlock_dash() -> bool:
+	if dash_unlocked:
+		return false
+
+	dash_unlocked = true
+	progression_changed.emit()
+	return true
+
+
+func grant_dash_unlock(pickup_id: StringName) -> bool:
+	var changed := unlock_dash()
+	if not pickup_id.is_empty():
+		changed = collect_pickup(pickup_id) or changed
+	return changed
 
 
 func _stringify_keys(source: Dictionary) -> Dictionary:
