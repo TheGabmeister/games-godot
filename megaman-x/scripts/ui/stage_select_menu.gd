@@ -18,8 +18,10 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"menu_cancel"):
+		var viewport := get_viewport()
+		if viewport != null:
+			viewport.set_input_as_handled()
 		_on_back_button_pressed()
-		get_viewport().set_input_as_handled()
 
 
 func _rebuild_roster() -> void:

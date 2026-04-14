@@ -18,9 +18,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed(&"menu_confirm") and not event.is_action_pressed(&"menu_cancel"):
 		return
 
+	var viewport := get_viewport()
+	if viewport != null:
+		viewport.set_input_as_handled()
+
 	if GameFlow != null and GameFlow.has_method("exit_stage_clear_to_frontend"):
 		GameFlow.exit_stage_clear_to_frontend()
-		get_viewport().set_input_as_handled()
 
 
 func get_snapshot() -> Dictionary:
