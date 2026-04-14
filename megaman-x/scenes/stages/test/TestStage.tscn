@@ -13,7 +13,8 @@
 [ext_resource type="PackedScene" path="res://scenes/stages/shared/StageCheckpoint.tscn" id="11_checkpoint"]
 [ext_resource type="PackedScene" path="res://scenes/stages/shared/StageClearTrigger.tscn" id="12_clear_trigger"]
 [ext_resource type="PackedScene" path="res://scenes/stages/shared/DashCapsule.tscn" id="13_dash_capsule"]
-[ext_resource type="Script" path="res://scripts/systems/cutscene_director.gd" id="14_cutscene_director"]
+[ext_resource type="Script" uid="uid://cgpkaftiuatqq" path="res://scripts/systems/cutscene_director.gd" id="14_cutscene_director"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/TemporaryDropSmall.tscn" id="15_a0vfq"]
 
 [sub_resource type="RectangleShape2D" id="1_ground_shape"]
 size = Vector2(256, 32)
@@ -184,3 +185,6 @@ offset_bottom = 248.0
 theme_override_colors/font_color = Color(0.713726, 0.803922, 0.909804, 1)
 text = "Loading..."
 autowrap_mode = 3
+
+[node name="TemporaryDropSmall" parent="." unique_id=1597283683 instance=ExtResource("15_a0vfq")]
+position = Vector2(727, 385)

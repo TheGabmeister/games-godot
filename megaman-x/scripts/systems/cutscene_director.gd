@@ -82,13 +82,16 @@ func _execute_action(action: Dictionary, context: Dictionary) -> Dictionary:
 			)
 		&"unlock_dash":
 			var pickup_id := action.get("pickup_id", &"") as StringName
-			Progression.grant_dash_unlock(pickup_id)
+			var changed := Progression.grant_dash_unlock(pickup_id)
 			var player := context.get("player", null) as Node
 			if player != null and player.has_method("set_dash_unlocked"):
 				player.set_dash_unlocked(true)
 			var capsule := action.get("capsule", null) as Node
 			if capsule != null and capsule.has_method("mark_collected"):
 				capsule.mark_collected()
+			var save_manager := get_node_or_null("/root/SaveManager")
+			if changed and save_manager != null and save_manager.has_method("save_game"):
+				save_manager.save_game(&"persistent_pickup")
 		_:
 			push_warning("CutsceneDirector ignored unknown action type '%s'." % action.get("type", ""))
 

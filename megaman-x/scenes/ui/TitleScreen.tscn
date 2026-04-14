@@ -41,12 +41,21 @@ text = "Phase 1 Runtime Shell"
 [node name="BodyLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.733333, 0.8, 0.901961, 1)
-text = "Boot now lands in the title flow.\nUse the button below to swap the active world to the test stage."
+text = "Boot lands in the title flow.\nContinue restores progression into the front-end before you load the test stage."
 
 [node name="RegisteredStagesLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.607843, 0.701961, 0.827451, 1)
 text = "Registered stages: loading..."
+
+[node name="SaveStatusLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.839216, 0.901961, 0.980392, 1)
+text = "Save data: loading..."
+
+[node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(280, 52)
+text = "Continue Save"
 
 [node name="LaunchTestStageButton" type="Button" parent="CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(280, 52)

@@ -25,6 +25,8 @@ signal death_sequence_finished
 @onready var hurtbox: Node = $Hurtbox
 @onready var health_component: Node = $HealthComponent
 @onready var player_combat: PlayerCombat = $PlayerCombat as PlayerCombat
+@onready var pickup_receiver: PickupReceiver = $PickupReceiver as PickupReceiver
+@onready var player_sensor: Area2D = $PlayerSensor
 @onready var camera_anchor: Marker2D = $CameraAnchor
 
 var locomotion_state: int = LocomotionState.IDLE
@@ -53,6 +55,8 @@ func _ready() -> void:
 	health_component.call("reset")
 	health_component.connect("damaged", _on_health_component_damaged)
 	health_component.connect("died", _on_health_component_died)
+	if player_sensor != null:
+		player_sensor.area_entered.connect(_on_player_sensor_area_entered)
 	_set_locomotion_state(LocomotionState.IDLE)
 
 
@@ -304,3 +308,10 @@ func _play_audio_event(event_id: StringName) -> void:
 	var audio_manager := get_node_or_null("/root/AudioManager")
 	if audio_manager != null:
 		audio_manager.play_sfx(event_id)
+
+
+func _on_player_sensor_area_entered(area: Area2D) -> void:
+	if pickup_receiver == null or area == null:
+		return
+
+	pickup_receiver.apply_pickup(area)

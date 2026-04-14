@@ -81,6 +81,14 @@ func _run() -> void:
 			exit_code = await _check_dialogue_flow()
 		"dash_unlock":
 			exit_code = await _check_dash_unlock()
+		"save_round_trip":
+			exit_code = await _check_save_round_trip()
+		"persistent_pickup_reload":
+			exit_code = await _check_persistent_pickup_reload()
+		"continue_flow":
+			exit_code = await _check_continue_flow()
+		"pickup_collision":
+			exit_code = await _check_pickup_collision()
 		_:
 			push_error("Unknown harness mode: %s" % arguments[0])
 
@@ -1132,6 +1140,220 @@ func _check_dash_unlock() -> int:
 	return 0
 
 
+func _check_save_round_trip() -> int:
+	var progression := _get_progression()
+	var save_manager := _get_save_manager()
+	if progression == null or save_manager == null:
+		push_error("Save round-trip check requires Progression and SaveManager autoloads.")
+		return 1
+
+	_use_harness_save_path(save_manager)
+	save_manager.call("delete_save")
+	progression.reset_for_new_game()
+	progression.grant_dash_unlock(&"test_stage_dash_capsule")
+	if not bool(save_manager.save_game(&"round_trip_test")):
+		push_error("SaveManager failed to write the round-trip save payload.")
+		return 1
+
+	progression.reset_for_new_game()
+	if bool(progression.get("dash_unlocked")):
+		push_error("Progression reset did not clear dash before reload.")
+		return 1
+
+	if not bool(save_manager.load_game()):
+		push_error("SaveManager failed to load the round-trip save payload.")
+		return 1
+
+	if not bool(progression.get("dash_unlocked")):
+		push_error("Dash unlock did not survive save/load round-trip.")
+		return 1
+
+	if not progression.call("has_collected_pickup", &"test_stage_dash_capsule"):
+		push_error("Collected persistent pickup did not survive save/load round-trip.")
+		return 1
+
+	save_manager.call("delete_save")
+	_clear_harness_save_path(save_manager)
+	progression.reset_for_new_game()
+	return 0
+
+
+func _check_persistent_pickup_reload() -> int:
+	var progression := _get_progression()
+	var save_manager := _get_save_manager()
+	if progression == null or save_manager == null:
+		push_error("Persistent pickup reload check requires Progression and SaveManager autoloads.")
+		return 1
+
+	_use_harness_save_path(save_manager)
+	save_manager.call("delete_save")
+	progression.reset_for_new_game()
+
+	var loaded := await _load_test_stage_via_main()
+	if loaded.is_empty():
+		return 1
+
+	var stage: Node = loaded.get("stage")
+	var player: Node2D = loaded.get("player") as Node2D
+	var dash_capsule: Node2D = stage.get_node_or_null("DashCapsule") as Node2D
+	if player == null or dash_capsule == null:
+		push_error("Persistent pickup reload check is missing the player or dash capsule.")
+		return 1
+
+	player.global_position = dash_capsule.global_position
+	await _await_physics_frames(4)
+	await _tap_menu_cancel()
+	await _await_physics_frames(4)
+
+	if not bool(save_manager.call("has_save")):
+		push_error("Collecting the persistent dash capsule did not trigger a save.")
+		return 1
+
+	progression.reset_for_new_game()
+	if bool(progression.get("dash_unlocked")):
+		push_error("Progression reset did not clear dash before reload.")
+		return 1
+
+	if not bool(save_manager.load_game()):
+		push_error("Persistent pickup reload check failed to load the saved progression.")
+		return 1
+
+	var reloaded_stage := await _instantiate_test_stage()
+	if reloaded_stage == null:
+		return 1
+
+	var reloaded_player: Node = reloaded_stage.get_node_or_null("Player")
+	var reloaded_capsule: Node = reloaded_stage.get_node_or_null("DashCapsule")
+	if reloaded_player == null or reloaded_capsule == null:
+		push_error("Reloaded test stage is missing the player or dash capsule.")
+		return 1
+
+	if not bool(reloaded_player.call("is_dash_unlocked")):
+		push_error("Reloaded player did not inherit dash unlock from saved progression.")
+		return 1
+
+	if not bool(reloaded_capsule.call("is_collected")):
+		push_error("Persistent dash capsule reappeared after save/load reload.")
+		return 1
+
+	save_manager.call("delete_save")
+	_clear_harness_save_path(save_manager)
+	progression.reset_for_new_game()
+	return 0
+
+
+func _check_continue_flow() -> int:
+	var progression := _get_progression()
+	var save_manager := _get_save_manager()
+	if progression == null or save_manager == null:
+		push_error("Continue flow check requires Progression and SaveManager autoloads.")
+		return 1
+
+	_use_harness_save_path(save_manager)
+	save_manager.call("delete_save")
+	progression.reset_for_new_game()
+	progression.grant_dash_unlock(&"test_stage_dash_capsule")
+	if not bool(save_manager.save_game(&"continue_flow_test")):
+		push_error("Continue flow check could not write a save payload.")
+		return 1
+
+	var main := await _instantiate_main_scene()
+	if main == null:
+		return 1
+
+	var title_screen: Node = main.get_node_or_null("UIRoot/TitleScreen")
+	var continue_button: Button = null
+	if title_screen != null:
+		continue_button = title_screen.get_node_or_null("CenterContainer/VBoxContainer/ContinueButton") as Button
+	if title_screen == null or continue_button == null:
+		push_error("Title flow is missing the continue button.")
+		return 1
+
+	progression.reset_for_new_game()
+	continue_button.emit_signal("pressed")
+	await process_frame
+	await process_frame
+
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.TITLE, 10):
+		push_error("Continue flow did not return to the title frontend.")
+		return 1
+
+	if main.get_node_or_null("WorldRoot/test_stage") != null:
+		push_error("Continue flow incorrectly reconstructed an in-progress stage.")
+		return 1
+
+	title_screen = main.get_node_or_null("UIRoot/TitleScreen")
+	var save_status_label: Label = null
+	continue_button = null
+	if title_screen != null:
+		save_status_label = title_screen.get_node_or_null("CenterContainer/VBoxContainer/SaveStatusLabel") as Label
+		continue_button = title_screen.get_node_or_null("CenterContainer/VBoxContainer/ContinueButton") as Button
+	if title_screen == null or save_status_label == null or continue_button == null:
+		push_error("Continue flow did not restore the title screen UI.")
+		return 1
+
+	if continue_button.disabled:
+		push_error("Continue button should stay enabled after returning to the frontend.")
+		return 1
+
+	if save_status_label.text.find("dash=unlocked") == -1:
+		push_error("Continue flow did not restore save-backed progression summary in the title UI.")
+		return 1
+
+	save_manager.call("delete_save")
+	_clear_harness_save_path(save_manager)
+	progression.reset_for_new_game()
+	return 0
+
+
+func _check_pickup_collision() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node2D = stage.get_node_or_null("Player") as Node2D
+	if player == null:
+		push_error("Pickup collision check could not find the player.")
+		return 1
+
+	var player_health: Node = player.call("get_health_component")
+	if player_health == null:
+		push_error("Pickup collision check could not resolve the player's health component.")
+		return 1
+
+	player_health.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"enemy", &"pickup_test_damage", 4, Vector2.ZERO))
+	await _await_physics_frames(2)
+
+	var health_before := int(player_health.get("current_health"))
+	if health_before >= int(player_health.get("max_health")):
+		push_error("Pickup collision check expected the player to be damaged before collecting a drop.")
+		return 1
+
+	var drop_scene := load("res://scenes/pickups/TemporaryDropSmall.tscn") as PackedScene
+	if drop_scene == null:
+		push_error("Pickup collision check could not load TemporaryDropSmall.tscn.")
+		return 1
+
+	var drop := drop_scene.instantiate() as Area2D
+	if drop == null:
+		push_error("Pickup collision check could not instantiate TemporaryDropSmall.")
+		return 1
+
+	stage.add_child(drop)
+	drop.global_position = player.global_position
+	await _await_physics_frames(3)
+
+	if is_instance_valid(drop):
+		push_error("Temporary drop was not collected by PlayerSensor overlap.")
+		return 1
+
+	if int(player_health.get("current_health")) <= health_before:
+		push_error("Collecting TemporaryDropSmall did not restore player health.")
+		return 1
+
+	return 0
+
+
 func _instantiate_test_stage() -> Node2D:
 	var stage_scene := load("res://scenes/stages/test/TestStage.tscn") as PackedScene
 	if stage_scene == null:
@@ -1282,6 +1504,20 @@ func _wait_for_active_overlay(main: Node, max_frames: int) -> Control:
 
 func _get_progression() -> Node:
 	return root.get_node_or_null("/root/Progression")
+
+
+func _get_save_manager() -> Node:
+	return root.get_node_or_null("/root/SaveManager")
+
+
+func _use_harness_save_path(save_manager: Node) -> void:
+	if save_manager != null:
+		save_manager.set("override_save_path", "user://phase_1_harness_save.json")
+
+
+func _clear_harness_save_path(save_manager: Node) -> void:
+	if save_manager != null:
+		save_manager.set("override_save_path", "")
 
 
 func _await_physics_frames(frame_count: int) -> void:

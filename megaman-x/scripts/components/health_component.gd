@@ -63,3 +63,16 @@ func reset() -> void:
 	_invulnerability_remaining = 0.0
 	health_changed.emit(current_health, max_health)
 	revived.emit()
+
+
+func heal(amount: int) -> int:
+	if amount <= 0 or is_dead:
+		return 0
+
+	var previous_health := current_health
+	current_health = mini(current_health + amount, max_health)
+	var healed_amount := current_health - previous_health
+	if healed_amount > 0:
+		health_changed.emit(current_health, max_health)
+
+	return healed_amount

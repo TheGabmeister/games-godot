@@ -58,6 +58,24 @@ func request_title() -> void:
 		_runtime_shell.show_title_screen(TITLE_SCREEN_SCENE_PATH)
 
 
+func start_new_game() -> void:
+	var progression := get_node_or_null("/root/Progression")
+	if progression != null and progression.has_method("reset_for_new_game"):
+		progression.reset_for_new_game()
+	request_title()
+
+
+func continue_from_save() -> bool:
+	var save_manager := get_node_or_null("/root/SaveManager")
+	if save_manager == null or not save_manager.has_method("load_game"):
+		return false
+
+	var loaded := bool(save_manager.load_game())
+	if loaded:
+		request_title()
+	return loaded
+
+
 func request_stage(stage_id: StringName) -> void:
 	var stage_definition := get_registered_stage(stage_id)
 	if stage_definition == null:
