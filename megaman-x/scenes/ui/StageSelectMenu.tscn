@@ -1,0 +1,78 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/stage_select_menu.gd" id="1_stage_select"]
+
+[node name="StageSelectMenu" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_stage_select")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0352941, 0.054902, 0.113725, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 64
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 64
+theme_override_constants/margin_bottom = 48
+
+[node name="Panel" type="Panel" parent="MarginContainer"]
+custom_minimum_size = Vector2(0, 560)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 24.0
+offset_right = -28.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="HeaderLabel" type="Label" parent="MarginContainer/Panel/VBoxContainer"]
+theme_override_colors/font_color = Color(0.941176, 0.980392, 1, 1)
+text = "STAGE SELECT"
+horizontal_alignment = 1
+
+[node name="SummaryLabel" type="Label" parent="MarginContainer/Panel/VBoxContainer"]
+theme_override_colors/font_color = Color(0.698039, 0.811765, 0.92549, 1)
+text = "Loading stage roster..."
+horizontal_alignment = 1
+
+[node name="RosterGrid" type="GridContainer" parent="MarginContainer/Panel/VBoxContainer"]
+size_flags_vertical = 3
+columns = 4
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+
+[node name="FooterLabel" type="Label" parent="MarginContainer/Panel/VBoxContainer"]
+theme_override_colors/font_color = Color(0.768627, 0.85098, 0.941176, 1)
+text = "Choose a stage."
+horizontal_alignment = 1
+
+[node name="FooterButtons" type="HBoxContainer" parent="MarginContainer/Panel/VBoxContainer"]
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="MarginContainer/Panel/VBoxContainer/FooterButtons"]
+custom_minimum_size = Vector2(180, 46)
+text = "Back To Title"
+
+[node name="DebugButton" type="Button" parent="MarginContainer/Panel/VBoxContainer/FooterButtons"]
+custom_minimum_size = Vector2(180, 46)
+text = "Debug Test Stage"

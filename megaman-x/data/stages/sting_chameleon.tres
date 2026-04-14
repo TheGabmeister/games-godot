@@ -4,9 +4,11 @@
 
 [resource]
 script = ExtResource("1_stage_definition")
-stage_id = &"test_stage"
-display_name = "Test Stage"
-scene_path = "res://scenes/stages/test/TestStage.tscn"
-stage_group = &"debug"
-show_in_stage_select = false
+stage_id = &"sting_chameleon"
+display_name = "Sting Chameleon"
+scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
+stage_group = &"maverick"
+boss_id = &"sting_chameleon"
+weapon_reward_id = &"chameleon_sting"
+requires_intro_clear = true
 allow_direct_launch = true

@@ -4,9 +4,11 @@
 
 [resource]
 script = ExtResource("1_stage_definition")
-stage_id = &"test_stage"
-display_name = "Test Stage"
-scene_path = "res://scenes/stages/test/TestStage.tscn"
-stage_group = &"debug"
-show_in_stage_select = false
+stage_id = &"storm_eagle"
+display_name = "Storm Eagle"
+scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
+stage_group = &"maverick"
+boss_id = &"storm_eagle"
+weapon_reward_id = &"storm_tornado"
+requires_intro_clear = true
 allow_direct_launch = true

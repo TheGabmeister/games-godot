@@ -87,6 +87,12 @@ func _run() -> void:
 			exit_code = await _check_persistent_pickup_reload()
 		"continue_flow":
 			exit_code = await _check_continue_flow()
+		"stage_select_roster":
+			exit_code = await _check_stage_select_roster()
+		"stage_select_loading":
+			exit_code = await _check_stage_select_loading()
+		"fortress_unlock_flow":
+			exit_code = await _check_fortress_unlock_flow()
 		"pickup_collision":
 			exit_code = await _check_pickup_collision()
 		_:
@@ -135,9 +141,11 @@ func _check_title_flow() -> int:
 		push_error("Title flow did not instance TitleScreen into UIRoot.")
 		return 1
 
-	var launch_button := title_screen.get_node_or_null("CenterContainer/VBoxContainer/LaunchTestStageButton")
-	if launch_button == null:
-		push_error("TitleScreen is missing its launch button.")
+	var new_game_button := title_screen.get_node_or_null("CenterContainer/VBoxContainer/NewGameButton")
+	var continue_button := title_screen.get_node_or_null("CenterContainer/VBoxContainer/ContinueButton")
+	var stage_select_button := title_screen.get_node_or_null("CenterContainer/VBoxContainer/StageSelectButton")
+	if new_game_button == null or continue_button == null or stage_select_button == null:
+		push_error("TitleScreen is missing one or more primary campaign buttons.")
 		return 1
 
 	return 0
@@ -1251,58 +1259,221 @@ func _check_continue_flow() -> int:
 
 	_use_harness_save_path(save_manager)
 	save_manager.call("delete_save")
+
 	progression.reset_for_new_game()
-	progression.grant_dash_unlock(&"test_stage_dash_capsule")
-	if not bool(save_manager.save_game(&"continue_flow_test")):
-		push_error("Continue flow check could not write a save payload.")
+	if not bool(save_manager.save_game(&"continue_intro_flow_test")):
+		push_error("Continue flow check could not write the intro-return save payload.")
 		return 1
 
-	var main := await _instantiate_main_scene()
-	if main == null:
+	var intro_main := await _instantiate_main_scene()
+	if intro_main == null:
 		return 1
 
-	var title_screen: Node = main.get_node_or_null("UIRoot/TitleScreen")
-	var continue_button: Button = null
-	if title_screen != null:
-		continue_button = title_screen.get_node_or_null("CenterContainer/VBoxContainer/ContinueButton") as Button
+	var title_screen: Node = intro_main.get_node_or_null("UIRoot/TitleScreen")
+	var continue_button := title_screen.get_node_or_null("CenterContainer/VBoxContainer/ContinueButton") as Button if title_screen != null else null
 	if title_screen == null or continue_button == null:
 		push_error("Title flow is missing the continue button.")
 		return 1
 
 	progression.reset_for_new_game()
 	continue_button.emit_signal("pressed")
+	await _await_physics_frames(4)
+
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.IN_STAGE, 20):
+		push_error("Continue flow did not return the player to Intro Highway when intro was uncleared.")
+		return 1
+
+	if intro_main.get_node_or_null("WorldRoot/intro_highway") == null:
+		push_error("Continue flow did not load Intro Highway from the stage start.")
+		return 1
+
+	intro_main.queue_free()
 	await process_frame
-	await process_frame
+	await _await_physics_frames(2)
 
-	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.TITLE, 10):
-		push_error("Continue flow did not return to the title frontend.")
+	progression.reset_for_new_game()
+	progression.mark_intro_cleared()
+	progression.grant_dash_unlock(&"test_stage_dash_capsule")
+	if not bool(save_manager.save_game(&"continue_stage_select_flow_test")):
+		push_error("Continue flow check could not write the stage-select save payload.")
 		return 1
 
-	if main.get_node_or_null("WorldRoot/test_stage") != null:
-		push_error("Continue flow incorrectly reconstructed an in-progress stage.")
+	var stage_select_main := await _instantiate_main_scene()
+	if stage_select_main == null:
 		return 1
 
-	title_screen = main.get_node_or_null("UIRoot/TitleScreen")
-	var save_status_label: Label = null
-	continue_button = null
-	if title_screen != null:
-		save_status_label = title_screen.get_node_or_null("CenterContainer/VBoxContainer/SaveStatusLabel") as Label
-		continue_button = title_screen.get_node_or_null("CenterContainer/VBoxContainer/ContinueButton") as Button
-	if title_screen == null or save_status_label == null or continue_button == null:
-		push_error("Continue flow did not restore the title screen UI.")
+	title_screen = stage_select_main.get_node_or_null("UIRoot/TitleScreen")
+	continue_button = title_screen.get_node_or_null("CenterContainer/VBoxContainer/ContinueButton") as Button if title_screen != null else null
+	if title_screen == null or continue_button == null:
+		push_error("Title flow is missing the continue button for stage-select restore.")
 		return 1
 
-	if continue_button.disabled:
-		push_error("Continue button should stay enabled after returning to the frontend.")
+	progression.reset_for_new_game()
+	continue_button.emit_signal("pressed")
+	await _await_physics_frames(4)
+
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.STAGE_SELECT, 20):
+		push_error("Continue flow did not route an intro-cleared save to Stage Select.")
 		return 1
 
-	if save_status_label.text.find("dash=unlocked") == -1:
-		push_error("Continue flow did not restore save-backed progression summary in the title UI.")
+	if stage_select_main.get_node_or_null("UIRoot/StageSelectMenu") == null:
+		push_error("Continue flow did not load the Stage Select UI.")
+		return 1
+
+	if stage_select_main.get_node_or_null("WorldRoot/intro_highway") != null:
+		push_error("Continue flow incorrectly loaded Intro Highway for an intro-cleared save.")
 		return 1
 
 	save_manager.call("delete_save")
 	_clear_harness_save_path(save_manager)
 	progression.reset_for_new_game()
+	return 0
+
+
+func _check_stage_select_roster() -> int:
+	var progression := _get_progression()
+	var game_flow := root.get_node_or_null("/root/GameFlow")
+	if progression == null or game_flow == null:
+		push_error("Stage select roster check requires Progression and GameFlow.")
+		return 1
+
+	var main := await _instantiate_main_scene()
+	if main == null:
+		return 1
+
+	progression.reset_for_new_game()
+	game_flow.request_stage_select()
+	await _await_physics_frames(2)
+
+	var menu := main.get_node_or_null("UIRoot/StageSelectMenu")
+	var chill_button := menu.get_node_or_null("MarginContainer/Panel/VBoxContainer/RosterGrid/chill_penguinButton") as Button if menu != null else null
+	var fortress_button := menu.get_node_or_null("MarginContainer/Panel/VBoxContainer/RosterGrid/sigma_fortress_1Button") as Button if menu != null else null
+	if menu == null or chill_button == null or fortress_button == null:
+		push_error("Stage select roster check could not find the expected stage buttons.")
+		return 1
+
+	if not chill_button.disabled:
+		push_error("Maverick stages should stay locked before Intro Highway is cleared.")
+		return 1
+
+	if not fortress_button.disabled:
+		push_error("Sigma Fortress 1 should stay locked before the Maverick bosses are defeated.")
+		return 1
+
+	progression.mark_intro_cleared()
+	game_flow.request_stage_select()
+	await _await_physics_frames(2)
+
+	menu = main.get_node_or_null("UIRoot/StageSelectMenu")
+	chill_button = menu.get_node_or_null("MarginContainer/Panel/VBoxContainer/RosterGrid/chill_penguinButton") as Button if menu != null else null
+	fortress_button = menu.get_node_or_null("MarginContainer/Panel/VBoxContainer/RosterGrid/sigma_fortress_1Button") as Button if menu != null else null
+	if menu == null or chill_button == null or fortress_button == null:
+		push_error("Stage select roster check lost the expected buttons after refresh.")
+		return 1
+
+	if chill_button.disabled:
+		push_error("Maverick stages did not unlock after Intro Highway clear.")
+		return 1
+
+	if not fortress_button.disabled:
+		push_error("Sigma Fortress 1 unlocked too early.")
+		return 1
+
+	return 0
+
+
+func _check_stage_select_loading() -> int:
+	var progression := _get_progression()
+	var game_flow := root.get_node_or_null("/root/GameFlow")
+	if progression == null or game_flow == null:
+		push_error("Stage select loading check requires Progression and GameFlow.")
+		return 1
+
+	progression.reset_for_new_game()
+	progression.mark_intro_cleared()
+
+	var main := await _instantiate_main_scene()
+	if main == null:
+		return 1
+
+	game_flow.request_stage_select()
+	await _await_physics_frames(2)
+
+	var menu := main.get_node_or_null("UIRoot/StageSelectMenu")
+	var chill_button := menu.get_node_or_null("MarginContainer/Panel/VBoxContainer/RosterGrid/chill_penguinButton") as Button if menu != null else null
+	if menu == null or chill_button == null:
+		push_error("Stage select loading check could not resolve the Chill Penguin stage button.")
+		return 1
+
+	chill_button.emit_signal("pressed")
+	await _await_physics_frames(4)
+
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.IN_STAGE, 20):
+		push_error("Selecting an unlocked stage did not switch GameFlow into IN_STAGE.")
+		return 1
+
+	var active_stage := main.get_node_or_null("WorldRoot/chill_penguin")
+	var hud := main.get_node_or_null("UIRoot/GameplayHUD")
+	if active_stage == null or hud == null:
+		push_error("Selecting Chill Penguin did not load the stage + HUD stack.")
+		return 1
+
+	if String(active_stage.scene_file_path) != "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn":
+		push_error("Selecting Chill Penguin loaded the wrong stage scene.")
+		return 1
+
+	return 0
+
+
+func _check_fortress_unlock_flow() -> int:
+	var progression := _get_progression()
+	var game_flow := root.get_node_or_null("/root/GameFlow")
+	if progression == null or game_flow == null:
+		push_error("Fortress unlock flow check requires Progression and GameFlow.")
+		return 1
+
+	progression.reset_for_new_game()
+	progression.mark_intro_cleared()
+
+	if bool(game_flow.is_stage_unlocked(&"sigma_fortress_1")):
+		push_error("Sigma Fortress 1 should not unlock before the Maverick bosses are defeated.")
+		return 1
+
+	for boss_id in [&"chill_penguin", &"storm_eagle", &"flame_mammoth", &"spark_mandrill", &"armored_armadillo", &"launch_octopus", &"boomer_kuwanger"]:
+		progression.mark_boss_defeated(boss_id)
+
+	if bool(game_flow.is_stage_unlocked(&"sigma_fortress_1")):
+		push_error("Sigma Fortress 1 unlocked before the full Maverick roster was defeated.")
+		return 1
+
+	progression.mark_boss_defeated(&"sting_chameleon")
+	if not bool(game_flow.is_stage_unlocked(&"sigma_fortress_1")):
+		push_error("Sigma Fortress 1 did not unlock after all Maverick bosses were defeated.")
+		return 1
+
+	if bool(game_flow.is_stage_unlocked(&"sigma_fortress_2")):
+		push_error("Sigma Fortress 2 unlocked before Sigma Fortress 1 was cleared.")
+		return 1
+
+	progression.mark_stage_cleared(&"sigma_fortress_1")
+	if not bool(game_flow.is_stage_unlocked(&"sigma_fortress_2")):
+		push_error("Sigma Fortress 2 did not unlock after Sigma Fortress 1 clear.")
+		return 1
+
+	if bool(game_flow.is_stage_unlocked(&"sigma_fortress_3")):
+		push_error("Sigma Fortress 3 unlocked before Sigma Fortress 2 was cleared.")
+		return 1
+
+	progression.mark_stage_cleared(&"sigma_fortress_2")
+	if not bool(game_flow.is_stage_unlocked(&"sigma_fortress_3")):
+		push_error("Sigma Fortress 3 did not unlock after Sigma Fortress 2 clear.")
+		return 1
+
+	progression.mark_stage_cleared(&"sigma_fortress_3")
+	if not bool(game_flow.is_stage_unlocked(&"sigma_fortress_4")):
+		push_error("Sigma Fortress 4 did not unlock after Sigma Fortress 3 clear.")
+		return 1
+
 	return 0
 
 

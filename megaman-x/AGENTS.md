@@ -88,6 +88,9 @@ This repository is an early-stage Godot project for `megaman-x`.
   - `-- save_round_trip`
   - `-- persistent_pickup_reload`
   - `-- continue_flow`
+  - `-- stage_select_roster`
+  - `-- stage_select_loading`
+  - `-- fortress_unlock_flow`
 - If new GDScript files are added, run the narrowest available script check or project startup check instead of relying only on static inspection.
 - Prefer `Console-ready` checks first, then harness-backed automated checks, and leave `Manual validation` items for the user.
 - Report which automated checks were run, which passed, and which were blocked by missing infrastructure or environment limits.

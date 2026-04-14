@@ -11,7 +11,16 @@ func configure(payload: Dictionary) -> void:
 	var clear_count := int(payload.get("clear_count", 1))
 	title_label.text = "STAGE CLEAR"
 	body_label.text = "%s complete." % display_name
-	detail_label.text = "Clear flow locked gameplay and replaced the HUD overlay.\nStageController transitions: %d" % clear_count
+	detail_label.text = "Clear flow locked gameplay and replaced the HUD overlay.\nStageController transitions: %d\nPress confirm or cancel to return to the frontend." % clear_count
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed(&"menu_confirm") and not event.is_action_pressed(&"menu_cancel"):
+		return
+
+	if GameFlow != null and GameFlow.has_method("exit_stage_clear_to_frontend"):
+		GameFlow.exit_stage_clear_to_frontend()
+		get_viewport().set_input_as_handled()
 
 
 func get_snapshot() -> Dictionary:

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StageDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/stage_definition.gd" id="1_stage_definition"]
+
+[resource]
+script = ExtResource("1_stage_definition")
+stage_id = &"sigma_fortress_4"
+display_name = "Sigma Fortress 4"
+scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
+stage_group = &"fortress"
+requires_intro_clear = true
+required_defeated_boss_ids = Array[StringName]([&"chill_penguin", &"storm_eagle", &"flame_mammoth", &"spark_mandrill", &"armored_armadillo", &"launch_octopus", &"boomer_kuwanger", &"sting_chameleon"])
+required_stage_clear_ids = Array[StringName]([&"sigma_fortress_3"])
+allow_direct_launch = true

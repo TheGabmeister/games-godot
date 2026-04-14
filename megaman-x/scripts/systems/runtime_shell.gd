@@ -29,6 +29,19 @@ func show_title_screen(scene_path: String) -> void:
 	ui_root.add_child(packed_scene.instantiate())
 
 
+func show_stage_select_screen(scene_path: String) -> void:
+	_clear_branch(world_root)
+	_clear_branch(ui_root)
+	_clear_branch(overlay_root)
+
+	var packed_scene := load(scene_path) as PackedScene
+	if packed_scene == null:
+		push_error("RuntimeShell failed to load stage-select scene at '%s'." % scene_path)
+		return
+
+	ui_root.add_child(packed_scene.instantiate())
+
+
 func load_stage(stage_definition: StageDefinition) -> void:
 	if stage_definition == null or not stage_definition.is_valid():
 		push_error("RuntimeShell received an invalid stage definition.")
@@ -46,6 +59,7 @@ func load_stage(stage_definition: StageDefinition) -> void:
 	_active_stage = packed_scene.instantiate()
 	_active_stage.name = String(stage_definition.stage_id)
 	world_root.add_child(_active_stage)
+	_configure_loaded_stage(stage_definition)
 	_install_gameplay_hud()
 
 
@@ -118,6 +132,18 @@ func _install_gameplay_hud() -> void:
 	var player := _resolve_stage_player(_active_stage)
 	if player != null and _active_hud.has_method("bind_player"):
 		_active_hud.bind_player(player)
+
+
+func _configure_loaded_stage(stage_definition: StageDefinition) -> void:
+	if _active_stage == null or stage_definition == null:
+		return
+
+	var stage_controller := _active_stage.get_node_or_null("StageController")
+	if stage_controller != null:
+		stage_controller.set("stage_id", stage_definition.stage_id)
+
+	if _active_stage.has_method("configure_stage_definition"):
+		_active_stage.configure_stage_definition(stage_definition)
 
 
 func _resolve_stage_player(stage: Node) -> Node:
