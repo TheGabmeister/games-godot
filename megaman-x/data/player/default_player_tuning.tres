@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="PlayerTuningData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player_tuning_data.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+base_max_hp = 16
+run_speed = 160.0
+acceleration = 900.0
+deceleration = 1200.0
+air_control = 700.0
+jump_velocity = -320.0
+gravity_scale = 1.0
+dash_speed = 280.0
+dash_duration = 0.18
+wall_slide_speed = 90.0
+wall_jump_force = Vector2(220, -320)
+hurt_knockback = Vector2(140, -120)
+hurt_duration = 0.35
+death_delay = 0.75
+invulnerability_time = 1.0

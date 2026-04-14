@@ -1,0 +1,101 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
+[ext_resource type="Resource" path="res://data/player/default_player_tuning.tres" id="2_tuning"]
+[ext_resource type="Script" path="res://scripts/player/player_presentation.gd" id="3_presentation"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/player/player_idle_32x48.svg" id="4_idle"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/player/player_run_32x48.svg" id="5_run"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/player/player_jump_32x48.svg" id="6_jump"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/player/player_fall_32x48.svg" id="7_fall"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="8_health"]
+[ext_resource type="Script" path="res://scripts/player/player_combat.gd" id="9_combat"]
+[ext_resource type="Script" path="res://scripts/player/pickup_receiver.gd" id="10_pickup"]
+[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="11_hurtbox"]
+
+[sub_resource type="RectangleShape2D" id="1_body_shape"]
+size = Vector2(18, 36)
+
+[sub_resource type="RectangleShape2D" id="2_area_shape"]
+size = Vector2(18, 36)
+
+[sub_resource type="CircleShape2D" id="3_sensor_shape"]
+radius = 18.0
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 3
+floor_snap_length = 6.0
+script = ExtResource("1_player")
+tuning = ExtResource("2_tuning")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -18)
+shape = SubResource("1_body_shape")
+
+[node name="VisualRoot" type="Node2D" parent="."]
+position = Vector2(0, -24)
+script = ExtResource("3_presentation")
+idle_texture = ExtResource("4_idle")
+run_texture = ExtResource("5_run")
+jump_texture = ExtResource("6_jump")
+fall_texture = ExtResource("7_fall")
+
+[node name="Sprite2D" type="Sprite2D" parent="VisualRoot"]
+
+[node name="StateLabel" type="Label" parent="VisualRoot"]
+offset_left = -44.0
+offset_top = -42.0
+offset_right = 44.0
+offset_bottom = -18.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.956863, 0.972549, 1, 1)
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 64
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("11_hurtbox")
+health_component_path = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -18)
+shape = SubResource("2_area_shape")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("8_health")
+team = &"player"
+
+[node name="PlayerCombat" type="Node" parent="."]
+script = ExtResource("9_combat")
+
+[node name="WeaponInventory" type="Node" parent="PlayerCombat"]
+
+[node name="PickupReceiver" type="Node" parent="."]
+script = ExtResource("10_pickup")
+
+[node name="PlayerSensor" type="Area2D" parent="."]
+collision_layer = 4096
+collision_mask = 768
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerSensor"]
+position = Vector2(0, -18)
+shape = SubResource("3_sensor_shape")
+
+[node name="ShotOrigin" type="Marker2D" parent="."]
+position = Vector2(14, -24)
+
+[node name="WallCheckLeft" type="RayCast2D" parent="."]
+position = Vector2(-10, -18)
+target_position = Vector2(-10, 0)
+collision_mask = 3
+enabled = true
+
+[node name="WallCheckRight" type="RayCast2D" parent="."]
+position = Vector2(10, -18)
+target_position = Vector2(10, 0)
+collision_mask = 3
+enabled = true
+
+[node name="CameraAnchor" type="Marker2D" parent="."]
+position = Vector2(0, -40)

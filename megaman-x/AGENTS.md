@@ -59,6 +59,13 @@ This repository is an early-stage Godot project for `megaman-x`.
   - `-- main_layers`
   - `-- autoloads`
   - `-- test_stage`
+  - `-- title_flow`
+  - `-- locomotion`
+  - `-- player_spawn`
+  - `-- camera_follow`
+  - `-- damage_pipeline`
+  - `-- player_retry`
+  - `-- stage_reset`
 - If new GDScript files are added, run the narrowest available script check or project startup check instead of relying only on static inspection.
 - Prefer `Console-ready` checks first, then harness-backed automated checks, and leave `Manual validation` items for the user.
 - Report which automated checks were run, which passed, and which were blocked by missing infrastructure or environment limits.

@@ -1,0 +1,45 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/test_dummy.gd" id="1_dummy"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2_health"]
+[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="3_hurtbox"]
+
+[sub_resource type="RectangleShape2D" id="1_hurtbox_shape"]
+size = Vector2(24, 24)
+
+[node name="TestDummy" type="Node2D"]
+script = ExtResource("1_dummy")
+
+[node name="VisualRoot" type="Node2D" parent="."]
+
+[node name="Outer" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(-12, -12, 12, -12, 12, 12, -12, 12)
+color = Color(0.345098, 0.403922, 0.478431, 1)
+
+[node name="Inner" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(0, -7, 5, -5, 7, 0, 5, 5, 0, 7, -5, 5, -7, 0, -5, -5)
+color = Color(1, 0.419608, 0.419608, 1)
+
+[node name="StatusLabel" type="Label" parent="VisualRoot"]
+offset_left = -48.0
+offset_top = -34.0
+offset_right = 48.0
+offset_bottom = -12.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.976471, 0.945098, 0.854902, 1)
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 2
+team = &"enemy"
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 128
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("3_hurtbox")
+health_component_path = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("1_hurtbox_shape")

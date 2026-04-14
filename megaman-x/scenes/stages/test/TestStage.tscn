@@ -1,19 +1,28 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/test_stage.gd" id="1_test_stage"]
 [ext_resource type="Texture2D" path="res://assets/placeholders/shared/grid_backdrop.svg" id="2_backdrop"]
 [ext_resource type="Texture2D" path="res://assets/placeholders/stage/test_floor_256x32.svg" id="3_floor"]
 [ext_resource type="Texture2D" path="res://assets/placeholders/shared/spawn_marker_32.svg" id="4_spawn_marker"]
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="5_player"]
+[ext_resource type="Script" path="res://scripts/camera/follow_camera_2d.gd" id="6_follow_camera"]
+[ext_resource type="Script" path="res://scripts/stages/stage_controller.gd" id="7_stage_controller"]
+[ext_resource type="Script" path="res://scripts/stages/hazard_area.gd" id="8_hazard"]
+[ext_resource type="PackedScene" path="res://scenes/stages/test/TestDummy.tscn" id="10_test_dummy"]
 
 [sub_resource type="RectangleShape2D" id="1_ground_shape"]
 size = Vector2(256, 32)
+
+[sub_resource type="RectangleShape2D" id="2_hazard_shape"]
+size = Vector2(96, 24)
 
 [node name="TestStage" type="Node2D"]
 script = ExtResource("1_test_stage")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(320, 180)
 enabled = true
+position_smoothing_enabled = false
+script = ExtResource("6_follow_camera")
 
 [node name="Backdrop" type="Sprite2D" parent="."]
 position = Vector2(320, 180)
@@ -30,8 +39,41 @@ position = Vector2(320, 296)
 shape = SubResource("1_ground_shape")
 
 [node name="SpawnMarker" type="Sprite2D" parent="."]
-position = Vector2(128, 240)
+position = Vector2(240, 240)
 texture = ExtResource("4_spawn_marker")
+
+[node name="Player" parent="." instance=ExtResource("5_player")]
+position = Vector2(240, 280)
+
+[node name="StageController" type="Node" parent="."]
+script = ExtResource("7_stage_controller")
+player_path = NodePath("../Player")
+spawn_point_path = NodePath("../PlayerSpawnPoint")
+
+[node name="PlayerSpawnPoint" type="Marker2D" parent="."]
+position = Vector2(240, 280)
+
+[node name="DeathHazard" type="Area2D" parent="."]
+position = Vector2(376, 284)
+collision_layer = 1024
+collision_mask = 64
+monitoring = true
+monitorable = true
+script = ExtResource("8_hazard")
+damage = 16
+team = &"hazard"
+weapon_id = &"spikes"
+knockback = Vector2(180, -220)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DeathHazard"]
+shape = SubResource("2_hazard_shape")
+
+[node name="HazardVisual" type="Polygon2D" parent="DeathHazard"]
+polygon = PackedVector2Array(-48, 12, -40, -8, -32, 12, -24, -8, -16, 12, -8, -8, 0, 12, 8, -8, 16, 12, 24, -8, 32, 12, 40, -8, 48, 12)
+color = Color(1, 0.419608, 0.419608, 1)
+
+[node name="TestDummy" parent="." instance=ExtResource("10_test_dummy")]
+position = Vector2(320, 248)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -49,7 +91,7 @@ offset_top = 24.0
 offset_right = 280.0
 offset_bottom = 54.0
 theme_override_colors/font_color = Color(0.898039, 0.956863, 1, 1)
-text = "Phase 1 Test Stage"
+text = "Phase 3 Test Stage"
 
 [node name="Body" type="Label" parent="CanvasLayer/Overlay"]
 offset_left = 24.0
