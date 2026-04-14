@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/weapon_data.gd" id="1_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/projectiles/PlayerBossWeaponShot.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_weapon")
+weapon_id = &"boomerang_cutter"
+display_name = "Boomerang Cutter"
+energy_cost = 2
+max_energy = 32
+projectile_scene = ExtResource("2_projectile")
+base_damage = 2
+shot_cooldown = 0.16
+active_projectile_limit = 2
+projectile_speed = 390.0
+projectile_lifetime = 0.95
+supports_charge = false
+uncharged_scale = Vector2(1, 0.85)
+uncharged_color = Color(0.792157, 1, 0.529412, 1)
+partial_charge_color = Color(0.792157, 1, 0.529412, 1)
+full_charge_color = Color(0.792157, 1, 0.529412, 1)
+ui_accent_color = Color(0.792157, 1, 0.529412, 1)

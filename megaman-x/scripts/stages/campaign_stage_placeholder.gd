@@ -1,5 +1,7 @@
 extends Node2D
 
+const WEAPON_CATALOG_SCRIPT = preload("res://scripts/player/weapon_catalog.gd")
+
 var _stage_definition: StageDefinition = null
 
 @onready var player: Node = $Player
@@ -33,14 +35,18 @@ func _refresh_ui() -> void:
 	var stage_id := stage_controller.stage_id
 	var display_name := String(stage_id)
 	var group_name := "Campaign"
+	var reward_name := ""
 	if _stage_definition != null:
 		stage_id = _stage_definition.stage_id
 		display_name = _stage_definition.display_name
 		group_name = String(_stage_definition.stage_group).capitalize()
+		if not _stage_definition.weapon_reward_id.is_empty():
+			reward_name = WEAPON_CATALOG_SCRIPT.get_weapon_display_name(_stage_definition.weapon_reward_id)
 
 	stage_label.text = display_name
-	body_label.text = "%s placeholder slice.\nStage ID: %s\nDash unlocked: %s\nTouch the clear gate to complete this stage." % [
+	body_label.text = "%s placeholder slice.\nStage ID: %s\nDash unlocked: %s\nReward: %s\nTouch the clear gate to complete this stage." % [
 		group_name,
 		stage_id,
 		"yes" if Progression.dash_unlocked else "no",
+		reward_name if not reward_name.is_empty() else "stage clear only",
 	]

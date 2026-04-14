@@ -93,6 +93,12 @@ func _run() -> void:
 			exit_code = await _check_stage_select_loading()
 		"fortress_unlock_flow":
 			exit_code = await _check_fortress_unlock_flow()
+		"weapon_reward_unlock":
+			exit_code = await _check_weapon_reward_unlock()
+		"weakness_tables":
+			exit_code = await _check_weakness_tables()
+		"weapon_energy_costs":
+			exit_code = await _check_weapon_energy_costs()
 		"pickup_collision":
 			exit_code = await _check_pickup_collision()
 		_:
@@ -1472,6 +1478,180 @@ func _check_fortress_unlock_flow() -> int:
 	progression.mark_stage_cleared(&"sigma_fortress_3")
 	if not bool(game_flow.is_stage_unlocked(&"sigma_fortress_4")):
 		push_error("Sigma Fortress 4 did not unlock after Sigma Fortress 3 clear.")
+		return 1
+
+	return 0
+
+
+func _check_weapon_reward_unlock() -> int:
+	var progression := _get_progression()
+	var game_flow := root.get_node_or_null("/root/GameFlow")
+	if progression == null or game_flow == null:
+		push_error("Weapon reward unlock check requires Progression and GameFlow.")
+		return 1
+
+	progression.reset_for_new_game()
+	progression.mark_intro_cleared()
+
+	var main := await _instantiate_main_scene()
+	if main == null:
+		return 1
+
+	game_flow.request_stage(&"chill_penguin")
+	await _await_physics_frames(3)
+
+	var stage := main.get_node_or_null("WorldRoot/chill_penguin")
+	var stage_controller := stage.get_node_or_null("StageController") if stage != null else null
+	if stage == null or stage_controller == null:
+		push_error("Weapon reward unlock check could not load the Chill Penguin placeholder stage.")
+		return 1
+
+	stage_controller.call("begin_stage_clear", &"reward_unlock_test")
+	await _await_physics_frames(2)
+
+	if not progression.has_weapon_unlocked(&"shotgun_ice"):
+		push_error("Clearing Chill Penguin did not unlock the Shotgun Ice reward.")
+		return 1
+
+	game_flow.request_stage(&"test_stage")
+	await _await_physics_frames(3)
+
+	var player := main.get_node_or_null("WorldRoot/test_stage/Player")
+	var inventory := player.get_node_or_null("PlayerCombat/WeaponInventory") if player != null else null
+	if player == null or inventory == null:
+		push_error("Weapon reward unlock check could not load the test stage inventory after the reward unlock.")
+		return 1
+
+	if not bool(inventory.call("has_weapon_unlocked", &"shotgun_ice")):
+		push_error("Unlocked Shotgun Ice reward did not appear in the player inventory.")
+		return 1
+
+	if not bool(inventory.call("equip_weapon", &"shotgun_ice")):
+		push_error("Unlocked Shotgun Ice reward could not be equipped from the player inventory.")
+		return 1
+
+	return 0
+
+
+func _check_weakness_tables() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("Weakness table check requires Progression.")
+		return 1
+
+	progression.reset_for_new_game()
+	progression.unlock_weapon(&"shotgun_ice")
+	progression.unlock_weapon(&"fire_wave")
+	progression.unlock_weapon(&"storm_tornado")
+
+	var loaded := await _load_test_stage_via_main()
+	var stage: Node = loaded.get("stage")
+	var player: Node = loaded.get("player")
+	var combat: Node = player.get_node_or_null("PlayerCombat") if player != null else null
+	var normal_hurtbox := stage.get_node_or_null("TestDummy/Hurtbox") if stage != null else null
+	var normal_health := stage.get_node_or_null("TestDummy/HealthComponent") if stage != null else null
+	var weak_hurtbox := stage.get_node_or_null("WeaknessDummy/Hurtbox") if stage != null else null
+	var weak_health := stage.get_node_or_null("WeaknessDummy/HealthComponent") if stage != null else null
+	if stage == null or player == null or combat == null or normal_hurtbox == null or normal_health == null or weak_hurtbox == null or weak_health == null:
+		push_error("Weakness table check could not resolve the required test-stage nodes.")
+		return 1
+
+	combat.call("reset_combat")
+	combat.call("get_current_weapon")
+
+	combat.get_node("WeaponInventory").call("equip_weapon", &"shotgun_ice")
+	normal_health.call("reset")
+	weak_health.call("reset")
+	normal_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"shotgun_ice", 2, Vector2.ZERO))
+	weak_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"shotgun_ice", 2, Vector2.ZERO))
+	await _await_physics_frames(1)
+
+	if int(normal_health.get("current_health")) != int(normal_health.get("max_health")) - 2:
+		push_error("Normal targets did not take the expected baseline Shotgun Ice damage.")
+		return 1
+
+	if int(weak_health.get("current_health")) != int(weak_health.get("max_health")) - 4:
+		push_error("Weakness target did not take amplified Shotgun Ice damage.")
+		return 1
+
+	weak_health.call("reset")
+	combat.get_node("WeaponInventory").call("equip_weapon", &"fire_wave")
+	weak_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"fire_wave", 2, Vector2.ZERO))
+	await _await_physics_frames(1)
+	if int(weak_health.get("current_health")) != int(weak_health.get("max_health")) - 1:
+		push_error("Resistance table did not reduce Fire Wave damage as expected.")
+		return 1
+
+	weak_health.call("reset")
+	combat.get_node("WeaponInventory").call("equip_weapon", &"storm_tornado")
+	var immunity_hit := bool(weak_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"storm_tornado", 3, Vector2.ZERO)))
+	await _await_physics_frames(1)
+	if immunity_hit or int(weak_health.get("current_health")) != int(weak_health.get("max_health")):
+		push_error("Immunity table did not reject Storm Tornado damage.")
+		return 1
+
+	return 0
+
+
+func _check_weapon_energy_costs() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("Weapon energy cost check requires Progression.")
+		return 1
+
+	progression.reset_for_new_game()
+	progression.unlock_weapon(&"shotgun_ice")
+
+	var loaded := await _load_test_stage_via_main()
+	var stage: Node = loaded.get("stage")
+	var hud: Node = loaded.get("hud")
+	var player: Node = loaded.get("player")
+	var combat: Node = player.get_node_or_null("PlayerCombat") if player != null else null
+	var inventory := combat.get_node_or_null("WeaponInventory") if combat != null else null
+	var dummy := stage.get_node_or_null("TestDummy") if stage != null else null
+	if stage == null or hud == null or player == null or combat == null or inventory == null or dummy == null:
+		push_error("Weapon energy cost check could not resolve the test-stage weapon nodes.")
+		return 1
+
+	if not bool(inventory.call("equip_weapon", &"shotgun_ice")):
+		push_error("Weapon energy cost check could not equip Shotgun Ice.")
+		return 1
+
+	var initial_snapshot := hud.call("get_snapshot") as Dictionary
+	if initial_snapshot.get("energy_text", "") != "32 / 32":
+		push_error("HUD did not expose the expected starting weapon energy for Shotgun Ice.")
+		return 1
+
+	if not bool(combat.call("fire_equipped_weapon", &"uncharged")):
+		push_error("Weapon energy cost check could not fire the equipped Shotgun Ice weapon.")
+		return 1
+
+	await _await_physics_frames(16)
+	dummy.call("reset_for_stage_retry")
+
+	var post_shot_snapshot := hud.call("get_snapshot") as Dictionary
+	if post_shot_snapshot.get("energy_text", "") != "30 / 32":
+		push_error("HUD did not update after Shotgun Ice consumed weapon energy.")
+		return 1
+
+	for _shot in range(15):
+		if not bool(combat.call("fire_equipped_weapon", &"uncharged")):
+			push_error("Shotgun Ice stopped firing before its weapon energy was fully depleted.")
+			return 1
+		await _await_physics_frames(16)
+		dummy.call("reset_for_stage_retry")
+
+	if int(combat.call("get_current_weapon_energy")) != 0:
+		push_error("Shotgun Ice did not drain to zero energy after the expected number of shots.")
+		return 1
+
+	if bool(combat.call("fire_equipped_weapon", &"uncharged")):
+		push_error("Shotgun Ice still fired after its energy was fully depleted.")
+		return 1
+
+	var depleted_snapshot := hud.call("get_snapshot") as Dictionary
+	if depleted_snapshot.get("energy_text", "") != "0 / 32":
+		push_error("HUD did not show the fully depleted weapon energy state.")
 		return 1
 
 	return 0

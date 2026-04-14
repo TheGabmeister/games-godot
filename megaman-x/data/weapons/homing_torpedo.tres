@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/weapon_data.gd" id="1_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/projectiles/PlayerBossWeaponShot.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_weapon")
+weapon_id = &"homing_torpedo"
+display_name = "Homing Torpedo"
+energy_cost = 3
+max_energy = 32
+projectile_scene = ExtResource("2_projectile")
+base_damage = 2
+shot_cooldown = 0.2
+active_projectile_limit = 2
+projectile_speed = 320.0
+projectile_lifetime = 1.15
+supports_charge = false
+uncharged_scale = Vector2(1.1, 0.9)
+uncharged_color = Color(0.545098, 0.972549, 1, 1)
+partial_charge_color = Color(0.545098, 0.972549, 1, 1)
+full_charge_color = Color(0.545098, 0.972549, 1, 1)
+ui_accent_color = Color(0.545098, 0.972549, 1, 1)

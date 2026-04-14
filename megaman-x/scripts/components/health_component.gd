@@ -9,6 +9,7 @@ signal revived
 @export var max_health := 16
 @export var team: StringName = &"neutral"
 @export var invulnerability_duration := 0.0
+@export var damage_modifiers_by_weapon: Dictionary = {}
 
 var current_health := 16
 var is_dead := false
@@ -42,19 +43,37 @@ func apply_hit_payload(payload: Dictionary) -> bool:
 		return false
 
 	var payload_damage := int(payload.get("damage", 0))
+	var payload_weapon_id := payload.get("weapon_id", &"") as StringName
+	var damage_multiplier := get_damage_multiplier_for_weapon(payload_weapon_id)
+	payload_damage = _apply_damage_multiplier(payload_damage, damage_multiplier)
 	if payload_damage <= 0:
 		return false
+
+	var applied_payload := payload.duplicate(true)
+	applied_payload["damage"] = payload_damage
+	applied_payload["damage_multiplier"] = damage_multiplier
 
 	current_health = maxi(current_health - payload_damage, 0)
 	_invulnerability_remaining = invulnerability_duration
 	health_changed.emit(current_health, max_health)
-	damaged.emit(payload, current_health)
+	damaged.emit(applied_payload, current_health)
 
 	if current_health <= 0:
 		is_dead = true
 		died.emit()
 
 	return true
+
+
+func get_damage_multiplier_for_weapon(weapon_id: StringName) -> float:
+	if weapon_id.is_empty():
+		return 1.0
+
+	for key in damage_modifiers_by_weapon.keys():
+		if StringName(str(key)) == weapon_id:
+			return maxf(float(damage_modifiers_by_weapon[key]), 0.0)
+
+	return 1.0
 
 
 func reset() -> void:
@@ -76,3 +95,10 @@ func heal(amount: int) -> int:
 		health_changed.emit(current_health, max_health)
 
 	return healed_amount
+
+
+func _apply_damage_multiplier(base_damage: int, damage_multiplier: float) -> int:
+	if base_damage <= 0 or damage_multiplier <= 0.0:
+		return 0
+
+	return maxi(1, roundi(float(base_damage) * damage_multiplier))

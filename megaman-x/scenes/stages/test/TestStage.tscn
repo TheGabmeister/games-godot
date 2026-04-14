@@ -113,6 +113,19 @@ polygon = PackedVector2Array(-48, 12, -40, -8, -32, 12, -24, -8, -16, 12, -8, -8
 
 [node name="TestDummy" parent="." unique_id=688527040 instance=ExtResource("10_test_dummy")]
 position = Vector2(640, 428)
+dummy_name = "Normal"
+
+[node name="WeaknessDummy" parent="." unique_id=788527040 instance=ExtResource("10_test_dummy")]
+position = Vector2(1108, 428)
+dummy_name = "Weak"
+
+[node name="HealthComponent" parent="WeaknessDummy"]
+max_health = 6
+damage_modifiers_by_weapon = {
+"fire_wave": 0.5,
+"shotgun_ice": 2.0,
+"storm_tornado": 0.0
+}
 
 [node name="WalkerBasic" parent="." unique_id=2088580161 instance=ExtResource("9_enemy")]
 position = Vector2(944, 460)

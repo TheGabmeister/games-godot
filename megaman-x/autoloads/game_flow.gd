@@ -1,5 +1,7 @@
 extends Node
 
+const WEAPON_CATALOG_SCRIPT = preload("res://scripts/player/weapon_catalog.gd")
+
 enum RuntimeState {
 	BOOT,
 	TITLE,
@@ -197,14 +199,16 @@ func request_stage_clear(stage_id: StringName, payload: Dictionary = {}) -> void
 		return
 
 	var stage_definition := get_registered_stage(stage_id)
-	var progression_changed := _apply_stage_clear_progression(stage_definition)
+	var progression_result := _apply_stage_clear_progression(stage_definition)
 	current_stage_id = stage_id
 	_set_state(RuntimeState.STAGE_CLEAR)
 
 	var overlay_payload := payload.duplicate(true)
 	overlay_payload["stage_id"] = stage_id
 	overlay_payload["display_name"] = stage_definition.display_name if stage_definition != null else String(stage_id)
-	overlay_payload["progression_saved"] = progression_changed
+	overlay_payload["progression_saved"] = bool(progression_result.get("progression_saved", false))
+	overlay_payload["reward_weapon_id"] = progression_result.get("reward_weapon_id", &"") as StringName
+	overlay_payload["reward_weapon_name"] = String(progression_result.get("reward_weapon_name", ""))
 
 	var audio_manager := get_node_or_null("/root/AudioManager")
 	if audio_manager != null and audio_manager.has_method("play_sfx"):
@@ -255,17 +259,30 @@ func _build_stage_registry() -> void:
 		_stage_order.append(definition.stage_id)
 
 
-func _apply_stage_clear_progression(stage_definition: StageDefinition) -> bool:
+func _apply_stage_clear_progression(stage_definition: StageDefinition) -> Dictionary:
+	var result := {
+		"progression_saved": false,
+		"reward_weapon_id": StringName(),
+		"reward_weapon_name": "",
+	}
 	if stage_definition == null:
-		return false
+		return result
 
 	var progression := _get_progression()
 	if progression == null:
-		return false
+		return result
 
 	var progression_changed := false
 	if progression.has_method("mark_stage_cleared"):
 		progression_changed = progression.mark_stage_cleared(stage_definition.stage_id) or progression_changed
+
+	if not stage_definition.boss_id.is_empty() and progression.has_method("mark_boss_defeated"):
+		var reward_weapon_id := stage_definition.weapon_reward_id
+		var boss_reward_changed := bool(progression.mark_boss_defeated(stage_definition.boss_id, reward_weapon_id))
+		progression_changed = boss_reward_changed or progression_changed
+		if boss_reward_changed and not reward_weapon_id.is_empty():
+			result["reward_weapon_id"] = reward_weapon_id
+			result["reward_weapon_name"] = WEAPON_CATALOG_SCRIPT.get_weapon_display_name(reward_weapon_id)
 
 	if stage_definition.stage_id == INTRO_STAGE_ID:
 		if progression.has_method("mark_intro_cleared"):
@@ -278,7 +295,8 @@ func _apply_stage_clear_progression(stage_definition: StageDefinition) -> bool:
 		if save_manager != null and save_manager.has_method("save_game"):
 			save_manager.save_game(&"stage_clear")
 
-	return progression_changed
+	result["progression_saved"] = progression_changed
+	return result
 
 
 func _set_state(new_state: int) -> void:

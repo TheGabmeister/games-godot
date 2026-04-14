@@ -24,3 +24,14 @@ func restore_health(amount: int) -> bool:
 		return false
 
 	return int(health_component.heal(amount)) > 0
+
+
+func restore_weapon_energy(weapon_id: StringName, amount: int) -> bool:
+	if amount <= 0 or player == null or not player.has_method("get_player_combat"):
+		return false
+
+	var combat := player.get_player_combat()
+	if combat == null or not combat.has_method("restore_weapon_energy"):
+		return false
+
+	return int(combat.restore_weapon_energy(weapon_id, amount)) > 0

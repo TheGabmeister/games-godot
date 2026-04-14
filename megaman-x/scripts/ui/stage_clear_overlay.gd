@@ -9,9 +9,17 @@ class_name StageClearOverlay
 func configure(payload: Dictionary) -> void:
 	var display_name := String(payload.get("display_name", "Stage"))
 	var clear_count := int(payload.get("clear_count", 1))
+	var reward_weapon_name := String(payload.get("reward_weapon_name", ""))
 	title_label.text = "STAGE CLEAR"
 	body_label.text = "%s complete." % display_name
-	detail_label.text = "Clear flow locked gameplay and replaced the HUD overlay.\nStageController transitions: %d\nPress confirm or cancel to return to the frontend." % clear_count
+	var detail_lines := [
+		"Clear flow locked gameplay and replaced the HUD overlay.",
+		"StageController transitions: %d" % clear_count,
+	]
+	if not reward_weapon_name.is_empty():
+		detail_lines.append("Weapon unlocked: %s" % reward_weapon_name)
+	detail_lines.append("Press confirm or cancel to return to the frontend.")
+	detail_label.text = "\n".join(detail_lines)
 
 
 func _unhandled_input(event: InputEvent) -> void:

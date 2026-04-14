@@ -2,6 +2,8 @@ extends Node2D
 
 signal defeated
 
+@export var dummy_name := "Dummy"
+
 @onready var health_component: Node = $HealthComponent
 @onready var hurtbox: Area2D = $Hurtbox
 @onready var visual_root: Node2D = $VisualRoot
@@ -28,4 +30,4 @@ func _on_health_component_died() -> void:
 
 
 func _on_health_changed(current_health: int, max_health: int) -> void:
-	status_label.text = "Dummy %d/%d" % [current_health, max_health]
+	status_label.text = "%s %d/%d" % [dummy_name, current_health, max_health]

@@ -19,6 +19,7 @@ enum ChargeFeedback {
 signal combat_state_changed(previous_state: int, new_state: int)
 signal charge_feedback_changed(previous_feedback: int, new_feedback: int)
 signal weapon_changed(weapon_id: StringName, display_name: String)
+signal weapon_energy_changed(weapon_id: StringName, current_energy: int, max_energy: int)
 signal projectile_spawned(projectile: Node, spawn_position: Vector2, tier: StringName)
 signal shot_fired(weapon_id: StringName, tier: StringName)
 signal combat_enabled_changed(is_enabled: bool)
@@ -37,14 +38,18 @@ var _charge_elapsed := 0.0
 var _cooldown_remaining := 0.0
 var _fire_state_remaining := 0.0
 var _tracked_projectiles: Array[Node] = []
+var _weapon_energy: Dictionary = {}
 var _full_charge_announced := false
 
 
 func _ready() -> void:
 	if weapon_inventory != null:
 		weapon_inventory.current_weapon_changed.connect(_on_weapon_inventory_current_weapon_changed)
+		weapon_inventory.inventory_changed.connect(_on_weapon_inventory_changed)
 
+	_sync_weapon_energy_table()
 	_emit_weapon_snapshot()
+	_emit_current_weapon_energy()
 	_set_combat_state(CombatState.READY)
 	_set_charge_feedback(ChargeFeedback.NONE)
 
@@ -58,6 +63,9 @@ func _physics_process(delta: float) -> void:
 
 	var current_weapon := get_current_weapon()
 	if current_weapon == null:
+		return
+
+	if _handle_weapon_switch_input():
 		return
 
 	if combat_state == CombatState.READY and current_weapon.supports_charge and Input.is_action_just_pressed("shoot"):
@@ -89,6 +97,29 @@ func get_current_weapon_name() -> String:
 func get_current_weapon_id() -> StringName:
 	var current_weapon := get_current_weapon()
 	return current_weapon.weapon_id if current_weapon != null else &""
+
+
+func get_current_weapon_energy() -> int:
+	var current_weapon := get_current_weapon()
+	if current_weapon == null:
+		return 0
+
+	return get_weapon_energy(current_weapon.weapon_id)
+
+
+func get_current_weapon_max_energy() -> int:
+	var current_weapon := get_current_weapon()
+	return int(current_weapon.max_energy) if current_weapon != null else 0
+
+
+func get_current_weapon_accent_color() -> Color:
+	var current_weapon := get_current_weapon()
+	return current_weapon.ui_accent_color if current_weapon != null else Color.WHITE
+
+
+func get_weapon_energy(weapon_id: StringName) -> int:
+	_sync_weapon_energy_table()
+	return int(_weapon_energy.get(weapon_id, 0))
 
 
 func get_combat_state_name() -> String:
@@ -124,6 +155,34 @@ func get_active_projectile_count() -> int:
 	return _tracked_projectiles.size()
 
 
+func fire_equipped_weapon(tier: StringName = &"uncharged") -> bool:
+	return _fire_current_weapon(tier)
+
+
+func restore_weapon_energy(weapon_id: StringName, amount: int) -> int:
+	if amount <= 0:
+		return 0
+
+	var weapon := weapon_inventory.get_current_weapon() if weapon_inventory != null and weapon_inventory.has_weapon_unlocked(weapon_id) and get_current_weapon_id() == weapon_id else null
+	if weapon == null and weapon_inventory != null:
+		for candidate in weapon_inventory.weapon_order:
+			if candidate != null and candidate.weapon_id == weapon_id:
+				weapon = candidate
+				break
+
+	if weapon == null or int(weapon.max_energy) <= 0:
+		return 0
+
+	_sync_weapon_energy_table()
+	var previous_energy := get_weapon_energy(weapon_id)
+	var restored_energy := mini(previous_energy + amount, int(weapon.max_energy))
+	_weapon_energy[weapon_id] = restored_energy
+	if get_current_weapon_id() == weapon_id:
+		_emit_current_weapon_energy()
+
+	return restored_energy - previous_energy
+
+
 func set_combat_enabled(is_enabled: bool, _reason: StringName = &"") -> void:
 	if combat_enabled == is_enabled and (is_enabled or combat_state == CombatState.DISABLED):
 		return
@@ -148,9 +207,11 @@ func reset_combat() -> void:
 	_fire_state_remaining = 0.0
 	_tracked_projectiles.clear()
 	_full_charge_announced = false
+	_refill_weapon_energy()
 	_set_charge_feedback(ChargeFeedback.NONE)
 	_set_combat_state(CombatState.READY)
 	_emit_weapon_snapshot()
+	_emit_current_weapon_energy()
 	combat_enabled_changed.emit(true)
 
 
@@ -167,6 +228,22 @@ func _update_timers(delta: float) -> void:
 		_cooldown_remaining = maxf(_cooldown_remaining - delta, 0.0)
 		if _cooldown_remaining == 0.0 and combat_enabled and combat_state == CombatState.COOLDOWN:
 			_set_combat_state(CombatState.READY)
+
+
+func _handle_weapon_switch_input() -> bool:
+	if weapon_inventory == null:
+		return false
+
+	if combat_state == CombatState.CHARGING or combat_state == CombatState.CHARGED:
+		return false
+
+	if Input.is_action_just_pressed("weapon_next"):
+		return weapon_inventory.cycle_next()
+
+	if Input.is_action_just_pressed("weapon_prev"):
+		return weapon_inventory.cycle_previous()
+
+	return false
 
 
 func _start_charge() -> void:
@@ -224,6 +301,10 @@ func _fire_current_weapon(tier: StringName) -> bool:
 		_set_combat_state(CombatState.READY)
 		return false
 
+	if not _has_energy_for_shot(current_weapon):
+		_set_combat_state(CombatState.READY)
+		return false
+
 	var projectile_scene := current_weapon.projectile_scene
 	if projectile_scene == null:
 		push_error("PlayerCombat weapon '%s' is missing a projectile scene." % current_weapon.weapon_id)
@@ -240,6 +321,7 @@ func _fire_current_weapon(tier: StringName) -> bool:
 	if projectile.has_method("configure"):
 		projectile.configure(projectile_setup)
 
+	_consume_weapon_energy(current_weapon)
 	projectile.tree_exited.connect(_on_projectile_tree_exited.bind(projectile), CONNECT_ONE_SHOT)
 	_tracked_projectiles.append(projectile)
 	projectile_spawned.emit(projectile, spawn_position, tier)
@@ -308,6 +390,45 @@ func _resolve_projectile_parent() -> Node:
 	return self
 
 
+func _sync_weapon_energy_table() -> void:
+	if weapon_inventory == null:
+		return
+
+	for weapon in weapon_inventory.weapon_order:
+		if weapon == null or int(weapon.max_energy) <= 0:
+			continue
+
+		if not _weapon_energy.has(weapon.weapon_id):
+			_weapon_energy[weapon.weapon_id] = int(weapon.max_energy)
+
+
+func _refill_weapon_energy() -> void:
+	_sync_weapon_energy_table()
+	if weapon_inventory == null:
+		return
+
+	for weapon in weapon_inventory.weapon_order:
+		if weapon == null or int(weapon.max_energy) <= 0:
+			continue
+
+		_weapon_energy[weapon.weapon_id] = int(weapon.max_energy)
+
+
+func _has_energy_for_shot(current_weapon: WeaponData) -> bool:
+	if current_weapon == null or int(current_weapon.max_energy) <= 0 or int(current_weapon.energy_cost) <= 0:
+		return true
+
+	return get_weapon_energy(current_weapon.weapon_id) >= int(current_weapon.energy_cost)
+
+
+func _consume_weapon_energy(current_weapon: WeaponData) -> void:
+	if current_weapon == null or int(current_weapon.max_energy) <= 0 or int(current_weapon.energy_cost) <= 0:
+		return
+
+	_weapon_energy[current_weapon.weapon_id] = maxi(get_weapon_energy(current_weapon.weapon_id) - int(current_weapon.energy_cost), 0)
+	_emit_current_weapon_energy()
+
+
 func _cancel_charge() -> void:
 	_charge_elapsed = 0.0
 	_full_charge_announced = false
@@ -332,6 +453,15 @@ func _emit_weapon_snapshot() -> void:
 	weapon_changed.emit(current_weapon.weapon_id, current_weapon.display_name)
 
 
+func _emit_current_weapon_energy() -> void:
+	var current_weapon := get_current_weapon()
+	if current_weapon == null:
+		weapon_energy_changed.emit(&"", 0, 0)
+		return
+
+	weapon_energy_changed.emit(current_weapon.weapon_id, get_weapon_energy(current_weapon.weapon_id), int(current_weapon.max_energy))
+
+
 func _set_combat_state(new_state: int) -> void:
 	if combat_state == new_state:
 		return
@@ -352,6 +482,12 @@ func _set_charge_feedback(new_feedback: int) -> void:
 
 func _on_weapon_inventory_current_weapon_changed(weapon_id: StringName, display_name: String) -> void:
 	weapon_changed.emit(weapon_id, display_name)
+	_emit_current_weapon_energy()
+
+
+func _on_weapon_inventory_changed() -> void:
+	_sync_weapon_energy_table()
+	_emit_current_weapon_energy()
 
 
 func _on_projectile_tree_exited(projectile: Node) -> void:

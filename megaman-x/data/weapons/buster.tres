@@ -7,6 +7,7 @@
 script = ExtResource("1_weapon")
 weapon_id = &"buster"
 display_name = "X-Buster"
+ui_accent_color = Color(0.619608, 0.921569, 1, 1)
 projectile_scene = ExtResource("2_projectile")
 base_damage = 1
 shot_cooldown = 0.18

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/weapon_data.gd" id="1_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/projectiles/PlayerBossWeaponShot.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_weapon")
+weapon_id = &"storm_tornado"
+display_name = "Storm Tornado"
+energy_cost = 4
+max_energy = 32
+projectile_scene = ExtResource("2_projectile")
+base_damage = 3
+shot_cooldown = 0.28
+active_projectile_limit = 1
+projectile_speed = 300.0
+projectile_lifetime = 1.1
+supports_charge = false
+uncharged_scale = Vector2(1.4, 1.2)
+uncharged_color = Color(0.611765, 0.980392, 0.705882, 1)
+partial_charge_color = Color(0.611765, 0.980392, 0.705882, 1)
+full_charge_color = Color(0.611765, 0.980392, 0.705882, 1)
+ui_accent_color = Color(0.611765, 0.980392, 0.705882, 1)

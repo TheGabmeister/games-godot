@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/weapon_data.gd" id="1_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/projectiles/PlayerBossWeaponShot.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_weapon")
+weapon_id = &"fire_wave"
+display_name = "Fire Wave"
+energy_cost = 3
+max_energy = 32
+projectile_scene = ExtResource("2_projectile")
+base_damage = 2
+shot_cooldown = 0.18
+active_projectile_limit = 2
+projectile_speed = 360.0
+projectile_lifetime = 0.95
+supports_charge = false
+uncharged_scale = Vector2(1.2, 0.95)
+uncharged_color = Color(1, 0.662745, 0.423529, 1)
+partial_charge_color = Color(1, 0.662745, 0.423529, 1)
+full_charge_color = Color(1, 0.662745, 0.423529, 1)
+ui_accent_color = Color(1, 0.662745, 0.423529, 1)
