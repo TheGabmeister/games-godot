@@ -45,6 +45,12 @@ func _run() -> void:
 			exit_code = await _check_player_retry()
 		"stage_reset":
 			exit_code = await _check_stage_reset()
+		"enemy_activation":
+			exit_code = await _check_enemy_activation()
+		"enemy_reset":
+			exit_code = await _check_enemy_reset()
+		"enemy_drop_reset":
+			exit_code = await _check_enemy_drop_reset()
 		"projectile_spawn":
 			exit_code = await _check_projectile_spawn()
 		"projectile_rules":
@@ -352,6 +358,106 @@ func _check_stage_reset() -> int:
 	return 0
 
 
+func _check_enemy_activation() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var enemy: Node = stage.get_node_or_null("WalkerBasic")
+	if enemy == null:
+		push_error("TestStage is missing WalkerBasic.")
+		return 1
+
+	var start_x: float = enemy.global_position.x
+	await _await_physics_frames(10)
+	if bool(enemy.call("is_awake")):
+		push_error("WalkerBasic should start asleep outside activation range.")
+		return 1
+
+	if absf(enemy.global_position.x - start_x) > 0.1:
+		push_error("Sleeping WalkerBasic moved before activation.")
+		return 1
+
+	var player: Node2D = stage.get_node_or_null("Player") as Node2D
+	player.global_position = enemy.global_position + Vector2(-72.0, 0.0)
+	await _await_physics_frames(8)
+
+	if not bool(enemy.call("is_awake")):
+		push_error("WalkerBasic did not wake when the player entered activation range.")
+		return 1
+
+	await _await_physics_frames(16)
+	if absf(enemy.global_position.x - start_x) < 1.0:
+		push_error("Activated WalkerBasic did not begin patrol movement.")
+		return 1
+
+	return 0
+
+
+func _check_enemy_reset() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var enemy: Node = stage.get_node_or_null("WalkerBasic")
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var player: Node = stage.get_node_or_null("Player")
+	if enemy == null or stage_controller == null or player == null:
+		push_error("TestStage is missing WalkerBasic, Player, or StageController.")
+		return 1
+
+	await _defeat_walker_enemy(enemy)
+	if not bool(enemy.call("is_defeated")) or enemy.visible:
+		push_error("WalkerBasic did not stay defeated before retry.")
+		return 1
+
+	var player_health: Node = player.call("get_health_component")
+	var lethal_hit := HIT_PAYLOAD_SCRIPT.create(self, &"enemy", &"enemy_reset_retry", int(player_health.get("max_health")), Vector2.ZERO)
+	player.call("apply_hit_payload", lethal_hit)
+
+	if not await _wait_for_retry_count(stage_controller, 1, 90):
+		push_error("StageController did not retry after enemy reset test death.")
+		return 1
+
+	if bool(enemy.call("is_defeated")) or not enemy.visible:
+		push_error("WalkerBasic was not restored on retry.")
+		return 1
+
+	return 0
+
+
+func _check_enemy_drop_reset() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var enemy: Node = stage.get_node_or_null("WalkerBasic")
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var player: Node = stage.get_node_or_null("Player")
+	if enemy == null or stage_controller == null or player == null:
+		push_error("TestStage is missing WalkerBasic, Player, or StageController.")
+		return 1
+
+	await _defeat_walker_enemy(enemy)
+	if int(enemy.call("get_active_drop_count")) != 1:
+		push_error("WalkerBasic did not spawn exactly one temporary drop on defeat.")
+		return 1
+
+	var player_health: Node = player.call("get_health_component")
+	var lethal_hit := HIT_PAYLOAD_SCRIPT.create(self, &"enemy", &"enemy_drop_retry", int(player_health.get("max_health")), Vector2.ZERO)
+	player.call("apply_hit_payload", lethal_hit)
+
+	if not await _wait_for_retry_count(stage_controller, 1, 90):
+		push_error("StageController did not retry after enemy drop reset test death.")
+		return 1
+
+	if int(enemy.call("get_active_drop_count")) != 0:
+		push_error("Temporary enemy drop survived stage retry.")
+		return 1
+
+	return 0
+
+
 func _check_projectile_spawn() -> int:
 	var stage := await _instantiate_test_stage()
 	if stage == null:
@@ -620,6 +726,18 @@ func _load_test_stage_via_main() -> Dictionary:
 		"hud": hud,
 		"player": player,
 	}
+
+
+func _defeat_walker_enemy(enemy: Node) -> void:
+	var enemy_health: Node = enemy.get_node_or_null("HealthComponent")
+	var enemy_hurtbox := enemy.get_node_or_null("Hurtbox")
+	if enemy_health == null or enemy_hurtbox == null:
+		return
+
+	var lethal_hit := HIT_PAYLOAD_SCRIPT.create(self, &"player", &"enemy_test_buster", int(enemy_health.get("max_health")), Vector2.ZERO)
+	enemy_hurtbox.call("apply_hit_payload", lethal_hit)
+	await process_frame
+	await _await_physics_frames(2)
 
 
 func _wait_for_retry_count(stage_controller: Node, expected_retry_count: int, max_frames: int) -> bool:

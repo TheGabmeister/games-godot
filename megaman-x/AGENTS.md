@@ -66,6 +66,9 @@ This repository is an early-stage Godot project for `megaman-x`.
   - `-- damage_pipeline`
   - `-- player_retry`
   - `-- stage_reset`
+  - `-- enemy_activation`
+  - `-- enemy_reset`
+  - `-- enemy_drop_reset`
   - `-- projectile_spawn`
   - `-- projectile_rules`
   - `-- charge_flow`

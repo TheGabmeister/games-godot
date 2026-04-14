@@ -1,0 +1,121 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_base.gd" id="1_enemy"]
+[ext_resource type="Resource" path="res://data/enemies/walker_basic.tres" id="2_data"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="4_health"]
+[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="5_hurtbox"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_brain.gd" id="6_brain"]
+[ext_resource type="Script" path="res://scripts/enemies/drop_spawner.gd" id="7_drop_spawner"]
+[ext_resource type="Script" path="res://scripts/enemies/states/enemy_idle_state.gd" id="8_idle_state"]
+[ext_resource type="Script" path="res://scripts/enemies/states/enemy_patrol_state.gd" id="9_patrol_state"]
+[ext_resource type="Script" path="res://scripts/enemies/states/enemy_dead_state.gd" id="10_dead_state"]
+
+[sub_resource type="RectangleShape2D" id="1_body_shape"]
+size = Vector2(22, 20)
+
+[sub_resource type="RectangleShape2D" id="2_hurtbox_shape"]
+size = Vector2(22, 20)
+
+[sub_resource type="CircleShape2D" id="3_vision_shape"]
+radius = 120.0
+
+[sub_resource type="RectangleShape2D" id="4_contact_shape"]
+size = Vector2(28, 22)
+
+[node name="EnemyWalkerBasic" type="CharacterBody2D"]
+collision_layer = 8
+collision_mask = 3
+floor_snap_length = 4.0
+script = ExtResource("1_enemy")
+data = ExtResource("2_data")
+initial_patrol_direction = -1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -12)
+shape = SubResource("1_body_shape")
+
+[node name="VisualRoot" type="Node2D" parent="."]
+position = Vector2(0, -12)
+
+[node name="Body" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(-11, -10, 11, -10, 11, 2, 8, 8, -8, 8, -11, 2)
+color = Color(0.482353, 0.819608, 1, 1)
+
+[node name="EyeLeft" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(-6, -5, -2, -5, -2, -1, -6, -1)
+color = Color(0.0666667, 0.12549, 0.2, 1)
+
+[node name="EyeRight" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(2, -5, 6, -5, 6, -1, 2, -1)
+color = Color(0.0666667, 0.12549, 0.2, 1)
+
+[node name="LegLeft" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(-9, 8, -3, 8, -4, 12, -10, 12)
+color = Color(1, 0.811765, 0.423529, 1)
+
+[node name="LegRight" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(3, 8, 9, 8, 10, 12, 4, 12)
+color = Color(1, 0.811765, 0.423529, 1)
+
+[node name="StatusLabel" type="Label" parent="VisualRoot"]
+offset_left = -72.0
+offset_top = -34.0
+offset_right = 72.0
+offset_bottom = -12.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.972549, 0.945098, 0.854902, 1)
+text = "walker_basic"
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 128
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("5_hurtbox")
+health_component_path = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -12)
+shape = SubResource("2_hurtbox_shape")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("4_health")
+max_health = 2
+team = &"enemy"
+
+[node name="VisionArea" type="Area2D" parent="."]
+collision_mask = 4
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VisionArea"]
+position = Vector2(0, -12)
+shape = SubResource("3_vision_shape")
+
+[node name="ContactArea" type="Area2D" parent="."]
+collision_layer = 32
+collision_mask = 64
+monitoring = true
+monitorable = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ContactArea"]
+position = Vector2(0, -12)
+shape = SubResource("4_contact_shape")
+
+[node name="AttackOrigin" type="Marker2D" parent="."]
+position = Vector2(12, -12)
+
+[node name="EnemyBrain" type="Node" parent="."]
+script = ExtResource("6_brain")
+
+[node name="IdleState" type="Node" parent="EnemyBrain"]
+script = ExtResource("8_idle_state")
+
+[node name="PatrolState" type="Node" parent="EnemyBrain"]
+script = ExtResource("9_patrol_state")
+
+[node name="DeadState" type="Node" parent="EnemyBrain"]
+script = ExtResource("10_dead_state")
+
+[node name="DropSpawner" type="Node" parent="."]
+script = ExtResource("7_drop_spawner")

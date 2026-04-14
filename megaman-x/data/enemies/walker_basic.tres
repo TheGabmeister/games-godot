@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1_data"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/TemporaryDropSmall.tscn" id="2_drop"]
+
+[resource]
+script = ExtResource("1_data")
+enemy_id = &"walker_basic"
+max_health = 2
+contact_damage = 2
+contact_weapon_id = &"walker_contact"
+contact_knockback = Vector2(140, -120)
+activation_range = 120.0
+patrol_speed = 52.0
+patrol_distance = 54.0
+drop_scene = ExtResource("2_drop")

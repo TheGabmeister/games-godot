@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/test_stage.gd" id="1_test_stage"]
 [ext_resource type="Texture2D" path="res://assets/placeholders/shared/grid_backdrop.svg" id="2_backdrop"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://scripts/camera/follow_camera_2d.gd" id="6_follow_camera"]
 [ext_resource type="Script" path="res://scripts/stages/stage_controller.gd" id="7_stage_controller"]
 [ext_resource type="Script" path="res://scripts/stages/hazard_area.gd" id="8_hazard"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Enemy_WalkerBasic.tscn" id="9_enemy"]
 [ext_resource type="PackedScene" path="res://scenes/stages/test/TestDummy.tscn" id="10_test_dummy"]
 
 [sub_resource type="RectangleShape2D" id="1_ground_shape"]
@@ -32,10 +33,20 @@ texture = ExtResource("2_backdrop")
 position = Vector2(640, 476)
 texture = ExtResource("3_floor")
 
+[node name="GroundVisualEast" type="Sprite2D" parent="."]
+position = Vector2(944, 476)
+texture = ExtResource("3_floor")
+
 [node name="Ground" type="StaticBody2D" parent="."]
 position = Vector2(640, 476)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundEast" type="StaticBody2D" parent="."]
+position = Vector2(944, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundEast"]
 shape = SubResource("1_ground_shape")
 
 [node name="SpawnMarker" type="Sprite2D" parent="."]
@@ -75,6 +86,9 @@ color = Color(1, 0.419608, 0.419608, 1)
 [node name="TestDummy" parent="." instance=ExtResource("10_test_dummy")]
 position = Vector2(640, 428)
 
+[node name="WalkerBasic" parent="." instance=ExtResource("9_enemy")]
+position = Vector2(944, 460)
+
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="Overlay" type="Control" parent="CanvasLayer"]
@@ -98,7 +112,7 @@ offset_top = 24.0
 offset_right = 1232.0
 offset_bottom = 50.0
 theme_override_colors/font_color = Color(0.898039, 0.956863, 1, 1)
-text = "Phase 4 Test Stage"
+text = "Phase 5 Test Stage"
 
 [node name="Body" type="Label" parent="CanvasLayer/Overlay"]
 offset_left = 938.0
