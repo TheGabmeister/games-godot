@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
-  <rect width="640" height="360" fill="#0b1526"/>
-  <rect y="220" width="640" height="140" fill="#12233c"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#0b1526"/>
+  <rect y="440" width="1280" height="280" fill="#12233c"/>
   <g stroke="#1f365a" stroke-width="1">
-    <path d="M0 36H640M0 72H640M0 108H640M0 144H640M0 180H640M0 216H640M0 252H640M0 288H640M0 324H640"/>
-    <path d="M64 0V360M128 0V360M192 0V360M256 0V360M320 0V360M384 0V360M448 0V360M512 0V360M576 0V360"/>
+    <path d="M0 72H1280M0 144H1280M0 216H1280M0 288H1280M0 360H1280M0 432H1280M0 504H1280M0 576H1280M0 648H1280"/>
+    <path d="M128 0V720M256 0V720M384 0V720M512 0V720M640 0V720M768 0V720M896 0V720M1024 0V720M1152 0V720"/>
   </g>
-  <rect x="56" y="68" width="168" height="80" fill="#173154" stroke="#6ab7ff" stroke-width="4"/>
-  <rect x="416" y="44" width="120" height="64" fill="#173154" stroke="#6ab7ff" stroke-width="4"/>
-  <rect x="456" y="188" width="112" height="56" fill="#173154" stroke="#6ab7ff" stroke-width="4"/>
+  <rect x="112" y="136" width="336" height="160" fill="#173154" stroke="#6ab7ff" stroke-width="8"/>
+  <rect x="832" y="88" width="240" height="128" fill="#173154" stroke="#6ab7ff" stroke-width="8"/>
+  <rect x="912" y="376" width="224" height="112" fill="#173154" stroke="#6ab7ff" stroke-width="8"/>
 </svg>

@@ -8,6 +8,16 @@ This spec is intentionally architecture-first. It defines system ownership, runt
 
 Use placeholder visuals and placeholder audio early, but organize the project so final assets can replace them without changing gameplay logic.
 
+## Display Target
+
+The working presentation target is `1280x720` (`16:9`).
+
+Rules:
+
+- author placeholder backdrops and UI mockups for a `1280x720` frame unless a narrower test fixture has a specific reason not to
+- keep gameplay scenes and camera framing readable on modern monitors without relying on tiny retro-era window defaults
+- if the project later adopts an internal low-resolution render target with upscale presentation, update this spec and the project settings in the same change
+
 The target campaign includes:
 
 - `intro_highway`

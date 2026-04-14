@@ -26,6 +26,13 @@ AudioManager="*res://autoloads/audio_manager.gd"
 
 3d/physics_engine="Jolt Physics"
 
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
 [rendering]
 
 rendering_device/driver.windows="d3d12"

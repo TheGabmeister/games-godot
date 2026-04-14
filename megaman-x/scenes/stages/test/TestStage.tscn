@@ -25,25 +25,25 @@ position_smoothing_enabled = false
 script = ExtResource("6_follow_camera")
 
 [node name="Backdrop" type="Sprite2D" parent="."]
-position = Vector2(320, 180)
+position = Vector2(640, 360)
 texture = ExtResource("2_backdrop")
 
 [node name="GroundVisual" type="Sprite2D" parent="."]
-position = Vector2(320, 296)
+position = Vector2(640, 476)
 texture = ExtResource("3_floor")
 
 [node name="Ground" type="StaticBody2D" parent="."]
-position = Vector2(320, 296)
+position = Vector2(640, 476)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
 shape = SubResource("1_ground_shape")
 
 [node name="SpawnMarker" type="Sprite2D" parent="."]
-position = Vector2(240, 240)
+position = Vector2(560, 420)
 texture = ExtResource("4_spawn_marker")
 
 [node name="Player" parent="." instance=ExtResource("5_player")]
-position = Vector2(240, 280)
+position = Vector2(560, 460)
 
 [node name="StageController" type="Node" parent="."]
 script = ExtResource("7_stage_controller")
@@ -51,10 +51,10 @@ player_path = NodePath("../Player")
 spawn_point_path = NodePath("../PlayerSpawnPoint")
 
 [node name="PlayerSpawnPoint" type="Marker2D" parent="."]
-position = Vector2(240, 280)
+position = Vector2(560, 460)
 
 [node name="DeathHazard" type="Area2D" parent="."]
-position = Vector2(376, 284)
+position = Vector2(696, 464)
 collision_layer = 1024
 collision_mask = 64
 monitoring = true
@@ -73,7 +73,7 @@ polygon = PackedVector2Array(-48, 12, -40, -8, -32, 12, -24, -8, -16, 12, -8, -8
 color = Color(1, 0.419608, 0.419608, 1)
 
 [node name="TestDummy" parent="." instance=ExtResource("10_test_dummy")]
-position = Vector2(320, 248)
+position = Vector2(640, 428)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
