@@ -14,7 +14,7 @@
 size = Vector2(22, 20)
 
 [sub_resource type="RectangleShape2D" id="2_hurtbox_shape"]
-size = Vector2(22, 20)
+size = Vector2(22, 28)
 
 [sub_resource type="CircleShape2D" id="3_vision_shape"]
 radius = 120.0
@@ -75,7 +75,7 @@ script = ExtResource("5_hurtbox")
 health_component_path = NodePath("../HealthComponent")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
-position = Vector2(0, -12)
+position = Vector2(0, -16)
 shape = SubResource("2_hurtbox_shape")
 
 [node name="HealthComponent" type="Node" parent="."]

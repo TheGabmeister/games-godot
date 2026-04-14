@@ -1,13 +1,13 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene format=3 uid="uid://opf0gfpdi3ho"]
 
-[ext_resource type="Script" path="res://scripts/stages/test_stage.gd" id="1_test_stage"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/shared/grid_backdrop.svg" id="2_backdrop"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/stage/test_floor_256x32.svg" id="3_floor"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/shared/spawn_marker_32.svg" id="4_spawn_marker"]
+[ext_resource type="Script" uid="uid://0b47ovxuojhr" path="res://scripts/stages/test_stage.gd" id="1_test_stage"]
+[ext_resource type="Texture2D" uid="uid://b3ydi4nw1clbh" path="res://assets/placeholders/shared/grid_backdrop.svg" id="2_backdrop"]
+[ext_resource type="Texture2D" uid="uid://dobgc8jwdlqvr" path="res://assets/placeholders/stage/test_floor_256x32.svg" id="3_floor"]
+[ext_resource type="Texture2D" uid="uid://cyapqdp7sv6yx" path="res://assets/placeholders/shared/spawn_marker_32.svg" id="4_spawn_marker"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="5_player"]
-[ext_resource type="Script" path="res://scripts/camera/follow_camera_2d.gd" id="6_follow_camera"]
-[ext_resource type="Script" path="res://scripts/stages/stage_controller.gd" id="7_stage_controller"]
-[ext_resource type="Script" path="res://scripts/stages/hazard_area.gd" id="8_hazard"]
+[ext_resource type="Script" uid="uid://bj64k1aiwu5sf" path="res://scripts/camera/follow_camera_2d.gd" id="6_follow_camera"]
+[ext_resource type="Script" uid="uid://dely4i4t3kfd8" path="res://scripts/stages/stage_controller.gd" id="7_stage_controller"]
+[ext_resource type="Script" uid="uid://bm0paorj0xd8s" path="res://scripts/stages/hazard_area.gd" id="8_hazard"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/Enemy_WalkerBasic.tscn" id="9_enemy"]
 [ext_resource type="PackedScene" path="res://scenes/stages/test/TestDummy.tscn" id="10_test_dummy"]
 [ext_resource type="PackedScene" path="res://scenes/stages/shared/StageCheckpoint.tscn" id="11_checkpoint"]
@@ -18,119 +18,111 @@ size = Vector2(256, 32)
 [sub_resource type="RectangleShape2D" id="2_hazard_shape"]
 size = Vector2(96, 24)
 
-[node name="TestStage" type="Node2D"]
+[node name="TestStage" type="Node2D" unique_id=771922021]
 script = ExtResource("1_test_stage")
 
-[node name="Camera2D" type="Camera2D" parent="."]
-enabled = true
-position_smoothing_enabled = false
+[node name="Camera2D" type="Camera2D" parent="." unique_id=508131588]
 script = ExtResource("6_follow_camera")
 
-[node name="Backdrop" type="Sprite2D" parent="."]
+[node name="Backdrop" type="Sprite2D" parent="." unique_id=2019608940]
 position = Vector2(640, 360)
 texture = ExtResource("2_backdrop")
 
-[node name="GroundVisual" type="Sprite2D" parent="."]
+[node name="GroundVisual" type="Sprite2D" parent="." unique_id=404834964]
 position = Vector2(640, 476)
 texture = ExtResource("3_floor")
 
-[node name="GroundVisualEast" type="Sprite2D" parent="."]
+[node name="GroundVisualEast" type="Sprite2D" parent="." unique_id=925857868]
 position = Vector2(944, 476)
 texture = ExtResource("3_floor")
 
-[node name="GroundVisualFarEast" type="Sprite2D" parent="."]
+[node name="GroundVisualFarEast" type="Sprite2D" parent="." unique_id=604560644]
 position = Vector2(1200, 476)
 texture = ExtResource("3_floor")
 
-[node name="Ground" type="StaticBody2D" parent="."]
+[node name="Ground" type="StaticBody2D" parent="." unique_id=1861250021]
 position = Vector2(640, 476)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground" unique_id=1910254351]
 shape = SubResource("1_ground_shape")
 
-[node name="GroundEast" type="StaticBody2D" parent="."]
+[node name="GroundEast" type="StaticBody2D" parent="." unique_id=2118528162]
 position = Vector2(944, 476)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundEast"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundEast" unique_id=1628406796]
 shape = SubResource("1_ground_shape")
 
-[node name="GroundFarEast" type="StaticBody2D" parent="."]
+[node name="GroundFarEast" type="StaticBody2D" parent="." unique_id=393283709]
 position = Vector2(1200, 476)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundFarEast"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundFarEast" unique_id=368732462]
 shape = SubResource("1_ground_shape")
 
-[node name="SpawnMarker" type="Sprite2D" parent="."]
+[node name="SpawnMarker" type="Sprite2D" parent="." unique_id=658135512]
 position = Vector2(560, 420)
 texture = ExtResource("4_spawn_marker")
 
-[node name="Player" parent="." instance=ExtResource("5_player")]
+[node name="Player" parent="." unique_id=1808638162 instance=ExtResource("5_player")]
 position = Vector2(560, 460)
 
-[node name="StageController" type="Node" parent="."]
+[node name="StageController" type="Node" parent="." unique_id=33145286]
 script = ExtResource("7_stage_controller")
 player_path = NodePath("../Player")
 spawn_point_path = NodePath("../PlayerSpawnPoint")
 
-[node name="PlayerSpawnPoint" type="Marker2D" parent="."]
+[node name="PlayerSpawnPoint" type="Marker2D" parent="." unique_id=1610809844]
 position = Vector2(560, 460)
 
-[node name="CheckpointAlpha" parent="." instance=ExtResource("11_checkpoint")]
+[node name="CheckpointAlpha" parent="." unique_id=1181100119 instance=ExtResource("11_checkpoint")]
 position = Vector2(624, 468)
 checkpoint_id = &"checkpoint_alpha"
 
-[node name="DamageHazard" type="Area2D" parent="."]
+[node name="DamageHazard" type="Area2D" parent="." unique_id=893747111]
 position = Vector2(696, 464)
 collision_layer = 1024
 collision_mask = 64
-monitoring = true
-monitorable = true
 script = ExtResource("8_hazard")
-damage = 4
-team = &"hazard"
 weapon_id = &"spikes_damage"
 knockback = Vector2(180, -220)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageHazard"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageHazard" unique_id=1421018373]
 shape = SubResource("2_hazard_shape")
 
-[node name="HazardVisual" type="Polygon2D" parent="DamageHazard"]
-polygon = PackedVector2Array(-48, 12, -40, -8, -32, 12, -24, -8, -16, 12, -8, -8, 0, 12, 8, -8, 16, 12, 24, -8, 32, 12, 40, -8, 48, 12)
+[node name="HazardVisual" type="Polygon2D" parent="DamageHazard" unique_id=1994863663]
 color = Color(1, 0.419608, 0.419608, 1)
+polygon = PackedVector2Array(-48, 12, -40, -8, -32, 12, -24, -8, -16, 12, -8, -8, 0, 12, 8, -8, 16, 12, 24, -8, 32, 12, 40, -8, 48, 12)
 
-[node name="TestDummy" parent="." instance=ExtResource("10_test_dummy")]
+[node name="TestDummy" parent="." unique_id=688527040 instance=ExtResource("10_test_dummy")]
 position = Vector2(640, 428)
 
-[node name="WalkerBasic" parent="." instance=ExtResource("9_enemy")]
+[node name="WalkerBasic" parent="." unique_id=2088580161 instance=ExtResource("9_enemy")]
 position = Vector2(944, 460)
 
-[node name="InstantDeathHazard" type="Area2D" parent="."]
-position = Vector2(1140, 464)
+[node name="InstantDeathHazard" type="Area2D" parent="." unique_id=1460085693]
+position = Vector2(791, 514)
 collision_layer = 1024
 collision_mask = 64
-monitoring = true
-monitorable = true
 script = ExtResource("8_hazard")
 hazard_mode = 1
 damage = 16
-team = &"hazard"
 weapon_id = &"pit_beam"
 knockback = Vector2(0, -260)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InstantDeathHazard"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InstantDeathHazard" unique_id=1827244013]
 shape = SubResource("2_hazard_shape")
 
-[node name="HazardVisual" type="Polygon2D" parent="InstantDeathHazard"]
-polygon = PackedVector2Array(-48, 10, 48, 10, 48, -10, -48, -10)
+[node name="HazardVisual" type="Polygon2D" parent="InstantDeathHazard" unique_id=1061722615]
 color = Color(0.517647, 0.941176, 1, 0.8)
+polygon = PackedVector2Array(-48, 10, 48, 10, 48, -10, -48, -10)
 
-[node name="CheckpointBravo" parent="." instance=ExtResource("11_checkpoint")]
+[node name="CheckpointBravo" parent="." unique_id=1318569847 instance=ExtResource("11_checkpoint")]
 position = Vector2(1256, 468)
 checkpoint_id = &"checkpoint_bravo"
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1202001734]
 
-[node name="Overlay" type="Control" parent="CanvasLayer"]
+[node name="Overlay" type="Control" parent="CanvasLayer" unique_id=282180812]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -138,14 +130,16 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="DiagnosticPanel" type="ColorRect" parent="CanvasLayer/Overlay"]
+[node name="DiagnosticPanel" type="ColorRect" parent="CanvasLayer/Overlay" unique_id=1541910282]
+layout_mode = 0
 offset_left = 916.0
 offset_top = 20.0
 offset_right = 1256.0
 offset_bottom = 236.0
 color = Color(0.0705882, 0.145098, 0.231373, 0.9)
 
-[node name="Header" type="Label" parent="CanvasLayer/Overlay"]
+[node name="Header" type="Label" parent="CanvasLayer/Overlay" unique_id=547381357]
+layout_mode = 0
 offset_left = 938.0
 offset_top = 24.0
 offset_right = 1232.0
@@ -153,11 +147,12 @@ offset_bottom = 50.0
 theme_override_colors/font_color = Color(0.898039, 0.956863, 1, 1)
 text = "Phase 6 Test Stage"
 
-[node name="Body" type="Label" parent="CanvasLayer/Overlay"]
+[node name="Body" type="Label" parent="CanvasLayer/Overlay" unique_id=801757937]
+layout_mode = 0
 offset_left = 938.0
 offset_top = 56.0
 offset_right = 1232.0
 offset_bottom = 216.0
-autowrap_mode = 3
 theme_override_colors/font_color = Color(0.713726, 0.803922, 0.909804, 1)
 text = "Loading..."
+autowrap_mode = 3

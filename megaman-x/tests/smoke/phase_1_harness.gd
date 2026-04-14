@@ -51,6 +51,8 @@ func _run() -> void:
 			exit_code = await _check_enemy_reset()
 		"enemy_drop_reset":
 			exit_code = await _check_enemy_drop_reset()
+		"enemy_projectile_hit":
+			exit_code = await _check_enemy_projectile_hit()
 		"checkpoint_activation":
 			exit_code = await _check_checkpoint_activation()
 		"checkpoint_retry":
@@ -468,6 +470,35 @@ func _check_hazard_modes() -> int:
 
 	if not bool(get_meta(&"hazard_instant_death_seen", false)):
 		push_error("Instant-death hazard did not kill the player.")
+		return 1
+
+	return 0
+
+
+func _check_enemy_projectile_hit() -> int:
+	var stage := await _instantiate_test_stage()
+	if stage == null:
+		return 1
+
+	var player: Node2D = stage.get_node_or_null("Player") as Node2D
+	var enemy: Node = stage.get_node_or_null("WalkerBasic")
+	var combat: Node = player.get_node_or_null("PlayerCombat") if player != null else null
+	if player == null or enemy == null or combat == null:
+		push_error("TestStage is missing Player, PlayerCombat, or WalkerBasic.")
+		return 1
+
+	var enemy_health: Node = enemy.get_node_or_null("HealthComponent")
+	if enemy_health == null:
+		push_error("WalkerBasic is missing HealthComponent.")
+		return 1
+
+	player.global_position = enemy.global_position + Vector2(-88.0, 0.0)
+	await _await_physics_frames(4)
+	await _tap_shoot()
+	await _await_physics_frames(20)
+
+	if int(enemy_health.get("current_health")) >= int(enemy_health.get("max_health")):
+		push_error("Player projectile did not damage WalkerBasic on contact.")
 		return 1
 
 	return 0

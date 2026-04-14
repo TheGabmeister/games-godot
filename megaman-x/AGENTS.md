@@ -69,6 +69,7 @@ This repository is an early-stage Godot project for `megaman-x`.
   - `-- enemy_activation`
   - `-- enemy_reset`
   - `-- enemy_drop_reset`
+  - `-- enemy_projectile_hit`
   - `-- checkpoint_activation`
   - `-- checkpoint_retry`
   - `-- hazard_modes`
