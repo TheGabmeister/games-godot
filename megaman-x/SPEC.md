@@ -1180,6 +1180,7 @@ Validation format for every phase:
 - each automated check should be labeled `Console-ready` or `Needs harness`
 - manual validation should focus on feel, control flow, and visible state changes that are difficult to assert purely through automation
 - each phase should add to the regression checklist rather than replacing it
+- when a phase introduces new visible gameplay actors, objects, pickups, UI, or hazards, that same phase should also generate simple flat placeholder sprites for them
 
 ### Phase 1
 
@@ -1190,6 +1191,7 @@ Scope:
 - autoload registration
 - one test stage
 - standalone stage testing
+- initial placeholder sprite conventions and first shared placeholder assets
 
 Automated checks:
 
@@ -1217,6 +1219,7 @@ Scope:
 - player movement
 - player locomotion state machine
 - camera follow hookup
+- player placeholder sprites for locomotion readability
 
 Automated checks:
 
@@ -1243,6 +1246,7 @@ Scope:
 - shared health, damage, and collision
 - player death and respawn flow
 - retry from stage start
+- player hurt and death placeholder visuals
 
 Automated checks:
 
@@ -1270,6 +1274,7 @@ Scope:
 - projectile pipeline
 - audio manager
 - HUD shell
+- player shot and HUD placeholder visuals
 
 Automated checks:
 
@@ -1299,6 +1304,7 @@ Scope:
 
 - one enemy family
 - enemy activation and reset behavior
+- placeholder sprites for the first enemy family and its temporary drops
 
 Automated checks:
 
@@ -1325,6 +1331,7 @@ Scope:
 - hazards
 - checkpoints
 - retry from checkpoint
+- placeholder visuals for hazards and checkpoints
 
 Automated checks:
 
@@ -1350,6 +1357,7 @@ Scope:
 
 - stage clear flow
 - one full non-boss stage slice
+- placeholder visuals for stage-clear presentation as needed
 
 Automated checks:
 
@@ -1375,6 +1383,7 @@ Scope:
 - dash unlock flow
 - stage-local cutscene
 - dialogue flow
+- placeholder visuals for capsules, dialogue portraits if used, and cutscene markers where helpful
 
 Automated checks:
 
@@ -1401,6 +1410,7 @@ Scope:
 - save and load
 - progression plumbing
 - persistent pickup save triggers
+- placeholder visuals for persistent pickups not yet represented
 
 Automated checks:
 
@@ -1426,6 +1436,7 @@ Scope:
 - stage select
 - multiple stage loading
 - fortress unlock flow
+- placeholder stage-select UI assets as needed
 
 Automated checks:
 
@@ -1451,6 +1462,7 @@ Scope:
 
 - boss weapons
 - weaknesses
+- placeholder visuals for boss-weapon projectiles and weapon UI states
 
 Automated checks:
 
@@ -1477,6 +1489,7 @@ Scope:
 - armor parts
 - heart tanks
 - sub tanks
+- placeholder visuals for armor capsules, heart tanks, and sub tanks
 
 Automated checks:
 
@@ -1501,6 +1514,7 @@ Scope:
 
 - boss encounter framework
 - boss UI
+- placeholder boss UI visuals
 
 Automated checks:
 
@@ -1525,6 +1539,7 @@ Bug watch:
 Scope:
 
 - first boss fight vertical slice
+- placeholder sprites for the first boss and boss-specific attacks
 
 Automated checks:
 
@@ -1548,6 +1563,7 @@ Bug watch:
 Scope:
 
 - additional boss fights
+- placeholder sprites for each newly added boss and boss-specific attacks
 
 Automated checks:
 
@@ -1569,6 +1585,7 @@ Scope:
 
 - full campaign content
 - final Sigma flow
+- placeholder visuals for remaining campaign-specific actors and finale elements
 
 Automated checks:
 
