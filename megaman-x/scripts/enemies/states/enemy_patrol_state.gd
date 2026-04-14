@@ -1,4 +1,4 @@
-extends Node
+extends EnemyState
 
 
 func get_state_name() -> StringName:
