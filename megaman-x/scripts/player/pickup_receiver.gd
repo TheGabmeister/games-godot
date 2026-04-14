@@ -30,7 +30,7 @@ func restore_weapon_energy(weapon_id: StringName, amount: int) -> bool:
 	if amount <= 0 or player == null or not player.has_method("get_player_combat"):
 		return false
 
-	var combat := player.get_player_combat()
+	var combat: Node = player.get_player_combat()
 	if combat == null or not combat.has_method("restore_weapon_energy"):
 		return false
 

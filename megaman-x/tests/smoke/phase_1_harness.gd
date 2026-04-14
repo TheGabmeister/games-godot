@@ -99,6 +99,8 @@ func _run() -> void:
 			exit_code = await _check_weakness_tables()
 		"weapon_energy_costs":
 			exit_code = await _check_weapon_energy_costs()
+		"unlock_all_weapons_shortcut":
+			exit_code = await _check_unlock_all_weapons_shortcut()
 		"pickup_collision":
 			exit_code = await _check_pickup_collision()
 		_:
@@ -1657,6 +1659,39 @@ func _check_weapon_energy_costs() -> int:
 	return 0
 
 
+func _check_unlock_all_weapons_shortcut() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("Unlock-all-weapons shortcut check requires Progression.")
+		return 1
+
+	progression.reset_for_new_game()
+	var stage := await _instantiate_test_stage()
+	var inventory := stage.get_node_or_null("Player/PlayerCombat/WeaponInventory") if stage != null else null
+	if stage == null or inventory == null:
+		push_error("Unlock-all-weapons shortcut check could not resolve the test stage inventory.")
+		return 1
+
+	if int(inventory.call("get_unlocked_weapon_count")) != 1:
+		push_error("Test stage should begin with only the buster unlocked.")
+		return 1
+
+	Input.parse_input_event(_key_event(KEY_U, true))
+	await _await_physics_frames(1)
+	Input.parse_input_event(_key_event(KEY_U, false))
+	await _await_physics_frames(1)
+
+	if int(inventory.call("get_unlocked_weapon_count")) <= 1:
+		push_error("Pressing U in the test stage did not unlock the boss weapon roster.")
+		return 1
+
+	if not progression.has_weapon_unlocked(&"shotgun_ice") or not progression.has_weapon_unlocked(&"storm_tornado"):
+		push_error("Unlock-all-weapons shortcut did not populate the expected progression unlocks.")
+		return 1
+
+	return 0
+
+
 func _check_pickup_collision() -> int:
 	var stage := await _instantiate_test_stage()
 	if stage == null:
@@ -1851,6 +1886,13 @@ func _wait_for_active_overlay(main: Node, max_frames: int) -> Control:
 		await _await_physics_frames(1)
 
 	return null
+
+
+func _key_event(keycode: Key, pressed: bool) -> InputEventKey:
+	var event := InputEventKey.new()
+	event.physical_keycode = keycode
+	event.pressed = pressed
+	return event
 
 
 func _get_progression() -> Node:

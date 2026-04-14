@@ -11,6 +11,7 @@ static func ensure_default_input_map() -> void:
 	_ensure_interact()
 	_ensure_weapon_next()
 	_ensure_weapon_prev()
+	_ensure_debug_unlock_all_weapons()
 	_ensure_sub_tank_use()
 	_ensure_pause()
 	_ensure_menu_confirm()
@@ -86,6 +87,13 @@ static func _ensure_weapon_prev() -> void:
 	_add_key_event(&"weapon_prev", KEY_Q)
 	_add_key_event(&"weapon_prev", KEY_PAGEDOWN)
 	_add_joy_button_event(&"weapon_prev", JOY_BUTTON_LEFT_SHOULDER)
+
+
+static func _ensure_debug_unlock_all_weapons() -> void:
+	if not _prepare_action(&"debug_unlock_all_weapons"):
+		return
+
+	_add_key_event(&"debug_unlock_all_weapons", KEY_U)
 
 
 static func _ensure_sub_tank_use() -> void:

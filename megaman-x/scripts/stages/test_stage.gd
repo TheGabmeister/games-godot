@@ -1,6 +1,6 @@
 extends Node2D
 
-const STAGE_NOTE := "Phase 11 weapon slice.\nMove with A/D. Jump with Space. Shoot with J. Dash with K after the capsule unlock.\nSwitch weapons with Q/E or shoulder buttons once boss weapons are unlocked.\nWeak dummy: Shotgun Ice hits harder, Fire Wave hits softer, Storm Tornado is ignored."
+const STAGE_NOTE := "Phase 11 weapon slice.\nMove with A/D. Jump with Space. Shoot with J. Dash with K after the capsule unlock.\nPress U to unlock all boss weapons for this session.\nSwitch weapons with Q/E or shoulder buttons once boss weapons are unlocked.\nWeak dummy: Shotgun Ice hits harder, Fire Wave hits softer, Storm Tornado is ignored."
 const DASH_CAPSULE_DIALOGUE := preload("res://data/dialogue/test_stage_dash_capsule.tres")
 const DASH_CAPSULE_PICKUP_ID := &"test_stage_dash_capsule"
 
@@ -52,6 +52,17 @@ func _ready() -> void:
 	cutscene_director.connect("cutscene_started", _on_cutscene_state_changed)
 	cutscene_director.connect("cutscene_finished", _on_cutscene_state_changed)
 	_refresh_overlay()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed(&"debug_unlock_all_weapons"):
+		return
+
+	var viewport := get_viewport()
+	if viewport != null:
+		viewport.set_input_as_handled()
+
+	_unlock_all_weapons_shortcut()
 
 
 func get_primary_player() -> Node:
@@ -169,10 +180,18 @@ func _on_dash_capsule_triggered(_pickup_id: StringName) -> void:
 	_refresh_overlay()
 
 
+func _unlock_all_weapons_shortcut() -> void:
+	if Progression == null or not Progression.has_method("unlock_all_weapons"):
+		return
+
+	Progression.unlock_all_weapons()
+	_refresh_overlay()
+
+
 func _refresh_overlay() -> void:
 	var health_component: Node = player.call("get_health_component")
 	var respawn_position: Vector2 = stage_controller.call("get_current_respawn_position")
-	body_label.text = "%s\nMove: %s | Facing: %s | Combat: %s | Charge: %s\nHP: %d/%d | Weapon: %s | Energy: %s\nShots: %d | Retries: %d | Cutscene: %s\nDash: unlocked=%s | pickup=%s\nCheckpoint: %s @ (%.0f, %.0f)\nClear: active=%s | count=%d | goal=%s\nNormal dummy: %s\nWeak dummy: %s\nEnemy: %s" % [
+	body_label.text = "%s\nMove: %s | Facing: %s | Combat: %s | Charge: %s\nHP: %d/%d | Weapon: %s | Energy: %s\nUnlocked weapons: %d | Shots: %d | Retries: %d\nCutscene: %s | Dash: unlocked=%s | pickup=%s\nCheckpoint: %s @ (%.0f, %.0f)\nClear: active=%s | count=%d | goal=%s\nNormal dummy: %s\nWeak dummy: %s\nEnemy: %s" % [
 		STAGE_NOTE,
 		player.call("get_locomotion_state_name"),
 		player.call("get_facing_name"),
@@ -182,6 +201,7 @@ func _refresh_overlay() -> void:
 		health_component.get("max_health"),
 		player_combat.call("get_current_weapon_name"),
 		_format_weapon_energy(),
+		player_combat.get_node("WeaponInventory").call("get_unlocked_weapon_count"),
 		player_combat.call("get_active_projectile_count"),
 		stage_controller.get("retry_count"),
 		stage_controller.call("get_active_cutscene_id"),

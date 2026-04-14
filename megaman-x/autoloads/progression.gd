@@ -1,5 +1,7 @@
 extends Node
 
+const WEAPON_CATALOG_SCRIPT = preload("res://scripts/player/weapon_catalog.gd")
+
 const ARMOR_PART_IDS := [&"helmet", &"body", &"arms", &"legs"]
 
 signal progression_changed
@@ -144,6 +146,22 @@ func unlock_weapon(weapon_id: StringName) -> bool:
 	unlocked_weapons[weapon_id] = true
 	progression_changed.emit()
 	return true
+
+
+func unlock_all_weapons() -> bool:
+	var changed := false
+	for weapon in WEAPON_CATALOG_SCRIPT.get_weapon_order():
+		if weapon == null or weapon.weapon_id == &"buster":
+			continue
+
+		if not has_weapon_unlocked(weapon.weapon_id):
+			unlocked_weapons[weapon.weapon_id] = true
+			changed = true
+
+	if changed:
+		progression_changed.emit()
+
+	return changed
 
 
 func grant_dash_unlock(pickup_id: StringName) -> bool:
