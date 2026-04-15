@@ -1,24 +1,42 @@
 [gd_scene load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://scripts/bosses/chill_penguin_boss.gd" id="1_boss"]
-[ext_resource type="PackedScene" path="res://scenes/projectiles/EnemyIceShot.tscn" id="2_projectile"]
+[ext_resource type="Script" path="res://scripts/bosses/flame_mammoth_boss.gd" id="1_boss"]
+[ext_resource type="PackedScene" path="res://scenes/projectiles/EnemyFireShot.tscn" id="2_projectile"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="3_health"]
 [ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="4_hurtbox"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/bosses/chill_penguin_96x96.svg" id="5_sprite"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/bosses/chill_penguin_ice_16x12.svg" id="6_ice_marker"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/bosses/flame_mammoth_96x96.svg" id="5_sprite"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/bosses/fire_wave_16x12.svg" id="6_attack"]
 
 [sub_resource type="RectangleShape2D" id="1_hurtbox_shape"]
-size = Vector2(54, 60)
-
-[sub_resource type="RectangleShape2D" id="2_contact_shape"]
 size = Vector2(60, 62)
 
-[node name="ChillPenguinBoss" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="2_contact_shape"]
+size = Vector2(66, 64)
+
+[node name="FlameMammothBoss" type="Node2D"]
 script = ExtResource("1_boss")
 projectile_scene = ExtResource("2_projectile")
-projectile_weapon_id = &"chill_penguin_ice"
-projectile_attack_id = &"ice_shot"
-contact_weapon_id = &"chill_penguin_body"
+intro_duration = 0.72
+phase_one_speed = 46.0
+phase_two_speed = 68.0
+phase_one_attack_interval = 1.45
+phase_two_attack_interval = 0.95
+phase_two_burst_count = 2
+phase_two_burst_spacing = 0.16
+patrol_distance = 118.0
+projectile_damage = 3
+projectile_speed = 190.0
+projectile_lifetime = 1.35
+projectile_knockback = Vector2(150, -95)
+projectile_weapon_id = &"flame_mammoth_fire"
+projectile_attack_id = &"fire_wave"
+projectile_color = Color(1, 0.65, 0.38, 1)
+projectile_visual_scale = Vector2(1.15, 1.0)
+contact_damage = 5
+contact_knockback = Vector2(220, -120)
+contact_weapon_id = &"flame_mammoth_body"
+phase_two_tint = Color(1, 0.9, 0.84, 1)
+defeated_tint = Color(0.72, 0.58, 0.5, 1)
 
 [node name="VisualRoot" type="Node2D" parent="."]
 
@@ -28,30 +46,30 @@ texture = ExtResource("5_sprite")
 
 [node name="AttackMarker" type="Sprite2D" parent="VisualRoot"]
 position = Vector2(26, -14)
-texture = ExtResource("6_ice_marker")
-modulate = Color(0.95, 0.98, 1, 0.72)
+texture = ExtResource("6_attack")
+modulate = Color(1, 0.94, 0.8, 0.84)
 
 [node name="PhaseLabel" type="Label" parent="VisualRoot"]
 offset_left = -64.0
-offset_top = -86.0
+offset_top = -88.0
 offset_right = 64.0
-offset_bottom = -64.0
+offset_bottom = -66.0
 horizontal_alignment = 1
-theme_override_colors/font_color = Color(1, 0.941176, 0.764706, 1)
+theme_override_colors/font_color = Color(1, 0.92549, 0.780392, 1)
 text = "WAITING"
 
 [node name="StatusLabel" type="Label" parent="VisualRoot"]
-offset_left = -80.0
-offset_top = -62.0
-offset_right = 80.0
-offset_bottom = -40.0
+offset_left = -84.0
+offset_top = -64.0
+offset_right = 84.0
+offset_bottom = -42.0
 horizontal_alignment = 1
-theme_override_colors/font_color = Color(0.866667, 0.941176, 1, 1)
+theme_override_colors/font_color = Color(1, 0.882353, 0.764706, 1)
 text = "WAITING"
 
 [node name="HealthComponent" type="Node" parent="."]
 script = ExtResource("3_health")
-max_health = 12
+max_health = 14
 team = &"enemy"
 
 [node name="Hurtbox" type="Area2D" parent="."]
@@ -77,4 +95,4 @@ position = Vector2(0, -2)
 shape = SubResource("2_contact_shape")
 
 [node name="AttackOrigin" type="Marker2D" parent="."]
-position = Vector2(24, -10)
+position = Vector2(26, -14)

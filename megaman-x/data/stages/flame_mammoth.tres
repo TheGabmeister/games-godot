@@ -6,7 +6,7 @@
 script = ExtResource("1_stage_definition")
 stage_id = &"flame_mammoth"
 display_name = "Flame Mammoth"
-scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
+scene_path = "res://scenes/stages/campaign/FlameMammothStage.tscn"
 stage_group = &"maverick"
 boss_id = &"flame_mammoth"
 weapon_reward_id = &"fire_wave"

@@ -6,7 +6,7 @@
 script = ExtResource("1_stage_definition")
 stage_id = &"storm_eagle"
 display_name = "Storm Eagle"
-scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
+scene_path = "res://scenes/stages/campaign/StormEagleStage.tscn"
 stage_group = &"maverick"
 boss_id = &"storm_eagle"
 weapon_reward_id = &"storm_tornado"

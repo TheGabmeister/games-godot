@@ -9,10 +9,10 @@ func _ready() -> void:
 	set_locked(false)
 
 
-func set_locked(is_locked: bool) -> void:
-	visible = is_locked
+func set_locked(locked: bool) -> void:
+	visible = locked
 	if collision_shape != null:
-		collision_shape.disabled = not is_locked
+		collision_shape.set_deferred("disabled", not locked)
 
 
 func is_locked() -> bool:

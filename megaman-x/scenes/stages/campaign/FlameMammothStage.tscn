@@ -11,7 +11,7 @@
 [ext_resource type="Script" path="res://scripts/stages/boss_encounter_controller.gd" id="9_boss_encounter"]
 [ext_resource type="PackedScene" path="res://scenes/ui/BossHUD.tscn" id="10_boss_hud"]
 [ext_resource type="PackedScene" path="res://scenes/stages/shared/BossArenaBarrier.tscn" id="11_boss_barrier"]
-[ext_resource type="PackedScene" path="res://scenes/bosses/ChillPenguinBoss.tscn" id="12_chill_boss"]
+[ext_resource type="PackedScene" path="res://scenes/bosses/FlameMammothBoss.tscn" id="12_boss"]
 
 [sub_resource type="RectangleShape2D" id="1_ground_shape"]
 size = Vector2(256, 32)
@@ -19,9 +19,9 @@ size = Vector2(256, 32)
 [sub_resource type="RectangleShape2D" id="2_boss_trigger_shape"]
 size = Vector2(72, 96)
 
-[node name="ChillPenguinStage" type="Node2D"]
+[node name="FlameMammothStage" type="Node2D"]
 script = ExtResource("1_boss_stage")
-boss_actor_path = NodePath("ChillPenguinBoss")
+boss_actor_path = NodePath("FlameMammothBoss")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 script = ExtResource("6_follow_camera")
@@ -143,7 +143,7 @@ position = Vector2(1420, 476)
 [node name="BossBarrierRight" parent="." instance=ExtResource("11_boss_barrier")]
 position = Vector2(1844, 476)
 
-[node name="ChillPenguinBoss" parent="." instance=ExtResource("12_chill_boss")]
+[node name="FlameMammothBoss" parent="." instance=ExtResource("12_boss")]
 position = Vector2(1624, 438)
 visible = false
 player_path = NodePath("../Player")
@@ -152,10 +152,10 @@ player_path = NodePath("../Player")
 script = ExtResource("9_boss_encounter")
 player_path = NodePath("../Player")
 entry_trigger_path = NodePath("../BossArenaTrigger")
-boss_path = NodePath("../ChillPenguinBoss")
+boss_path = NodePath("../FlameMammothBoss")
 barrier_paths = [NodePath("../BossBarrierLeft"), NodePath("../BossBarrierRight")]
-boss_id = &"chill_penguin"
-boss_display_name = "Chill Penguin"
+boss_id = &"flame_mammoth"
+boss_display_name = "Flame Mammoth"
 
 [node name="StageController" type="Node" parent="."]
 script = ExtResource("7_stage_controller")
@@ -189,7 +189,7 @@ theme_override_constants/separation = 8
 
 [node name="StageLabel" type="Label" parent="CanvasLayer/Panel/VBoxContainer"]
 theme_override_colors/font_color = Color(0.945098, 0.980392, 1, 1)
-text = "Chill Penguin"
+text = "Flame Mammoth"
 
 [node name="BodyLabel" type="Label" parent="CanvasLayer/Panel/VBoxContainer"]
 theme_override_colors/font_color = Color(0.780392, 0.862745, 0.952941, 1)

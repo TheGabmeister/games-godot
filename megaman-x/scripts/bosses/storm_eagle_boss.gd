@@ -1,0 +1,2 @@
+extends MaverickBoss
+class_name StormEagleBoss

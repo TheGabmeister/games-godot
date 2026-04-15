@@ -75,6 +75,20 @@ func get_boss_max_health() -> int:
 	return int(_boss_health.get("max_health")) if _boss_health != null else 0
 
 
+func get_boss_node() -> Node:
+	return boss
+
+
+func get_boss_hurtbox() -> Node:
+	if boss == null:
+		return null
+	return boss.get_node_or_null("Hurtbox")
+
+
+func get_boss_health_component() -> Node:
+	return _boss_health
+
+
 func start_encounter() -> bool:
 	if encounter_active or encounter_completed:
 		return false

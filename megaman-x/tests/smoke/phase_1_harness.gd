@@ -3,6 +3,7 @@ extends SceneTree
 const PLAYER_SCRIPT = preload("res://scripts/player/player.gd")
 const PLAYER_COMBAT_SCRIPT = preload("res://scripts/player/player_combat.gd")
 const HIT_PAYLOAD_SCRIPT = preload("res://scripts/components/hit_payload.gd")
+const WEAPON_CATALOG_SCRIPT = preload("res://scripts/player/weapon_catalog.gd")
 
 const REQUIRED_AUTOLOADS := {
 	"GameFlow": "/root/GameFlow",
@@ -10,6 +11,29 @@ const REQUIRED_AUTOLOADS := {
 	"SaveManager": "/root/SaveManager",
 	"AudioManager": "/root/AudioManager",
 }
+
+const IMPLEMENTED_BOSS_STAGE_CONFIGS := [
+	{
+		"stage_id": &"chill_penguin",
+		"display_name": "Chill Penguin",
+		"reward_weapon_id": &"shotgun_ice",
+	},
+	{
+		"stage_id": &"storm_eagle",
+		"display_name": "Storm Eagle",
+		"reward_weapon_id": &"storm_tornado",
+	},
+	{
+		"stage_id": &"flame_mammoth",
+		"display_name": "Flame Mammoth",
+		"reward_weapon_id": &"fire_wave",
+	},
+]
+
+const ADDED_BOSS_STAGE_IDS: Array[StringName] = [
+	&"storm_eagle",
+	&"flame_mammoth",
+]
 
 
 func _init() -> void:
@@ -73,6 +97,10 @@ func _run() -> void:
 			exit_code = await _check_first_boss_phase_order()
 		"first_boss_progression_once":
 			exit_code = await _check_first_boss_progression_once()
+		"boss_framework_regression":
+			exit_code = await _check_boss_framework_regression()
+		"additional_boss_reward_ui_reset":
+			exit_code = await _check_additional_boss_reward_ui_reset()
 		"checkpoint_activation":
 			exit_code = await _check_checkpoint_activation()
 		"checkpoint_retry":
@@ -1017,6 +1045,175 @@ func _check_first_boss_progression_once() -> int:
 	if int(stage_controller.get("stage_clear_count")) != 1:
 		push_error("Boss progression-once check observed duplicate stage-clear transitions.")
 		return 1
+
+	return 0
+
+
+func _check_boss_framework_regression() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("Boss framework regression check requires Progression.")
+		return 1
+
+	for entry in IMPLEMENTED_BOSS_STAGE_CONFIGS:
+		await _cleanup_loaded_nodes()
+		progression.reset_for_new_game()
+		progression.mark_intro_cleared()
+
+		var stage_id := entry.get("stage_id", &"") as StringName
+		var loaded := await _load_boss_stage_stack(stage_id)
+		if loaded.is_empty():
+			return 1
+
+		var player: Node2D = loaded["player"] as Node2D
+		var boss_trigger: Area2D = loaded["boss_trigger"] as Area2D
+		var boss_encounter: Node = loaded["boss_encounter"] as Node
+		var boss_hud: Control = loaded["boss_hud"] as Control
+		var boss: Node = loaded["boss"] as Node
+		var boss_hurtbox: Node = loaded["boss_hurtbox"] as Node
+		var boss_health: Node = loaded["boss_health"] as Node
+		if player == null or boss_trigger == null or boss_encounter == null or boss_hud == null or boss == null or boss_hurtbox == null or boss_health == null:
+			push_error("Boss framework regression check is missing the shared encounter stack for '%s'." % stage_id)
+			return 1
+
+		var phase_history: Array[String] = []
+		boss.connect("phase_changed", func(_previous_phase: StringName, new_phase: StringName) -> void:
+			phase_history.append(String(new_phase))
+		)
+
+		player.global_position = boss_trigger.global_position
+		await _await_physics_frames(32)
+		if not bool(boss_encounter.call("is_encounter_active")):
+			push_error("Boss framework regression did not activate encounter '%s'." % stage_id)
+			return 1
+
+		if not boss_hud.visible:
+			push_error("Boss framework regression did not show BossHUD for '%s'." % stage_id)
+			return 1
+
+		var hud_snapshot := boss_hud.call("get_snapshot") as Dictionary
+		if hud_snapshot.get("name_text", "") != entry.get("display_name", ""):
+			push_error("Boss framework regression showed the wrong BossHUD name for '%s'." % stage_id)
+			return 1
+
+		var max_health := int(boss_health.get("max_health"))
+		var phase_two_damage := _phase_two_damage_amount(max_health)
+		boss_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"%s_phase_two" % String(stage_id), phase_two_damage, Vector2.ZERO))
+		await _await_physics_frames(4)
+		boss_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"%s_defeat" % String(stage_id), int(boss_health.get("current_health")), Vector2.ZERO))
+		await _await_physics_frames(4)
+
+		var expected_order := ["INTRO", "PHASE_ONE", "PHASE_TWO", "DEFEATED"]
+		if phase_history.size() < expected_order.size():
+			push_error("Boss framework regression recorded too few phase transitions for '%s': %s" % [stage_id, phase_history])
+			return 1
+
+		for index in range(expected_order.size()):
+			if phase_history[index] != expected_order[index]:
+				push_error("Boss framework regression phase mismatch for '%s'. Expected %s, got %s" % [stage_id, expected_order, phase_history])
+				return 1
+
+		if not bool(boss_encounter.call("has_encounter_completed")):
+			push_error("Boss framework regression did not complete encounter '%s' after boss defeat." % stage_id)
+			return 1
+
+	return 0
+
+
+func _check_additional_boss_reward_ui_reset() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("Additional boss reward/UI/reset check requires Progression.")
+		return 1
+
+	for stage_id in ADDED_BOSS_STAGE_IDS:
+		await _cleanup_loaded_nodes()
+		progression.reset_for_new_game()
+		progression.mark_intro_cleared()
+
+		var entry := _get_boss_stage_entry(stage_id)
+		var loaded := await _load_boss_stage_stack(stage_id)
+		if loaded.is_empty():
+			return 1
+
+		var main: Node = loaded["main"] as Node
+		var player: Node2D = loaded["player"] as Node2D
+		var stage_controller: Node = loaded["stage_controller"] as Node
+		var boss_trigger: Area2D = loaded["boss_trigger"] as Area2D
+		var boss_encounter: Node = loaded["boss_encounter"] as Node
+		var boss_hud: Control = loaded["boss_hud"] as Control
+		var boss_hurtbox: Node = loaded["boss_hurtbox"] as Node
+		var boss_health: Node = loaded["boss_health"] as Node
+		if main == null or player == null or stage_controller == null or boss_trigger == null or boss_encounter == null or boss_hud == null or boss_hurtbox == null or boss_health == null:
+			push_error("Additional boss reward/UI/reset check is missing required nodes for '%s'." % stage_id)
+			return 1
+
+		player.global_position = boss_trigger.global_position
+		await _await_physics_frames(4)
+		if not boss_hud.visible:
+			push_error("Additional boss reward/UI/reset did not show BossHUD for '%s'." % stage_id)
+			return 1
+
+		var hud_snapshot := boss_hud.call("get_snapshot") as Dictionary
+		if hud_snapshot.get("name_text", "") != entry.get("display_name", ""):
+			push_error("Additional boss reward/UI/reset showed the wrong BossHUD name for '%s'." % stage_id)
+			return 1
+
+		boss_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"%s_retry_chip" % String(stage_id), 3, Vector2.ZERO))
+		await process_frame
+		var lethal_hit := HIT_PAYLOAD_SCRIPT.create(self, &"enemy", &"%s_retry" % String(stage_id), int(player.call("get_health_component").get("max_health")), Vector2.ZERO)
+		player.call("apply_hit_payload", lethal_hit)
+		if not await _wait_for_retry_count(stage_controller, 1, 90):
+			push_error("Additional boss reward/UI/reset did not trigger retry for '%s'." % stage_id)
+			return 1
+
+		await _await_physics_frames(3)
+		if bool(boss_encounter.call("is_encounter_active")):
+			push_error("Additional boss reward/UI/reset left encounter active after retry for '%s'." % stage_id)
+			return 1
+		if bool(boss_encounter.call("has_encounter_completed")):
+			push_error("Additional boss reward/UI/reset left encounter completed after retry for '%s'." % stage_id)
+			return 1
+		if bool(boss_encounter.call("is_arena_locked")):
+			push_error("Additional boss reward/UI/reset left the arena locked after retry for '%s'." % stage_id)
+			return 1
+		if boss_hud.visible:
+			push_error("Additional boss reward/UI/reset left BossHUD visible after retry for '%s'." % stage_id)
+			return 1
+		if int(boss_health.get("current_health")) != int(boss_health.get("max_health")):
+			push_error("Additional boss reward/UI/reset did not restore boss health after retry for '%s'." % stage_id)
+			return 1
+
+		player.global_position = boss_trigger.global_position
+		await _await_physics_frames(4)
+		boss_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"%s_reward" % String(stage_id), int(boss_health.get("max_health")), Vector2.ZERO))
+		if not await _wait_for_gameflow_state(GameFlow.RuntimeState.STAGE_CLEAR, 30):
+			push_error("Additional boss reward/UI/reset did not reach STAGE_CLEAR for '%s'." % stage_id)
+			return 1
+
+		var overlay := await _wait_for_active_overlay(main, 20)
+		if overlay == null:
+			push_error("Additional boss reward/UI/reset did not mount the stage-clear overlay for '%s'." % stage_id)
+			return 1
+
+		var overlay_snapshot := overlay.call("get_snapshot") as Dictionary
+		var reward_text := "Weapon unlocked: %s" % _get_reward_weapon_display_name(entry.get("reward_weapon_id", &"") as StringName)
+		if String(overlay_snapshot.get("detail_text", "")).find(reward_text) == -1:
+			push_error("Additional boss reward/UI/reset did not report the expected reward for '%s'." % stage_id)
+			return 1
+
+		if not progression.has_defeated_boss(stage_id):
+			push_error("Additional boss reward/UI/reset did not mark boss defeat for '%s'." % stage_id)
+			return 1
+
+		var reward_weapon_id := entry.get("reward_weapon_id", &"") as StringName
+		if not progression.has_weapon_unlocked(reward_weapon_id):
+			push_error("Additional boss reward/UI/reset did not unlock reward weapon '%s'." % reward_weapon_id)
+			return 1
+
+		if int(stage_controller.get("stage_clear_count")) != 1:
+			push_error("Additional boss reward/UI/reset observed duplicate stage clear for '%s'." % stage_id)
+			return 1
 
 	return 0
 
@@ -2341,6 +2538,38 @@ func _load_stage_via_main(stage_id: StringName) -> Dictionary:
 	}
 
 
+func _load_boss_stage_stack(stage_id: StringName) -> Dictionary:
+	var entry := _get_boss_stage_entry(stage_id)
+	if entry.is_empty():
+		push_error("Boss stage stack helper is missing config for '%s'." % stage_id)
+		return {}
+
+	var loaded := await _load_stage_via_main(stage_id)
+	if loaded.is_empty():
+		return {}
+
+	var stage: Node = loaded["stage"] as Node
+	var stage_controller: Node = stage.get_node_or_null("StageController") if stage != null else null
+	var boss_encounter: Node = stage.get_node_or_null("BossEncounterController") if stage != null else null
+	var boss_trigger: Area2D = stage.get_node_or_null("BossArenaTrigger") as Area2D if stage != null else null
+	var boss_hud: Control = stage.get_node_or_null("BossLayer/BossHUD") as Control if stage != null else null
+	var boss: Node = boss_encounter.call("get_boss_node") as Node if boss_encounter != null and boss_encounter.has_method("get_boss_node") else null
+	var boss_hurtbox: Node = boss_encounter.call("get_boss_hurtbox") as Node if boss_encounter != null and boss_encounter.has_method("get_boss_hurtbox") else null
+	var boss_health: Node = boss_encounter.call("get_boss_health_component") as Node if boss_encounter != null and boss_encounter.has_method("get_boss_health_component") else null
+	if stage == null or stage_controller == null or boss_encounter == null or boss_trigger == null or boss_hud == null or boss == null or boss_hurtbox == null or boss_health == null:
+		push_error("Boss stage stack helper could not resolve the encounter nodes for '%s'." % stage_id)
+		return {}
+
+	loaded["stage_controller"] = stage_controller
+	loaded["boss_encounter"] = boss_encounter
+	loaded["boss_trigger"] = boss_trigger
+	loaded["boss_hud"] = boss_hud
+	loaded["boss"] = boss
+	loaded["boss_hurtbox"] = boss_hurtbox
+	loaded["boss_health"] = boss_health
+	return loaded
+
+
 func _defeat_walker_enemy(enemy: Node) -> void:
 	var enemy_health: Node = enemy.get_node_or_null("HealthComponent")
 	var enemy_hurtbox := enemy.get_node_or_null("Hurtbox")
@@ -2413,6 +2642,22 @@ func _wait_for_active_overlay(main: Node, max_frames: int) -> Control:
 		await _await_physics_frames(1)
 
 	return null
+
+
+func _get_boss_stage_entry(stage_id: StringName) -> Dictionary:
+	for entry in IMPLEMENTED_BOSS_STAGE_CONFIGS:
+		if entry.get("stage_id", &"") == stage_id:
+			return entry
+	return {}
+
+
+func _get_reward_weapon_display_name(weapon_id: StringName) -> String:
+	return WEAPON_CATALOG_SCRIPT.get_weapon_display_name(weapon_id)
+
+
+func _phase_two_damage_amount(max_health: int) -> int:
+	var threshold_health := maxi(1, int(ceil(float(max_health) * 0.5)))
+	return maxi(1, (max_health - threshold_health) + 1)
 
 
 func _key_event(keycode: Key, pressed: bool) -> InputEventKey:
