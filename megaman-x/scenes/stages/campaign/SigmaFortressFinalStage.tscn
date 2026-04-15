@@ -1,16 +1,16 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene format=3 uid="uid://conck7li3fjcf"]
 
-[ext_resource type="Script" path="res://scripts/stages/sigma_fortress_final_stage.gd" id="1_finale"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/shared/grid_backdrop.svg" id="2_backdrop"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/stage/test_floor_256x32.svg" id="3_floor"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/shared/spawn_marker_32.svg" id="4_spawn_marker"]
+[ext_resource type="Script" uid="uid://v8yhfq4vvsdw" path="res://scripts/stages/sigma_fortress_final_stage.gd" id="1_finale"]
+[ext_resource type="Texture2D" uid="uid://b3ydi4nw1clbh" path="res://assets/placeholders/shared/grid_backdrop.svg" id="2_backdrop"]
+[ext_resource type="Texture2D" uid="uid://dobgc8jwdlqvr" path="res://assets/placeholders/stage/test_floor_256x32.svg" id="3_floor"]
+[ext_resource type="Texture2D" uid="uid://cyapqdp7sv6yx" path="res://assets/placeholders/shared/spawn_marker_32.svg" id="4_spawn_marker"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="5_player"]
-[ext_resource type="Script" path="res://scripts/camera/follow_camera_2d.gd" id="6_follow_camera"]
-[ext_resource type="Script" path="res://scripts/stages/stage_controller.gd" id="7_stage_controller"]
+[ext_resource type="Script" uid="uid://bj64k1aiwu5sf" path="res://scripts/camera/follow_camera_2d.gd" id="6_follow_camera"]
+[ext_resource type="Script" uid="uid://dely4i4t3kfd8" path="res://scripts/stages/stage_controller.gd" id="7_stage_controller"]
 [ext_resource type="PackedScene" path="res://scenes/stages/shared/BossArenaBarrier.tscn" id="8_boss_barrier"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/bosses/velguarder_96x96.svg" id="9_velguarder"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/bosses/sigma_first_form_96x96.svg" id="10_sigma_first"]
-[ext_resource type="Texture2D" path="res://assets/placeholders/bosses/sigma_wolf_form_96x96.svg" id="11_sigma_wolf"]
+[ext_resource type="Texture2D" uid="uid://ce4sj1evktnsu" path="res://assets/placeholders/bosses/velguarder_96x96.svg" id="9_velguarder"]
+[ext_resource type="Texture2D" uid="uid://dqb6hg3oicby2" path="res://assets/placeholders/bosses/sigma_first_form_96x96.svg" id="10_sigma_first"]
+[ext_resource type="Texture2D" uid="uid://dc8n3g5geuqlp" path="res://assets/placeholders/bosses/sigma_wolf_form_96x96.svg" id="11_sigma_wolf"]
 
 [sub_resource type="RectangleShape2D" id="1_ground_shape"]
 size = Vector2(256, 32)
@@ -21,208 +21,217 @@ size = Vector2(80, 104)
 [sub_resource type="RectangleShape2D" id="3_resolve_shape"]
 size = Vector2(360, 120)
 
-[node name="SigmaFortressFinalStage" type="Node2D"]
+[node name="SigmaFortressFinalStage" type="Node2D" unique_id=664637373]
 script = ExtResource("1_finale")
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=812956511]
 script = ExtResource("6_follow_camera")
 
-[node name="Backdrop" type="Sprite2D" parent="."]
+[node name="Backdrop" type="Sprite2D" parent="." unique_id=1173531221]
+modulate = Color(0.72, 0.84, 0.96, 1)
 position = Vector2(640, 360)
 texture = ExtResource("2_backdrop")
-modulate = Color(0.72, 0.84, 0.96, 1)
 
-[node name="GroundVisualWest" type="Sprite2D" parent="."]
+[node name="GroundVisualWest" type="Sprite2D" parent="." unique_id=1898761936]
+modulate = Color(0.72, 0.76, 0.86, 1)
 position = Vector2(352, 476)
 texture = ExtResource("3_floor")
-modulate = Color(0.72, 0.76, 0.86, 1)
 
-[node name="GroundVisualCenter" type="Sprite2D" parent="."]
+[node name="GroundVisualCenter" type="Sprite2D" parent="." unique_id=850612332]
+modulate = Color(0.72, 0.76, 0.86, 1)
 position = Vector2(608, 476)
 texture = ExtResource("3_floor")
-modulate = Color(0.72, 0.76, 0.86, 1)
 
-[node name="GroundVisualEast" type="Sprite2D" parent="."]
+[node name="GroundVisualEast2" type="Sprite2D" parent="." unique_id=319201356]
+modulate = Color(0.72, 0.76, 0.86, 1)
+position = Vector2(1120, 476)
+texture = ExtResource("3_floor")
+
+[node name="GroundVisualEast" type="Sprite2D" parent="." unique_id=201365611]
+modulate = Color(0.72, 0.76, 0.86, 1)
 position = Vector2(864, 476)
 texture = ExtResource("3_floor")
-modulate = Color(0.72, 0.76, 0.86, 1)
 
-[node name="GroundVisualBossWest" type="Sprite2D" parent="."]
+[node name="GroundVisualBossWest" type="Sprite2D" parent="." unique_id=809385478]
+modulate = Color(0.92, 0.72, 0.5, 1)
 position = Vector2(1376, 476)
 texture = ExtResource("3_floor")
-modulate = Color(0.92, 0.72, 0.5, 1)
 
-[node name="GroundVisualBossCenter" type="Sprite2D" parent="."]
+[node name="GroundVisualBossCenter" type="Sprite2D" parent="." unique_id=2083872222]
+modulate = Color(0.92, 0.72, 0.5, 1)
 position = Vector2(1632, 476)
 texture = ExtResource("3_floor")
-modulate = Color(0.92, 0.72, 0.5, 1)
 
-[node name="GroundVisualBossEast" type="Sprite2D" parent="."]
+[node name="GroundVisualBossEast" type="Sprite2D" parent="." unique_id=104646866]
+modulate = Color(0.92, 0.72, 0.5, 1)
 position = Vector2(1888, 476)
 texture = ExtResource("3_floor")
-modulate = Color(0.92, 0.72, 0.5, 1)
 
-[node name="GroundWest" type="StaticBody2D" parent="."]
+[node name="GroundWest" type="StaticBody2D" parent="." unique_id=2005512233]
 position = Vector2(352, 476)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundWest"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundWest" unique_id=1170953450]
 shape = SubResource("1_ground_shape")
 
-[node name="GroundCenter" type="StaticBody2D" parent="."]
+[node name="GroundCenter" type="StaticBody2D" parent="." unique_id=1320582538]
 position = Vector2(608, 476)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundCenter"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundCenter" unique_id=1864926961]
 shape = SubResource("1_ground_shape")
 
-[node name="GroundEast" type="StaticBody2D" parent="."]
+[node name="GroundEast" type="StaticBody2D" parent="." unique_id=1615080519]
 position = Vector2(864, 476)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundEast"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundEast" unique_id=944611103]
 shape = SubResource("1_ground_shape")
 
-[node name="GroundBossWest" type="StaticBody2D" parent="."]
+[node name="GroundEast2" type="StaticBody2D" parent="." unique_id=646431459]
+position = Vector2(1119, 477)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundEast2" unique_id=1493450250]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundBossWest" type="StaticBody2D" parent="." unique_id=1533900782]
 position = Vector2(1376, 476)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBossWest"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBossWest" unique_id=2059013684]
 shape = SubResource("1_ground_shape")
 
-[node name="GroundBossCenter" type="StaticBody2D" parent="."]
+[node name="GroundBossCenter" type="StaticBody2D" parent="." unique_id=2055908792]
 position = Vector2(1632, 476)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBossCenter"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBossCenter" unique_id=93145958]
 shape = SubResource("1_ground_shape")
 
-[node name="GroundBossEast" type="StaticBody2D" parent="."]
+[node name="GroundBossEast" type="StaticBody2D" parent="." unique_id=1763618014]
 position = Vector2(1888, 476)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBossEast"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBossEast" unique_id=1076313861]
 shape = SubResource("1_ground_shape")
 
-[node name="SpawnPoint" type="Marker2D" parent="."]
+[node name="SpawnPoint" type="Marker2D" parent="." unique_id=1275550904]
 position = Vector2(220, 460)
 
-[node name="SpawnMarker" type="Sprite2D" parent="."]
+[node name="SpawnMarker" type="Sprite2D" parent="." unique_id=2112353372]
 position = Vector2(220, 420)
 texture = ExtResource("4_spawn_marker")
 
-[node name="Player" parent="." instance=ExtResource("5_player")]
+[node name="Player" parent="." unique_id=656733783 instance=ExtResource("5_player")]
 position = Vector2(220, 460)
 
-[node name="BossGateTrigger" type="Area2D" parent="."]
+[node name="BossGateTrigger" type="Area2D" parent="." unique_id=709443795]
 position = Vector2(1328, 426)
 collision_layer = 2048
 collision_mask = 4
-monitoring = true
 monitorable = false
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BossGateTrigger"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BossGateTrigger" unique_id=440508522]
 shape = SubResource("2_trigger_shape")
 
-[node name="TriggerVisual" type="Polygon2D" parent="BossGateTrigger"]
+[node name="TriggerVisual" type="Polygon2D" parent="BossGateTrigger" unique_id=450323527]
 color = Color(0.909804, 0.623529, 0.356863, 0.24)
 polygon = PackedVector2Array(-40, 36, 40, 36, 40, -36, -40, -36)
 
-[node name="StatusLabel" type="Label" parent="BossGateTrigger"]
+[node name="StatusLabel" type="Label" parent="BossGateTrigger" unique_id=127773689]
 offset_left = -88.0
 offset_top = -62.0
 offset_right = 88.0
 offset_bottom = -40.0
-horizontal_alignment = 1
 theme_override_colors/font_color = Color(1, 0.92549, 0.8, 1)
 text = "FINAL GATE"
+horizontal_alignment = 1
 
-[node name="BossBarrierLeft" parent="." instance=ExtResource("8_boss_barrier")]
+[node name="BossBarrierLeft" parent="." unique_id=1951185539 instance=ExtResource("8_boss_barrier")]
 position = Vector2(1418, 476)
 
-[node name="BossBarrierRight" parent="." instance=ExtResource("8_boss_barrier")]
+[node name="BossBarrierRight" parent="." unique_id=326142715 instance=ExtResource("8_boss_barrier")]
 position = Vector2(1848, 476)
 
-[node name="ResolveArea" type="Area2D" parent="."]
+[node name="ResolveArea" type="Area2D" parent="." unique_id=1668237950]
 position = Vector2(1632, 410)
 collision_layer = 2048
 collision_mask = 4
-monitoring = true
 monitorable = false
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ResolveArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ResolveArea" unique_id=2130347383]
 shape = SubResource("3_resolve_shape")
 
-[node name="ResolveVisual" type="Polygon2D" parent="ResolveArea"]
+[node name="ResolveVisual" type="Polygon2D" parent="ResolveArea" unique_id=170173689]
 color = Color(0.423529, 0.819608, 0.992157, 0.16)
 polygon = PackedVector2Array(-180, 60, 180, 60, 180, -60, -180, -60)
 
-[node name="PromptLabel" type="Label" parent="ResolveArea"]
+[node name="PromptLabel" type="Label" parent="ResolveArea" unique_id=490611088]
 offset_left = -200.0
 offset_top = -94.0
 offset_right = 200.0
 offset_bottom = -70.0
-horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.886275, 0.972549, 1, 1)
 text = "Press Interact To Resolve Active Encounter"
+horizontal_alignment = 1
 
-[node name="BossSlots" type="Node2D" parent="."]
+[node name="BossSlots" type="Node2D" parent="." unique_id=1859785598]
 
-[node name="BossSlotOne" type="Node2D" parent="BossSlots"]
+[node name="BossSlotOne" type="Node2D" parent="BossSlots" unique_id=12295195]
 position = Vector2(1480, 360)
 
-[node name="Sprite2D" type="Sprite2D" parent="BossSlots/BossSlotOne"]
+[node name="Sprite2D" type="Sprite2D" parent="BossSlots/BossSlotOne" unique_id=1459329547]
 texture = ExtResource("9_velguarder")
 
-[node name="Label" type="Label" parent="BossSlots/BossSlotOne"]
+[node name="Label" type="Label" parent="BossSlots/BossSlotOne" unique_id=564241505]
 offset_left = -72.0
 offset_top = 62.0
 offset_right = 72.0
 offset_bottom = 84.0
-horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.952941, 0.960784, 1, 1)
 text = "Velguarder"
+horizontal_alignment = 1
 
-[node name="BossSlotTwo" type="Node2D" parent="BossSlots"]
+[node name="BossSlotTwo" type="Node2D" parent="BossSlots" unique_id=1242755774]
 position = Vector2(1632, 360)
 
-[node name="Sprite2D" type="Sprite2D" parent="BossSlots/BossSlotTwo"]
+[node name="Sprite2D" type="Sprite2D" parent="BossSlots/BossSlotTwo" unique_id=406743580]
 texture = ExtResource("10_sigma_first")
 
-[node name="Label" type="Label" parent="BossSlots/BossSlotTwo"]
+[node name="Label" type="Label" parent="BossSlots/BossSlotTwo" unique_id=357402890]
 offset_left = -84.0
 offset_top = 62.0
 offset_right = 84.0
 offset_bottom = 84.0
-horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.952941, 0.960784, 1, 1)
 text = "Sigma First Form"
+horizontal_alignment = 1
 
-[node name="BossSlotThree" type="Node2D" parent="BossSlots"]
+[node name="BossSlotThree" type="Node2D" parent="BossSlots" unique_id=536762540]
 position = Vector2(1784, 360)
 
-[node name="Sprite2D" type="Sprite2D" parent="BossSlots/BossSlotThree"]
+[node name="Sprite2D" type="Sprite2D" parent="BossSlots/BossSlotThree" unique_id=279081480]
 texture = ExtResource("11_sigma_wolf")
 
-[node name="Label" type="Label" parent="BossSlots/BossSlotThree"]
+[node name="Label" type="Label" parent="BossSlots/BossSlotThree" unique_id=888734022]
 offset_left = -84.0
 offset_top = 62.0
 offset_right = 84.0
 offset_bottom = 84.0
-horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.952941, 0.960784, 1, 1)
 text = "Sigma Wolf Form"
+horizontal_alignment = 1
 
-[node name="StageController" type="Node" parent="."]
+[node name="StageController" type="Node" parent="." unique_id=1428607311]
 script = ExtResource("7_stage_controller")
 player_path = NodePath("../Player")
 spawn_point_path = NodePath("../SpawnPoint")
 stage_id = &"sigma_fortress_4"
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1081259710]
 
-[node name="Panel" type="Panel" parent="CanvasLayer"]
+[node name="Panel" type="Panel" parent="CanvasLayer" unique_id=141758023]
 offset_left = 28.0
 offset_top = 24.0
 offset_right = 524.0
 offset_bottom = 272.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Panel"]
-anchors_preset = 15
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Panel" unique_id=606955511]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 18.0
@@ -233,11 +242,13 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="StageLabel" type="Label" parent="CanvasLayer/Panel/VBoxContainer"]
+[node name="StageLabel" type="Label" parent="CanvasLayer/Panel/VBoxContainer" unique_id=269090820]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.945098, 0.980392, 1, 1)
 text = "Sigma Fortress 4"
 
-[node name="BodyLabel" type="Label" parent="CanvasLayer/Panel/VBoxContainer"]
+[node name="BodyLabel" type="Label" parent="CanvasLayer/Panel/VBoxContainer" unique_id=119314847]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.780392, 0.862745, 0.952941, 1)
-autowrap_mode = 3
 text = "Loading final-stage metadata..."
+autowrap_mode = 3
