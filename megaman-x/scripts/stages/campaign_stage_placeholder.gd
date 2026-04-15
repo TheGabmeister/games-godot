@@ -90,8 +90,12 @@ func _refresh_ui() -> void:
 
 	stage_label.text = display_name
 	if _is_first_boss_slice():
-		var boss_phase := boss_actor.call("get_phase_name") if boss_actor != null and boss_actor.has_method("get_phase_name") else &"OFFLINE"
-		var boss_health := boss_actor.call("get_health_component") if boss_actor != null and boss_actor.has_method("get_health_component") else null
+		var boss_phase: StringName = &"OFFLINE"
+		if boss_actor != null and boss_actor.has_method("get_phase_name"):
+			boss_phase = boss_actor.call("get_phase_name") as StringName
+		var boss_health: Node = null
+		if boss_actor != null and boss_actor.has_method("get_health_component"):
+			boss_health = boss_actor.call("get_health_component") as Node
 		body_label.text = "%s vertical slice.\nStage ID: %s\nDash unlocked: %s\nReward: %s\nBoss phase: %s | HP: %d/%d\nEnter the boss gate, survive the attack loop, and defeat Chill Penguin to trigger stage clear." % [
 			group_name,
 			stage_id,

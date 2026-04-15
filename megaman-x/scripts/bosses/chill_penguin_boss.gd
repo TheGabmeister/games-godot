@@ -37,7 +37,7 @@ const PHASE_DEFEATED := &"DEFEATED"
 @onready var phase_label: Label = $VisualRoot/PhaseLabel
 @onready var status_label: Label = $VisualRoot/StatusLabel
 @onready var attack_origin: Marker2D = $AttackOrigin
-@onready var player: Node = get_node_or_null(player_path)
+@onready var player: Node2D = get_node_or_null(player_path) as Node2D
 
 var _spawn_position := Vector2.ZERO
 var _phase: StringName = PHASE_WAITING
@@ -169,7 +169,7 @@ func _refresh_visuals() -> void:
 
 func _update_movement(delta: float) -> void:
 	if player != null:
-		var delta_x := player.global_position.x - global_position.x
+		var delta_x: float = player.global_position.x - global_position.x
 		if absf(delta_x) > 8.0:
 			_move_direction = 1 if delta_x > 0.0 else -1
 

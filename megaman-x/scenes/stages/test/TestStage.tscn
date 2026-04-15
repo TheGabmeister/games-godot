@@ -294,7 +294,7 @@ offset_top = 24.0
 offset_right = 1232.0
 offset_bottom = 50.0
 theme_override_colors/font_color = Color(0.898039, 0.956863, 1, 1)
-text = "Phase 13 Test Stage"
+text = "Boss Systems Test Stage"
 
 [node name="Body" type="Label" parent="CanvasLayer/Overlay" unique_id=801757937]
 layout_mode = 0

@@ -6,7 +6,7 @@
 script = ExtResource("1_stage_definition")
 stage_id = &"chill_penguin"
 display_name = "Chill Penguin"
-scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
+scene_path = "res://scenes/stages/campaign/ChillPenguinStage.tscn"
 stage_group = &"maverick"
 boss_id = &"chill_penguin"
 weapon_reward_id = &"shotgun_ice"

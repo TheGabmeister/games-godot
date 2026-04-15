@@ -1,6 +1,6 @@
 extends Node2D
 
-const STAGE_NOTE := "Phase 13 boss slice.\nMove with A/D. Jump with Space. Shoot with J. Dash with K after the capsule unlock.\nPress U to unlock all boss weapons for this session. Press V or Tab to use a filled sub tank.\nSwitch weapons with Q/E or shoulder buttons once boss weapons are unlocked.\nUse the tall wall before the boss gate to test wall slide and wall jump.\nWalk into the far-right arena trigger to start the boss encounter."
+const STAGE_NOTE := "Boss systems test stage.\nMove with A/D. Jump with Space. Shoot with J. Dash with K after the capsule unlock.\nPress U to unlock all boss weapons for this session. Press V or Tab to use a filled sub tank.\nSwitch weapons with Q/E or shoulder buttons once boss weapons are unlocked.\nUse the tall wall before the boss gate to test wall slide and wall jump.\nWalk into the far-right arena trigger to start the boss encounter."
 const DASH_CAPSULE_DIALOGUE := preload("res://data/dialogue/test_stage_dash_capsule.tres")
 const DASH_CAPSULE_PICKUP_ID := &"test_stage_dash_capsule"
 
