@@ -1,394 +1,292 @@
 # SPEC.md
 
-## Summary
+## Purpose
 
-Recreate *Mega Man X* (1993) in Godot 4.6 as a mechanics-first 2D action platformer.
+This document is the high-level technical guide for `megaman-x`.
 
-This spec is intentionally architecture-first. It defines system ownership, runtime structure, scene boundaries, state machines, data responsibilities, and project rules. It should not serve as a code template.
+It is meant to help a game developer jump into the project quickly by answering:
 
-Use placeholder visuals and placeholder audio early, but organize the project so final assets can replace them without changing gameplay logic.
+- what the project is trying to preserve
+- how the main systems are organized
+- which files are the entry points for each subsystem
+- where to tweak common gameplay values
+- how to add or revise content safely
+- how the project is expected to be tested
 
-## Display Target
+This document is not a milestone log or an exhaustive implementation dump. The codebase remains the source of truth for exact node trees, signal wiring, data fields, and current tuning values.
 
-The working presentation target is `1280x720` (`16:9`).
+## Project Identity
 
-Rules:
+`megaman-x` is a mechanics-first recreation of *Mega Man X* built in Godot `4.6`.
 
-- author placeholder backdrops and UI mockups for a `1280x720` frame unless a narrower test fixture has a specific reason not to
-- keep gameplay scenes and camera framing readable on modern monitors without relying on tiny retro-era window defaults
-- if the project later adopts an internal low-resolution render target with upscale presentation, update this spec and the project settings in the same change
+Current project assumptions:
 
-The target campaign includes:
+- physics engine: Jolt Physics
+- Windows renderer target: `d3d12`
+- display target: `1280x720` (`16:9`)
 
-- `intro_highway`
-- the 8 Maverick stages
-- Sigma Fortress stages
-- final Sigma fights
-- boss weapons
-- armor parts
-- heart tanks
-- sub tanks
+Core goals:
+
+- prioritize control feel, combat clarity, and readable stage flow
+- preserve the campaign structure of intro stage, Maverick stages, Sigma Fortress stages, and final Sigma flow
+- keep gameplay logic independent from placeholder art and audio
+- keep direct stage iteration viable throughout development
+
+## Quick Orientation
+
+If you are new to the project, start with these files:
+
+- `project.godot`: engine settings, autoload registration, project-wide config
+- `autoloads/game_flow.gd`: runtime state, stage registry, front-end and campaign transitions
+- `scripts/systems/runtime_shell.gd`: how `Main.tscn` mounts stages, HUD, overlays, and front-end screens
+- `scripts/systems/stage_definition.gd`: the schema for stage metadata
+- `scripts/stages/stage_controller.gd`: stage-local retry, checkpoint, cutscene, and stage-clear flow
+- `scenes/player/Player.tscn`: player scene composition
+- `scripts/player/player.gd`: locomotion state machine and progression-driven upgrades
+- `scripts/player/player_combat.gd`: weapon firing, charge logic, and energy handling
+- `scripts/enemies/enemy_base.gd`: shared enemy behavior
+- `scripts/enemies/enemy_brain.gd`: simple enemy state machine driver
+- `scripts/bosses/maverick_boss.gd`: shared Maverick boss framework
+- `scripts/systems/cutscene_director.gd`: cutscene action runner
+- `scripts/systems/dialogue_controller.gd`: dialogue playback and overlay mounting
+- `autoloads/audio_manager.gd`: semantic audio event registration and playback
+- `tests/smoke/phase_1_harness.gd`: main automated gameplay harness
+
+## Design Pillars
+
+### Mechanics First
+
+- player movement and combat readability matter more than cinematic complexity
+- gameplay feedback should come from explicit state changes, not hidden hacks
+- placeholder assets are acceptable if they preserve good anchors, collisions, and timing
+
+### Clear Ownership
+
+- runtime flow belongs to runtime services and the runtime shell
+- stage-local flow belongs to stages and stage controllers
+- gameplay state lives in gameplay systems, not UI
+- progression changes should route through progression-aware systems instead of one-off scene scripts
+
+### Data-Driven Campaign
+
+- stages, weapons, pickups, and dialogue should be authored through explicit data
+- campaign order and unlock logic should come from stage data and progression facts
+- avoid filesystem-driven discovery for core gameplay content
+
+### Testable By Default
+
+- stages should be runnable directly
+- shared systems should be reusable enough to validate in isolation
+- regression-prone gameplay should gain harness coverage when feasible
 
 ## Project Layout
 
-Use a consistent top-level structure from the start.
+Top-level structure:
 
-Recommended folders:
-
-- `autoloads/` for the four runtime services only
-- `scenes/player/` for player scenes
-- `scenes/enemies/` for enemy scenes
-- `scenes/bosses/` for boss scenes
-- `scenes/stages/` for stage scenes and stage-local helpers
-- `scenes/ui/` for menus, HUD, dialogue, and overlays
-- `scripts/components/` for reusable gameplay components such as health, hurtboxes, projectiles, and checkpoints
-- `scripts/player/` for player-specific logic
-- `scripts/enemies/` for enemy-specific logic and AI states
-- `scripts/bosses/` for boss-specific logic and phase controllers
-- `scripts/systems/` for reusable runtime systems that are not autoloads
-- `data/stages/` for `StageDefinition` resources
-- `data/weapons/` for weapon data resources
-- `data/dialogue/` for dialogue sequences and cutscene-adjacent text data
-- `audio/` for placeholder and final audio assets
-- `assets/placeholders/` for temporary art and effects
+- `autoloads/`: runtime services only
+- `scenes/`: authored scenes
+- `scripts/`: reusable gameplay and UI logic
+- `data/`: resources for stages, weapons, dialogue, player tuning, and other authorable content
+- `audio/`: authored audio assets and notes
+- `assets/placeholders/`: placeholder art
+- `tests/`: smoke tests, fixtures, and regression helpers
 
 Rules:
 
-- scenes live under `scenes/`, reusable logic under `scripts/`, and authorable data under `data/`
-- stage-local content may live with the stage scene when it is not intended to be reused elsewhere
-- use stable `res://` paths from the beginning so future asset swaps do not require path churn
+- keep stable `res://` paths whenever possible
+- prefer shared scripts for reusable behavior and data resources for authored differences
+- preserve generated `.import` and `.godot` files unless a task explicitly requires changing them
 
-## Runtime Services
+## Runtime Architecture
 
-Use these autoloads only:
+### Main Runtime Flow
 
-- `autoloads/game_flow.gd`
-- `autoloads/progression.gd`
-- `autoloads/save_manager.gd`
-- `autoloads/audio_manager.gd`
+The runtime entry scene is `scenes/Main.tscn`.
 
-### Application shell
+The shell logic lives in `scripts/systems/runtime_shell.gd` and owns three responsibilities:
 
-Use one non-autoload runtime shell scene to host the active game content.
+- mount the active gameplay stage
+- mount persistent gameplay HUD
+- mount overlay UI and front-end screens
 
-Recommended structure:
+The high-level runtime state lives in `autoloads/game_flow.gd`.
 
-```text
-Main.tscn
-- Main
-  - WorldRoot
-  - UIRoot
-  - OverlayRoot
-```
+`GameFlow` is responsible for:
 
-Responsibilities:
-
-- `WorldRoot` holds the active stage scene
-- `UIRoot` holds persistent gameplay UI such as HUD
-- `OverlayRoot` holds modal layers such as pause, dialogue, and stage-clear overlays
+- title flow
+- stage select
+- stage requests
+- cutscene transitions
+- stage-clear transitions
+- ending transitions
+- stage registry and stage unlock queries
 
 Rules:
 
-- `GameFlow` coordinates transitions, but the runtime shell owns actual scene instancing and teardown
-- only one stage scene should be active in `WorldRoot` at a time
-- runtime UI should be layered without adding more autoloads
+- only one gameplay stage should be active at a time
+- stage transitions should route through `GameFlow`, not ad hoc `change_scene` behavior
+- stage selection, campaign unlocks, and loading order should come from `StageDefinition` resources, not from directory scanning
 
-State-to-scene mapping:
+### Runtime Services
 
-- `BOOT` initializes the runtime shell and then hands off to title flow
-- `TITLE` shows the title menu in `UIRoot` with no active stage in `WorldRoot`
-- `STAGE_SELECT` shows stage selection in `UIRoot` with no active stage in `WorldRoot`
-- `IN_STAGE` loads one stage scene into `WorldRoot` and the gameplay HUD into `UIRoot`
-- `PAUSED`, `CUTSCENE`, and `STAGE_CLEAR` are overlay states layered on top of `IN_STAGE`
-- `ENDING` may use either a full-screen UI scene or a controlled ending sequence, but it is not a normal gameplay stage
+The project currently assumes only these autoloads:
 
-Handoff contract:
+- `GameFlow`
+- `Progression`
+- `SaveManager`
+- `AudioManager`
 
-- `GameFlow` decides the next runtime state and semantic destination
-- the runtime shell resolves that destination into scene instances, loads them, and tears down the previous content
-- stage lookup must come from explicit stage data or an explicit registry, never from filesystem discovery
-- `GameFlow` owns the runtime stage registry used for stage loading order, stage select, and fortress progression checks
+Their intended ownership:
 
-### `GameFlow`
+- `GameFlow`: runtime state and campaign routing
+- `Progression`: persistent campaign facts
+- `SaveManager`: save/load serialization
+- `AudioManager`: semantic audio events and playback
 
-Purpose:
+Do not add new autoloads casually. If a new global service is truly needed, update this spec and `AGENTS.md` with the architectural reason.
 
-- own high-level runtime state
-- own scene transitions
-- coordinate boot, menus, stage entry, pause, cutscenes, and ending flow
+## Stage Data And Stage Flow
 
-Runtime states:
+### Stage Metadata
 
-- `BOOT`
-- `TITLE`
-- `STAGE_SELECT`
-- `IN_STAGE`
-- `PAUSED`
-- `CUTSCENE`
-- `STAGE_CLEAR`
-- `ENDING`
+Stage metadata is defined by `scripts/systems/stage_definition.gd`, with authored resources under `data/stages/`.
 
-Rules:
+A `StageDefinition` identifies:
 
-- stage requests should flow through `GameFlow`
-- stage scenes should not own the global boot or menu flow
-- cutscenes should switch the game into a dedicated cutscene mode
-- pause and resume should be mediated through `GameFlow`, not handled independently by stage scenes
+- `stage_id`
+- `display_name`
+- `scene_path`
+- `stage_group`
+- `boss_id`
+- `ordered_boss_ids` for multi-encounter stages
+- `weapon_reward_id`
+- stage-select visibility
+- unlock prerequisites
+- whether the stage should trigger ending flow on clear
 
-Flow rules:
+Use stage data for:
 
-- a new game always starts by entering `intro_highway`
-- continue uses saved progression but does not resume an in-progress room or checkpoint
-- if intro has not been cleared, continue returns the player to `intro_highway` from its start
-- if intro has been cleared, continue returns the player to stage select
-- stage restart and return-to-stage-select requests should also route through `GameFlow`
-- the initial implementation does not use a lives or continue-count system, so no separate `GAME_OVER` state is required yet
+- adding a new stage
+- changing a stage's reward or unlock behavior
+- changing which scene a stage loads
+- changing boss encounter order for special stages
 
-### `Progression`
+### Stage Controller
 
-Purpose:
+The stage-level flow owner is `scripts/stages/stage_controller.gd`.
 
-- own in-memory campaign state
-- track what the player has unlocked or permanently collected
+`StageController` is responsible for:
 
-Tracks:
+- retry flow
+- checkpoint activation
+- current respawn point
+- stage-local cutscene begin/end
+- stage-clear begin
+- cleanup of resettable or stage-clear-only objects
 
-- defeated bosses
-- unlocked weapons
-- collected persistent pickups
-- collected heart tanks
-- armor parts by explicit part ID
-- dash unlock
-- intro clear flag
-- fortress unlock state
-- sub tank ownership and fill state
-- campaign unlock markers used to derive stage availability
+If you need to change:
 
-Rules:
+- checkpoint behavior: start with `stage_controller.gd` and `scripts/stages/stage_checkpoint.gd`
+- stage-clear timing: start with `stage_controller.gd`
+- retry reset behavior: inspect the `stage_resettable` group and `reset_for_stage_retry` methods on stage actors
 
-- `Progression` owns campaign facts, not moment-to-moment gameplay state
-- systems that award permanent progress should update `Progression`
-- stage availability should be derived from progression facts where possible instead of duplicated as separate saved booleans
+## Player Architecture
 
-Campaign unlock rules:
+### Where To Start
 
-- a new save starts with `intro_highway` as the only required entry point
-- clearing `intro_highway` unlocks dash and the 8 Maverick stages
-- defeating a Maverick boss unlocks that boss weapon immediately
-- Sigma Fortress unlocks only after all 8 Maverick bosses are defeated
-- fortress stages unlock sequentially from `sigma_fortress_1` through `sigma_fortress_4`
-- persistent pickups stay collected on replay once recorded in `Progression`
-- collected heart tanks increase the player's maximum HP through progression-derived bonuses
-- armor parts use explicit IDs: `helmet`, `body`, `arms`, and `legs`
+Core player files:
 
-### `SaveManager`
+- scene: `scenes/player/Player.tscn`
+- locomotion: `scripts/player/player.gd`
+- combat: `scripts/player/player_combat.gd`
+- presentation: `scripts/player/player_presentation.gd`
+- pickups and persistent upgrades: `scripts/player/pickup_receiver.gd`
+- tuning schema: `scripts/player/player_tuning_data.gd`
+- default tuning resource: `data/player/default_player_tuning.tres`
+- weapon inventory: `scripts/player/weapon_inventory.gd`
+- weapon catalog and data: `scripts/player/weapon_catalog.gd`, `scripts/player/weapon_data.gd`, `data/weapons/*.tres`
 
-Purpose:
+### Player Scene Composition
 
-- serialize and deserialize progression data only
+`Player.tscn` is intentionally component-oriented.
 
-Rules:
+The important pieces are:
 
-- save to `user://save_01.json`
-- use a versioned payload
-- convert between save data and `Progression`
-- do not place gameplay rules in `SaveManager`
-- save triggers should be defined centrally rather than scattered across gameplay scripts
+- `Player.gd` on the root body for locomotion and state
+- `HealthComponent` for HP, damage, invulnerability, and death
+- `Hurtbox` for damage intake routing
+- `PlayerCombat` for firing, charge, cooldown, and weapon energy
+- `PickupReceiver` for temporary and persistent pickup effects
+- `PlayerSensor` for pickup overlap collection
+- `CameraAnchor` for follow camera targeting
+- `WallCheckLeft` and `WallCheckRight` for wall-slide and wall-jump detection
 
-### `AudioManager`
+### Player Locomotion State Machine
 
-Purpose:
+The locomotion state machine lives in `scripts/player/player.gd`.
 
-- own music playback
-- own SFX playback
-- own bus routing
-- map semantic audio events to streams
+Current states:
 
-Rules:
+- `IDLE`
+- `RUN`
+- `JUMP`
+- `FALL`
+- `DASH`
+- `WALL_SLIDE`
+- `HURT`
+- `DEAD`
 
-- gameplay systems should request semantic events, not raw file paths
+High-level behavior:
 
-## Player
+- `Player.gd` reads input, updates timers, resolves wall contact, applies gravity, and chooses the current locomotion state
+- hurt and death temporarily override normal movement
+- dash is a timed locomotion override
+- wall slide is derived from wall contact plus directional input
 
-Keep all player-related implementation in the player area of the project, but keep responsibilities split by subsystem.
+If you want to change locomotion behavior:
 
-Player responsibilities are divided across:
+- state transitions: edit `scripts/player/player.gd`
+- movement numbers: edit `data/player/default_player_tuning.tres`
+- available tuning fields: inspect `scripts/player/player_tuning_data.gd`
+- visuals for locomotion states: edit `scripts/player/player_presentation.gd` and the textures assigned in `Player.tscn`
 
-- `Player.gd` for locomotion, facing, and movement state
-- `PlayerCombat.gd` for firing, charge behavior, and weapon usage
-- `HealthComponent.gd` for HP, damage intake, invulnerability, and death signaling
-- `PickupReceiver.gd` for applying pickup effects
-- visual and animation nodes for presentation only
+### Tuning Player Movement
 
-### Player scene
+The main movement tuning resource is `data/player/default_player_tuning.tres`.
 
-```text
-Player.tscn
-- Player (CharacterBody2D) [Player.gd]
-  - CollisionShape2D
-  - VisualRoot
-  - Hurtbox
-  - HealthComponent
-  - PlayerCombat
-    - WeaponInventory
-  - PickupReceiver
-  - PlayerSensor
-  - ShotOrigin
-  - WallCheckLeft
-  - WallCheckRight
-  - CameraAnchor
-```
+The schema in `scripts/player/player_tuning_data.gd` includes:
 
-### Input
-
-Required actions:
-
-- `move_left`
-- `move_right`
-- `jump`
-- `dash`
-- `shoot`
-- `interact`
-- `weapon_next`
-- `weapon_prev`
-- `sub_tank_use`
-- `pause`
-- `menu_confirm`
-- `menu_cancel`
-
-Rules:
-
-- support both keyboard and gamepad
-- gameplay code reads input actions only
-- gameplay code should not depend on raw keys or buttons
-
-### Player tuning data
-
-Use a dedicated data resource for player tuning values.
-
-It should hold movement and combat-adjacent tuning such as:
-
-- base max HP
 - run speed
 - acceleration and deceleration
 - air control
 - jump velocity
 - gravity scale
-- dash speed and duration
+- dash speed and dash duration
 - wall slide speed
 - wall jump force
-- hurt knockback
 - hurt duration
 - death delay
 - invulnerability time
 
-Rules:
+Rule of thumb:
 
-- balance values should live in data, not be hardcoded into logic
+- if you want to change numbers, start in the `.tres`
+- if you want to change behavior, start in `player.gd`
 
-### Player controller
+### Player Combat And Weapons
 
-`Player.gd` owns:
+Combat logic lives in `scripts/player/player_combat.gd`.
 
-- locomotion
-- facing direction
-- grounded and airborne movement handling
-- wall movement handling
-- movement-side state evaluation
+Key responsibilities:
 
-`Player.gd` should not own:
+- maintain combat state
+- read shoot input
+- manage charge timing
+- enforce cooldowns and projectile limits
+- consume and restore weapon energy
+- spawn projectiles from `ShotOrigin`
 
-- weapon inventory rules
-- projectile spawning rules
-- pickup application logic
-- cutscene logic
-
-### Player locomotion state machine
-
-Use a single locomotion state machine in `Player.gd`.
-
-States:
-
-- `IDLE`
-- `RUN`
-- `JUMP`
-- `FALL`
-- `DASH`
-- `WALL_SLIDE`
-- `HURT`
-- `DEAD`
-
-Priority order:
-
-- `DEAD`
-- `HURT`
-- `DASH`
-- `WALL_SLIDE`
-- `JUMP`
-- `FALL`
-- `RUN`
-- `IDLE`
-
-Rules:
-
-- dash exists in code from the start
-- campaign dash unlock is gated by the intro-stage capsule
-- debug stages may enable dash immediately
-- wall jump is supported but does not use a separate locomotion state; a wall jump transitions back into `JUMP`
-- dash does not grant invulnerability frames in the default implementation
-- ladder support belongs to the full game plan, but it does not need to block the first playable slice
-
-### Player combat
-
-`PlayerCombat.gd` owns:
-
-- weapon firing
-- shot timing and cooldown
-- charge behavior
-- projectile spawning requests
-- weapon energy consumption and restoration
-
-`PlayerCombat.gd` does not own locomotion.
-
-Use weapon data resources for:
-
-- weapon ID
-- display name
-- energy cost
-- max weapon energy capacity when applicable
-- projectile scene reference
-- base damage
-- charge support
-- charge tier thresholds and charge-shot outputs
-
-Combat behavior rules:
-
-- only one weapon is equipped at a time
-- weapon data should define any active projectile limit for that weapon
-- for the first implementation, `buster` is the only weapon that needs charge behavior
-- the buster supports three shot tiers: uncharged, partial charge, and full charge
-- `CHARGING` is the build-up state, partial charge is still part of `CHARGING`, and `CHARGED` means full charge is ready
-- charge release samples the equipped weapon and facing at the moment the shot is spawned
-- entering `DISABLED`, `HURT`, `DEAD`, or cutscene control cancels any in-progress charge unless a specific weapon later opts into different behavior
-
-### Weapon switching
-
-Use a dedicated `WeaponInventory` node under `PlayerCombat`.
-
-Rules:
-
-- the weapon order is explicit
-- `buster` starts unlocked
-- unlocked boss weapons are added through progression
-- cycling should skip locked weapons
-- weapon switching updates the HUD through combat or inventory signals rather than direct UI polling of input
-- for the first implementation, weapon switching is ignored while a charge is being held
-
-### Combat state machine
-
-Use a separate combat state machine in `PlayerCombat.gd`.
-
-States:
+Important combat states:
 
 - `READY`
 - `FIRING`
@@ -397,1259 +295,356 @@ States:
 - `COOLDOWN`
 - `DISABLED`
 
-Rules:
+Weapon flow:
 
-- locomotion and combat run in parallel
-- movement state should not block valid combat state changes by default
-- combat may be disabled temporarily during hurt, death, or cutscenes when needed
-- combat cooldown rules should be owned by weapon or combat data, not spread across player and projectile scripts
+- weapon order and unlocked state are managed by `WeaponInventory`
+- weapon definitions live in `data/weapons/*.tres`
+- `weapon_catalog.gd` provides the canonical catalog order used by inventory and progression
 
-These combinations must be supported:
+If you want to:
 
-- `RUN + READY`
-- `JUMP + FIRING`
-- `DASH + CHARGING`
-- `WALL_SLIDE + CHARGED`
-- `HURT + DISABLED`
+- tweak a weapon's cost, cooldown, damage, or projectile behavior: edit the relevant `data/weapons/*.tres`
+- change charge thresholds or combat-state behavior: edit `scripts/player/player_combat.gd`
+- change how unlocked weapons are tracked: inspect `WeaponInventory` and `Progression`
 
-### Player presentation
+### Player Pickups And Progression Upgrades
 
-Player visuals should read gameplay state, not define it.
+Pickup application is handled by `scripts/player/pickup_receiver.gd`.
 
-Presentation responsibilities:
+Use it when working on:
 
-- facing-based sprite or animation flipping
-- locomotion-state presentation
-- combat-state presentation
-- hurt, invulnerability, and charge feedback
+- heart tanks
+- armor parts
+- sub tanks
+- temporary health or weapon refills
+- save triggers tied to persistent pickups
 
-Rules:
+`Player.gd` also applies progression-driven upgrades on spawn or progression changes, especially max HP increases from heart tanks.
 
-- visual nodes should derive their state from locomotion and combat state machines
-- presentation should support uncharged, `charge_small`, and `charge_full` feedback tiers for the buster
-- animation playback should not become the authoritative source of gameplay state
+## Enemy Architecture
 
-### Player pickups
+### Where To Start
 
-Pickups should apply effects through `PickupReceiver.gd`, not through `Player.gd`.
+Core enemy files:
 
-`PickupReceiver` owns:
+- base scene example: `scenes/enemies/Enemy_WalkerBasic.tscn`
+- base behavior: `scripts/enemies/enemy_base.gd`
+- AI driver: `scripts/enemies/enemy_brain.gd`
+- enemy authored data: `scripts/enemies/enemy_data.gd`
+- state base class: `scripts/enemies/states/enemy_state.gd`
+- current states: `enemy_idle_state.gd`, `enemy_patrol_state.gd`, `enemy_dead_state.gd`
+- temporary drops: `scripts/enemies/drop_spawner.gd`
 
-- health refill application
-- weapon energy refill application
-- persistent reward routing into `Progression`
-- heart tank routing into progression-derived max HP growth
-- armor capsule routing by explicit armor part ID
-- sub tank refill routing
+### How Enemy AI Works
 
-`PlayerSensor` should detect pickup `Area2D`s and pass them to `PickupReceiver`.
+Enemy AI is intentionally simple and shallow:
 
-### Player death and respawn
+- `EnemyBase` owns shared body movement, damage handling, contact damage, vision activation, defeat flow, and drop spawning
+- `EnemyBrain` owns the current state node and transitions between idle, patrol, and dead
+- each enemy state is a small node implementing `enter`, `exit`, and `physics_update`
 
-Death and respawn are stage-flow concerns, not self-contained player logic.
+Current wake/sleep behavior:
 
-Rules:
+- the player entering `VisionArea` wakes the enemy
+- leaving the area sleeps the enemy
+- defeat moves the brain into the dead state
 
-- `HealthComponent` signals player death
-- `StageController` decides whether to respawn at checkpoint or restart the stage
-- player scripts should not reload scenes directly on death
-- death should lock player input immediately, play the configured death timing, and then hand off to `StageController` for fade and respawn flow
+### How To Add A New Enemy Type
 
-## Shared Gameplay Systems
+Recommended path:
 
-This section defines systems shared by player, enemies, bosses, hazards, and world interactions.
+1. Duplicate a working enemy scene such as `Enemy_WalkerBasic.tscn`.
+2. Create or assign an `EnemyData` resource for the new enemy.
+3. Adjust shared parameters like HP, contact damage, activation range, patrol speed, and drop scene in the data resource.
+4. If the behavior can be expressed with existing states, reuse them.
+5. If the behavior needs new logic, add a new `EnemyState`-derived script and wire it under `EnemyBrain`.
+6. Only branch away from `EnemyBase` when the enemy genuinely does not fit the shared body/vision/contact model.
 
-### Health and damage
+If you want to tweak:
 
-Use one shared hit payload shape and one shared health component.
+- generic enemy numbers: edit the `EnemyData` resource
+- wake/sleep or contact behavior: edit `enemy_base.gd`
+- AI transitions: edit `enemy_brain.gd`
+- per-state behavior: edit the state script
 
-Shared concepts:
+## Boss Architecture
 
-- hit payload contains the source, team, weapon identity, damage, and knockback
-- hurtboxes filter incoming hits by team
-- health components process damage, invulnerability, death, and health signals
+### Where To Start
 
-Rules:
+Boss-related files:
 
-- use the same damage pipeline for player, enemies, and bosses
-- hazards should integrate with the same damage model where practical
-- the source of a hit defines intended damage and knockback, but the target decides how that knockback is resolved in its own movement logic
+- shared boss behavior: `scripts/bosses/maverick_boss.gd`
+- generic configurable boss wrapper: `scripts/bosses/generic_maverick_boss.gd`
+- stage encounter driver: `scripts/stages/boss_encounter_controller.gd`
+- reusable boss-stage wrapper: `scripts/stages/maverick_boss_stage.gd`
+- current bespoke bosses: `chill_penguin_boss.gd`, `storm_eagle_boss.gd`, `flame_mammoth_boss.gd`
+- current generic boss scene path: `scenes/bosses/GenericMaverickBoss.tscn`
 
-### Projectiles
+### How Boss Flow Works
 
-Use one shared projectile contract for player and enemy attacks.
+There are two layers:
 
-Projectile data or configuration should define:
+- the boss actor controls phases, movement, attacks, and defeat
+- the boss encounter/stage layer controls arena locking, HUD visibility, and handoff into stage clear
 
-- owner team
-- weapon ID
-- damage payload
-- movement behavior
-- lifetime
-- hit behavior against world and targets
+`MaverickBoss` currently provides:
 
-Rules:
+- intro phase
+- phase one and phase two combat loops
+- projectile spawning
+- contact damage
+- phase change signaling
+- defeat signaling
 
-- projectiles own travel and lifetime, not progression logic
-- projectile hits should produce the same shared hit payload used elsewhere
-- player and enemy projectile scenes may differ visually, but they should follow the same damage-routing model
-- the default projectile behavior is single-hit and destroy-on-hit unless projectile data says otherwise
-- world collision should be data-driven so weapons can choose whether they stop on solid tiles, ignore one-way surfaces, pierce, or explode
-- multi-hit or lingering projectiles must define their per-target hit interval explicitly to avoid accidental rapid-hit behavior
+`BossEncounterController` provides:
 
-### Damage modifiers and weaknesses
-
-Use data-driven damage modifiers for bosses and, when useful, for enemies.
-
-Rules:
-
-- default damage comes from weapon data unless an enemy or boss overrides it
-- weakness and resistance tables should be keyed by stable weapon IDs
-- weapon weakness logic should live on the target side or shared combat data, not inside player movement scripts
-- target-side damage modifiers should support immunity, resistance, normal damage, and weakness without special-casing individual player weapons
-
-### Collision layers
-
-Keep these layer numbers stable:
-
-| Layer | Name |
-| --- | --- |
-| 1 | `WORLD_SOLID` |
-| 2 | `WORLD_ONE_WAY` |
-| 3 | `PLAYER_BODY` |
-| 4 | `ENEMY_BODY` |
-| 5 | `PLAYER_HITBOX` |
-| 6 | `ENEMY_HITBOX` |
-| 7 | `PLAYER_HURTBOX` |
-| 8 | `ENEMY_HURTBOX` |
-| 9 | `PICKUP` |
-| 10 | `TRIGGER` |
-| 11 | `HAZARD` |
-| 12 | `CAMERA_ZONE` |
-| 13 | `PLAYER_SENSOR` |
-
-Recommended usage:
-
-- character bodies collide with world layers
-- hitboxes and hurtboxes use `Area2D`
-- pickups, checkpoints, cutscene triggers, and camera zones use `Area2D`
-- hazards use `Area2D` and plug into the shared hit or hazard pipeline
-
-## Enemies And Bosses
-
-### Campaign roster
-
-Stages and bosses:
-
-- `intro_highway` with scripted `vile_ride_armor`
-- `chill_penguin`
-- `spark_mandrill`
-- `armored_armadillo`
-- `launch_octopus`
-- `boomer_kuwanger`
-- `sting_chameleon`
-- `storm_eagle`
-- `flame_mammoth`
-- `sigma_fortress_1` with `bospider`
-- `sigma_fortress_2` with `rangda_bangda`
-- `sigma_fortress_3` with boss rematch teleporter gauntlet
-- `sigma_fortress_4` with `velguarder`, `sigma_first_form`, and `sigma_wolf_form`
-
-Weapon rewards:
-
-- `shotgun_ice`
-- `electric_spark`
-- `rolling_shield`
-- `homing_torpedo`
-- `boomerang_cutter`
-- `chameleon_sting`
-- `storm_tornado`
-- `fire_wave`
-
-Use stable internal IDs for regular enemy families such as:
-
-- `walker_basic`
-- `turret_basic`
-- `hopper_basic`
-- `flying_drone_basic`
-- `shield_guard_basic`
-- `mine_dropper_basic`
-
-### Enemy scene and logic
-
-Enemy inheritance stays shallow.
-
-Core enemy parts:
-
-- `EnemyBase.gd` as the main scene script
-- `HealthComponent.gd` for HP
-- `Hurtbox.gd` for incoming hit routing
-- `EnemyBrain.gd` for AI state transitions
-- `DropSpawner` or equivalent for temporary drops
-- enemy data resource or equivalent authored configuration
-
-Example structure:
-
-```text
-Enemy_WalkerBasic.tscn
-- EnemyWalkerBasic (CharacterBody2D) [EnemyBase.gd]
-  - CollisionShape2D
-  - VisualRoot
-  - Hurtbox
-  - HealthComponent
-  - VisionArea
-  - AttackOrigin
-  - EnemyBrain
-  - DropSpawner
-```
-
-Rules:
-
-- avoid deep enemy inheritance trees
-- keep common combat and health behavior shared
-- keep enemy-specific behavior in data, states, or small scripts
-- placed enemies should be authored from explicit scene instances or spawn definitions, not discovered dynamically at runtime
-
-Enemy authored data should cover at least:
-
-- enemy ID
-- max health
-- contact damage or touch-hit behavior
-- optional projectile or attack references
-- optional drop behavior
-- activation range or activation policy
-- reset behavior on retry
+- boss gate trigger activation
+- arena barrier lock/unlock
+- encounter active/completed state
+- boss HUD data feed
 
-### Enemy AI
+`maverick_boss_stage.gd` wires the stage definition into the encounter, boss display name, and stage-clear handoff.
 
-Use small state scripts, not one giant enemy update loop.
+If you want to:
 
-Reusable enemy state types:
+- tweak a boss's speeds, timings, colors, or attack numbers: edit the boss scene exports or the generic boss profile data in `generic_maverick_boss.gd`
+- add a new boss that still fits the shared Maverick model: prefer the shared `MaverickBoss` + boss-stage path
+- change arena or HUD behavior: inspect `boss_encounter_controller.gd` and `scripts/ui/boss_hud.gd`
 
-- `IdleState`
-- `PatrolState`
-- `ChaseState`
-- `AttackState`
-- `RecoverState`
-- `DeadState`
+## Dialogue And Cutscenes
 
-Rules:
-
-- `EnemyBrain` owns transitions between states
-- individual states own localized behavior
-- enemy behavior should be composable, not hardwired into one monolithic class
-- non-boss enemies should use a clear activation policy so off-screen behavior is predictable
+### Where To Start
 
-Activation and reset policy:
+Dialogue and cutscene files:
 
-- default stage enemies wake when the player enters their activation range or camera-relevant area
-- enemies outside the active gameplay area should not continue running expensive AI unnecessarily
-- by default, non-boss enemies do not respawn just because the player leaves and re-enters an area during the same run
-- defeated enemies and temporary enemy drops are stage-run state only and reset on retry
-- retrying from a checkpoint rebuilds enemies and temporary stage objects from authored state for the current run
+- dialogue playback: `scripts/systems/dialogue_controller.gd`
+- dialogue resource types: `scripts/systems/dialogue_sequence.gd`, `scripts/systems/dialogue_line.gd`
+- dialogue UI: `scripts/ui/dialogue_box.gd`, `scenes/ui/DialogueBox.tscn`
+- cutscene runner: `scripts/systems/cutscene_director.gd`
+- example dialogue asset: `data/dialogue/test_stage_dash_capsule.tres`
 
-### Boss scene and logic
+### How The Dialogue System Works
 
-Bosses use the shared combat and health systems plus a boss-specific phase controller.
+Dialogue is resource-driven.
 
-Example structure:
+A dialogue sequence is a `DialogueSequence` resource containing:
 
-```text
-Boss_ChillPenguin.tscn
-- BossChillPenguin (CharacterBody2D) [BossBase.gd]
-  - CollisionShape2D
-  - VisualRoot
-  - Hurtbox
-  - HealthComponent
-  - BossPhaseController
-  - AttackOrigin
-  - IntroMarker
-  - ArenaMarker
-```
-
-Boss requirements:
-
-- intro hook
-- health bar integration
-- arena lock behavior
-- weakness and resistance handling
-- reward flow through `Progression`
-
-Rules:
-
-- boss phase changes should be controlled by explicit thresholds or conditions
-- boss rewards should not bypass progression systems
-- bosses should expose stable IDs for progression, weakness tables, and UI hookup
-- bosses should remain stage-owned encounters and should not use the generic off-screen despawn policy used by normal enemies
-
-Boss phase authoring should define:
-
-- ordered phase list
-- entry condition for each phase
-- attacks or behaviors enabled in each phase
-- one-time transition actions
-- end-of-fight handoff back to `StageController`
-
-### Boss rematch gauntlet
-
-`sigma_fortress_3` uses a staged boss-rematch flow rather than one new single boss encounter.
-
-Rules:
-
-- the fortress-3 source of truth is an explicit ordered list of rematch boss IDs in stage data
-- rematch encounters do not award duplicate boss weapons
-- stage clear occurs only after the required rematch set has been completed
-- teleporter availability and completion state are stage-run state, not permanent save data
+- `sequence_id`
+- `allow_skip`
+- `lines`
 
-### Vehicles and ride armor
-
-Ride armor is a separate gameplay system from normal player locomotion.
-
-Use cases:
-
-- scripted enemy ride armor in `intro_highway`
-- player-pilotable ride armor in later campaign content such as `flame_mammoth`
+Each line is a `DialogueLine` resource containing:
 
-Rules:
-
-- ride armor uses its own movement and attack rules instead of reusing the normal player locomotion state machine directly
-- entering or exiting ride armor uses the `interact` action
-- while mounted, the player temporarily delegates locomotion and combat authority to the ride armor controller
-- ride armor availability and destruction are stage-run state unless a specific campaign unlock is later added
+- `line_id`
+- `speaker_id`
+- `body_text`
 
-## Stages, Camera, And Pickups
+`DialogueController`:
 
-### Stage data
+- loads `DialogueBox.tscn`
+- mounts it on the runtime overlay
+- advances on `menu_confirm`
+- skips on `menu_cancel` when the sequence allows it
+- emits sequence and line change signals
 
-Use a stage definition resource for stage metadata.
+### How To Add Or Change Dialogue
 
-Stage data should identify:
+Recommended path:
 
-- stage ID
-- display name
-- stage scene
-- boss ID
-- optional ordered boss list for multi-encounter stages such as fortress rematches
-- weapon reward ID
-- music event or track ID
-- default spawn ID
-- default unlock behavior
-- intro-clear requirements
-- optional intro or stage-clear cutscene IDs
+1. Create or edit a resource in `data/dialogue/`.
+2. Add or edit `DialogueLine` entries in the `DialogueSequence`.
+3. Trigger the sequence from a cutscene action using `CutsceneDirector` with a `show_text` action.
+4. If the dialogue is tied to a stage object, inspect the stage-local script that starts the cutscene or dialogue flow.
 
-Rules:
+Use `CutsceneDirector` when dialogue is part of a larger scripted flow such as:
 
-- stage IDs are the canonical keys used by `GameFlow`, progression, stage select, save data, and audio lookup
-- stage metadata should be authored explicitly and reused across title flow, stage select, and stage loading
-- the ordered list of `StageDefinition` resources owned by `GameFlow` is the source of truth for stage select order and fortress ordering
-
-### Stage scene layout
-
-Use a consistent stage root structure.
-
-```text
-Stage_FlameMammoth.tscn
-- StageController
-  - CameraController
-  - TilemapRoot
-  - BackgroundRoot
-  - SpawnPoints
-  - Checkpoints
-  - Enemies
-  - Pickups
-  - Capsules
-  - Triggers
-  - CameraZones
-  - HazardZones
-  - BossArena
-```
-
-### Stage controller
-
-`StageController.gd` owns stage-local flow.
-
-Responsibilities:
-
-- player spawn
-- checkpoint activation
-- trigger wiring
-- stage-local boss references
-- camera zone activation
-- stage complete signaling
-- stage-local cutscene entry points
-
-Rules:
-
-- stage scenes should be runnable directly for testing
-- standalone stage testing should not require the full boot flow
-- stage-local debug progression is allowed for development convenience
-- stage completion should award progression updates before leaving the stage
-- stage-local systems should report upward to `StageController` rather than changing global flow directly
-
-Stage completion rules:
-
-- stage clear is a stage-controller decision, not just a boss death signal
-- for Maverick and fortress stages, defeating the stage boss starts the stage-clear flow
-- progression rewards, cutscene outcomes, and save triggers occur before exiting the cleared stage
-- once stage-clear flow begins, normal gameplay input should not resume unless the flow explicitly returns control
-
-### Checkpoints and hazards
-
-Checkpoints are stage-local retry anchors.
-
-Checkpoint rules:
-
-- checkpoints use stable stage-local IDs
-- `StageController` owns the active checkpoint for the current run
-- checkpoints are not permanent campaign progression facts and should not be stored in the save file
-- activating a checkpoint updates the respawn anchor for the current run only
-- retrying from checkpoint respawns the player at that checkpoint and rebuilds temporary stage state from authored content
-
-Hazard rules:
-
-- hazards may either apply standard damage or cause an instant death or fall reset depending on the hazard type
-- hazards should use shared systems where possible instead of bespoke per-stage logic
-- out-of-bounds or pit recovery should route through `StageController`
-- pits and out-of-bounds volumes are instant-death hazards by default, not damage-and-continue hazards
-- retry should reset temporary pickups, temporary drops, breakable objects, and enemy state unless a stage-specific rule intentionally says otherwise
-
-### Camera
-
-Use one gameplay camera per stage, not multiple active gameplay cameras.
-
-Camera modes:
-
-- `FOLLOW`
-- `ZONE_LOCK`
-- `SCREEN_SCROLL`
-- `BOSS_LOCK`
-- `CUTSCENE`
-
-Rules:
-
-- follow `Player/CameraAnchor`
-- clamp to stage bounds or zone bounds
-- use `SCREEN_SCROLL` for room-to-room or screen-boundary transitions that temporarily take control away from normal follow behavior
-- during `SCREEN_SCROLL`, gameplay input is locked by default until the camera handoff finishes
-- boss fights switch to `BOSS_LOCK`
-- cutscenes temporarily take camera control
-- use light additive shake, not heavy cinematic motion
-
-### Pickups and powerups
-
-Persistent pickups live in the stage scene. Temporary drops spawn at runtime.
-
-Pickup categories:
-
-- health refill
-- weapon-energy refill
-- heart tank
-- sub tank
-- armor capsule
-
-Pickup data should identify:
-
-- pickup ID
-- pickup type
-- whether it is persistent
-- effect payload such as health, weapon energy, or armor part
-
-Persistent pickup rules:
-
-- heart tanks, sub tanks, and armor capsules are persistent
-- health and weapon-energy refills are not persistent
-- use stable IDs like `intro_highway_dash_capsule` or `storm_eagle_heart_tank`
-- stage load should skip already collected persistent pickups
-- persistent pickup collection should trigger a save opportunity once the pickup is confirmed
-
-Sub tank rules:
-
-- sub tanks are persistent inventory items with separate ownership and fill state
-- `sub_tank_use` attempts to heal the player from owned filled sub tanks
-- sub tank usage is available from the pause menu in the full campaign and may also be bound directly through `sub_tank_use`
-- sub tank healing routes through `HealthComponent` and cannot exceed the current max HP
-
-Armor part effect domains:
-
-- `helmet` covers exploration or utility upgrades
-- `body` covers defense or damage mitigation upgrades
-- `arms` covers buster or charge upgrades
-- `legs` covers movement upgrades that stack on top of the baseline dash rules
-
-## Progression, Stage Select, And Save
-
-### Stage select
-
-Use a dedicated stage select scene such as `scenes/ui/stage_select_menu.tscn`.
-
-Rules:
-
-- render a fixed roster from `StageDefinition` resources
-- stage order is explicit, not derived from the filesystem
-- after intro clear, unlock the 8 Maverick stages
-- unlock fortress stages only when the required progression flags are set
-- `intro_highway` does not need to appear in the normal stage select flow after it has been cleared
-- fortress stage ordering is explicit and should not be inferred from filenames
-- the stage select scene reads order and lock state from the same `GameFlow` stage registry used for stage loading
-
-### Save system
-
-Initial save format:
-
-- JSON
-- versioned
-- stored at `user://save_01.json`
-- one local save profile in the initial implementation
-
-Serialized fields:
-
-- save format version
-- boss defeat flags
-- weapon unlock flags
-- persistent pickup collection IDs
-- armor part unlock flags for `helmet`, `body`, `arms`, and `legs`
-- dash unlock flag
-- sub tank ownership and fill values
-- intro-clear flag
-- fortress-unlock flag
-
-Derived values instead of serialized values:
-
-- max HP bonus is derived from collected heart tank IDs rather than a separate `max_hp_extensions` field
-- weapon max-energy capacity is defined in combat or weapon data rather than saved as progression state
-
-Do not serialize:
-
-- live enemy instances
-- temporary pickups
-- current checkpoint as a permanent campaign fact
-- moment-to-moment HP or weapon energy unless a suspend-save system is added later
-
-Save trigger policy:
-
-- save after stage clear and reward payout
-- save after newly collected persistent pickups or capsules
-- do not save on temporary pickups or every checkpoint touch by default
-- continuing from save restores campaign progression only, then re-enters the appropriate front-end flow rather than reconstructing an in-progress stage snapshot
-
-Migration policy:
-
-- every save payload version change must define an upgrade path from older supported versions
-- if a payload is too old or invalid to migrate safely, loading should fail gracefully and preserve the existing file until the user chooses how to proceed
-
-### Retry model
-
-For the first implementation:
-
-- retry from checkpoint or stage start
-- no full lives or continues system required yet
-- lives can be layered on later without changing movement or combat architecture
-- until a lives system exists, death flows directly into retry handling rather than a separate game-over screen
-
-## Cutscenes And Dialogue
-
-### Cutscenes
-
-Use a data-driven `CutsceneDirector.gd`.
-
-Cutscene logic should not live in player scripts.
-
-Primary use cases:
-
-- intro stage opening
-- Zero rescue
-- Dr. Light capsule sequences
-- boss intro stingers
-- stage clear reward flow
-- ending and fortress transitions
-
-First-pass cutscene actions:
-
-- `move_actor`
-- `play_animation_state`
-- `camera_pan_to_marker`
-- `wait`
-- `show_text`
-- `emit_audio_event`
-- `unlock_dash`
-- `end_stage`
-
-Rules:
-
-- cutscenes should coordinate actors, camera, audio, and dialogue
-- progression changes triggered by story moments should still route through the proper gameplay systems
-- stage scripts may start cutscenes, but the cutscene system owns sequence execution once started
-- only one cutscene should be active at a time
-- entering a cutscene disables normal gameplay input and any combat actions that should not run during scripted control
-- exiting a cutscene must restore player control, camera ownership, and gameplay state in a defined order
-
-Cutscene skip and interruption rules:
-
-- skippability is authored per cutscene or per sequence
-- skipping a cutscene must still apply any required progression or stage-state outcomes
-- if a cutscene is unskippable, dialogue skipping rules cannot bypass it
-- stage-critical cutscenes should start only when the stage is in a safe state for control handoff
-
-### Dialogue
-
-Dialogue is a subsystem used by cutscenes. It should not own progression changes or camera movement.
-
-Files:
-
-- `scenes/ui/dialogue_box.tscn`
-- `scripts/ui/dialogue_box.gd`
-- `scripts/systems/dialogue_controller.gd`
-- `data/dialogue/*.tres` or `data/dialogue/*.json`
-
-Dialogue data should support:
-
-- sequence IDs
-- line IDs
-- speaker IDs
-- body text
-- portrait references
-- optional voice or SFX events
-- skippable versus unskippable sequence behavior
-
-Input rules:
-
-- `menu_confirm` advances dialogue
-- `menu_cancel` may skip only skippable sequences
-- gameplay input stays disabled while dialogue is active
-- dialogue completion should return control to the active cutscene or stage flow explicitly rather than implicitly assuming gameplay resumes
-
-Capsule flow example:
-
-1. Player enters a capsule trigger.
-2. `StageController` starts a cutscene.
-3. `CutsceneDirector` shows the related dialogue sequence.
-4. `DialogueController` presents the sequence.
-5. The cutscene awards the unlock through gameplay systems.
-6. `Progression` marks the capsule collected.
+- capsule interactions
+- stage events
+- camera handoffs
+- progression unlocks
 
 ## Audio
 
-Audio is event-driven. Gameplay code triggers semantic events, not raw file paths.
+### Where Audio Lives
 
-Required semantic events:
+Audio assets and notes live under `audio/`.
 
-- `player_jump`
-- `player_dash`
-- `player_shoot`
-- `buster_charge_start`
-- `buster_charge_full`
-- `player_hurt`
-- `enemy_defeat`
-- `boss_intro`
-- `boss_defeat`
-- `checkpoint_activated`
-- `stage_clear`
-- `menu_confirm`
-- `menu_cancel`
+Current project note:
 
-Implementation rules:
+- placeholder playback is still generated in code for many events
+- the default semantic event registration is currently in `autoloads/audio_manager.gd`
 
-- one autoload: `AudioManager`
-- use buses such as `Master`, `Music`, and `SFX`
-- use data-driven event-to-stream mapping
-- missing placeholder clips should fail silently
-- stages, bosses, UI, and cutscenes all use the same semantic event vocabulary
-- boss encounters should support a boss-intro stinger transition into a boss loop and a return or handoff after the encounter ends
+### How Audio Works
+
+Gameplay and UI code should emit semantic events like:
+
+- player shot
+- player hurt
+- charge start
+- charge full
+- stage clear
+
+`AudioManager` owns:
+
+- music event registration
+- SFX event registration
+- event existence queries
+- playback routing
+
+### How To Swap A Specific Sound
+
+Right now, the default event table is defined in `autoloads/audio_manager.gd`.
+
+If you want to replace a specific sound:
+
+1. Identify the semantic event ID used by the calling gameplay script.
+2. Add or load the desired `AudioStream` asset.
+3. Register it against that event through `AudioManager`.
+4. Keep the event ID stable so gameplay code does not need to know about asset filenames.
+
+If the project later moves from generated placeholder streams to authored assets, preserve the semantic event API rather than rewriting gameplay callers to point at raw files.
 
 ## UI
 
-Required UI:
+### Where To Start
 
-- title and menu UI
-- player HUD
-- weapon energy display
-- boss health display
-- pause menu
-- stage select UI
-- dialogue box
+UI scenes and scripts:
 
-UI rules:
+- gameplay HUD: `scenes/ui/GameplayHUD.tscn`, `scripts/ui/gameplay_hud.gd`
+- boss HUD: `scenes/ui/BossHUD.tscn`, `scripts/ui/boss_hud.gd`
+- title: `scenes/ui/TitleScreen.tscn`, `scripts/ui/title_screen.gd`
+- stage select: `scenes/ui/StageSelectMenu.tscn`, `scripts/ui/stage_select_menu.gd`
+- stage clear: `scenes/ui/StageClearOverlay.tscn`, `scripts/ui/stage_clear_overlay.gd`
+- ending: `scenes/ui/EndingScreen.tscn`, `scripts/ui/ending_screen.gd`
 
-- UI reads gameplay state
-- UI does not own gameplay logic
-- stage clear and weapon unlock feedback should use the same UI system
-- HUD should expose player HP, equipped weapon, weapon energy, and boss HP when relevant
-- pause, dialogue, and stage-clear screens should behave as overlay UI, not separate gameplay scenes
-- gameplay HUD is owned by the runtime shell and shown only during gameplay states
-- the pause menu is the full-campaign source for weapon selection and sub tank usage, while `weapon_next` and `weapon_prev` are allowed as direct shortcuts
-- boss UI is instantiated by the runtime shell in `UIRoot` and is driven by the currently active boss encounter selected by `StageController`
-- UI should consume state through signals, explicit references, or read-only queries, not by duplicating gameplay state internally
+Rules:
 
-## Test Infrastructure
+- UI should observe gameplay state through signals, queries, or bound references
+- gameplay HUD belongs to gameplay runtime states only
+- overlay screens should not become the owner of gameplay logic
 
-Validation goals are not enough by themselves. The project also needs a lightweight testing architecture so automated checks can actually be run repeatedly from the console where appropriate.
+## Progression And Save
 
-Test categories:
+### Progression
 
-- `Console-ready` checks can run immediately through a headless Godot command without a custom harness beyond the project itself
-- `Needs harness` checks require dedicated test scenes, test scripts, fixtures, or a test runner before they can be run from the console
-- `Manual only` checks cover feel, readability, pacing, and other human judgment tasks that should stay outside automation
+Persistent campaign state lives in `autoloads/progression.gd`.
 
-Test types:
+This is where to look for:
 
-- smoke tests for project boot, scene load, and basic startup safety
-- integration tests for player, stage, progression, save-load, and encounter flows
-- regression tests for bugs that should never come back once fixed
-- manual validation passes for control feel, camera behavior, UI clarity, and cutscene readability
+- defeated bosses
+- unlocked weapons
+- cleared stages
+- collected persistent pickups
+- heart tanks
+- armor parts
+- sub tanks
+- dash unlock
+- campaign completion checks
 
-Recommended test layout:
+### Save
 
-- `tests/smoke/` for narrow startup and scene-load checks
-- `tests/integration/` for gameplay-flow verification
-- `tests/regression/` for targeted bug repro coverage
-- `tests/fixtures/` for save payloads, progression presets, and reusable authored test data
-- `scenes/test/` for dedicated test stages and encounter setups
-- `scripts/test/` for test helpers, assertions, and a shared test runner
+Save flow lives in `autoloads/save_manager.gd`.
 
-Test runner rules:
+Use it when changing:
 
-- keep one dedicated test runner entry point for scripted checks rather than scattering ad hoc scripts across the repo
-- console automation should return a clear pass or fail exit code
-- test output should identify the failing phase, test name, or fixture clearly enough for quick triage
-- headless smoke checks should remain runnable even before the full test harness exists
+- saved fields
+- save versioning
+- save path
+- when the game writes a save
 
-Command conventions:
+The project currently saves campaign facts, not room-level suspend state.
 
-- keep `godot --path . --headless --quit` as the base smoke check
-- add dedicated console commands for smoke and integration suites once the test runner exists
-- prefer deterministic test commands that do not require title-flow navigation or editor-only setup
+## Content Authoring Guidelines
 
-Fixture strategy:
+### Stages
 
-- use explicit progression presets for locked, partially unlocked, and fully unlocked campaign states
-- use explicit save fixtures for save-load round-trip tests and migration tests
-- use dedicated test stages for movement, combat, hazards, checkpoints, pickups, and boss encounters
-- test fixtures may enable debug conveniences, but those conveniences must stay out of normal gameplay flow
+When adding or revising a stage:
 
-Debug helper policy:
+- start with the relevant `StageDefinition` resource in `data/stages/`
+- keep stage identity and unlock logic in stage data
+- keep stage-local triggers and retry logic in the stage scene and controller
+- prefer direct stage launch for iteration
 
-- test-only helpers are allowed when they reduce setup cost for repeatable validation
-- test helpers should be isolated behind clearly named scripts, scenes, or debug flags
-- gameplay systems should not depend on test helpers to function in normal play
+### Weapons
 
-Automation boundaries:
+When changing weapon behavior:
 
-- `Console-ready` checks should be favored for boot, scene load, save-load, state transitions, reward payout, and retry flows
-- `Needs harness` checks should cover stateful gameplay interactions such as locomotion transitions, combat behavior, checkpoint resets, cutscene sequencing, and boss phase flow
-- `Manual only` checks should remain the default for movement feel, camera feel, UI readability, and pacing judgments
+- authored values live in `data/weapons/*.tres`
+- schema lives in `scripts/player/weapon_data.gd`
+- catalog order lives in `scripts/player/weapon_catalog.gd`
 
-Regression policy:
+### Pickups And Upgrades
 
-- every bug fixed during development should be considered for either a regression test or a documented manual checklist item
-- once a harness-backed automated test exists for a system, later milestone work should extend that suite instead of replacing it
+When adding persistent upgrades:
 
-## Validation Strategy
+- use stable IDs
+- route collection through `PickupReceiver`
+- update progression instead of storing per-stage custom flags
+- ensure the pickup remains safe on replay after save/load
 
-Before broader content production starts, the project should be able to validate these loops cheaply:
+### Placeholder Assets
 
-- headless project boot
-- direct stage launch from the editor
-- player spawn, movement, combat, damage, death, and retry in a test stage
-- boss defeat into progression update
-- persistent pickup collection into save and reload
+Placeholder assets should be easy to swap later.
 
-Validation rules:
+Rules:
+
+- keep collisions and anchors independent from art
+- use stable asset names and paths
+- do not let gameplay logic depend on placeholder-specific visuals
+
+## Testing Procedure
+
+### Validation Philosophy
+
+Automated checks are agent-owned. Manual feel checks are user-owned.
+
+Rules:
 
 - prefer the narrowest useful validation first
-- direct stage testing should remain a first-class workflow throughout development
+- validate systems in the context where they are authored
+- extend the harness when a behavior is regression-prone and repeatable
+- keep direct stage launch working as an iteration path
 
-Recommended validation order:
+### Standard Validation Order
+
+Use this order unless a task clearly calls for something narrower:
 
 1. Run a headless project boot check.
-2. Launch the current stage scene directly in the editor.
-3. Verify spawn, movement, combat, damage, death, and retry in that stage.
-4. Verify one persistent pickup and one checkpoint flow.
-5. Verify boss defeat, reward payout, save, and return to front-end flow.
+2. Run the relevant harness-backed automated check.
+3. Run neighboring regression checks when shared flow is affected.
+4. Leave feel, readability, pacing, and subjective presentation to manual validation.
 
-Validation expectations for new work:
+### Console Workflow
 
-- new player or shared-system work should be validated in the narrowest possible test stage
-- new progression or save work should include a save-load smoke check
-- new cutscene or dialogue work should include both normal completion and skip-path checks
-- milestone-level automated checks should be tagged as either `Console-ready` or `Needs harness`
+Base smoke check:
 
-## Placeholder Asset Rules
+```powershell
+godot --path . --headless --quit
+```
 
-- use stable placeholder names
-- keep collision and hitboxes separate from visuals
-- drive visuals from semantic states such as `idle`, `run`, `dash`, `hurt`, `charge_small`, and `charge_full`
-- keep character, enemy, projectile, UI, and stage placeholder conventions consistent
+Harness entry point:
 
-## Milestones
+```powershell
+godot --path . --headless -s res://tests/smoke/phase_1_harness.gd -- <mode>
+```
 
-The original milestone buckets were too large to reliably complete in a single turn. Use the smaller phases below instead.
+Use harness-backed checks for:
 
-Validation format for every phase:
+- progression
+- rewards
+- retry flow
+- stage flow
+- boss activation and completion
+- save/load
+- regression fixes
 
-- automated checks should be the narrowest useful verification for the systems added in that phase
-- each automated check should be labeled `Console-ready` or `Needs harness`
-- manual validation should focus on feel, control flow, and visible state changes that are difficult to assert purely through automation
-- each phase should add to the regression checklist rather than replacing it
-- when a phase introduces new visible gameplay actors, objects, pickups, UI, or hazards, that same phase should also generate simple flat placeholder sprites for them
+## Documentation Maintenance
 
-### Phase 1
+This spec should stay onboarding-oriented and architectural.
 
-Scope:
+Rules:
 
-- project structure
-- runtime shell
-- autoload registration
-- one test stage
-- standalone stage testing
-- initial placeholder sprite conventions and first shared placeholder assets
-
-Automated checks:
-
-- `Console-ready`: headless project boot succeeds
-- `Needs harness`: `Main.tscn` loads with the expected root layers
-- `Needs harness`: required autoloads exist and initialize without errors
-- `Console-ready`: test stage can be instanced directly without going through title flow
-
-Manual validation:
-
-- launch the project normally and confirm title flow appears
-- launch the test stage directly from the editor
-- confirm only one gameplay stage is active at a time
-
-Bug watch:
-
-- missing or duplicate autoload registration
-- runtime shell loading the wrong scene layer
-- test stage depending on title flow to boot correctly
-
-### Phase 2
-
-Scope:
-
-- player movement
-- player locomotion state machine
-- camera follow hookup
-- player placeholder sprites for locomotion readability
-
-Automated checks:
-
-- `Needs harness`: locomotion states transition correctly for idle, run, jump, and fall
-- `Needs harness`: player spawn creates a controllable player instance in the test stage
-- `Needs harness`: camera follows the player anchor without null-reference errors
-
-Manual validation:
-
-- run left and right, jump, fall, and stop repeatedly
-- verify facing direction changes cleanly
-- verify camera follow feels stable during jumps and landings
-
-Bug watch:
-
-- stuck locomotion states
-- frame-rate-dependent movement
-- camera jitter, lag spikes, or wrong follow target
-
-### Phase 3
-
-Scope:
-
-- shared health, damage, and collision
-- player death and respawn flow
-- retry from stage start
-- player hurt and death placeholder visuals
-
-Automated checks:
-
-- `Needs harness`: hit payload damages valid targets and ignores same-team hits
-- `Needs harness`: player death signal triggers retry flow from stage start
-- `Needs harness`: stage retry reconstructs temporary run state from authored content
-
-Manual validation:
-
-- take damage from an enemy or hazard
-- die and confirm restart from the stage start anchor
-- verify the stage looks reset after retry
-
-Bug watch:
-
-- invulnerability not respected
-- duplicate death or retry triggers
-- stale temporary objects surviving across retry
-
-### Phase 4
-
-Scope:
-
-- player combat
-- projectile pipeline
-- audio manager
-- HUD shell
-- player shot and HUD placeholder visuals
-
-Automated checks:
-
-- `Needs harness`: firing spawns projectiles from the correct origin
-- `Needs harness`: projectile limits and cooldown rules are enforced
-- `Needs harness`: charge start and release follow expected combat state changes
-- `Needs harness`: HUD receives weapon and health updates
-- `Console-ready`: semantic audio events resolve without runtime errors
-
-Manual validation:
-
-- fire repeatedly while grounded and airborne
-- charge and release the buster
-- take damage while charging
-- confirm HUD and placeholder SFX react correctly
-
-Bug watch:
-
-- duplicate projectiles or ignored projectile limits
-- charge state getting stuck
-- HUD desync from gameplay state
-- leaked or overlapping audio playback nodes
-
-### Phase 5
-
-Scope:
-
-- one enemy family
-- enemy activation and reset behavior
-- placeholder sprites for the first enemy family and its temporary drops
-
-Automated checks:
-
-- `Needs harness`: enemy activation range wakes the enemy correctly
-- `Needs harness`: defeated enemy state resets on retry
-- `Needs harness`: temporary drops from the enemy are removed on retry
-
-Manual validation:
-
-- approach and leave an enemy activation area
-- defeat the enemy and retry the stage
-- verify the enemy and any drop behavior reset correctly
-
-Bug watch:
-
-- off-screen enemies running AI forever
-- enemies not resetting after retry
-- drops persisting incorrectly across resets
-
-### Phase 6
-
-Scope:
-
-- hazards
-- checkpoints
-- retry from checkpoint
-- placeholder visuals for hazards and checkpoints
-
-Automated checks:
-
-- `Needs harness`: touching a checkpoint updates the current respawn anchor
-- `Needs harness`: retry from checkpoint uses the latest active checkpoint
-- `Needs harness`: hazard types trigger the expected damage or instant-death behavior
-
-Manual validation:
-
-- activate multiple checkpoints in order
-- die to hazards before and after checkpoint activation
-- verify respawn location and stage reset behavior
-
-Bug watch:
-
-- wrong respawn anchor used after death
-- hazards applying damage too often or not at all
-- checkpoint state not updating reliably
-
-### Phase 7
-
-Scope:
-
-- stage clear flow
-- one full non-boss stage slice
-- placeholder visuals for stage-clear presentation as needed
-
-Automated checks:
-
-- `Needs harness`: stage clear transitions through `StageController` exactly once
-- `Needs harness`: gameplay input is disabled during stage-clear flow
-- `Needs harness`: stage-clear overlay or handoff state appears without leaving stale gameplay state behind
-
-Manual validation:
-
-- complete the non-boss stage slice from start to finish
-- confirm stage-clear presentation appears and control does not return unexpectedly
-
-Bug watch:
-
-- duplicate stage-clear triggers
-- lingering gameplay input after clear
-- temporary stage objects surviving into post-clear flow
-
-### Phase 8
-
-Scope:
-
-- dash unlock flow
-- stage-local cutscene
-- dialogue flow
-- placeholder visuals for capsules, dialogue portraits if used, and cutscene markers where helpful
-
-Automated checks:
-
-- `Needs harness`: cutscene start and end transitions occur in the expected order
-- `Needs harness`: dialogue advances and skip rules behave as authored
-- `Needs harness`: dash unlock updates progression and becomes available after the event
-
-Manual validation:
-
-- trigger the dash capsule flow
-- play the cutscene normally once and skip it once if skippable
-- confirm control returns correctly and dash is available afterward
-
-Bug watch:
-
-- control not restored after cutscene
-- duplicate unlock rewards
-- camera ownership not restored after dialogue or cutscene completion
-
-### Phase 9
-
-Scope:
-
-- save and load
-- progression plumbing
-- persistent pickup save triggers
-- placeholder visuals for persistent pickups not yet represented
-
-Automated checks:
-
-- `Needs harness`: save payload round-trips cleanly through save and load
-- `Needs harness`: persistent pickup collection updates progression and survives reload
-- `Needs harness`: continuing from save returns to the correct front-end flow
-
-Manual validation:
-
-- collect a persistent pickup, save, reload, and verify it stays collected
-- test a fresh save and an existing save path
-
-Bug watch:
-
-- corrupted or partial save payloads
-- progression flags not restored consistently
-- persistent pickups reappearing after reload
-
-### Phase 10
-
-Scope:
-
-- stage select
-- multiple stage loading
-- fortress unlock flow
-- placeholder stage-select UI assets as needed
-
-Automated checks:
-
-- `Needs harness`: stage select roster reflects progression-derived unlock state
-- `Needs harness`: selecting an unlocked stage loads the correct stage scene
-- `Needs harness`: fortress unlock conditions evaluate correctly
-
-Manual validation:
-
-- navigate the stage select UI with keyboard and gamepad
-- attempt to enter locked and unlocked stages
-- verify fortress progression unlock timing
-
-Bug watch:
-
-- locked stages shown as selectable
-- wrong stage scene loading from a valid selection
-- fortress stages unlocking too early or too late
-
-### Phase 11
-
-Scope:
-
-- boss weapons
-- weaknesses
-- placeholder visuals for boss-weapon projectiles and weapon UI states
-
-Automated checks:
-
-- `Needs harness`: defeated-boss reward weapon is added to the inventory
-- `Needs harness`: weakness and resistance tables change damage as expected
-- `Needs harness`: weapon energy costs apply correctly for newly added weapons
-
-Manual validation:
-
-- switch between unlocked weapons
-- use a boss weapon against normal targets and weakness-enabled targets
-- verify HUD weapon energy updates
-
-Bug watch:
-
-- wrong weapon unlock reward
-- weakness tables keyed to the wrong IDs
-- weapon energy draining or restoring incorrectly
-
-### Phase 12
-
-Scope:
-
-- armor parts
-- heart tanks
-- sub tanks
-- placeholder visuals for armor capsules, heart tanks, and sub tanks
-
-Automated checks:
-
-- `Needs harness`: each persistent upgrade type records correctly in progression
-- `Needs harness`: heart tank and armor upgrades survive save and load
-- `Needs harness`: sub tank ownership and fill state serialize correctly
-
-Manual validation:
-
-- collect one of each upgrade type
-- reload the game and confirm ownership and effects remain
-
-Bug watch:
-
-- duplicate collection of persistent upgrades
-- upgrade effects applied without persistence or persisted without effects
-- sub tank fill values not restoring correctly
-
-### Phase 13
-
-Scope:
-
-- boss encounter framework
-- boss UI
-- placeholder boss UI visuals
-
-Automated checks:
-
-- `Needs harness`: entering a boss arena activates boss UI and arena lock behavior
-- `Needs harness`: retry resets the boss encounter to its initial state
-- `Needs harness`: boss UI hides cleanly when the encounter ends or resets
-
-Manual validation:
-
-- enter and leave the boss arena through the intended flow
-- die during the encounter and retry
-- verify boss UI appears only during the encounter
-
-Bug watch:
-
-- arena locks not releasing
-- boss UI persisting outside the encounter
-- encounter state not resetting cleanly on retry
-
-### Phase 14
-
-Scope:
-
-- first boss fight vertical slice
-- placeholder sprites for the first boss and boss-specific attacks
-
-Automated checks:
-
-- `Needs harness`: first boss defeat triggers the expected reward and stage-clear flow
-- `Needs harness`: boss phase transitions fire in the intended order
-- `Needs harness`: boss defeat updates progression exactly once
-
-Manual validation:
-
-- play the full first boss fight from encounter start to reward payout
-- test death during the fight and a full successful clear
-
-Bug watch:
-
-- boss phase softlocks
-- reward payout not triggering or triggering twice
-- boss death leaving the arena in an invalid state
-
-### Phase 15
-
-Scope:
-
-- additional boss fights
-- placeholder sprites for each newly added boss and boss-specific attacks
-
-Automated checks:
-
-- `Needs harness`: regression suite covers shared boss framework behavior across all implemented bosses
-- `Needs harness`: each added boss reports reward, UI, and reset behavior correctly
-
-Manual validation:
-
-- spot-check each new boss encounter for intro, phase flow, death handling, and reward flow
-
-Bug watch:
-
-- shared boss framework regressions affecting older bosses
-- per-boss exceptions bypassing progression or UI cleanup
-
-### Phase 16
-
-Scope:
-
-- full campaign content
-- final Sigma flow
-- placeholder visuals for remaining campaign-specific actors and finale elements
-
-Automated checks:
-
-- `Needs harness`: campaign progression can unlock all required stages in order
-- `Needs harness`: final Sigma flow triggers only when prerequisite progression is complete
-- `Needs harness`: ending flow can be reached from a valid completed campaign state
-
-Manual validation:
-
-- test representative progression paths across Maverick, fortress, and final flow content
-- verify endgame transitions and front-end return paths
-
-Bug watch:
-
-- progression dead ends
-- campaign unlock order mismatches
-- final flow transitions breaking save or return flow
-
-### Phase 17
-
-Scope:
-
-- movement and combat tuning
-- placeholder replacement
-- bug fixing and optimization
-
-Automated checks:
-
-- `Console-ready`: full smoke suite passes across boot and stage load
-- `Needs harness`: regression suite passes across combat, save-load, and one boss encounter
-- `Needs harness`: placeholder asset swaps do not break scene references
-- `Console-ready`: no new runtime errors are introduced by tuning passes
-
-Manual validation:
-
-- run a full feel pass on movement, combat pacing, camera, UI responsiveness, and encounter readability
-- verify placeholder replacements preserve collisions, anchors, and hitboxes
-
-Bug watch:
-
-- tuning changes causing regressions in earlier mechanics
-- asset swaps breaking offsets, collisions, or references
-- late optimization changing gameplay timing or state behavior
-
-## Acceptance Criteria
-
-- player can run, jump, wall jump, dash, shoot, charge, take damage, die, and respawn
-- keyboard and gamepad both work through the same action map
-- locomotion and combat state machines run in parallel without conflicts
-- pickups and capsules apply effects through `PickupReceiver`
-- one stage can be run directly from the editor for mid-level testing
-- one stage vertical slice is playable from start to boss clear using placeholders only
-- boss defeat updates progression and unlocks the proper weapon reward
-- save and load restore persistent campaign state correctly
-- audio responds to semantic gameplay events
-- dialogue and cutscene flow work without embedding story logic into player scripts
-- project structure supports one active stage plus layered runtime UI without adding extra autoloads
+- keep milestone history and delivery-phase notes out of this file
+- keep exact implementation details in code, scenes, data, and tests
+- record repo workflow details in `AGENTS.md`
+- update this document when architecture, subsystem ownership, or content-authoring workflow changes in a meaningful way
