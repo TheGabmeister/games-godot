@@ -1,0 +1,86 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/chill_penguin_boss.gd" id="1_boss"]
+[ext_resource type="PackedScene" path="res://scenes/projectiles/EnemyIceShot.tscn" id="2_projectile"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="3_health"]
+[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="4_hurtbox"]
+
+[sub_resource type="RectangleShape2D" id="1_hurtbox_shape"]
+size = Vector2(54, 60)
+
+[sub_resource type="RectangleShape2D" id="2_contact_shape"]
+size = Vector2(60, 62)
+
+[node name="ChillPenguinBoss" type="Node2D"]
+script = ExtResource("1_boss")
+projectile_scene = ExtResource("2_projectile")
+
+[node name="VisualRoot" type="Node2D" parent="."]
+
+[node name="Body" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(-28, 28, -32, -8, -16, -30, 0, -36, 18, -28, 30, -10, 28, 28, 10, 38, -12, 38)
+color = Color(0.486275, 0.784314, 0.952941, 1)
+
+[node name="Belly" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(-10, 28, -16, -4, -8, -18, 6, -22, 16, -10, 14, 26, 6, 34, -4, 34)
+color = Color(0.92549, 0.972549, 1, 1)
+
+[node name="Beak" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(12, -4, 28, 2, 12, 10)
+color = Color(1, 0.780392, 0.396078, 1)
+
+[node name="Crest" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(-8, -34, 4, -50, 16, -32)
+color = Color(0.901961, 0.952941, 1, 1)
+
+[node name="Eye" type="Polygon2D" parent="VisualRoot"]
+polygon = PackedVector2Array(6, -18, 12, -18, 12, -10, 6, -10)
+color = Color(0.0862745, 0.121569, 0.172549, 1)
+
+[node name="PhaseLabel" type="Label" parent="VisualRoot"]
+offset_left = -64.0
+offset_top = -86.0
+offset_right = 64.0
+offset_bottom = -64.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.941176, 0.764706, 1)
+text = "WAITING"
+
+[node name="StatusLabel" type="Label" parent="VisualRoot"]
+offset_left = -80.0
+offset_top = -62.0
+offset_right = 80.0
+offset_bottom = -40.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.866667, 0.941176, 1, 1)
+text = "WAITING"
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("3_health")
+max_health = 12
+team = &"enemy"
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 128
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("4_hurtbox")
+health_component_path = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -2)
+shape = SubResource("1_hurtbox_shape")
+
+[node name="ContactArea" type="Area2D" parent="."]
+collision_layer = 32
+collision_mask = 64
+monitoring = true
+monitorable = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ContactArea"]
+position = Vector2(0, -2)
+shape = SubResource("2_contact_shape")
+
+[node name="AttackOrigin" type="Marker2D" parent="."]
+position = Vector2(24, -10)

@@ -11,6 +11,15 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
 
+func set_trigger_enabled(is_enabled: bool) -> void:
+	monitoring = is_enabled
+	visible = is_enabled
+
+
+func is_trigger_enabled() -> bool:
+	return monitoring
+
+
 func _on_body_entered(body: Node) -> void:
 	if body == null or not body.has_method("get_health_component") or stage_controller == null:
 		return

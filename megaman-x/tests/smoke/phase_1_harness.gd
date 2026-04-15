@@ -67,6 +67,12 @@ func _run() -> void:
 			exit_code = await _check_boss_encounter_retry_reset()
 		"boss_ui_cleanup":
 			exit_code = await _check_boss_ui_cleanup()
+		"first_boss_reward_flow":
+			exit_code = await _check_first_boss_reward_flow()
+		"first_boss_phase_order":
+			exit_code = await _check_first_boss_phase_order()
+		"first_boss_progression_once":
+			exit_code = await _check_first_boss_progression_once()
 		"checkpoint_activation":
 			exit_code = await _check_checkpoint_activation()
 		"checkpoint_retry":
@@ -859,6 +865,157 @@ func _check_boss_ui_cleanup() -> int:
 
 	if boss_hud.visible:
 		push_error("Boss HUD did not hide after the encounter ended.")
+		return 1
+
+	return 0
+
+
+func _check_first_boss_reward_flow() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("First boss reward flow check requires Progression.")
+		return 1
+
+	progression.reset_for_new_game()
+	progression.mark_intro_cleared()
+
+	var loaded := await _load_stage_via_main(&"chill_penguin")
+	if loaded.is_empty():
+		return 1
+
+	var main: Node = loaded["main"]
+	var stage: Node = loaded["stage"]
+	var player: Node2D = loaded["player"] as Node2D
+	var stage_controller: Node = stage.get_node_or_null("StageController")
+	var boss_trigger: Area2D = stage.get_node_or_null("BossArenaTrigger") as Area2D
+	var boss_hurtbox: Node = stage.get_node_or_null("ChillPenguinBoss/Hurtbox")
+	var boss_health: Node = stage.get_node_or_null("ChillPenguinBoss/HealthComponent")
+	if main == null or stage_controller == null or player == null or boss_trigger == null or boss_hurtbox == null or boss_health == null:
+		push_error("First boss reward flow check is missing the Chill Penguin encounter stack.")
+		return 1
+
+	player.global_position = boss_trigger.global_position
+	await _await_physics_frames(4)
+	boss_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"boss_reward_test", int(boss_health.get("max_health")), Vector2.ZERO))
+
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.STAGE_CLEAR, 30):
+		push_error("Defeating Chill Penguin did not transition into STAGE_CLEAR.")
+		return 1
+
+	var overlay := await _wait_for_active_overlay(main, 20)
+	if overlay == null:
+		push_error("Boss reward flow did not mount the stage-clear overlay.")
+		return 1
+
+	var snapshot := overlay.call("get_snapshot") as Dictionary
+	if snapshot.get("detail_text", "").find("Weapon unlocked: Shotgun Ice") == -1:
+		push_error("Stage-clear overlay did not report the Shotgun Ice reward after the boss defeat.")
+		return 1
+
+	if not progression.has_defeated_boss(&"chill_penguin"):
+		push_error("Boss reward flow did not mark Chill Penguin as defeated.")
+		return 1
+
+	if not progression.has_weapon_unlocked(&"shotgun_ice"):
+		push_error("Boss reward flow did not unlock Shotgun Ice.")
+		return 1
+
+	if int(stage_controller.get("stage_clear_count")) != 1:
+		push_error("Boss reward flow triggered stage clear more than once.")
+		return 1
+
+	return 0
+
+
+func _check_first_boss_phase_order() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("First boss phase order check requires Progression.")
+		return 1
+
+	progression.reset_for_new_game()
+	progression.mark_intro_cleared()
+
+	var loaded := await _load_stage_via_main(&"chill_penguin")
+	if loaded.is_empty():
+		return 1
+
+	var stage: Node = loaded["stage"]
+	var player: Node2D = loaded["player"] as Node2D
+	var boss_trigger: Area2D = stage.get_node_or_null("BossArenaTrigger") as Area2D if stage != null else null
+	var boss: Node = stage.get_node_or_null("ChillPenguinBoss") if stage != null else null
+	var boss_hurtbox: Node = stage.get_node_or_null("ChillPenguinBoss/Hurtbox") if stage != null else null
+	var boss_health: Node = stage.get_node_or_null("ChillPenguinBoss/HealthComponent") if stage != null else null
+	if player == null or boss_trigger == null or boss == null or boss_hurtbox == null or boss_health == null:
+		push_error("First boss phase order check is missing the Chill Penguin encounter nodes.")
+		return 1
+
+	var phase_history: Array[String] = []
+	boss.connect("phase_changed", func(_previous_phase: StringName, new_phase: StringName) -> void:
+		phase_history.append(String(new_phase))
+	)
+
+	player.global_position = boss_trigger.global_position
+	await _await_physics_frames(40)
+	boss_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"boss_phase_two_test", 7, Vector2.ZERO))
+	await _await_physics_frames(4)
+	boss_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"boss_phase_defeat_test", int(boss_health.get("current_health")), Vector2.ZERO))
+	await _await_physics_frames(4)
+
+	var expected_order := ["INTRO", "PHASE_ONE", "PHASE_TWO", "DEFEATED"]
+	if phase_history.size() < expected_order.size():
+		push_error("Boss phase order check recorded too few phase transitions: %s" % phase_history)
+		return 1
+
+	for index in range(expected_order.size()):
+		if phase_history[index] != expected_order[index]:
+			push_error("Boss phase order mismatch. Expected %s, got %s" % [expected_order, phase_history])
+			return 1
+
+	return 0
+
+
+func _check_first_boss_progression_once() -> int:
+	var progression := _get_progression()
+	if progression == null:
+		push_error("First boss progression-once check requires Progression.")
+		return 1
+
+	progression.reset_for_new_game()
+	progression.mark_intro_cleared()
+
+	var loaded := await _load_stage_via_main(&"chill_penguin")
+	if loaded.is_empty():
+		return 1
+
+	var stage: Node = loaded["stage"]
+	var player: Node2D = loaded["player"] as Node2D
+	var stage_controller: Node = stage.get_node_or_null("StageController") if stage != null else null
+	var boss_trigger: Area2D = stage.get_node_or_null("BossArenaTrigger") as Area2D if stage != null else null
+	var boss_hurtbox: Node = stage.get_node_or_null("ChillPenguinBoss/Hurtbox") if stage != null else null
+	var boss_health: Node = stage.get_node_or_null("ChillPenguinBoss/HealthComponent") if stage != null else null
+	if player == null or stage_controller == null or boss_trigger == null or boss_hurtbox == null or boss_health == null:
+		push_error("First boss progression-once check is missing the Chill Penguin encounter stack.")
+		return 1
+
+	player.global_position = boss_trigger.global_position
+	await _await_physics_frames(4)
+	boss_hurtbox.call("apply_hit_payload", HIT_PAYLOAD_SCRIPT.create(self, &"player", &"boss_progression_test", int(boss_health.get("max_health")), Vector2.ZERO))
+	if not await _wait_for_gameflow_state(GameFlow.RuntimeState.STAGE_CLEAR, 30):
+		push_error("Boss progression-once check did not reach STAGE_CLEAR.")
+		return 1
+
+	await _await_physics_frames(10)
+	if progression.defeated_bosses.size() != 1 or not progression.has_defeated_boss(&"chill_penguin"):
+		push_error("Boss progression did not record Chill Penguin exactly once.")
+		return 1
+
+	if progression.unlocked_weapons.size() != 2 or not progression.has_weapon_unlocked(&"shotgun_ice"):
+		push_error("Boss progression did not unlock Shotgun Ice exactly once.")
+		return 1
+
+	if int(stage_controller.get("stage_clear_count")) != 1:
+		push_error("Boss progression-once check observed duplicate stage-clear transitions.")
 		return 1
 
 	return 0
@@ -2152,6 +2309,10 @@ func _instantiate_main_scene() -> Node:
 
 
 func _load_test_stage_via_main() -> Dictionary:
+	return await _load_stage_via_main(&"test_stage")
+
+
+func _load_stage_via_main(stage_id: StringName) -> Dictionary:
 	var main := await _instantiate_main_scene()
 	if main == null:
 		return {}
@@ -2161,15 +2322,15 @@ func _load_test_stage_via_main() -> Dictionary:
 		push_error("GameFlow autoload is unavailable.")
 		return {}
 
-	game_flow.request_stage(&"test_stage")
+	game_flow.request_stage(stage_id)
 	await process_frame
 	await _await_physics_frames(3)
 
-	var stage := main.get_node_or_null("WorldRoot/test_stage")
+	var stage := main.get_node_or_null("WorldRoot/%s" % String(stage_id))
 	var hud := main.get_node_or_null("UIRoot/GameplayHUD")
 	var player := stage.get_node_or_null("Player") if stage != null else null
 	if stage == null or hud == null or player == null:
-		push_error("Main scene did not load the test stage HUD stack.")
+		push_error("Main scene did not load the requested stage + HUD stack.")
 		return {}
 
 	return {
