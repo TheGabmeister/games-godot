@@ -15,7 +15,9 @@ enum RuntimeState {
 
 const TITLE_SCREEN_SCENE_PATH := "res://scenes/ui/TitleScreen.tscn"
 const STAGE_SELECT_SCENE_PATH := "res://scenes/ui/StageSelectMenu.tscn"
+const ENDING_SCREEN_SCENE_PATH := "res://scenes/ui/EndingScreen.tscn"
 const INTRO_STAGE_ID := &"intro_highway"
+const FINAL_STAGE_ID := &"sigma_fortress_4"
 const MAVERICK_BOSS_IDS: Array[StringName] = [
 	&"chill_penguin",
 	&"storm_eagle",
@@ -48,6 +50,7 @@ signal stage_changed(stage_id: StringName)
 signal cutscene_started(stage_id: StringName, cutscene_id: StringName)
 signal cutscene_finished(stage_id: StringName, cutscene_id: StringName)
 signal stage_clear_started(stage_id: StringName)
+signal ending_started(stage_id: StringName)
 
 var current_state: int = RuntimeState.BOOT
 var current_stage_id: StringName = &""
@@ -96,6 +99,25 @@ func get_stage_select_entries() -> Array[Dictionary]:
 func can_access_stage_select() -> bool:
 	var progression := _get_progression()
 	return bool(progression != null and progression.get("intro_cleared"))
+
+
+func is_campaign_complete() -> bool:
+	var progression := _get_progression()
+	if progression == null:
+		return false
+
+	if progression.has_method("is_campaign_complete"):
+		return progression.is_campaign_complete()
+
+	return progression.has_method("has_stage_cleared") and progression.has_stage_cleared(FINAL_STAGE_ID)
+
+
+func can_trigger_ending_from_stage(stage_id: StringName) -> bool:
+	var definition := get_registered_stage(stage_id)
+	if definition == null or not definition.triggers_ending_on_clear:
+		return false
+
+	return is_stage_unlocked(stage_id)
 
 
 func is_stage_unlocked(stage_id: StringName) -> bool:
@@ -209,10 +231,19 @@ func request_stage_clear(stage_id: StringName, payload: Dictionary = {}) -> void
 	overlay_payload["progression_saved"] = bool(progression_result.get("progression_saved", false))
 	overlay_payload["reward_weapon_id"] = progression_result.get("reward_weapon_id", &"") as StringName
 	overlay_payload["reward_weapon_name"] = String(progression_result.get("reward_weapon_name", ""))
+	overlay_payload["ordered_boss_ids"] = stage_definition.ordered_boss_ids.duplicate() if stage_definition != null else []
 
 	var audio_manager := get_node_or_null("/root/AudioManager")
 	if audio_manager != null and audio_manager.has_method("play_sfx"):
 		audio_manager.play_sfx(&"stage_clear_fanfare")
+
+	if stage_definition != null and stage_definition.triggers_ending_on_clear:
+		_set_state(RuntimeState.ENDING)
+		overlay_payload["campaign_complete"] = is_campaign_complete()
+		if _runtime_shell != null and _runtime_shell.has_method("show_ending_screen"):
+			_runtime_shell.show_ending_screen(ENDING_SCREEN_SCENE_PATH, overlay_payload)
+		ending_started.emit(current_stage_id)
+		return
 
 	if _runtime_shell != null and _runtime_shell.has_method("show_stage_clear_overlay"):
 		_runtime_shell.show_stage_clear_overlay(overlay_payload)
@@ -226,6 +257,10 @@ func exit_stage_clear_to_frontend() -> void:
 		request_stage_select()
 		return
 
+	request_title()
+
+
+func exit_ending_to_title() -> void:
 	request_title()
 
 

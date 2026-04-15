@@ -135,6 +135,12 @@ func _run() -> void:
 			exit_code = await _check_stage_select_loading()
 		"fortress_unlock_flow":
 			exit_code = await _check_fortress_unlock_flow()
+		"campaign_progression_order":
+			exit_code = await _check_campaign_progression_order()
+		"final_sigma_flow":
+			exit_code = await _check_final_sigma_flow()
+		"ending_flow":
+			exit_code = await _check_ending_flow()
 		"weapon_reward_unlock":
 			exit_code = await _check_weapon_reward_unlock()
 		"weakness_tables":
@@ -2037,6 +2043,208 @@ func _check_fortress_unlock_flow() -> int:
 		push_error("Sigma Fortress 4 did not unlock after Sigma Fortress 3 clear.")
 		return 1
 
+	return 0
+
+
+func _check_campaign_progression_order() -> int:
+	var progression := _get_progression()
+	var game_flow := root.get_node_or_null("/root/GameFlow")
+	if progression == null or game_flow == null:
+		push_error("Campaign progression order check requires Progression and GameFlow.")
+		return 1
+
+	progression.reset_for_new_game()
+	if bool(game_flow.is_stage_unlocked(&"chill_penguin")) or bool(game_flow.is_stage_unlocked(&"sigma_fortress_1")):
+		push_error("Campaign progression should start locked behind Intro Highway.")
+		return 1
+
+	progression.mark_intro_cleared()
+	for stage_id in [&"chill_penguin", &"spark_mandrill", &"armored_armadillo", &"launch_octopus", &"boomer_kuwanger", &"sting_chameleon", &"storm_eagle", &"flame_mammoth"]:
+		if not bool(game_flow.is_stage_unlocked(stage_id)):
+			push_error("Intro clear did not unlock Maverick stage '%s'." % stage_id)
+			return 1
+
+	if bool(game_flow.is_stage_unlocked(&"sigma_fortress_1")):
+		push_error("Sigma Fortress 1 unlocked before the Maverick roster was defeated.")
+		return 1
+
+	for boss_id in [&"chill_penguin", &"storm_eagle", &"flame_mammoth", &"spark_mandrill", &"armored_armadillo", &"launch_octopus", &"boomer_kuwanger", &"sting_chameleon"]:
+		progression.mark_boss_defeated(boss_id)
+
+	if not progression.have_all_mavericks_been_defeated():
+		push_error("Campaign progression helper did not recognize the completed Maverick roster.")
+		return 1
+
+	if not bool(game_flow.is_stage_unlocked(&"sigma_fortress_1")):
+		push_error("Sigma Fortress 1 did not unlock after the Maverick roster was defeated.")
+		return 1
+
+	if bool(game_flow.is_stage_unlocked(&"sigma_fortress_2")) or bool(game_flow.is_stage_unlocked(&"sigma_fortress_3")) or bool(game_flow.is_stage_unlocked(&"sigma_fortress_4")):
+		push_error("Later fortress stages unlocked before their required clear order.")
+		return 1
+
+	progression.mark_stage_cleared(&"sigma_fortress_1")
+	if not bool(game_flow.is_stage_unlocked(&"sigma_fortress_2")) or bool(game_flow.is_stage_unlocked(&"sigma_fortress_3")):
+		push_error("Sigma Fortress 2 order did not unlock cleanly after Sigma Fortress 1.")
+		return 1
+
+	progression.mark_stage_cleared(&"sigma_fortress_2")
+	if not bool(game_flow.is_stage_unlocked(&"sigma_fortress_3")) or bool(game_flow.is_stage_unlocked(&"sigma_fortress_4")):
+		push_error("Sigma Fortress 3 order did not unlock cleanly after Sigma Fortress 2.")
+		return 1
+
+	progression.mark_stage_cleared(&"sigma_fortress_3")
+	if not bool(game_flow.is_stage_unlocked(&"sigma_fortress_4")):
+		push_error("Sigma Fortress 4 did not unlock after Sigma Fortress 3 clear.")
+		return 1
+
+	return 0
+
+
+func _check_final_sigma_flow() -> int:
+	var progression := _get_progression()
+	var game_flow := root.get_node_or_null("/root/GameFlow")
+	if progression == null or game_flow == null:
+		push_error("Final Sigma flow check requires Progression and GameFlow.")
+		return 1
+
+	progression.reset_for_new_game()
+	progression.mark_intro_cleared()
+	for boss_id in [&"chill_penguin", &"storm_eagle", &"flame_mammoth", &"spark_mandrill", &"armored_armadillo", &"launch_octopus", &"boomer_kuwanger", &"sting_chameleon"]:
+		progression.mark_boss_defeated(boss_id)
+	progression.mark_stage_cleared(&"sigma_fortress_1")
+	progression.mark_stage_cleared(&"sigma_fortress_2")
+
+	if bool(game_flow.is_stage_unlocked(&"sigma_fortress_4")) or bool(game_flow.can_trigger_ending_from_stage(&"sigma_fortress_4")):
+		push_error("Final Sigma flow unlocked before Sigma Fortress 3 was cleared.")
+		return 1
+
+	progression.mark_stage_cleared(&"sigma_fortress_3")
+	if not bool(game_flow.is_stage_unlocked(&"sigma_fortress_4")):
+		push_error("Final Sigma stage did not unlock after Sigma Fortress 3 clear.")
+		return 1
+	if not bool(game_flow.can_trigger_ending_from_stage(&"sigma_fortress_4")):
+		push_error("GameFlow did not recognize Sigma Fortress 4 as a valid ending trigger stage.")
+		return 1
+
+	var loaded: Dictionary = await _load_stage_via_main(&"sigma_fortress_4")
+	var stage: Node = loaded.get("stage", null) as Node
+	if loaded.is_empty() or stage == null:
+		push_error("Final Sigma flow check could not load Sigma Fortress 4 through Main.")
+		return 1
+
+	if bool(stage.call("has_sequence_started")):
+		push_error("Final Sigma sequence started before the player entered the boss gate.")
+		return 1
+
+	if not bool(stage.call("start_final_sequence_for_test")):
+		push_error("Final Sigma stage could not start its sequence after prerequisites were met.")
+		return 1
+
+	if stage.call("get_active_boss_id") != &"velguarder":
+		push_error("Final Sigma stage did not begin with Velguarder.")
+		return 1
+
+	if not bool(stage.call("resolve_active_boss_for_test")):
+		push_error("Final Sigma stage could not resolve the first placeholder encounter.")
+		return 1
+	await _await_physics_frames(1)
+
+	if int(game_flow.get("current_state")) != game_flow.RuntimeState.IN_STAGE:
+		push_error("Final Sigma flow left IN_STAGE before the final encounter was completed.")
+		return 1
+
+	if stage.call("get_active_boss_id") != &"sigma_first_form":
+		push_error("Final Sigma flow did not advance to Sigma First Form after Velguarder.")
+		return 1
+
+	return 0
+
+
+func _check_ending_flow() -> int:
+	var progression := _get_progression()
+	var game_flow := root.get_node_or_null("/root/GameFlow")
+	var save_manager := _get_save_manager()
+	if progression == null or game_flow == null or save_manager == null:
+		push_error("Ending flow check requires Progression, GameFlow, and SaveManager.")
+		return 1
+
+	_use_harness_save_path(save_manager)
+	save_manager.call("delete_save")
+	progression.reset_for_new_game()
+	progression.mark_intro_cleared()
+	for boss_id in [&"chill_penguin", &"storm_eagle", &"flame_mammoth", &"spark_mandrill", &"armored_armadillo", &"launch_octopus", &"boomer_kuwanger", &"sting_chameleon"]:
+		progression.mark_boss_defeated(boss_id)
+	progression.mark_stage_cleared(&"sigma_fortress_1")
+	progression.mark_stage_cleared(&"sigma_fortress_2")
+	progression.mark_stage_cleared(&"sigma_fortress_3")
+
+	var loaded: Dictionary = await _load_stage_via_main(&"sigma_fortress_4")
+	var main: Node = loaded.get("main", null) as Node
+	var stage: Node = loaded.get("stage", null) as Node
+	if loaded.is_empty() or main == null or stage == null:
+		push_error("Ending flow check could not load Sigma Fortress 4 through Main.")
+		save_manager.call("delete_save")
+		_clear_harness_save_path(save_manager)
+		return 1
+
+	stage.call("start_final_sequence_for_test")
+	for _encounter in range(3):
+		if not bool(stage.call("resolve_active_boss_for_test")):
+			push_error("Ending flow check could not resolve the next final encounter.")
+			save_manager.call("delete_save")
+			_clear_harness_save_path(save_manager)
+			return 1
+		await _await_physics_frames(2)
+
+	if not await _wait_for_gameflow_state(game_flow.RuntimeState.ENDING, 30):
+		push_error("Final Sigma completion did not transition GameFlow into ENDING.")
+		save_manager.call("delete_save")
+		_clear_harness_save_path(save_manager)
+		return 1
+
+	var ending_screen: Node = main.get_node_or_null("UIRoot/EndingScreen")
+	if ending_screen == null:
+		push_error("Runtime shell did not mount the EndingScreen after final completion.")
+		save_manager.call("delete_save")
+		_clear_harness_save_path(save_manager)
+		return 1
+
+	var ending_snapshot := ending_screen.call("get_snapshot") as Dictionary
+	if not String(ending_snapshot.get("detail_text", "")).contains("Campaign complete: yes"):
+		push_error("Ending screen did not report the completed-campaign state.")
+		save_manager.call("delete_save")
+		_clear_harness_save_path(save_manager)
+		return 1
+
+	if not progression.is_campaign_complete():
+		push_error("Final Sigma completion did not persist the campaign-complete progression fact.")
+		save_manager.call("delete_save")
+		_clear_harness_save_path(save_manager)
+		return 1
+
+	if not bool(save_manager.call("has_save")):
+		push_error("Final Sigma completion did not trigger a save before the ending screen.")
+		save_manager.call("delete_save")
+		_clear_harness_save_path(save_manager)
+		return 1
+
+	await _tap_menu_confirm()
+	if not await _wait_for_gameflow_state(game_flow.RuntimeState.TITLE, 30):
+		push_error("Ending screen did not return to the title screen after confirm.")
+		save_manager.call("delete_save")
+		_clear_harness_save_path(save_manager)
+		return 1
+
+	var title_screen: Node = main.get_node_or_null("UIRoot/TitleScreen")
+	if title_screen == null:
+		push_error("Title flow did not remount after leaving the ending screen.")
+		save_manager.call("delete_save")
+		_clear_harness_save_path(save_manager)
+		return 1
+
+	save_manager.call("delete_save")
+	_clear_harness_save_path(save_manager)
 	return 0
 
 

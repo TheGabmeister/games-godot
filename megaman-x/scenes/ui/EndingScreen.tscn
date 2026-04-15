@@ -1,0 +1,62 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/ending_screen.gd" id="1_ending"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/ui/ending_banner.svg" id="2_banner"]
+
+[node name="EndingScreen" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ending")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0313726, 0.0823529, 0.137255, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="Center"]
+custom_minimum_size = Vector2(760, 360)
+
+[node name="Content" type="VBoxContainer" parent="Center/Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 26.0
+offset_right = -30.0
+offset_bottom = -26.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Banner" type="TextureRect" parent="Center/Panel/Content"]
+custom_minimum_size = Vector2(512, 128)
+texture = ExtResource("2_banner")
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="Center/Panel/Content"]
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.941176, 0.980392, 1, 1)
+text = "ENDING"
+
+[node name="BodyLabel" type="Label" parent="Center/Panel/Content"]
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.760784, 0.878431, 0.94902, 1)
+text = "Sigma Fortress 4 complete."
+
+[node name="DetailLabel" type="Label" parent="Center/Panel/Content"]
+theme_override_colors/font_color = Color(0.796078, 0.894118, 0.956863, 1)
+autowrap_mode = 3
+text = "Loading ending details..."

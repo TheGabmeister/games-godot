@@ -14,8 +14,9 @@ This repository is an early-stage Godot project for `megaman-x`.
 - Physics engine: Jolt Physics.
 - Renderer on Windows: `d3d12`.
 - Main design reference: `SPEC.md`.
-- Current tracked repo content is still light: project config, docs, icon, and editor metadata.
-- There are not yet gameplay scenes, scripts, or tests checked in.
+- Implemented milestone coverage is now through Phase 16 groundwork: runtime shell, title flow, stage select, test stage, player locomotion/combat, checkpoints, hazards, save/load, persistent pickups, boss weapons, persistent upgrades, boss framework, multiple Maverick boss slices, fortress progression ordering, final Sigma placeholder flow, and ending return flow.
+- Implemented campaign boss slices currently include `chill_penguin`, `storm_eagle`, and `flame_mammoth`.
+- Shared Maverick boss logic now lives in `scripts/bosses/maverick_boss.gd`, with campaign boss-stage wiring in `scripts/stages/maverick_boss_stage.gd`.
 
 ## Source of truth
 
@@ -42,6 +43,7 @@ This repository is an early-stage Godot project for `megaman-x`.
 ## Testing workflow
 
 - Prefer stage scenes to be runnable directly for iteration; do not assume the full boot/title flow is required for every test.
+- For progression, reward, stage-clear, and front-end return behavior, prefer loading stages through `Main.tscn` / `GameFlow` rather than only running a campaign stage scene directly.
 - If you add gameplay scenes or scripts, prefer the narrowest useful validation first: script check, stage smoke test, then broader project launch if needed.
 - Follow the validation split in `SPEC.md`:
   - `Automated checks` are owned by the agent.
@@ -57,10 +59,11 @@ This repository is an early-stage Godot project for `megaman-x`.
 - If `godot` is not on `PATH`, use the local Godot executable configured on the machine.
 - Phase 1 harness-backed checks live at `tests/smoke/phase_1_harness.gd` and currently support:
   - `-- main_layers`
+  - `-- title_flow`
   - `-- autoloads`
   - `-- test_stage`
-  - `-- title_flow`
   - `-- locomotion`
+  - `-- wall_jump`
   - `-- player_spawn`
   - `-- camera_follow`
   - `-- damage_pipeline`
@@ -73,6 +76,12 @@ This repository is an early-stage Godot project for `megaman-x`.
   - `-- stage_clear_once`
   - `-- stage_clear_input_lock`
   - `-- stage_clear_overlay`
+  - `-- boss_encounter_activation`
+  - `-- boss_encounter_retry_reset`
+  - `-- boss_ui_cleanup`
+  - `-- first_boss_reward_flow`
+  - `-- first_boss_phase_order`
+  - `-- first_boss_progression_once`
   - `-- checkpoint_activation`
   - `-- checkpoint_retry`
   - `-- hazard_modes`
@@ -91,6 +100,16 @@ This repository is an early-stage Godot project for `megaman-x`.
   - `-- stage_select_roster`
   - `-- stage_select_loading`
   - `-- fortress_unlock_flow`
+  - `-- campaign_progression_order`
+  - `-- final_sigma_flow`
+  - `-- ending_flow`
+  - `-- weapon_reward_unlock`
+  - `-- weakness_tables`
+  - `-- weapon_energy_costs`
+  - `-- unlock_all_weapons_shortcut`
+  - `-- persistent_upgrade_types`
+  - `-- upgrade_save_reload`
+  - `-- sub_tank_round_trip`
   - `-- boss_framework_regression`
   - `-- additional_boss_reward_ui_reset`
 - If new GDScript files are added, run the narrowest available script check or project startup check instead of relying only on static inspection.
@@ -103,4 +122,6 @@ This repository is an early-stage Godot project for `megaman-x`.
 - Start by reading `project.godot` to confirm engine settings before making engine-level changes.
 - Start by reading `SPEC.md` to understand the intended subsystem layout before adding code.
 - If you need to establish structure, create only the folders required by the task instead of scaffolding the full game at once.
+- When touching Phase 15+ boss work, keep new bosses on the shared `MaverickBoss` + `maverick_boss_stage.gd` path unless the user explicitly wants a different architecture.
+- If you add another campaign boss slice, update both the relevant `data/stages/*.tres` scene path and the harness coverage if the new boss should participate in shared regression checks.
 - Update this file when repo-specific workflow, test commands, or implementation conventions become real and stable.

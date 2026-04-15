@@ -2,6 +2,24 @@ extends Node2D
 
 const WEAPON_CATALOG_SCRIPT = preload("res://scripts/player/weapon_catalog.gd")
 const FIRST_BOSS_STAGE_ID := &"chill_penguin"
+const BOSS_DISPLAY_NAMES := {
+	&"spark_mandrill": "Spark Mandrill",
+	&"armored_armadillo": "Armored Armadillo",
+	&"launch_octopus": "Launch Octopus",
+	&"boomer_kuwanger": "Boomer Kuwanger",
+	&"sting_chameleon": "Sting Chameleon",
+	&"bospider": "Bospider",
+	&"rangda_bangda": "Rangda Bangda",
+}
+const BOSS_PREVIEW_TEXTURES := {
+	&"spark_mandrill": preload("res://assets/placeholders/bosses/spark_mandrill_96x96.svg"),
+	&"armored_armadillo": preload("res://assets/placeholders/bosses/armored_armadillo_96x96.svg"),
+	&"launch_octopus": preload("res://assets/placeholders/bosses/launch_octopus_96x96.svg"),
+	&"boomer_kuwanger": preload("res://assets/placeholders/bosses/boomer_kuwanger_96x96.svg"),
+	&"sting_chameleon": preload("res://assets/placeholders/bosses/sting_chameleon_96x96.svg"),
+	&"bospider": preload("res://assets/placeholders/bosses/bospider_96x96.svg"),
+	&"rangda_bangda": preload("res://assets/placeholders/bosses/rangda_bangda_96x96.svg"),
+}
 
 var _stage_definition: StageDefinition = null
 
@@ -17,6 +35,7 @@ var _stage_definition: StageDefinition = null
 @onready var boss_hud: Control = $BossLayer/BossHUD
 @onready var stage_label: Label = $CanvasLayer/Panel/VBoxContainer/StageLabel
 @onready var body_label: Label = $CanvasLayer/Panel/VBoxContainer/BodyLabel
+@onready var boss_preview: TextureRect = $CanvasLayer/Panel/VBoxContainer/BossPreview
 
 
 func _ready() -> void:
@@ -81,12 +100,18 @@ func _refresh_ui() -> void:
 	var display_name := String(stage_id)
 	var group_name := "Campaign"
 	var reward_name := ""
+	var primary_boss_id: StringName = &""
+	var ordered_boss_ids: Array[StringName] = []
 	if _stage_definition != null:
 		stage_id = _stage_definition.stage_id
 		display_name = _stage_definition.display_name
 		group_name = String(_stage_definition.stage_group).capitalize()
+		primary_boss_id = _stage_definition.boss_id
+		ordered_boss_ids = _stage_definition.ordered_boss_ids.duplicate()
 		if not _stage_definition.weapon_reward_id.is_empty():
 			reward_name = WEAPON_CATALOG_SCRIPT.get_weapon_display_name(_stage_definition.weapon_reward_id)
+
+	_refresh_preview(primary_boss_id)
 
 	stage_label.text = display_name
 	if _is_first_boss_slice():
@@ -107,12 +132,47 @@ func _refresh_ui() -> void:
 		]
 		return
 
-	body_label.text = "%s placeholder slice.\nStage ID: %s\nDash unlocked: %s\nReward: %s\nTouch the clear gate to complete this stage." % [
-		group_name,
-		stage_id,
-		"yes" if Progression.dash_unlocked else "no",
-		reward_name if not reward_name.is_empty() else "stage clear only",
+	var detail_lines := [
+		"%s placeholder slice." % group_name,
+		"Stage ID: %s" % stage_id,
+		"Dash unlocked: %s" % ("yes" if Progression.dash_unlocked else "no"),
+		"Reward: %s" % (reward_name if not reward_name.is_empty() else "stage clear only"),
 	]
+	if not primary_boss_id.is_empty():
+		detail_lines.append("Primary threat: %s" % _get_boss_display_name(primary_boss_id))
+	if not ordered_boss_ids.is_empty():
+		detail_lines.append("Encounter order: %s" % ", ".join(_boss_names_for_ids(ordered_boss_ids)))
+		detail_lines.append("Touch the clear gate after the rematch route is complete.")
+	else:
+		detail_lines.append("Touch the clear gate to complete this stage.")
+	body_label.text = "\n".join(detail_lines)
+
+
+func _refresh_preview(primary_boss_id: StringName) -> void:
+	if boss_preview == null:
+		return
+
+	if primary_boss_id.is_empty() or not BOSS_PREVIEW_TEXTURES.has(primary_boss_id):
+		boss_preview.visible = false
+		boss_preview.texture = null
+		return
+
+	boss_preview.texture = BOSS_PREVIEW_TEXTURES[primary_boss_id]
+	boss_preview.visible = true
+
+
+func _get_boss_display_name(boss_id: StringName) -> String:
+	if BOSS_DISPLAY_NAMES.has(boss_id):
+		return String(BOSS_DISPLAY_NAMES[boss_id])
+
+	return String(boss_id).replace("_", " ").capitalize()
+
+
+func _boss_names_for_ids(boss_ids: Array[StringName]) -> PackedStringArray:
+	var names := PackedStringArray()
+	for boss_id in boss_ids:
+		names.append(_get_boss_display_name(boss_id))
+	return names
 
 
 func _on_boss_encounter_started(_boss_id: StringName, _display_name: String) -> void:

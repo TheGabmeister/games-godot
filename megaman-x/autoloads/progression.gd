@@ -5,6 +5,17 @@ const WEAPON_CATALOG_SCRIPT = preload("res://scripts/player/weapon_catalog.gd")
 const ARMOR_PART_IDS := [&"helmet", &"body", &"arms", &"legs"]
 const HEART_TANK_HEALTH_BONUS := 2
 const SUB_TANK_MAX_FILL := 32
+const MAVERICK_BOSS_IDS := [
+	&"chill_penguin",
+	&"storm_eagle",
+	&"flame_mammoth",
+	&"spark_mandrill",
+	&"armored_armadillo",
+	&"launch_octopus",
+	&"boomer_kuwanger",
+	&"sting_chameleon",
+]
+const FINAL_STAGE_ID := &"sigma_fortress_4"
 
 signal progression_changed
 
@@ -157,6 +168,18 @@ func mark_boss_defeated(boss_id: StringName, weapon_id: StringName = &"") -> boo
 		unlocked_weapons[weapon_id] = true
 	progression_changed.emit()
 	return true
+
+
+func have_all_mavericks_been_defeated() -> bool:
+	for boss_id in MAVERICK_BOSS_IDS:
+		if not has_defeated_boss(boss_id):
+			return false
+
+	return true
+
+
+func is_campaign_complete() -> bool:
+	return has_stage_cleared(FINAL_STAGE_ID)
 
 
 func has_weapon_unlocked(weapon_id: StringName) -> bool:

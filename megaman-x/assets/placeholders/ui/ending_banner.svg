@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="128" viewBox="0 0 512 128">
+  <rect width="512" height="128" rx="24" fill="#071b2d"/>
+  <path d="M28 96h456" stroke="#4dd3ff" stroke-width="8" stroke-linecap="round"/>
+  <path d="M54 30h90v28H54zM184 30h144v28H184zM366 30h92v28h-92z" fill="#98f3ff" opacity=".18"/>
+  <text x="256" y="78" fill="#eefbff" font-family="Arial, sans-serif" font-size="40" font-weight="700" text-anchor="middle">ENDING CLEAR</text>
+</svg>

@@ -8,6 +8,7 @@ stage_id = &"sigma_fortress_3"
 display_name = "Sigma Fortress 3"
 scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
 stage_group = &"fortress"
+ordered_boss_ids = Array[StringName]([&"chill_penguin", &"spark_mandrill", &"armored_armadillo", &"launch_octopus", &"boomer_kuwanger", &"sting_chameleon", &"storm_eagle", &"flame_mammoth"])
 requires_intro_clear = true
 required_defeated_boss_ids = Array[StringName]([&"chill_penguin", &"storm_eagle", &"flame_mammoth", &"spark_mandrill", &"armored_armadillo", &"launch_octopus", &"boomer_kuwanger", &"sting_chameleon"])
 required_stage_clear_ids = Array[StringName]([&"sigma_fortress_2"])

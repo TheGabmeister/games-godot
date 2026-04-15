@@ -42,6 +42,26 @@ func show_stage_select_screen(scene_path: String) -> void:
 	ui_root.add_child(packed_scene.instantiate())
 
 
+func show_ending_screen(scene_path: String, payload: Dictionary = {}) -> void:
+	_clear_branch(world_root)
+	_clear_branch(ui_root)
+	_clear_branch(overlay_root)
+
+	var packed_scene := load(scene_path) as PackedScene
+	if packed_scene == null:
+		push_error("RuntimeShell failed to load ending scene at '%s'." % scene_path)
+		return
+
+	var ending_screen := packed_scene.instantiate() as Control
+	if ending_screen == null:
+		push_error("RuntimeShell could not instance ending scene at '%s'." % scene_path)
+		return
+
+	ui_root.add_child(ending_screen)
+	if ending_screen.has_method("configure"):
+		ending_screen.configure(payload)
+
+
 func load_stage(stage_definition: StageDefinition) -> void:
 	if stage_definition == null or not stage_definition.is_valid():
 		push_error("RuntimeShell received an invalid stage definition.")

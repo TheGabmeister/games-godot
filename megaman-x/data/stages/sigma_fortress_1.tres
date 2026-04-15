@@ -8,6 +8,7 @@ stage_id = &"sigma_fortress_1"
 display_name = "Sigma Fortress 1"
 scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
 stage_group = &"fortress"
+boss_id = &"bospider"
 requires_intro_clear = true
 required_defeated_boss_ids = Array[StringName]([&"chill_penguin", &"storm_eagle", &"flame_mammoth", &"spark_mandrill", &"armored_armadillo", &"launch_octopus", &"boomer_kuwanger", &"sting_chameleon"])
 allow_direct_launch = true

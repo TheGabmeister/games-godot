@@ -36,7 +36,7 @@ texture = ExtResource("2_title_banner")
 [node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.92549, 0.952941, 1, 1)
-text = "Phase 1 Runtime Shell"
+text = "Campaign Runtime Shell"
 
 [node name="BodyLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 horizontal_alignment = 1

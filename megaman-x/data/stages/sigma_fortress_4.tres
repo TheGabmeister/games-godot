@@ -6,9 +6,12 @@
 script = ExtResource("1_stage_definition")
 stage_id = &"sigma_fortress_4"
 display_name = "Sigma Fortress 4"
-scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
+scene_path = "res://scenes/stages/campaign/SigmaFortressFinalStage.tscn"
 stage_group = &"fortress"
+boss_id = &"sigma_wolf_form"
+ordered_boss_ids = Array[StringName]([&"velguarder", &"sigma_first_form", &"sigma_wolf_form"])
 requires_intro_clear = true
 required_defeated_boss_ids = Array[StringName]([&"chill_penguin", &"storm_eagle", &"flame_mammoth", &"spark_mandrill", &"armored_armadillo", &"launch_octopus", &"boomer_kuwanger", &"sting_chameleon"])
 required_stage_clear_ids = Array[StringName]([&"sigma_fortress_3"])
+triggers_ending_on_clear = true
 allow_direct_launch = true
