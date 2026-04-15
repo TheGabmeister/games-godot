@@ -41,6 +41,11 @@ func configure_stage_definition(stage_definition: StageDefinition) -> void:
 	_stage_definition = stage_definition
 	if stage_controller != null:
 		stage_controller.stage_id = stage_definition.stage_id
+	if boss_encounter != null:
+		boss_encounter.boss_id = stage_definition.boss_id
+		boss_encounter.boss_display_name = stage_definition.display_name
+	if boss_actor != null and boss_actor.has_method("configure_boss_profile"):
+		boss_actor.configure_boss_profile(stage_definition.boss_id)
 	if is_inside_tree():
 		_refresh_ui()
 

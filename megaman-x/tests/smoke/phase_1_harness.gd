@@ -28,11 +28,41 @@ const IMPLEMENTED_BOSS_STAGE_CONFIGS := [
 		"display_name": "Flame Mammoth",
 		"reward_weapon_id": &"fire_wave",
 	},
+	{
+		"stage_id": &"spark_mandrill",
+		"display_name": "Spark Mandrill",
+		"reward_weapon_id": &"electric_spark",
+	},
+	{
+		"stage_id": &"armored_armadillo",
+		"display_name": "Armored Armadillo",
+		"reward_weapon_id": &"rolling_shield",
+	},
+	{
+		"stage_id": &"launch_octopus",
+		"display_name": "Launch Octopus",
+		"reward_weapon_id": &"homing_torpedo",
+	},
+	{
+		"stage_id": &"boomer_kuwanger",
+		"display_name": "Boomer Kuwanger",
+		"reward_weapon_id": &"boomerang_cutter",
+	},
+	{
+		"stage_id": &"sting_chameleon",
+		"display_name": "Sting Chameleon",
+		"reward_weapon_id": &"chameleon_sting",
+	},
 ]
 
 const ADDED_BOSS_STAGE_IDS: Array[StringName] = [
 	&"storm_eagle",
 	&"flame_mammoth",
+	&"spark_mandrill",
+	&"armored_armadillo",
+	&"launch_octopus",
+	&"boomer_kuwanger",
+	&"sting_chameleon",
 ]
 
 

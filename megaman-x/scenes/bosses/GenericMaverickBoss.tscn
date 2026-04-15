@@ -1,0 +1,77 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/generic_maverick_boss.gd" id="1_boss"]
+[ext_resource type="PackedScene" path="res://scenes/projectiles/EnemyWindShot.tscn" id="2_projectile"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="3_health"]
+[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="4_hurtbox"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/bosses/spark_mandrill_96x96.svg" id="5_sprite"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/player/boss_weapon_shot_16x12.svg" id="6_attack"]
+
+[sub_resource type="RectangleShape2D" id="1_hurtbox_shape"]
+size = Vector2(56, 58)
+
+[sub_resource type="RectangleShape2D" id="2_contact_shape"]
+size = Vector2(60, 60)
+
+[node name="GenericMaverickBoss" type="Node2D"]
+script = ExtResource("1_boss")
+projectile_scene = ExtResource("2_projectile")
+
+[node name="VisualRoot" type="Node2D" parent="."]
+
+[node name="BodySprite" type="Sprite2D" parent="VisualRoot"]
+position = Vector2(0, -8)
+texture = ExtResource("5_sprite")
+
+[node name="AttackMarker" type="Sprite2D" parent="VisualRoot"]
+position = Vector2(24, -16)
+texture = ExtResource("6_attack")
+modulate = Color(1, 0.9, 0.34, 0.86)
+
+[node name="PhaseLabel" type="Label" parent="VisualRoot"]
+offset_left = -64.0
+offset_top = -88.0
+offset_right = 64.0
+offset_bottom = -66.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.968627, 0.764706, 1)
+text = "WAITING"
+
+[node name="StatusLabel" type="Label" parent="VisualRoot"]
+offset_left = -84.0
+offset_top = -64.0
+offset_right = 84.0
+offset_bottom = -42.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.976471, 0.960784, 0.752941, 1)
+text = "WAITING"
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("3_health")
+max_health = 12
+team = &"enemy"
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 128
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("4_hurtbox")
+health_component_path = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -4)
+shape = SubResource("1_hurtbox_shape")
+
+[node name="ContactArea" type="Area2D" parent="."]
+collision_layer = 32
+collision_mask = 64
+monitoring = true
+monitorable = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ContactArea"]
+position = Vector2(0, -4)
+shape = SubResource("2_contact_shape")
+
+[node name="AttackOrigin" type="Marker2D" parent="."]
+position = Vector2(24, -16)

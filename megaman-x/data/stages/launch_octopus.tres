@@ -6,7 +6,7 @@
 script = ExtResource("1_stage_definition")
 stage_id = &"launch_octopus"
 display_name = "Launch Octopus"
-scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
+scene_path = "res://scenes/stages/campaign/GenericMaverickBossStage.tscn"
 stage_group = &"maverick"
 boss_id = &"launch_octopus"
 weapon_reward_id = &"homing_torpedo"

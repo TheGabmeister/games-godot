@@ -6,7 +6,7 @@
 script = ExtResource("1_stage_definition")
 stage_id = &"spark_mandrill"
 display_name = "Spark Mandrill"
-scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
+scene_path = "res://scenes/stages/campaign/GenericMaverickBossStage.tscn"
 stage_group = &"maverick"
 boss_id = &"spark_mandrill"
 weapon_reward_id = &"electric_spark"

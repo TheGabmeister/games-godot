@@ -15,7 +15,7 @@ This repository is an early-stage Godot project for `megaman-x`.
 - Renderer on Windows: `d3d12`.
 - Main design reference: `SPEC.md`.
 - Implemented milestone coverage is now through Phase 16 groundwork: runtime shell, title flow, stage select, test stage, player locomotion/combat, checkpoints, hazards, save/load, persistent pickups, boss weapons, persistent upgrades, boss framework, multiple Maverick boss slices, fortress progression ordering, final Sigma placeholder flow, and ending return flow.
-- Implemented campaign boss slices currently include `chill_penguin`, `storm_eagle`, and `flame_mammoth`.
+- Implemented campaign boss slices now cover all 8 Maverick stages, with authored slices for `chill_penguin`, `storm_eagle`, and `flame_mammoth`, plus shared generic boss-stage coverage for `spark_mandrill`, `armored_armadillo`, `launch_octopus`, `boomer_kuwanger`, and `sting_chameleon`.
 - Shared Maverick boss logic now lives in `scripts/bosses/maverick_boss.gd`, with campaign boss-stage wiring in `scripts/stages/maverick_boss_stage.gd`.
 
 ## Source of truth

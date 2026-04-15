@@ -6,7 +6,7 @@
 script = ExtResource("1_stage_definition")
 stage_id = &"sting_chameleon"
 display_name = "Sting Chameleon"
-scene_path = "res://scenes/stages/campaign/CampaignStagePlaceholder.tscn"
+scene_path = "res://scenes/stages/campaign/GenericMaverickBossStage.tscn"
 stage_group = &"maverick"
 boss_id = &"sting_chameleon"
 weapon_reward_id = &"chameleon_sting"

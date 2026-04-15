@@ -1,0 +1,197 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/maverick_boss_stage.gd" id="1_boss_stage"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/shared/grid_backdrop.svg" id="2_backdrop"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/stage/test_floor_256x32.svg" id="3_floor"]
+[ext_resource type="Texture2D" path="res://assets/placeholders/shared/spawn_marker_32.svg" id="4_spawn_marker"]
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="5_player"]
+[ext_resource type="Script" path="res://scripts/camera/follow_camera_2d.gd" id="6_follow_camera"]
+[ext_resource type="Script" path="res://scripts/stages/stage_controller.gd" id="7_stage_controller"]
+[ext_resource type="PackedScene" path="res://scenes/stages/shared/StageClearTrigger.tscn" id="8_clear_trigger"]
+[ext_resource type="Script" path="res://scripts/stages/boss_encounter_controller.gd" id="9_boss_encounter"]
+[ext_resource type="PackedScene" path="res://scenes/ui/BossHUD.tscn" id="10_boss_hud"]
+[ext_resource type="PackedScene" path="res://scenes/stages/shared/BossArenaBarrier.tscn" id="11_boss_barrier"]
+[ext_resource type="PackedScene" path="res://scenes/bosses/GenericMaverickBoss.tscn" id="12_boss"]
+
+[sub_resource type="RectangleShape2D" id="1_ground_shape"]
+size = Vector2(256, 32)
+
+[sub_resource type="RectangleShape2D" id="2_boss_trigger_shape"]
+size = Vector2(72, 96)
+
+[node name="GenericMaverickBossStage" type="Node2D"]
+script = ExtResource("1_boss_stage")
+boss_actor_path = NodePath("GenericMaverickBoss")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("6_follow_camera")
+
+[node name="Backdrop" type="Sprite2D" parent="."]
+position = Vector2(640, 360)
+texture = ExtResource("2_backdrop")
+
+[node name="GroundVisualWest" type="Sprite2D" parent="."]
+position = Vector2(352, 476)
+texture = ExtResource("3_floor")
+
+[node name="GroundVisualCenter" type="Sprite2D" parent="."]
+position = Vector2(608, 476)
+texture = ExtResource("3_floor")
+
+[node name="GroundVisualEast" type="Sprite2D" parent="."]
+position = Vector2(864, 476)
+texture = ExtResource("3_floor")
+
+[node name="GroundVisualGoal" type="Sprite2D" parent="."]
+position = Vector2(1120, 476)
+texture = ExtResource("3_floor")
+
+[node name="GroundVisualBossWest" type="Sprite2D" parent="."]
+position = Vector2(1376, 476)
+texture = ExtResource("3_floor")
+
+[node name="GroundVisualBossCenter" type="Sprite2D" parent="."]
+position = Vector2(1632, 476)
+texture = ExtResource("3_floor")
+
+[node name="GroundVisualBossEast" type="Sprite2D" parent="."]
+position = Vector2(1888, 476)
+texture = ExtResource("3_floor")
+
+[node name="GroundWest" type="StaticBody2D" parent="."]
+position = Vector2(352, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundWest"]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundCenter" type="StaticBody2D" parent="."]
+position = Vector2(608, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundCenter"]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundEast" type="StaticBody2D" parent="."]
+position = Vector2(864, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundEast"]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundGoal" type="StaticBody2D" parent="."]
+position = Vector2(1120, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundGoal"]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundBossWest" type="StaticBody2D" parent="."]
+position = Vector2(1376, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBossWest"]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundBossCenter" type="StaticBody2D" parent="."]
+position = Vector2(1632, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBossCenter"]
+shape = SubResource("1_ground_shape")
+
+[node name="GroundBossEast" type="StaticBody2D" parent="."]
+position = Vector2(1888, 476)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundBossEast"]
+shape = SubResource("1_ground_shape")
+
+[node name="SpawnPoint" type="Marker2D" parent="."]
+position = Vector2(220, 460)
+
+[node name="SpawnMarker" type="Sprite2D" parent="."]
+position = Vector2(220, 420)
+texture = ExtResource("4_spawn_marker")
+
+[node name="Player" parent="." instance=ExtResource("5_player")]
+position = Vector2(220, 460)
+
+[node name="GoalTrigger" parent="." instance=ExtResource("8_clear_trigger")]
+position = Vector2(1960, 468)
+
+[node name="BossArenaTrigger" type="Area2D" parent="."]
+position = Vector2(1350, 428)
+collision_layer = 2048
+collision_mask = 4
+monitoring = false
+monitorable = false
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BossArenaTrigger"]
+shape = SubResource("2_boss_trigger_shape")
+
+[node name="TriggerVisual" type="Polygon2D" parent="BossArenaTrigger"]
+color = Color(0.678431, 0.913725, 1, 0.22)
+polygon = PackedVector2Array(-36, 32, 36, 32, 36, -32, -36, -32)
+
+[node name="StatusLabel" type="Label" parent="BossArenaTrigger"]
+offset_left = -72.0
+offset_top = -58.0
+offset_right = 72.0
+offset_bottom = -36.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.909804, 0.972549, 1, 1)
+text = "BOSS GATE"
+
+[node name="BossBarrierLeft" parent="." instance=ExtResource("11_boss_barrier")]
+position = Vector2(1420, 476)
+
+[node name="BossBarrierRight" parent="." instance=ExtResource("11_boss_barrier")]
+position = Vector2(1844, 476)
+
+[node name="GenericMaverickBoss" parent="." instance=ExtResource("12_boss")]
+position = Vector2(1624, 438)
+visible = false
+player_path = NodePath("../Player")
+
+[node name="BossEncounterController" type="Node" parent="."]
+script = ExtResource("9_boss_encounter")
+player_path = NodePath("../Player")
+entry_trigger_path = NodePath("../BossArenaTrigger")
+boss_path = NodePath("../GenericMaverickBoss")
+barrier_paths = [NodePath("../BossBarrierLeft"), NodePath("../BossBarrierRight")]
+boss_id = &"spark_mandrill"
+boss_display_name = "Spark Mandrill"
+
+[node name="StageController" type="Node" parent="."]
+script = ExtResource("7_stage_controller")
+player_path = NodePath("../Player")
+spawn_point_path = NodePath("../SpawnPoint")
+stage_id = &"campaign_placeholder"
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="BossLayer" type="CanvasLayer" parent="."]
+
+[node name="BossHUD" parent="BossLayer" instance=ExtResource("10_boss_hud")]
+
+[node name="Panel" type="Panel" parent="CanvasLayer"]
+offset_left = 28.0
+offset_top = 24.0
+offset_right = 468.0
+offset_bottom = 168.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 14.0
+offset_right = -18.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="StageLabel" type="Label" parent="CanvasLayer/Panel/VBoxContainer"]
+theme_override_colors/font_color = Color(0.945098, 0.980392, 1, 1)
+text = "Maverick Boss Stage"
+
+[node name="BodyLabel" type="Label" parent="CanvasLayer/Panel/VBoxContainer"]
+theme_override_colors/font_color = Color(0.780392, 0.862745, 0.952941, 1)
+autowrap_mode = 3
+text = "Loading stage metadata..."
