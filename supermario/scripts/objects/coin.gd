@@ -1,8 +1,5 @@
 extends Area2D
 
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/coin_sheet.png")
-
 @export var collect_sound: AudioStream
 
 var _collected: bool = false
@@ -12,9 +9,6 @@ var _collected: bool = false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 4, {
-		&"spin": {"frames": [0, 1, 2, 3], "fps": 6.0},
-	})
 	_sprite.play(&"spin")
 
 

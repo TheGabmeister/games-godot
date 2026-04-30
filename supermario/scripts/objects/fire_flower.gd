@@ -1,8 +1,6 @@
 extends Area2D
 
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/powerups_sheet.png")
 
 @export var item_config: Resource  # ItemConfig
 
@@ -15,9 +13,6 @@ var _collected: bool = false
 func _ready() -> void:
 	monitoring = false
 	body_entered.connect(_on_body_entered)
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 5, {
-		&"pulse": {"frames": [2, 3, 4], "fps": 6.0},
-	})
 	_sprite.play(&"pulse")
 
 

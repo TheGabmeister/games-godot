@@ -1,7 +1,5 @@
 extends "res://scripts/objects/block_base.gd"
 
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/blocks_sheet.png")
 const CoinScene := preload("res://scenes/objects/coin.tscn")
 const MushroomScene := preload("res://scenes/objects/mushroom.tscn")
 const FireFlowerScene := preload("res://scenes/objects/fire_flower.tscn")
@@ -17,12 +15,8 @@ var _used: bool = false
 
 func _ready() -> void:
 	super._ready()
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 6, {
-		&"active": {"frames": [0, 1, 2], "fps": 3.0},
-		&"used": {"frames": [3], "fps": 1.0, "loop": false},
-	})
 	_sprite.speed_scale = bump_config.pulse_frequency if bump_config else 1.0
-	_sprite.play(&"active")
+	_sprite.play(&"question_active")
 
 
 func _process(delta: float) -> void:
@@ -34,7 +28,7 @@ func bump_from_below() -> void:
 	if _used:
 		return
 	_used = true
-	_sprite.play(&"used")
+	_sprite.play(&"question_used")
 	start_bump()
 	play_bump_sound()
 	EventBus.block_bumped.emit(global_position)

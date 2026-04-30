@@ -21,6 +21,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="19_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/game_over.tscn" id="20_gameover"]
 [ext_resource type="PackedScene" path="res://scenes/ui/level_complete.tscn" id="21_complete"]
+[ext_resource type="SpriteFrames" path="res://resources/sprite_frames/background_decor_frames.tres" id="22_decor_frames"]
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
@@ -67,75 +68,99 @@ mouse_filter = 2
 script = ExtResource("4_parallax")
 
 [node name="Hill0" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Hill1" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Hill2" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Hill3" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Hill4" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Hill5" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud0" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud1" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud2" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud3" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud4" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud5" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud6" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud7" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud8" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud9" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud10" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Cloud11" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Bush0" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Bush1" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Bush2" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Bush3" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Bush4" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="Bush5" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+sprite_frames = ExtResource("22_decor_frames")
 centered = false
 
 [node name="TileMapLayer_Ground" type="TileMapLayer" parent="." unique_id=234901537]

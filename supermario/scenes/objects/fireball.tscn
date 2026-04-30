@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/fireball.gd" id="1_fireball"]
+[ext_resource type="SpriteFrames" path="res://resources/sprite_frames/fireball_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(6, 6)
@@ -29,4 +30,5 @@ shape = SubResource("RectangleShape2D_hitbox")
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(-16, -20)
 scale = Vector2(0.5, 0.5)
+sprite_frames = ExtResource("2_frames")
 centered = false

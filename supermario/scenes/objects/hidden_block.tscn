@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/hidden_block.gd" id="1_hidden"]
 [ext_resource type="Resource" path="res://resources/config/block_bump_default.tres" id="2_bump"]
 [ext_resource type="AudioStream" path="res://audio/sfx/block_bump.wav" id="3_bump_sfx"]
 [ext_resource type="AudioStream" path="res://audio/sfx/coin.wav" id="4_coin_sfx"]
+[ext_resource type="SpriteFrames" path="res://resources/sprite_frames/blocks_frames.tres" id="5_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_block"]
 size = Vector2(16, 16)
@@ -26,6 +27,7 @@ disabled = true
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(-16, -26)
 scale = Vector2(0.8, 0.8)
+sprite_frames = ExtResource("5_frames")
 centered = false
 
 [node name="TriggerArea" type="Area2D" parent="."]

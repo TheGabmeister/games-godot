@@ -9,6 +9,12 @@ Run from the project root:
 python tools/sprites/generate_sprites.py
 ```
 
+Generate Godot `SpriteFrames` resources for the exported sheets:
+
+```powershell
+python tools/sprites/generate_sprite_frames.py
+```
+
 Use a custom Inkscape path if needed:
 
 ```powershell

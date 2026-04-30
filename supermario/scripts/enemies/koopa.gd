@@ -1,7 +1,5 @@
 extends "res://scripts/enemies/enemy_base.gd"
 
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/koopa_sheet.png")
 const KoopaShellScene := preload("res://scenes/enemies/koopa_shell.tscn")
 
 @export var stomp_sound: AudioStream
@@ -12,9 +10,6 @@ const KoopaShellScene := preload("res://scenes/enemies/koopa_shell.tscn")
 func _ready() -> void:
 	super()
 	_enemy_type = &"koopa"
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 3, {
-		&"walk": {"frames": [0, 1], "fps": 8.0},
-	})
 	_sprite.play(&"walk")
 
 

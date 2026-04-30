@@ -2,14 +2,6 @@ extends Node2D
 
 ## Places repeating sprite-based cloud, hill, and bush decorations with parallax.
 
-const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/background_decor_sheet.png")
-const ANIMATIONS := {
-	&"cloud": {"frames": [0], "fps": 1.0, "loop": false},
-	&"hill": {"frames": [1], "fps": 1.0, "loop": false},
-	&"bush": {"frames": [2], "fps": 1.0, "loop": false},
-}
-
 @export var parallax_clouds: float = 0.3
 @export var parallax_hills: float = 0.5
 
@@ -27,15 +19,11 @@ var _camera: Camera2D
 
 
 func _ready() -> void:
-	var frames := SpriteFramesBuilder.build(SHEET, 3, ANIMATIONS)
 	for sprite in _hill_sprites:
-		sprite.sprite_frames = frames
 		sprite.animation = &"hill"
 	for sprite in _cloud_sprites:
-		sprite.sprite_frames = frames
 		sprite.animation = &"cloud"
 	for sprite in _bush_sprites:
-		sprite.sprite_frames = frames
 		sprite.animation = &"bush"
 
 

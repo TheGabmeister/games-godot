@@ -3,8 +3,6 @@ extends CharacterBody2D
 const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000]
 const FireballScene := preload("res://scenes/objects/fireball.tscn")
 const StateIds := preload("res://scripts/player/player_state_ids.gd")
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/player_sheet.png")
 
 const STAR_POWER_DURATION: float = 10.0
 const STAR_WARNING_TIME: float = 2.0
@@ -61,22 +59,6 @@ func _ready() -> void:
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
 	EventBus.player_powered_up.connect(_on_player_powered_up)
 	EventBus.player_damaged.connect(_on_player_damaged)
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 6, {
-		&"small_idle": {"frames": [0], "fps": 1.0, "loop": false},
-		&"small_walk": {"frames": [1, 2], "fps": 8.0},
-		&"small_jump": {"frames": [3], "fps": 1.0, "loop": false},
-		&"small_death": {"frames": [4], "fps": 1.0, "loop": false},
-		&"big_idle": {"frames": [5], "fps": 1.0, "loop": false},
-		&"big_walk": {"frames": [6, 7], "fps": 8.0},
-		&"big_jump": {"frames": [8], "fps": 1.0, "loop": false},
-		&"big_crouch": {"frames": [9], "fps": 1.0, "loop": false},
-		&"big_flag": {"frames": [10], "fps": 1.0, "loop": false},
-		&"fire_idle": {"frames": [11], "fps": 1.0, "loop": false},
-		&"fire_walk": {"frames": [12, 13], "fps": 8.0},
-		&"fire_jump": {"frames": [14], "fps": 1.0, "loop": false},
-		&"fire_crouch": {"frames": [15], "fps": 1.0, "loop": false},
-		&"fire_flag": {"frames": [16], "fps": 1.0, "loop": false},
-	})
 	# Sync collision size with the current GameManager power state. Required
 	# because power is preserved across level transitions (e.g., finishing 1-1
 	# as Fire Mario should spawn Fire Mario in 1-2), but the scene file bakes

@@ -1,11 +1,5 @@
 extends Node2D
 
-const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/effects_sheet.png")
-const ANIMATIONS := {
-	&"default": {"frames": [1], "fps": 1.0, "loop": false},
-}
-
 var _timer: float = 0.0
 const DURATION := 0.2
 
@@ -15,9 +9,8 @@ const DURATION := 0.2
 
 
 func _ready() -> void:
-	var frames := SpriteFramesBuilder.build(SHEET, 6, ANIMATIONS)
 	for sprite in _sprites:
-		sprite.sprite_frames = frames
+		sprite.animation = &"puff"
 		sprite.position = Vector2(-16, -16)
 		sprite.scale = Vector2(0.35, 0.35)
 

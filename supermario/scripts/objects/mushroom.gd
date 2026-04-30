@@ -1,8 +1,6 @@
 extends CharacterBody2D
 
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
-const SHEET := preload("res://sprites/powerups_sheet.png")
 
 @export var item_config: Resource  # ItemConfig
 
@@ -18,10 +16,6 @@ func _ready() -> void:
 	set_collision_layer_value(1, false)
 	set_collision_mask_value(1, false)
 	hurtbox.body_entered.connect(_on_body_entered)
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 5, {
-		&"red": {"frames": [0], "fps": 1.0, "loop": false},
-		&"1up": {"frames": [1], "fps": 1.0, "loop": false},
-	})
 	_sprite.play(&"red")
 
 

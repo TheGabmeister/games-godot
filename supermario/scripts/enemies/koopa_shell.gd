@@ -1,8 +1,5 @@
 extends CharacterBody2D
 
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/koopa_shell_sheet.png")
-
 const GRAVITY := 1800.0
 const SHELL_SPEED := 600.0
 const KICK_IMMUNITY := 0.15
@@ -33,10 +30,6 @@ func _ready() -> void:
 	add_to_group("enemies")
 	_damage_area.area_entered.connect(_on_damage_area_entered)
 	_damage_area.monitoring = false
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 4, {
-		&"idle": {"frames": [0], "fps": 1.0, "loop": false},
-		&"spin": {"frames": [0, 1, 2, 3], "fps": 8.0},
-	})
 	_sprite.play(&"idle")
 
 

@@ -1,20 +1,5 @@
 extends Node2D
 
-const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/score_digits_sheet.png")
-const ANIMATIONS := {
-	&"0": {"frames": [0], "fps": 1.0, "loop": false},
-	&"1": {"frames": [1], "fps": 1.0, "loop": false},
-	&"2": {"frames": [2], "fps": 1.0, "loop": false},
-	&"3": {"frames": [3], "fps": 1.0, "loop": false},
-	&"4": {"frames": [4], "fps": 1.0, "loop": false},
-	&"5": {"frames": [5], "fps": 1.0, "loop": false},
-	&"6": {"frames": [6], "fps": 1.0, "loop": false},
-	&"7": {"frames": [7], "fps": 1.0, "loop": false},
-	&"8": {"frames": [8], "fps": 1.0, "loop": false},
-	&"9": {"frames": [9], "fps": 1.0, "loop": false},
-}
-
 var _effects: Resource
 var _timer: float = 0.0
 var _points: int = 0
@@ -48,11 +33,9 @@ func _build_digits() -> void:
 
 	var text := str(_points)
 	var start_x := -float(text.length()) * 4.0
-	var frames := SpriteFramesBuilder.build(SHEET, 10, ANIMATIONS)
 	for i in mini(text.length(), _digit_sprites.size()):
 		var digit := StringName(text[i])
 		var sprite := _digit_sprites[i]
-		sprite.sprite_frames = frames
 		sprite.animation = digit
 		sprite.position = Vector2(start_x + i * 8.0 - 16.0, -24.0)
 		sprite.scale = Vector2(0.35, 0.35)

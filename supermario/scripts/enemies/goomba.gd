@@ -1,7 +1,5 @@
 extends "res://scripts/enemies/enemy_base.gd"
 
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/goomba_sheet.png")
 const SQUISH_DURATION := 0.5
 
 @export var stomp_sound: AudioStream
@@ -15,10 +13,6 @@ var _squish_timer: float = 0.0
 func _ready() -> void:
 	super()
 	_enemy_type = &"goomba"
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 3, {
-		&"walk": {"frames": [0, 1], "fps": 8.0},
-		&"squished": {"frames": [2], "fps": 1.0, "loop": false},
-	})
 	_sprite.play(&"walk")
 
 

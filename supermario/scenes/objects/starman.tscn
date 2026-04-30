@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/starman.gd" id="1_starman"]
 [ext_resource type="Resource" path="res://resources/config/item_default.tres" id="2_item"]
+[ext_resource type="SpriteFrames" path="res://resources/sprite_frames/starman_frames.tres" id="3_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(12, 14)
@@ -30,4 +31,5 @@ shape = SubResource("RectangleShape2D_hurt")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(-16, -30)
+sprite_frames = ExtResource("3_frames")
 centered = false

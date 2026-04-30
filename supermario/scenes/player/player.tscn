@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3]
+[gd_scene load_steps=27 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Resource" path="res://resources/config/player_movement_default.tres" id="10_movement"]
@@ -24,6 +24,8 @@
 [ext_resource type="AudioStream" path="res://audio/sfx/powerdown.wav" id="23_powerdown_sfx"]
 [ext_resource type="AudioStream" path="res://audio/sfx/death.wav" id="24_death_sfx"]
 [ext_resource type="AudioStream" path="res://audio/sfx/fireball.wav" id="25_fireball_sfx"]
+[ext_resource type="SpriteFrames" path="res://resources/sprite_frames/player_frames.tres" id="26_player_frames"]
+[ext_resource type="SpriteFrames" path="res://resources/sprite_frames/effects_frames.tres" id="27_effects_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
 size = Vector2(24, 28)
@@ -57,6 +59,7 @@ scale = Vector2(2, 2)
 
 [node name="Sprite" type="AnimatedSprite2D" parent="Visuals"]
 position = Vector2(-16, -30)
+sprite_frames = ExtResource("26_player_frames")
 centered = false
 
 [node name="StateMachine" type="Node" parent="."]
@@ -121,16 +124,21 @@ script = ExtResource("14_flash")
 script = ExtResource("15_trail")
 
 [node name="Trail0" type="AnimatedSprite2D" parent="MotionTrail"]
+sprite_frames = ExtResource("27_effects_frames")
 centered = false
 
 [node name="Trail1" type="AnimatedSprite2D" parent="MotionTrail"]
+sprite_frames = ExtResource("27_effects_frames")
 centered = false
 
 [node name="Trail2" type="AnimatedSprite2D" parent="MotionTrail"]
+sprite_frames = ExtResource("27_effects_frames")
 centered = false
 
 [node name="Trail3" type="AnimatedSprite2D" parent="MotionTrail"]
+sprite_frames = ExtResource("27_effects_frames")
 centered = false
 
 [node name="Trail4" type="AnimatedSprite2D" parent="MotionTrail"]
+sprite_frames = ExtResource("27_effects_frames")
 centered = false

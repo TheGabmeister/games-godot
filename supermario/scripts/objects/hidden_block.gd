@@ -1,7 +1,5 @@
 extends "res://scripts/objects/block_base.gd"
 
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/blocks_sheet.png")
 const MushroomScene := preload("res://scenes/objects/mushroom.tscn")
 
 @export var contents: StringName = &"coin"
@@ -18,9 +16,7 @@ func _ready() -> void:
 	super._ready()
 	collision_shape.disabled = true
 	trigger_area.body_entered.connect(_on_body_entered)
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 6, {
-		&"used": {"frames": [3], "fps": 1.0, "loop": false},
-	})
+	_sprite.animation = &"used"
 	_sprite.visible = false
 
 

@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/pipe.gd" id="1_pipe"]
 [ext_resource type="AudioStream" path="res://audio/sfx/pipe.wav" id="2_pipe_sfx"]
+[ext_resource type="SpriteFrames" path="res://resources/sprite_frames/pipe_frames.tres" id="3_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(32, 32)
@@ -18,18 +19,23 @@ script = ExtResource("1_pipe")
 entry_sound = ExtResource("2_pipe_sfx")
 
 [node name="CapSprite" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("3_frames")
 centered = false
 
 [node name="BodySprite0" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("3_frames")
 centered = false
 
 [node name="BodySprite1" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("3_frames")
 centered = false
 
 [node name="BodySprite2" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("3_frames")
 centered = false
 
 [node name="BodySprite3" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("3_frames")
 centered = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

@@ -1,7 +1,5 @@
 extends Node2D
 
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/piranha_plant_sheet.png")
 const EMERGE_HEIGHT: float = 24.0
 const EMERGE_DURATION: float = 0.8
 const WAIT_TOP_DURATION: float = 1.5
@@ -29,9 +27,7 @@ func _ready() -> void:
 	_hitbox_shape.position.y = 0.0
 	_proximity_zone.body_entered.connect(_on_proximity_body_entered)
 	_proximity_zone.body_exited.connect(_on_proximity_body_exited)
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 4, {
-		&"emerge": {"frames": [0, 1, 2, 3], "fps": 1.0, "loop": false},
-	})
+	_sprite.animation = &"emerge"
 
 
 func activate() -> void:

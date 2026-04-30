@@ -1,11 +1,5 @@
 extends Node2D
 
-const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/effects_sheet.png")
-const ANIMATIONS := {
-	&"default": {"frames": [4], "fps": 1.0, "loop": false},
-}
-
 var _effects: Resource
 var _trail_positions: Array[Vector2] = []
 var _trail_alphas: Array[float] = []
@@ -21,9 +15,8 @@ const MIN_SPEED := 180.0
 
 func _ready() -> void:
 	_effects = (owner as CharacterBody2D).effects if owner else preload("res://resources/config/effects_default.tres")
-	var frames := SpriteFramesBuilder.build(SHEET, 6, ANIMATIONS)
 	for sprite in _sprites:
-		sprite.sprite_frames = frames
+		sprite.animation = &"trail"
 		sprite.position = Vector2(-16, -24)
 		sprite.scale = Vector2(0.5, 0.7)
 		sprite.visible = false

@@ -1,18 +1,23 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/effects/score_popup.gd" id="1_script"]
+[ext_resource type="SpriteFrames" path="res://resources/sprite_frames/score_digits_frames.tres" id="2_frames"]
 
 [node name="ScorePopup" type="Node2D"]
 script = ExtResource("1_script")
 
 [node name="Digit0" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_frames")
 centered = false
 
 [node name="Digit1" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_frames")
 centered = false
 
 [node name="Digit2" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_frames")
 centered = false
 
 [node name="Digit3" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_frames")
 centered = false

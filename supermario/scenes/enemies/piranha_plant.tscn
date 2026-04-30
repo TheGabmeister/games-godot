@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/piranha_plant.gd" id="1_piranha"]
+[ext_resource type="SpriteFrames" path="res://resources/sprite_frames/piranha_plant_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
 size = Vector2(14, 20)
@@ -30,4 +31,5 @@ shape = SubResource("RectangleShape2D_proximity")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(-16, -30)
+sprite_frames = ExtResource("2_frames")
 centered = false

@@ -1,14 +1,6 @@
 extends Node2D
 
-const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/flagpole_sheet.png")
 const POLE_HEIGHT: float = 320.0
-const ANIMATIONS := {
-	&"pole": {"frames": [0], "fps": 1.0, "loop": false},
-	&"ball": {"frames": [1], "fps": 1.0, "loop": false},
-	&"flag": {"frames": [2], "fps": 1.0, "loop": false},
-	&"base": {"frames": [3], "fps": 1.0, "loop": false},
-}
 
 @export var flagpole_sound: AudioStream
 
@@ -23,14 +15,9 @@ var _triggered: bool = false
 
 func _ready() -> void:
 	_detect_area.body_entered.connect(_on_body_entered)
-	var frames := SpriteFramesBuilder.build(SHEET, 4, ANIMATIONS)
-	_pole_sprite.sprite_frames = frames
 	_pole_sprite.animation = &"pole"
-	_ball_sprite.sprite_frames = frames
 	_ball_sprite.animation = &"ball"
-	_flag_sprite.sprite_frames = frames
 	_flag_sprite.animation = &"flag"
-	_base_sprite.sprite_frames = frames
 	_base_sprite.animation = &"base"
 	_update_sprites()
 

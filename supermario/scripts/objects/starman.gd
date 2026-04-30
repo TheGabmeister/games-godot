@@ -1,8 +1,6 @@
 extends CharacterBody2D
 
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
-const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
-const SHEET := preload("res://sprites/starman_sheet.png")
 
 @export var item_config: Resource  # ItemConfig
 
@@ -19,9 +17,6 @@ func _ready() -> void:
 	set_collision_layer_value(1, false)
 	set_collision_mask_value(1, false)
 	hurtbox.body_entered.connect(_on_body_entered)
-	_sprite.sprite_frames = FramesBuilder.build(SHEET, 3, {
-		&"cycle": {"frames": [0, 1, 2], "fps": 6.0},
-	})
 	_sprite.play(&"cycle")
 
 
