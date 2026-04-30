@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" viewBox="0 0 128 32" shape-rendering="crispEdges">
+<g transform="translate(0,0)"><rect x="14" y="0" width="4" height="32" fill="#999999"/></g><g transform="translate(32,0)"><circle cx="16" cy="16" r="7" fill="#ffe626" stroke="#aa8a00" stroke-width="1"/></g><g transform="translate(64,0)"><polygon points="22,8 5,16 22,24" fill="#1ab326" stroke="#0c6615" stroke-width="1"/></g><g transform="translate(96,0)"><rect x="4" y="16" width="24" height="12" fill="#40a640" stroke="#267026" stroke-width="1"/></g>
+</svg>

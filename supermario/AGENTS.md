@@ -48,8 +48,8 @@ When making changes in this repo:
    assignment. Many behavior changes here come from missing `.tres` assignments
    rather than code alone.
 10. If you change tile size or visual scale, update the TileSet builder, level
-    `TILE_SIZE` constants, authored scene positions, gameplay config resources,
-    and dependent object offsets together. The current grid is 32 px tiles.
+	`TILE_SIZE` constants, authored scene positions, gameplay config resources,
+	and dependent object offsets together. The current grid is 32 px tiles.
 
 ## Implementation Notes
 
