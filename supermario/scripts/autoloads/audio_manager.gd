@@ -1,27 +1,26 @@
 extends Node
 
 const SFX_POOL_SIZE: int = 10
-const SFX_2D_POOL_SIZE: int = 6
 const MUSIC_FADE_DURATION: float = 0.5
 
 var _sfx_registry: Dictionary[StringName, String] = {
-	&"jump": "",
-	&"jump_big": "",
-	&"stomp": "",
-	&"coin": "",
-	&"block_bump": "",
-	&"block_break": "",
-	&"powerup": "",
-	&"powerdown": "",
-	&"fireball": "",
-	&"kick": "",
-	&"pipe": "",
-	&"1up": "",
-	&"death": "",
-	&"flagpole": "",
-	&"game_over": "",
-	&"stage_clear": "",
-	&"warning": "",
+	&"jump": "res://audio/sfx/jump.wav",
+	&"jump_big": "res://audio/sfx/jump_big.wav",
+	&"stomp": "res://audio/sfx/stomp.wav",
+	&"coin": "res://audio/sfx/coin.wav",
+	&"block_bump": "res://audio/sfx/block_bump.wav",
+	&"block_break": "res://audio/sfx/block_break.wav",
+	&"powerup": "res://audio/sfx/powerup.wav",
+	&"powerdown": "res://audio/sfx/powerdown.wav",
+	&"fireball": "res://audio/sfx/fireball.wav",
+	&"kick": "res://audio/sfx/kick.wav",
+	&"pipe": "res://audio/sfx/pipe.wav",
+	&"1up": "res://audio/sfx/1up.wav",
+	&"death": "res://audio/sfx/death.wav",
+	&"flagpole": "res://audio/sfx/flagpole.wav",
+	&"game_over": "res://audio/sfx/game_over.wav",
+	&"stage_clear": "res://audio/sfx/stage_clear.wav",
+	&"warning": "res://audio/sfx/warning.wav",
 }
 
 var _music_registry: Dictionary[StringName, String] = {
@@ -36,8 +35,6 @@ var _music_streams: Dictionary[StringName, AudioStream] = {}
 
 var _sfx_pool: Array[AudioStreamPlayer] = []
 var _sfx_pool_index: int = 0
-var _sfx_2d_pool: Array[AudioStreamPlayer2D] = []
-var _sfx_2d_pool_index: int = 0
 
 var _music_a: AudioStreamPlayer
 var _music_b: AudioStreamPlayer
@@ -62,20 +59,6 @@ func play_sfx(sound_name: StringName) -> void:
 	player.stream = stream
 	player.play()
 	_sfx_pool_index = (_sfx_pool_index + 1) % SFX_POOL_SIZE
-
-
-func play_sfx_at(sound_name: StringName, position: Vector2) -> void:
-	if not _sfx_registry.has(sound_name):
-		push_warning("AudioManager: unknown SFX key '%s'" % sound_name)
-		return
-	var stream := _get_sfx_stream(sound_name)
-	if stream == null:
-		return
-	var player := _sfx_2d_pool[_sfx_2d_pool_index]
-	player.stream = stream
-	player.global_position = position
-	player.play()
-	_sfx_2d_pool_index = (_sfx_2d_pool_index + 1) % SFX_2D_POOL_SIZE
 
 
 func play_music(music_name: StringName) -> void:
@@ -148,11 +131,6 @@ func _build_sfx_pool() -> void:
 		player.bus = &"SFX"
 		add_child(player)
 		_sfx_pool.append(player)
-	for i in SFX_2D_POOL_SIZE:
-		var player := AudioStreamPlayer2D.new()
-		player.bus = &"SFX"
-		add_child(player)
-		_sfx_2d_pool.append(player)
 
 
 func _build_music_players() -> void:
@@ -166,14 +144,14 @@ func _build_music_players() -> void:
 
 
 func _connect_signals() -> void:
-	EventBus.coin_collected.connect(func(pos: Vector2) -> void: play_sfx_at(&"coin", pos))
+	EventBus.coin_collected.connect(func(_pos: Vector2) -> void: play_sfx(&"coin"))
 	EventBus.player_died.connect(func() -> void:
 		play_sfx(&"death")
 		stop_music()
 	)
-	EventBus.enemy_stomped.connect(func(pos: Vector2) -> void: play_sfx_at(&"stomp", pos))
-	EventBus.block_bumped.connect(func(pos: Vector2) -> void: play_sfx_at(&"block_bump", pos))
-	EventBus.block_broken.connect(func(pos: Vector2) -> void: play_sfx_at(&"block_break", pos))
+	EventBus.enemy_stomped.connect(func(_pos: Vector2) -> void: play_sfx(&"stomp"))
+	EventBus.block_bumped.connect(func(_pos: Vector2) -> void: play_sfx(&"block_bump"))
+	EventBus.block_broken.connect(func(_pos: Vector2) -> void: play_sfx(&"block_break"))
 	EventBus.player_powered_up.connect(func(_type: StringName) -> void: play_sfx(&"powerup"))
 	EventBus.player_damaged.connect(func() -> void: play_sfx(&"powerdown"))
 	EventBus.level_started.connect(func(_w: int, l: int) -> void:
@@ -191,4 +169,3 @@ func _connect_signals() -> void:
 		play_sfx(&"game_over")
 	)
 	EventBus.one_up_earned.connect(func() -> void: play_sfx(&"1up"))
-	EventBus.flagpole_reached.connect(func(_h: float) -> void: play_sfx(&"flagpole"))
