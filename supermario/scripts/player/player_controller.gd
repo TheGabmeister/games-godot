@@ -16,6 +16,7 @@ const MAX_FIREBALLS: int = 2
 @export var powerdown_sound: AudioStream
 @export var death_sound: AudioStream
 @export var fireball_sound: AudioStream
+@export var star_music: AudioStream
 
 var coyote_active: bool = false
 var jump_buffered: bool = false
@@ -302,7 +303,7 @@ func _start_star_power() -> void:
 	_star_timer = STAR_POWER_DURATION
 	drawer.star_power_active = true
 	EventBus.player_star_power_started.emit()
-	AudioManager.play_music(&"star")
+	EventBus.music_requested.emit(star_music)
 
 
 func _end_star_power() -> void:
@@ -314,7 +315,7 @@ func _end_star_power() -> void:
 	if _invincibility_timer <= 0.0:
 		_is_invincible = false
 	EventBus.player_star_power_ended.emit()
-	AudioManager.play_music(&"overworld")
+	EventBus.level_music_requested.emit()
 
 
 # --- Fireballs ---

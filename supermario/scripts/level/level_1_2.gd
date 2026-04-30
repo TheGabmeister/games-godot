@@ -6,17 +6,32 @@ const TILE_SIZE := 16
 const LEVEL_HEIGHT := 14
 const LEVEL_WIDTH := 170  # tiles
 
+@export var level_music: AudioStream
+
 @onready var tilemap: TileMapLayer = $TileMapLayer_Ground
 @onready var player: CharacterBody2D = $Player
 @onready var camera: Camera2D
 
 
 func _ready() -> void:
+	EventBus.level_started.connect(_on_level_started)
+	EventBus.level_music_requested.connect(_request_level_music)
 	camera = player.get_node("Camera2D") as Camera2D
 	tilemap.tile_set = TilesetBuilder.create_tileset(Palette.UNDERGROUND_DARK, Palette.UNDERGROUND_BASE)
 	_setup_camera()
 	_paint_terrain()
 	# Level boot and run-state are owned by GameManager._enter_level().
+
+
+func _on_level_started(_world: int, _level: int) -> void:
+	_request_level_music()
+
+
+func _request_level_music() -> void:
+	if level_music != null:
+		EventBus.music_requested.emit(level_music)
+	else:
+		EventBus.music_stop_requested.emit()
 
 
 func _setup_camera() -> void:

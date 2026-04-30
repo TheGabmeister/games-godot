@@ -2,6 +2,10 @@ extends Node
 
 # Audio
 signal sfx_requested(sound: AudioStream)
+signal music_requested(music: AudioStream)
+signal music_stop_requested
+signal music_duck_requested(enabled: bool)
+signal level_music_requested
 
 # Player
 signal player_died

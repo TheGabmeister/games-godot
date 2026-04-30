@@ -64,8 +64,8 @@ res://
     ui/                          # title, hud, pause, game_over, level_complete
 
   scripts/
-    autoloads/                   # event_bus, game_manager, audio_manager,
-                                 # scene_manager, camera_effects
+    autoloads/                   # event_bus, game_manager, sfx_manager,
+                                 # music_manager, scene_manager, camera_effects
     color_palette.gd             # Registered as `Palette` autoload
     player/                      # controller, drawer, state_machine,
                                  # player_states/, player_state_ids.gd
@@ -94,10 +94,11 @@ Generated files under `.godot/`, `*.uid`, and `*.import` are not hand-edited.
 
 1. **EventBus** — pure signal hub. ~30 signals covering player, scoring, enemies, blocks, and game state. Cross-system communication should prefer signals over hard references.
 2. **GameManager** — persistent state (score, coins, lives, timer, power state, game state) and the entire level-transition flow. Single funnel `_enter_level(path)` for all transitions, called by `start_new_game()`, `advance_to_next_level()`, and `respawn_current_level()`.
-3. **AudioManager** — registry-based audio. SFX/music registries map `StringName` keys to file paths; empty paths safely no-op. SFX pool of 10 non-positional + 6 positional players, music crossfade via dual `AudioStreamPlayer`. Wired to EventBus signals.
-4. **SceneManager** — fade transitions and the level-intro overlay. Public API: `change_scene`, `change_scene_no_fade`, `fade_out` / `fade_in`, `show_level_intro`.
-5. **CameraEffects** — screen shake (the camera controller reads `get_shake_offset()` per frame) and freeze-frame via time-scale dip.
-6. **Palette** — `scripts/color_palette.gd`. All named colors used by `_draw()`. Access as `Palette.MARIO_RED`, `Palette.PIPE_GREEN`, etc.
+3. **SfxManager** — event-driven SFX playback. Callers own `AudioStream` references and emit `EventBus.sfx_requested(sound)`; the manager only owns the SFX player pool.
+4. **MusicManager** — event-driven music playback. Callers own music streams and emit music request/stop/duck events; the manager only owns dual `AudioStreamPlayer` crossfade plumbing.
+5. **SceneManager** — fade transitions and the level-intro overlay. Public API: `change_scene`, `change_scene_no_fade`, `fade_out` / `fade_in`, `show_level_intro`.
+6. **CameraEffects** — screen shake (the camera controller reads `get_shake_offset()` per frame) and freeze-frame via time-scale dip.
+7. **Palette** — `scripts/color_palette.gd`. All named colors used by `_draw()`. Access as `Palette.MARIO_RED`, `Palette.PIPE_GREEN`, etc.
 
 ### Game Flow
 

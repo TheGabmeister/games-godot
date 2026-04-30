@@ -124,6 +124,7 @@ func lose_life() -> void:
 	EventBus.lives_changed.emit(lives)
 	if lives <= 0:
 		set_game_state(GameState.GAME_OVER)
+		EventBus.music_stop_requested.emit()
 		EventBus.game_over.emit()
 	else:
 		EventBus.player_respawned.emit()
@@ -166,10 +167,12 @@ func stop_level_timer() -> void:
 
 func _on_player_died() -> void:
 	_timer_active = false
+	EventBus.music_stop_requested.emit()
 
 
 func _on_level_completed() -> void:
 	_timer_active = false
+	EventBus.music_stop_requested.emit()
 	var time_bonus := ceili(time_remaining) * 50
 	add_score(time_bonus)
 	set_game_state(GameState.LEVEL_COMPLETE)

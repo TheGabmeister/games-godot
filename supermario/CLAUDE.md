@@ -45,11 +45,11 @@ obvious from reading the code in isolation.
 - `_enter_level()` has exactly three callers: `start_new_game()`, `advance_to_next_level()`, `respawn_current_level()`. Do not add a fourth — extend one of these.
 - Public flow API (no underscore prefix): `start_level_timer`, `stop_level_timer`, `advance_to_next_level`, `respawn_current_level`, `return_to_title`.
 
-### AudioManager
+### SfxManager and MusicManager
 
-- Streams are loaded lazily via `_get_sfx_stream()` / `_get_music_stream()` and cached in `_sfx_streams` / `_music_streams` dictionaries. `load()` runs at most once per asset per session; subsequent plays are pure dictionary lookups.
-- All EventBus-to-audio wiring is already connected. Adding a new sound = add a key/path to the registry — the signal handler already exists.
-- Unknown registry keys log a warning and no-op.
+- Audio managers are playback plumbing only. Gameplay/UI callers own `AudioStream` references and emit EventBus audio requests.
+- SFX uses `EventBus.sfx_requested(sound)`, handled by `SfxManager`'s pooled `AudioStreamPlayer`s.
+- Music uses `EventBus.music_requested(music)`, `music_stop_requested`, and `music_duck_requested(enabled)`, handled by `MusicManager`'s dual-player crossfade setup.
 
 ### SceneManager
 

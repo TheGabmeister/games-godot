@@ -23,7 +23,7 @@ func pause() -> void:
 	visible = true
 	get_tree().paused = true
 	GameManager.set_game_state(GameManager.GameState.PAUSED)
-	AudioManager.set_music_ducked(true)
+	EventBus.music_duck_requested.emit(true)
 
 
 func unpause() -> void:
@@ -31,4 +31,4 @@ func unpause() -> void:
 	visible = false
 	get_tree().paused = false
 	GameManager.set_game_state(GameManager.GameState.PLAYING)
-	AudioManager.set_music_ducked(false)
+	EventBus.music_duck_requested.emit(false)
