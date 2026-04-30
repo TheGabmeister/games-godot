@@ -27,15 +27,3 @@ static func build(texture: Texture2D, columns: int, animations: Dictionary) -> S
 			frames.add_frame(anim_name, atlas)
 
 	return frames
-
-
-static func configure(
-	sprite: AnimatedSprite2D,
-	texture: Texture2D,
-	columns: int,
-	animations: Dictionary,
-	animation: StringName = &"default"
-) -> void:
-	sprite.sprite_frames = build(texture, columns, animations)
-	sprite.animation = animation
-	sprite.centered = false

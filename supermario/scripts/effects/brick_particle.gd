@@ -16,7 +16,7 @@ const LIFETIME := 1.0
 
 
 func _ready() -> void:
-	SpriteFramesBuilder.configure(_sprite, SHEET, 6, ANIMATIONS)
+	_sprite.sprite_frames = SpriteFramesBuilder.build(SHEET, 6, ANIMATIONS)
 	_sprite.position = Vector2(-16, -16)
 	_sprite.scale = Vector2(0.45, 0.45)
 

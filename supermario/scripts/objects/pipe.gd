@@ -48,13 +48,16 @@ func _ready() -> void:
 
 func _build_sprites() -> void:
 	var h: float = pipe_height * TILE_SIZE
-	SpriteFramesBuilder.configure(_cap_sprite, SHEET, 2, ANIMATIONS, &"cap")
+	var frames := SpriteFramesBuilder.build(SHEET, 2, ANIMATIONS)
+	_cap_sprite.sprite_frames = frames
+	_cap_sprite.animation = &"cap"
 	_cap_sprite.position = Vector2(-32, -h - 8)
 	_cap_sprite.scale = Vector2(2.0, 1.0)
 
 	for i in _body_sprites.size():
 		var body := _body_sprites[i]
-		SpriteFramesBuilder.configure(body, SHEET, 2, ANIMATIONS, &"body")
+		body.sprite_frames = frames
+		body.animation = &"body"
 		body.visible = i < pipe_height
 		if not body.visible:
 			continue

@@ -48,10 +48,12 @@ func _build_digits() -> void:
 
 	var text := str(_points)
 	var start_x := -float(text.length()) * 4.0
+	var frames := SpriteFramesBuilder.build(SHEET, 10, ANIMATIONS)
 	for i in mini(text.length(), _digit_sprites.size()):
 		var digit := StringName(text[i])
 		var sprite := _digit_sprites[i]
-		SpriteFramesBuilder.configure(sprite, SHEET, 10, ANIMATIONS, digit)
+		sprite.sprite_frames = frames
+		sprite.animation = digit
 		sprite.position = Vector2(start_x + i * 8.0 - 16.0, -24.0)
 		sprite.scale = Vector2(0.35, 0.35)
 		sprite.visible = true

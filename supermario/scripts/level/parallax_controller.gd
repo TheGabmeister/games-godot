@@ -27,12 +27,16 @@ var _camera: Camera2D
 
 
 func _ready() -> void:
+	var frames := SpriteFramesBuilder.build(SHEET, 3, ANIMATIONS)
 	for sprite in _hill_sprites:
-		SpriteFramesBuilder.configure(sprite, SHEET, 3, ANIMATIONS, &"hill")
+		sprite.sprite_frames = frames
+		sprite.animation = &"hill"
 	for sprite in _cloud_sprites:
-		SpriteFramesBuilder.configure(sprite, SHEET, 3, ANIMATIONS, &"cloud")
+		sprite.sprite_frames = frames
+		sprite.animation = &"cloud"
 	for sprite in _bush_sprites:
-		SpriteFramesBuilder.configure(sprite, SHEET, 3, ANIMATIONS, &"bush")
+		sprite.sprite_frames = frames
+		sprite.animation = &"bush"
 
 
 func _process(_delta: float) -> void:

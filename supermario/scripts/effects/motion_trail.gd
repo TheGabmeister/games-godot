@@ -21,8 +21,9 @@ const MIN_SPEED := 180.0
 
 func _ready() -> void:
 	_effects = (owner as CharacterBody2D).effects if owner else preload("res://resources/config/effects_default.tres")
+	var frames := SpriteFramesBuilder.build(SHEET, 6, ANIMATIONS)
 	for sprite in _sprites:
-		SpriteFramesBuilder.configure(sprite, SHEET, 6, ANIMATIONS)
+		sprite.sprite_frames = frames
 		sprite.position = Vector2(-16, -24)
 		sprite.scale = Vector2(0.5, 0.7)
 		sprite.visible = false

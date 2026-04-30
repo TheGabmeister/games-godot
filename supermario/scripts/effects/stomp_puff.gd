@@ -15,8 +15,9 @@ const DURATION := 0.2
 
 
 func _ready() -> void:
+	var frames := SpriteFramesBuilder.build(SHEET, 6, ANIMATIONS)
 	for sprite in _sprites:
-		SpriteFramesBuilder.configure(sprite, SHEET, 6, ANIMATIONS)
+		sprite.sprite_frames = frames
 		sprite.position = Vector2(-16, -16)
 		sprite.scale = Vector2(0.35, 0.35)
 

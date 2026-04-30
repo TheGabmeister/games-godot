@@ -19,7 +19,8 @@ const FADE_TIME := 0.1
 
 
 func _ready() -> void:
-	SpriteFramesBuilder.configure(_sprite, SHEET, 4, ANIMATIONS, &"spin")
+	_sprite.sprite_frames = SpriteFramesBuilder.build(SHEET, 4, ANIMATIONS)
+	_sprite.animation = &"spin"
 	_sprite.position = Vector2(-16, -24)
 	_sprite.scale = Vector2(0.65, 0.65)
 	_sprite.play()

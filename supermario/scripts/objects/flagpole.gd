@@ -23,10 +23,15 @@ var _triggered: bool = false
 
 func _ready() -> void:
 	_detect_area.body_entered.connect(_on_body_entered)
-	SpriteFramesBuilder.configure(_pole_sprite, SHEET, 4, ANIMATIONS, &"pole")
-	SpriteFramesBuilder.configure(_ball_sprite, SHEET, 4, ANIMATIONS, &"ball")
-	SpriteFramesBuilder.configure(_flag_sprite, SHEET, 4, ANIMATIONS, &"flag")
-	SpriteFramesBuilder.configure(_base_sprite, SHEET, 4, ANIMATIONS, &"base")
+	var frames := SpriteFramesBuilder.build(SHEET, 4, ANIMATIONS)
+	_pole_sprite.sprite_frames = frames
+	_pole_sprite.animation = &"pole"
+	_ball_sprite.sprite_frames = frames
+	_ball_sprite.animation = &"ball"
+	_flag_sprite.sprite_frames = frames
+	_flag_sprite.animation = &"flag"
+	_base_sprite.sprite_frames = frames
+	_base_sprite.animation = &"base"
 	_update_sprites()
 
 

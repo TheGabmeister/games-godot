@@ -10,6 +10,6 @@ const ANIMATIONS := {
 
 
 func _ready() -> void:
-	SpriteFramesBuilder.configure(_sprite, SHEET, 1, ANIMATIONS)
+	_sprite.sprite_frames = SpriteFramesBuilder.build(SHEET, 1, ANIMATIONS)
 	_sprite.position = Vector2(-40, -70)
 	_sprite.scale = Vector2(2.5, 2.5)
