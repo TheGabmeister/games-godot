@@ -2,11 +2,9 @@
 
 ## D. Code Smells
 
-### 24. Magic numbers throughout drawing and collision code
+### 24. Magic numbers throughout collision/layout code
 
-Every `_draw()` method is full of unexplained pixel offsets (`-8`, `0.06`, `192.0`, `768.0`, `512.0`, `-200.0`, `500.0`, etc.). The parallax controller alone has dozens. Named constants would make these self-documenting.
-
-Magic collision/layout numbers also appear in:
+Magic collision/layout numbers appear in:
 - `kill_zone.gd:5-6`
 - `level_base.gd:16`, `level_1_2.gd:13`
 - `question_block.gd:4`

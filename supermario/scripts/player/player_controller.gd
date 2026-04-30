@@ -3,11 +3,14 @@ extends CharacterBody2D
 const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000]
 const FireballScene := preload("res://scenes/objects/fireball.tscn")
 const StateIds := preload("res://scripts/player/player_state_ids.gd")
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
 
 const STAR_POWER_DURATION: float = 10.0
 const STAR_WARNING_TIME: float = 2.0
 const MAX_FIREBALLS: int = 2
 const VISUAL_SCALE: float = 2.0
+const SHEET_COLUMNS := 6
+const SPRITE_OFFSET := Vector2(-16, -30)
 
 @export var movement: Resource  # PlayerMovementConfig
 @export var effects: Resource  # EffectsConfig
@@ -36,9 +39,18 @@ var _star_timer: float = 0.0
 # Fireball tracking
 var _active_fireballs: int = 0
 
+# Sprite animation
+# `displayed_power_state` is normally synced to GameManager.current_power_state in
+# update_collision_shape(), but GrowState / ShrinkState override it during the
+# flicker animation so the sprite alternates between Small and Big frames while
+# the actual power transition is locked in.
+var displayed_power_state: int = 0
+var _walk_cycle: float = 0.0
+var _star_cycle: float = 0.0
+
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var visuals: Node2D = $Visuals
-@onready var drawer: Node2D = $Visuals/PlayerDrawer
+@onready var _sprite: Sprite2D = $Visuals/Sprite
 @onready var state_machine: Node = $StateMachine
 @onready var camera: Camera2D = $Camera2D
 @onready var stomp_detector: Area2D = $StompDetector
@@ -51,10 +63,10 @@ func _ready() -> void:
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
 	EventBus.player_powered_up.connect(_on_player_powered_up)
 	EventBus.player_damaged.connect(_on_player_damaged)
-	# Sync collision size and drawer form with the current GameManager
-	# power state. Required because power is preserved across level
-	# transitions (e.g., finishing 1-1 as Fire Mario should spawn Fire
-	# Mario in 1-2), but the scene file bakes in the Small collision.
+	# Sync collision size with the current GameManager power state. Required
+	# because power is preserved across level transitions (e.g., finishing 1-1
+	# as Fire Mario should spawn Fire Mario in 1-2), but the scene file bakes
+	# in the Small collision.
 	update_collision_shape()
 
 
@@ -87,8 +99,6 @@ func _process(delta: float) -> void:
 	# Star power
 	if _is_star_powered:
 		_star_timer -= delta
-		# Palette cycling
-		drawer.star_power_active = true
 		# Warning flashes in last 2 seconds
 		if _star_timer <= STAR_WARNING_TIME:
 			modulate.a = 0.5 if fmod(_star_timer, 0.2) < 0.1 else 1.0
@@ -97,6 +107,8 @@ func _process(delta: float) -> void:
 
 	# Fireball input (Fire Mario, run button, any normal gameplay state)
 	_check_fireball_input()
+
+	_update_sprite_frame(delta)
 
 
 func apply_gravity(delta: float) -> void:
@@ -159,7 +171,6 @@ func can_crouch() -> bool:
 
 func set_crouching(crouching: bool) -> void:
 	_is_crouching = crouching
-	drawer.is_crouching = crouching
 	update_collision_shape()
 
 
@@ -293,7 +304,7 @@ func update_collision_shape() -> void:
 	else:
 		shape.size = movement.big_collision
 		collision_shape.position.y = -movement.big_collision.y / 2.0
-	drawer.power_state = GameManager.current_power_state
+	displayed_power_state = GameManager.current_power_state
 
 
 # --- Star Power ---
@@ -302,7 +313,6 @@ func _start_star_power() -> void:
 	_is_star_powered = true
 	_is_invincible = true
 	_star_timer = STAR_POWER_DURATION
-	drawer.star_power_active = true
 	EventBus.player_star_power_started.emit()
 	EventBus.music_requested.emit(star_music)
 
@@ -311,12 +321,67 @@ func _end_star_power() -> void:
 	_is_star_powered = false
 	_star_timer = 0.0
 	modulate.a = 1.0
-	drawer.star_power_active = false
 	# Restore damage invincibility if not already expired
 	if _invincibility_timer <= 0.0:
 		_is_invincible = false
 	EventBus.player_star_power_ended.emit()
 	EventBus.level_music_requested.emit()
+
+
+# --- Sprite Animation ---
+
+func _update_sprite_frame(delta: float) -> void:
+	var is_moving := absf(velocity.x) > 10.0
+	if is_moving:
+		_walk_cycle += absf(velocity.x) * delta * 0.05
+	else:
+		_walk_cycle = 0.0
+
+	if _is_star_powered:
+		_star_cycle += delta * 8.0
+		_sprite.modulate = _star_color()
+	else:
+		_sprite.modulate = Color.WHITE
+
+	SpriteHelper.set_cell(_sprite, _get_frame_index(is_moving), SHEET_COLUMNS, SPRITE_OFFSET)
+
+
+func _get_frame_index(is_moving: bool) -> int:
+	var current_state: Node = state_machine.current_state
+	var state_name: StringName = current_state.name if current_state else &""
+	var power_state := displayed_power_state
+
+	if power_state == GameManager.PowerState.SMALL:
+		if state_name == StateIds.DEATH:
+			return 4
+		if state_name == StateIds.JUMP or state_name == StateIds.FALL:
+			return 3
+		if is_moving:
+			return 1 + (int(_walk_cycle * 8.0) % 2)
+		return 0
+
+	var base := 11 if power_state == GameManager.PowerState.FIRE else 5
+	if _is_crouching:
+		return base + 4
+	if state_name == StateIds.FLAGPOLE:
+		return base + 5
+	if state_name == StateIds.JUMP or state_name == StateIds.FALL:
+		return base + 3
+	if is_moving:
+		return base + 1 + (int(_walk_cycle * 8.0) % 2)
+	return base
+
+
+func _star_color() -> Color:
+	match int(_star_cycle) % 4:
+		0:
+			return Color(1.0, 1.0, 0.5)
+		1:
+			return Color(1.0, 0.55, 0.55)
+		2:
+			return Color(0.55, 1.0, 0.65)
+		_:
+			return Color(0.75, 0.9, 1.0)
 
 
 # --- Fireballs ---

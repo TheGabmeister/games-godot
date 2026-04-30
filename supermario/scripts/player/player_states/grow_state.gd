@@ -32,7 +32,6 @@ func exit() -> void:
 	player.process_mode = Node.PROCESS_MODE_INHERIT
 
 	player.velocity = _source_velocity
-	player.drawer.power_state = GameManager.current_power_state
 	player.update_collision_shape()
 
 
@@ -42,7 +41,7 @@ func process_frame(delta: float) -> void:
 	# Flicker between small and big drawing
 	var flicker_cycle: float = _timer * player.effects.grow_flicker_rate
 	var show_big := int(flicker_cycle) % 2 == 0
-	player.drawer.power_state = GameManager.current_power_state if show_big else GameManager.PowerState.SMALL
+	player.displayed_power_state = GameManager.current_power_state if show_big else GameManager.PowerState.SMALL
 
 	if _timer >= player.effects.grow_shrink_duration:
 		var return_state: StringName = _source_state_name

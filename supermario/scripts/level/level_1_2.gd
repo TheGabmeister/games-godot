@@ -19,7 +19,7 @@ func _ready() -> void:
 	EventBus.level_started.connect(_on_level_started)
 	EventBus.level_music_requested.connect(_request_level_music)
 	camera = player.get_node("Camera2D") as Camera2D
-	tilemap.tile_set = TilesetBuilder.create_tileset(Palette.UNDERGROUND_DARK, Palette.UNDERGROUND_BASE)
+	tilemap.tile_set = TilesetBuilder.create_tileset()
 	_setup_camera()
 	_paint_terrain()
 	# Level boot and run-state are owned by GameManager._enter_level().

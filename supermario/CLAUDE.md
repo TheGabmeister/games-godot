@@ -119,7 +119,7 @@ tweening over a fixed distance, so the helper doesn't quite apply).
 
 ### Pipe Warp
 
-- `pipe.gd` (StaticBody2D) draws via `_draw()` and manages a `WarpZone` `Area2D` on top. When the player is on the zone, grounded, and presses down, `player.enter_pipe(self, target)` is called.
+- `pipe.gd` (StaticBody2D) renders a `Sprite2D` from `sprites/pipe_sheet.png` (cap + body cells, sized from `pipe_height`) and manages a `WarpZone` `Area2D` on top. When the player is on the zone, grounded, and presses down, `player.enter_pipe(self, target)` is called.
 - **Z-ordering:** Player default `z_index` is 10 (set in `player.tscn`). Pipes are at 5 with `z_as_relative = false`. `PipeEnterState.enter()` caches the previous `z_index`, drops it to 0 (below the pipe rim), and `exit()` restores it. Don't mutate `z_index` from the pipe script — the state owns that lifecycle so death-during-warp can't leave Mario stuck behind geometry.
 - During the tween, the player's `CollisionShape2D.disabled` is toggled via `set_deferred`. Velocity is zeroed and `apply_gravity()` / `move_and_slide()` are skipped — position is driven by Tween directly. Re-enable on exit (also deferred to avoid a one-frame overlap at the destination pipe).
 
@@ -168,7 +168,7 @@ Reach for these instead of re-pasting boilerplate:
 
 - `scripts/objects/block_base.gd` — bump animation state for all interactable blocks (extends `StaticBody2D`).
 - `scripts/objects/emerge_helper.gd` — lazy-init + vertical tween for items that emerge from question blocks.
-- `scripts/level/tileset_builder.gd` — `create_tileset(top_color, fill_color)` returns a 2-tile atlas with collision polygons. Used by both `level_base.gd` (overworld) and `level_1_2.gd` (underground), passing colors from `color_palette.gd`.
+- `scripts/level/tileset_builder.gd` — `create_tileset()` builds a `TileSet` from `sprites/terrain_sheet.png` (4 tiles: overworld top/fill, underground top/fill) with full-tile collision polygons. Used by both `level_base.gd` (overworld picks tile 0/1) and `level_1_2.gd` (underground picks tile 2/3).
 - `enemy_base._disable_all_collision()` — used in death-animation paths.
 
 ## Gotchas
@@ -216,7 +216,7 @@ needs a one-shot guard to prevent firing every frame. `DeathState` uses
 - Do not edit generated files: `.godot/*`, `*.import`, `*.uid`.
 - Be careful editing `project.godot` — a single malformed line breaks project loading.
 - Preserve existing line endings and formatting.
-- All visuals must use primitive shapes and `_draw()` — no sprite textures.
+- Visuals come from generated sprite sheets in `sprites/`. To change art, edit `tools/sprites/generate_sprites.py` and re-run it; do not hand-edit the PNG/SVG outputs.
 - Conventions in `README.md` (typed signatures, no `class_name`, `StateIds` over string literals, `_prefix` privacy) apply.
 
 ## Asset Pipeline

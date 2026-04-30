@@ -63,10 +63,8 @@ func _spawn_contents() -> void:
 		&"1up":
 			var item := MushroomScene.instantiate() as Node2D
 			get_parent().add_child(item)
-			if item.has_node("Drawer"):
-				var drawer := item.get_node("Drawer")
-				if drawer.has_method("set_one_up"):
-					drawer.set_one_up(true)
+			if item.has_method("set_one_up"):
+				item.set_one_up(true)
 			item.global_position = spawn_pos
 			EventBus.item_spawned.emit(&"1up", spawn_pos)
 		_:

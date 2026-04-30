@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/enemies/koopa.gd" id="1_koopa"]
 [ext_resource type="Resource" path="res://resources/config/koopa_config.tres" id="3_config"]
-[ext_resource type="Script" path="res://scripts/enemies/koopa_drawer.gd" id="2_drawer"]
+[ext_resource type="Texture2D" path="res://sprites/koopa_sheet.png" id="2_sheet"]
 [ext_resource type="AudioStream" path="res://audio/sfx/stomp.wav" id="4_stomp_sfx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
@@ -25,8 +25,12 @@ shape = SubResource("RectangleShape2D_col")
 
 [node name="Visuals" type="Node2D" parent="."]
 
-[node name="Drawer" type="Node2D" parent="Visuals"]
-script = ExtResource("2_drawer")
+[node name="Sprite" type="Sprite2D" parent="Visuals"]
+position = Vector2(-16, -30)
+texture = ExtResource("2_sheet")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 32, 32)
 
 [node name="Hitbox" type="Area2D" parent="."]
 collision_layer = 16

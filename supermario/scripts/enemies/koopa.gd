@@ -1,13 +1,30 @@
 extends "res://scripts/enemies/enemy_base.gd"
 
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SHEET_COLUMNS := 3
+const SPRITE_OFFSET := Vector2(-16, -30)
 const KoopaShellScene := preload("res://scenes/enemies/koopa_shell.tscn")
 
 @export var stomp_sound: AudioStream
+
+var _walk_cycle: float = 0.0
+
+@onready var _sprite: Sprite2D = $Visuals/Sprite
 
 
 func _ready() -> void:
 	super()
 	_enemy_type = &"koopa"
+
+
+func _process(delta: float) -> void:
+	var is_moving := absf(velocity.x) > 5.0
+	if is_moving:
+		_walk_cycle += absf(velocity.x) * delta * 0.06
+	else:
+		_walk_cycle = 0.0
+	var frame := int(_walk_cycle * 8.0) % 2 if is_moving else 0
+	SpriteHelper.set_cell(_sprite, frame, SHEET_COLUMNS, SPRITE_OFFSET)
 
 
 func _physics_process(delta: float) -> void:

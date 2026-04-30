@@ -68,7 +68,7 @@ When making changes in this repo:
   generally be scene instances under those containers, not TileMap-authored
   objects.
 - `scenes/player/player.tscn` expects child nodes named `CollisionShape2D`,
-  `Visuals`, `Visuals/PlayerDrawer`, `StateMachine`, `Camera2D`,
+  `Visuals`, `Visuals/Sprite`, `StateMachine`, `Camera2D`,
   `StompDetector`, `Hurtbox`, `DamageFlash`, and `MotionTrail`.
 - Player state transitions are scene-node-name based. Use
   `scripts/player/player_state_ids.gd` constants instead of scattering raw
@@ -89,8 +89,9 @@ When making changes in this repo:
 - `_ready()` runs synchronously inside `add_child()` in Godot 4. If a spawned
   item is positioned by its caller, do not snapshot spawn position in `_ready()`;
   use the existing lazy-initialization pattern in `emerge_helper.gd`.
-- Effects are procedural and lightweight. Prefer `_draw()`, short-lived helper
-  nodes, and EventBus-driven spawning over heavyweight particle scene
+- Effects are lightweight, code-driven `Node2D`s with their own `_process` /
+  lifetime, spawned via `effects_manager._spawn_effect`. Prefer short-lived
+  helper nodes and EventBus-driven spawning over heavyweight particle scene
   hierarchies.
 - When changing autoload behavior, keep signal contracts and startup
   expectations compatible with existing HUD, player, block, item, and level

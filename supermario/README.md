@@ -1,18 +1,19 @@
 # Super Mario Bros (Godot 4.6)
 
-A 2D Super Mario Bros recreation built in Godot 4.6. All visuals are code-drawn
-primitive shapes — no spritesheets or texture-based characters. Ships with
-World 1-1 and 1-2, Fire Mario, starman, piranha plants, pipe warps, the
-flagpole sequence, and a full title / pause / game-over flow.
+A 2D Super Mario Bros recreation built in Godot 4.6. Sprites are generated
+from a Python + Inkscape pipeline (`tools/sprites/generate_sprites.py`) into
+sheets under `sprites/`. Ships with World 1-1 and 1-2, Fire Mario, starman,
+piranha plants, pipe warps, the flagpole sequence, and a full title / pause
+/ game-over flow.
 
 ## Project Pillars
 
-- **Primitive-shape visuals only.** No sprite textures for characters or gameplay objects — everything is `_draw()`, `Polygon2D`, `Line2D`, `ColorRect`, etc.
+- **Generated sprite sheets.** Characters, items, blocks, and terrain are SVG-authored in `tools/sprites/generate_sprites.py` and exported as 32 px-cell PNG sheets. Frame selection happens in small per-entity scripts.
 - **Tight, readable platforming** that feels close to classic SMB.
 - **Modern polish** through particles, glow, screen shake, transitions.
 - **Audio-ready** registry-based architecture; SFX/music plug in by filling paths.
 
-Out of scope: online play, save files, level editor, sprite art pipelines, mobile-specific controls.
+Out of scope: online play, save files, level editor, mobile-specific controls.
 
 ## Running
 
@@ -66,7 +67,6 @@ res://
   scripts/
     autoloads/                   # event_bus, game_manager, sfx_manager,
                                  # music_manager, scene_manager, camera_effects
-    color_palette.gd             # Registered as `Palette` autoload
     player/                      # controller, drawer, state_machine,
                                  # player_states/, player_state_ids.gd
     enemies/                     # enemy_base + per-type scripts
@@ -98,7 +98,6 @@ Generated files under `.godot/`, `*.uid`, and `*.import` are not hand-edited.
 4. **MusicManager** — event-driven music playback. Callers own music streams and emit music request/stop/duck events; the manager only owns dual `AudioStreamPlayer` crossfade plumbing.
 5. **SceneManager** — fade transitions and the level-intro overlay. Public API: `change_scene`, `change_scene_no_fade`, `fade_out` / `fade_in`, `show_level_intro`.
 6. **CameraEffects** — screen shake (the camera controller reads `get_shake_offset()` per frame) and freeze-frame via time-scale dip.
-7. **Palette** — `scripts/color_palette.gd`. All named colors used by `_draw()`. Access as `Palette.MARIO_RED`, `Palette.PIPE_GREEN`, etc.
 
 ### Game Flow
 
@@ -130,7 +129,7 @@ State machine with child nodes:
 - **`camera_controller.gd`** — script on the `Camera2D` child of the player. Owns horizontal look-ahead, screen-shake compositing, and the no-backtrack `limit_left` ratchet.
 - **`state_machine.gd`** — delegates `_process` / `_physics_process` / `_unhandled_input` to the active state.
 - **States** in `scripts/player/player_states/`: `Idle`, `Run`, `Jump`, `Fall`, `Crouch`, `Death`, `Grow`, `Shrink`, `PipeEnter`, `Flagpole`. Each state owns its own transition logic.
-- **`player_drawer.gd`** — procedural `_draw()` rendering with walk-cycle animation and star palette cycling.
+- **Sprite frame selection** lives in `player_controller._update_sprite_frame()` — picks frames from `sprites/player_sheet.png` based on `displayed_power_state`, movement velocity, current state name, and crouch flag. Star power tints the sprite via `_sprite.modulate`.
 
 State-name references go through `scripts/player/player_state_ids.gd` (a constants-only `RefCounted`). Use `state_machine.transition_to(StateIds.JUMP)`, never `&"JumpState"` string literals — a rename in the scene tree would otherwise be silent.
 
@@ -141,7 +140,7 @@ Star power is a flag on the controller (`_is_star_powered`), not a state. Fireba
 - **`level_base.gd`** (overworld) and **`level_1_2.gd`** (underground) construct scenes only — they paint terrain via the shared builder and place interactive objects.
 - **`tileset_builder.gd`** — parameterized procedural TileSet builder. `create_tileset(top_color, fill_color)` returns a 2-tile atlas with collision polygons, used by both levels with different palette colors.
 - Only static terrain uses `TileMapLayer`. Blocks, enemies, and items are individual scene instances under container `Node2D` nodes.
-- **`parallax_controller.gd`** — procedural cloud/hill/bush drawing with parallax driven by the player camera's screen center.
+- **`parallax_controller.gd`** — places repeating cloud/hill/bush sprites from `sprites/background_decor_sheet.png` with parallax driven by the player camera's screen center.
 - **`enemy_spawner.gd`** — activates enemies as the camera approaches `activation_distance`, cleans up enemies left far behind.
 
 ### Enemy System
@@ -222,10 +221,10 @@ Scene-instanced scripts (player, enemies, blocks, items) use `@export var config
 
 ## Visual Style
 
-- All visuals use primitive shapes: `Polygon2D`, `Line2D`, `draw_rect`, `draw_circle`, `draw_polygon`, `ColorRect`.
+- Sprite sheets generated from `tools/sprites/generate_sprites.py` (SVG → Inkscape → PNG). Each cell is 32×32; sheets are laid out as `cols × rows` grids.
+- Per-entity drawer scripts use `Sprite2D.region_rect` to pick the frame; `scripts/visuals/sprite_region_helper.gd` is the shared helper.
 - Geometry stays aligned to the 32 px grid.
 - Bold silhouettes, high contrast, no tiny detail.
-- Named colors live exclusively in `scripts/color_palette.gd` (accessed as `Palette.*`). No hard-coded hex values in gameplay code.
 - WorldEnvironment uses subtle bloom; Forward Plus is required for the glow.
 
 ## GDScript Conventions
@@ -244,6 +243,6 @@ Scene-instanced scripts (player, enemies, blocks, items) use `@export var config
 3. **Dedicated player state machine** — movement, damage, growth, pipes, and flagpole behaviors would otherwise turn into brittle condition chains in the controller.
 4. **EventBus-based decoupling** — HUD, audio, scoring, and effects react to gameplay without hard scene dependencies.
 5. **Forward Plus renderer** — the visual pitch depends on subtle bloom and post-processing on a 2D canvas.
-6. **`_draw()`-driven character rendering** — the project intentionally avoids sprite production and benefits from procedural animation control (palette swaps, walk cycles).
+6. **Sprite-sheet rendering with code-side frame selection** — sheets are generated programmatically (no hand-painted assets), and per-entity scripts pick frames from state. Keeps art reproducible while leaving animation logic in code.
 7. **32 px grid** — preserves classic Mario spacing and keeps scene authoring simple.
 8. **Per-category Resource tunables, not a god-object.** Categories are clear from gameplay structure, and `.tres` variants give designer-friendly tuning without code changes.

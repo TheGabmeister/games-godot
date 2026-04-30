@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/koopa_shell.gd" id="1_shell"]
-[ext_resource type="Script" path="res://scripts/enemies/koopa_shell_drawer.gd" id="2_drawer"]
+[ext_resource type="Texture2D" path="res://sprites/koopa_shell_sheet.png" id="2_sheet"]
 [ext_resource type="AudioStream" path="res://audio/sfx/kick.wav" id="3_kick_sfx"]
 [ext_resource type="AudioStream" path="res://audio/sfx/stomp.wav" id="4_stomp_sfx"]
 
@@ -28,8 +28,12 @@ shape = SubResource("RectangleShape2D_col")
 
 [node name="Visuals" type="Node2D" parent="."]
 
-[node name="Drawer" type="Node2D" parent="Visuals"]
-script = ExtResource("2_drawer")
+[node name="Sprite" type="Sprite2D" parent="Visuals"]
+position = Vector2(-16, -30)
+texture = ExtResource("2_sheet")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 32, 32)
 
 [node name="Hitbox" type="Area2D" parent="."]
 collision_layer = 16

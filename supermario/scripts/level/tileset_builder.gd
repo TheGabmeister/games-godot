@@ -6,7 +6,7 @@ const TERRAIN_SHEET := preload("res://sprites/terrain_sheet.png")
 const TILE_SIZE := 32
 
 
-static func create_tileset(_top_color: Color, _fill_color: Color) -> TileSet:
+static func create_tileset() -> TileSet:
 	var tileset := TileSet.new()
 	tileset.tile_size = Vector2i(TILE_SIZE, TILE_SIZE)
 

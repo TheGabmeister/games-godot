@@ -1,5 +1,9 @@
 extends CharacterBody2D
 
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SHEET_COLUMNS := 4
+const SPRITE_OFFSET := Vector2(-16, -30)
+
 const GRAVITY := 1800.0
 const SHELL_SPEED := 600.0
 const KICK_IMMUNITY := 0.15
@@ -17,10 +21,12 @@ var _is_dead: bool = false
 var _flip_dying: bool = false
 var _combo_count: int = 0
 var _kick_immune_timer: float = 0.0
+var _spin_cycle: float = 0.0
 
 @onready var _hitbox: Area2D = $Hitbox
 @onready var _damage_area: Area2D = $DamageArea
 @onready var _visuals: Node2D = $Visuals
+@onready var _sprite: Sprite2D = $Visuals/Sprite
 
 
 func _ready() -> void:
@@ -29,6 +35,13 @@ func _ready() -> void:
 	add_to_group("enemies")
 	_damage_area.area_entered.connect(_on_damage_area_entered)
 	_damage_area.monitoring = false
+
+
+func _process(delta: float) -> void:
+	if absf(velocity.x) > 5.0:
+		_spin_cycle += absf(velocity.x) * delta * 0.04
+	var frame := int(_spin_cycle * 8.0) % SHEET_COLUMNS
+	SpriteHelper.set_cell(_sprite, frame, SHEET_COLUMNS, SPRITE_OFFSET)
 
 
 func activate() -> void:
