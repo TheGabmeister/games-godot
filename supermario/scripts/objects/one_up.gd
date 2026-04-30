@@ -1,9 +1,9 @@
 extends CharacterBody2D
 
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
-const OneUpSound := preload("res://audio/sfx/1up.wav")
 
 @export var item_config: Resource  # ItemConfig
+@export var collect_sound: AudioStream
 
 var _direction: float = 1.0
 var _emerge := EmergeHelper.new()
@@ -44,7 +44,7 @@ func _on_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):
 		_collected = true
 		GameManager.earn_one_up()
-		_play_sound(OneUpSound)
+		_play_sound(collect_sound)
 		queue_free()
 
 

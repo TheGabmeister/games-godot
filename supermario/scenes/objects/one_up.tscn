@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/one_up.gd" id="1_one_up"]
+[ext_resource type="AudioStream" path="res://audio/sfx/1up.wav" id="2_one_up_sfx"]
 [ext_resource type="Resource" path="res://resources/config/item_default.tres" id="3_item"]
 [ext_resource type="SpriteFrames" path="res://resources/sprite_frames/powerups_frames.tres" id="4_frames"]
 
@@ -16,6 +17,7 @@ collision_layer = 32
 collision_mask = 1
 script = ExtResource("1_one_up")
 item_config = ExtResource("3_item")
+collect_sound = ExtResource("2_one_up_sfx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -7)
