@@ -1,51 +1,54 @@
-[gd_resource type="SpriteFrames" load_steps=6 format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://cu3rb81phw2eo"]
 
-[ext_resource type="Texture2D" path="res://sprites/flagpole_sheet.png" id="1_texture"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_flagpole_frames_0"]
-atlas = ExtResource("1_texture")
-region = Rect2(0, 0, 32, 32)
+[ext_resource type="Texture2D" uid="uid://rf1g1nnb2qcn" path="res://sprites/flagpole_sheet.png" id="1_texture"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_flagpole_frames_1"]
 atlas = ExtResource("1_texture")
 region = Rect2(32, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_flagpole_frames_2"]
-atlas = ExtResource("1_texture")
-region = Rect2(64, 0, 32, 32)
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_flagpole_frames_3"]
 atlas = ExtResource("1_texture")
 region = Rect2(96, 0, 32, 32)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_flagpole_frames_2"]
+atlas = ExtResource("1_texture")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_flagpole_frames_0"]
+atlas = ExtResource("1_texture")
+region = Rect2(0, 0, 32, 32)
+
 [resource]
 animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_flagpole_frames_0")
-}],
-"loop": false,
-"name": &"pole",
-"speed": 1.0}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_flagpole_frames_1")
 }],
 "loop": false,
 "name": &"ball",
-"speed": 1.0}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_flagpole_frames_2")
-}],
-"loop": false,
-"name": &"flag",
-"speed": 1.0}, {
+"speed": 1.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_flagpole_frames_3")
 }],
 "loop": false,
 "name": &"base",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_flagpole_frames_2")
+}],
+"loop": false,
+"name": &"flag",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_flagpole_frames_0")
+}],
+"loop": false,
+"name": &"pole",
 "speed": 1.0
 }]

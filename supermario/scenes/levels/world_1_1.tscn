@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/question_block.tscn" id="6_qblock"]
 [ext_resource type="PackedScene" path="res://scenes/objects/brick_block.tscn" id="7_brick"]
 [ext_resource type="PackedScene" path="res://scenes/objects/coin.tscn" id="8_coin"]
+[ext_resource type="PackedScene" uid="uid://u3o4u5bg6shc" path="res://scenes/pickup_base.tscn" id="8_o1a77"]
 [ext_resource type="PackedScene" path="res://scenes/objects/hidden_block.tscn" id="9_hidden"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/goomba.tscn" id="10_goomba"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/koopa.tscn" id="11_koopa"]
@@ -67,100 +68,124 @@ mouse_filter = 2
 [node name="ParallaxDecor" type="Node2D" parent="Background" unique_id=354653872]
 script = ExtResource("4_parallax")
 
-[node name="Hill0" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Hill0" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=282863501]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Hill1" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Hill1" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1653474772]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Hill2" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Hill2" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1808064579]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Hill3" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Hill3" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=849570936]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Hill4" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Hill4" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1167436645]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Hill5" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Hill5" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1518780204]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud0" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud0" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1766108315]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud1" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud1" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1944824054]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud2" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud2" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=211372275]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud3" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud3" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1397874225]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud4" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud4" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1882311757]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud5" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud5" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=2146641975]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud6" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud6" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=718137808]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud7" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud7" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1838214834]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud8" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud8" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1913326158]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud9" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud9" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=2058895969]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud10" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud10" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1711851686]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Cloud11" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Cloud11" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1742361381]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Bush0" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Bush0" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1411111972]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Bush1" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Bush1" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=235551907]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Bush2" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Bush2" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1600300760]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Bush3" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Bush3" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1822291209]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Bush4" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Bush4" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=518611560]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
-[node name="Bush5" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+[node name="Bush5" type="AnimatedSprite2D" parent="Background/ParallaxDecor" unique_id=1007790222]
 sprite_frames = ExtResource("22_decor_frames")
+animation = &"cloud"
 centered = false
 
 [node name="TileMapLayer_Ground" type="TileMapLayer" parent="." unique_id=234901537]
@@ -299,6 +324,9 @@ pipe_height = 4
 position = Vector2(1856, 384)
 warp_target = NodePath("../Pipe_28")
 pipe_height = 4
+
+[node name="PickupBase" parent="Pipes" unique_id=1707778480 instance=ExtResource("8_o1a77")]
+position = Vector2(1078, 329)
 
 [node name="Coins" type="Node2D" parent="." unique_id=1534874590]
 

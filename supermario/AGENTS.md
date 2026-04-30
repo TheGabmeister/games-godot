@@ -124,7 +124,7 @@ fault.
 - **Sprites**: generated from the Python + Inkscape pipeline in
   `tools/sprites/`.
   - SVG source sheets live under `tools/sprites/svg/`; `tools/.gdignore` keeps
-    them out of Godot's imported project assets.
+	them out of Godot's imported project assets.
   - Runtime PNG sheets live directly under `res://sprites/`.
   - Godot `SpriteFrames` resources live under `res://resources/sprite_frames/`
     and are assigned directly to scene-authored `AnimatedSprite2D` nodes.

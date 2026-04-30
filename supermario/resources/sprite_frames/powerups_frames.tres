@@ -1,10 +1,6 @@
-[gd_resource type="SpriteFrames" load_steps=7 format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://vtlshwb1nx1j"]
 
-[ext_resource type="Texture2D" path="res://sprites/powerups_sheet.png" id="1_texture"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_powerups_frames_0"]
-atlas = ExtResource("1_texture")
-region = Rect2(0, 0, 32, 32)
+[ext_resource type="Texture2D" uid="uid://c80hcf4u5ewrp" path="res://sprites/powerups_sheet.png" id="1_texture"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_powerups_frames_1"]
 atlas = ExtResource("1_texture")
@@ -22,22 +18,20 @@ region = Rect2(96, 0, 32, 32)
 atlas = ExtResource("1_texture")
 region = Rect2(128, 0, 32, 32)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_powerups_frames_0"]
+atlas = ExtResource("1_texture")
+region = Rect2(0, 0, 32, 32)
+
 [resource]
 animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_powerups_frames_0")
-}],
-"loop": false,
-"name": &"red",
-"speed": 1.0}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_powerups_frames_1")
 }],
 "loop": false,
 "name": &"1up",
-"speed": 1.0}, {
+"speed": 1.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_powerups_frames_2")
@@ -51,4 +45,12 @@ animations = [{
 "loop": true,
 "name": &"pulse",
 "speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_powerups_frames_0")
+}],
+"loop": false,
+"name": &"red",
+"speed": 1.0
 }]
