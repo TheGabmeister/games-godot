@@ -35,10 +35,13 @@
       "WebFetch(domain:forum.godotengine.org)",
       "WebFetch(domain:dev.to)",
       "Bash(\"d:\\\\Godot_v4.6.2-stable_win64.exe\" --headless --path \"c:\\\\dev\\\\games-godot\\\\supermario\" --quit)",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(\"d:\\\\Godot_v4.6.2-stable_win64.exe\" --headless --path \"c:\\\\dev\\\\games-godot\\\\supermario\" --script res://tools/bake_tiles.gd)",
+      "Read(//tmp/**)"
     ],
     "additionalDirectories": [
-      "C:\\Users\\Admin\\.claude\\projects\\c--dev-games-godot-supermario\\memory"
+      "C:\\Users\\Admin\\.claude\\projects\\c--dev-games-godot-supermario\\memory",
+      "\\tmp"
     ]
   }
 }

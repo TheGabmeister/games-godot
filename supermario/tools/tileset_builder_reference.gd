@@ -1,6 +1,21 @@
-extends Node
+## Original tileset_builder.gd — deleted 2026-05-01
+##
+## This script built the TileSet programmatically from terrain_sheet.png.
+## Its output was baked to resources/tilesets/terrain_tileset.tres and the
+## tile data was embedded in the level .tscn files. Kept here as reference
+## for how the TileSet was constructed.
+##
+## Tile layout in terrain_sheet.png (128x32, 4 tiles):
+##   (0,0): Overworld top (green/brown grass)
+##   (1,0): Overworld fill (solid brown)
+##   (2,0): Underground top (dark gray-blue)
+##   (3,0): Underground fill (light gray-blue)
+##
+## Physics: All 4 tiles have full-tile (32x32) collision polygons on
+## physics layer 0 (collision_layer=1, collision_mask=0). Polygon coords
+## are relative to tile center per Godot 4 convention.
 
-## Builds a TileSet from the generated terrain sprite sheet.
+extends Node
 
 const TERRAIN_SHEET := preload("res://sprites/terrain_sheet.png")
 const TILE_SIZE := 32
