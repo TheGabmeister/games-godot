@@ -92,6 +92,19 @@ When making changes in this repo:
 - `_ready()` runs synchronously inside `add_child()` in Godot 4. If a spawned
   item is positioned by its caller, do not snapshot spawn position in `_ready()`;
   use the existing lazy-initialization pattern in `emerge_helper.gd`.
+- Pickup root types intentionally follow behavior. Moving pickups such as
+  mushrooms, 1-ups, and starmen are `CharacterBody2D` nodes so scripted motion
+  can use `move_and_slide()`, terrain collision, `is_on_floor()`, and
+  `is_on_wall()`. Simple overlap pickups such as coins and fire flowers can
+  stay as `Area2D` nodes. Do not force all pickups into one root node type just
+  to share code.
+- Shared pickup collection state and one-shot collect sound playback live in
+  `scripts/pickups/pickup_helper.gd`. Concrete pickup scripts should keep their
+  reward behavior local (coin count, power-up, 1-up, star power) and call the
+  helper before applying the reward.
+- Pickup scene resources should remain scene-swappable when useful. For
+  example, `collect_sound` belongs on the pickup scene when designers may swap
+  the sound, while movement tuning comes from `item_config`.
 - Effects are lightweight `.tscn` scenes under `scenes/effects/`, spawned via
   `effects_manager._spawn_effect`. Their visual children should be
   scene-authored `AnimatedSprite2D` nodes with `SpriteFrames` assigned in the

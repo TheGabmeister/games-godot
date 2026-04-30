@@ -1,16 +1,16 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene format=3 uid="uid://makdw2xkedrc"]
 
-[ext_resource type="Script" path="res://scripts/level/level_1_2.gd" id="1_level"]
+[ext_resource type="Script" uid="uid://vgtu1dgt8rh4" path="res://scripts/level/level_1_2.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
-[ext_resource type="Script" path="res://scripts/level/kill_zone.gd" id="3_killzone"]
+[ext_resource type="Script" uid="uid://b3e14k2o5frpw" path="res://scripts/level/kill_zone.gd" id="3_killzone"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://scenes/objects/question_block.tscn" id="6_qblock"]
 [ext_resource type="PackedScene" path="res://scenes/objects/brick_block.tscn" id="7_brick"]
 [ext_resource type="PackedScene" path="res://scenes/objects/coin.tscn" id="8_coin"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/goomba.tscn" id="10_goomba"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/koopa.tscn" id="11_koopa"]
-[ext_resource type="Script" path="res://scripts/level/enemy_spawner.gd" id="12_spawner"]
-[ext_resource type="Script" path="res://scripts/effects/effects_manager.gd" id="13_effects"]
+[ext_resource type="Script" uid="uid://cymipnon36txh" path="res://scripts/level/enemy_spawner.gd" id="12_spawner"]
+[ext_resource type="Script" uid="uid://diqwbmfxsrtj6" path="res://scripts/effects/effects_manager.gd" id="13_effects"]
 [ext_resource type="Resource" path="res://resources/config/effects_default.tres" id="14_fx_config"]
 [ext_resource type="PackedScene" path="res://scenes/objects/pipe.tscn" id="15_pipe"]
 [ext_resource type="PackedScene" path="res://scenes/objects/flagpole.tscn" id="16_flagpole"]
@@ -28,186 +28,171 @@ glow_enabled = true
 glow_bloom = 0.1
 glow_blend_mode = 0
 
-[node name="World_1_2" type="Node2D"]
+[node name="World_1_2" type="Node2D" unique_id=953841316]
 script = ExtResource("1_level")
 
-[node name="Background" type="CanvasLayer" parent="."]
-layer = -1
+[node name="TileMapLayer_Ground" type="TileMapLayer" parent="." unique_id=581589954]
 
-[node name="SkyRect" type="ColorRect" parent="Background"]
-color = Color(0.05, 0.05, 0.08, 1)
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
+[node name="Blocks" type="Node2D" parent="." unique_id=1608870402]
 
-[node name="TileMapLayer_Ground" type="TileMapLayer" parent="."]
-
-[node name="Blocks" type="Node2D" parent="."]
-
-; --- Early section: intro blocks ---
-[node name="Brick_10_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_10_8" parent="Blocks" unique_id=646980903 instance=ExtResource("7_brick")]
 position = Vector2(336, 288)
 
-[node name="QBlock_11_8" parent="Blocks" instance=ExtResource("6_qblock")]
+[node name="QBlock_11_8" parent="Blocks" unique_id=35256759 instance=ExtResource("6_qblock")]
 position = Vector2(368, 288)
 contents = &"mushroom"
 
-[node name="Brick_12_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_12_8" parent="Blocks" unique_id=31192023 instance=ExtResource("7_brick")]
 position = Vector2(400, 288)
 
-[node name="Brick_13_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_13_8" parent="Blocks" unique_id=1559821027 instance=ExtResource("7_brick")]
 position = Vector2(432, 288)
 
-; --- Platform section blocks ---
-[node name="QBlock_25_7" parent="Blocks" instance=ExtResource("6_qblock")]
+[node name="QBlock_25_7" parent="Blocks" unique_id=1168017093 instance=ExtResource("6_qblock")]
 position = Vector2(816, 240)
 
-[node name="Brick_35_5" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_35_5" parent="Blocks" unique_id=816141770 instance=ExtResource("7_brick")]
 position = Vector2(1136, 176)
 
-[node name="QBlock_36_5" parent="Blocks" instance=ExtResource("6_qblock")]
+[node name="QBlock_36_5" parent="Blocks" unique_id=531773762 instance=ExtResource("6_qblock")]
 position = Vector2(1168, 176)
 contents = &"fire_flower"
 
-[node name="Brick_37_5" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_37_5" parent="Blocks" unique_id=229722557 instance=ExtResource("7_brick")]
 position = Vector2(1200, 176)
 
-; --- Mid section ---
-[node name="Brick_70_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_70_8" parent="Blocks" unique_id=1506838633 instance=ExtResource("7_brick")]
 position = Vector2(2256, 288)
 
-[node name="Brick_71_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_71_8" parent="Blocks" unique_id=864576747 instance=ExtResource("7_brick")]
 position = Vector2(2288, 288)
 
-[node name="QBlock_72_8" parent="Blocks" instance=ExtResource("6_qblock")]
+[node name="QBlock_72_8" parent="Blocks" unique_id=803130181 instance=ExtResource("6_qblock")]
 position = Vector2(2320, 288)
 
-[node name="Brick_73_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_73_8" parent="Blocks" unique_id=1901468312 instance=ExtResource("7_brick")]
 position = Vector2(2352, 288)
 
-[node name="MultiCoin_75_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="MultiCoin_75_8" parent="Blocks" unique_id=1287335610 instance=ExtResource("7_brick")]
 position = Vector2(2416, 288)
 coin_count = 8
 
-; --- Late section ---
-[node name="QBlock_120_7" parent="Blocks" instance=ExtResource("6_qblock")]
+[node name="QBlock_120_7" parent="Blocks" unique_id=1009828201 instance=ExtResource("6_qblock")]
 position = Vector2(3856, 240)
 contents = &"mushroom"
 
-[node name="Brick_125_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_125_8" parent="Blocks" unique_id=2003499422 instance=ExtResource("7_brick")]
 position = Vector2(4016, 288)
 
-[node name="Brick_126_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_126_8" parent="Blocks" unique_id=407703242 instance=ExtResource("7_brick")]
 position = Vector2(4048, 288)
 
-[node name="Brick_127_8" parent="Blocks" instance=ExtResource("7_brick")]
+[node name="Brick_127_8" parent="Blocks" unique_id=1357156960 instance=ExtResource("7_brick")]
 position = Vector2(4080, 288)
 
-[node name="Pipes" type="Node2D" parent="."]
+[node name="Pipes" type="Node2D" parent="." unique_id=372404226]
 
-[node name="Pipe_entry" parent="Pipes" instance=ExtResource("15_pipe")]
+[node name="Pipe_entry" parent="Pipes" unique_id=775219658 instance=ExtResource("15_pipe")]
 position = Vector2(96, 384)
 
-[node name="Coins" type="Node2D" parent="."]
+[node name="Coins" type="Node2D" parent="." unique_id=1697147275]
 
-[node name="Coin_22_7a" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_22_7a" parent="Coins" unique_id=1492340973 instance=ExtResource("8_coin")]
 position = Vector2(720, 240)
 
-[node name="Coin_22_7b" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_22_7b" parent="Coins" unique_id=2095975226 instance=ExtResource("8_coin")]
 position = Vector2(752, 240)
 
-[node name="Coin_22_7c" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_22_7c" parent="Coins" unique_id=1025819266 instance=ExtResource("8_coin")]
 position = Vector2(784, 240)
 
-[node name="Coin_55_5a" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_55_5a" parent="Coins" unique_id=1095379055 instance=ExtResource("8_coin")]
 position = Vector2(1776, 176)
 
-[node name="Coin_55_5b" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_55_5b" parent="Coins" unique_id=201398554 instance=ExtResource("8_coin")]
 position = Vector2(1808, 176)
 
-[node name="Coin_55_5c" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_55_5c" parent="Coins" unique_id=392255544 instance=ExtResource("8_coin")]
 position = Vector2(1840, 176)
 
-[node name="Coin_85_7a" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_85_7a" parent="Coins" unique_id=1620821915 instance=ExtResource("8_coin")]
 position = Vector2(2736, 240)
 
-[node name="Coin_85_7b" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_85_7b" parent="Coins" unique_id=1192456175 instance=ExtResource("8_coin")]
 position = Vector2(2768, 240)
 
-[node name="Coin_115_5a" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_115_5a" parent="Coins" unique_id=1382409211 instance=ExtResource("8_coin")]
 position = Vector2(3696, 176)
 
-[node name="Coin_115_5b" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_115_5b" parent="Coins" unique_id=1681165967 instance=ExtResource("8_coin")]
 position = Vector2(3728, 176)
 
-[node name="Coin_115_5c" parent="Coins" instance=ExtResource("8_coin")]
+[node name="Coin_115_5c" parent="Coins" unique_id=274485107 instance=ExtResource("8_coin")]
 position = Vector2(3760, 176)
 
-[node name="Enemies" type="Node2D" parent="."]
+[node name="Enemies" type="Node2D" parent="." unique_id=1013136781]
 script = ExtResource("12_spawner")
 
-[node name="Goomba_15" parent="Enemies" instance=ExtResource("10_goomba")]
+[node name="Goomba_15" parent="Enemies" unique_id=873239223 instance=ExtResource("10_goomba")]
 position = Vector2(496, 384)
 
-[node name="Goomba_30a" parent="Enemies" instance=ExtResource("10_goomba")]
+[node name="Goomba_30a" parent="Enemies" unique_id=929787962 instance=ExtResource("10_goomba")]
 position = Vector2(976, 384)
 
-[node name="Goomba_30b" parent="Enemies" instance=ExtResource("10_goomba")]
+[node name="Goomba_30b" parent="Enemies" unique_id=172971660 instance=ExtResource("10_goomba")]
 position = Vector2(1040, 384)
 
-[node name="Koopa_45" parent="Enemies" instance=ExtResource("11_koopa")]
+[node name="Koopa_45" parent="Enemies" unique_id=432929498 instance=ExtResource("11_koopa")]
 position = Vector2(1456, 384)
 
-[node name="Goomba_60a" parent="Enemies" instance=ExtResource("10_goomba")]
+[node name="Goomba_60a" parent="Enemies" unique_id=974992209 instance=ExtResource("10_goomba")]
 position = Vector2(1936, 384)
 
-[node name="Goomba_60b" parent="Enemies" instance=ExtResource("10_goomba")]
+[node name="Goomba_60b" parent="Enemies" unique_id=1389024911 instance=ExtResource("10_goomba")]
 position = Vector2(2000, 384)
 
-[node name="Goomba_90" parent="Enemies" instance=ExtResource("10_goomba")]
+[node name="Goomba_90" parent="Enemies" unique_id=1478874906 instance=ExtResource("10_goomba")]
 position = Vector2(2896, 384)
 
-[node name="Koopa_105" parent="Enemies" instance=ExtResource("11_koopa")]
+[node name="Koopa_105" parent="Enemies" unique_id=1199302540 instance=ExtResource("11_koopa")]
 position = Vector2(3376, 384)
 
-[node name="Goomba_130a" parent="Enemies" instance=ExtResource("10_goomba")]
+[node name="Goomba_130a" parent="Enemies" unique_id=273389513 instance=ExtResource("10_goomba")]
 position = Vector2(4176, 384)
 
-[node name="Goomba_130b" parent="Enemies" instance=ExtResource("10_goomba")]
+[node name="Goomba_130b" parent="Enemies" unique_id=772203048 instance=ExtResource("10_goomba")]
 position = Vector2(4240, 384)
 
-[node name="Effects" type="Node2D" parent="."]
+[node name="Effects" type="Node2D" parent="." unique_id=536672454]
 script = ExtResource("13_effects")
 effects_config = ExtResource("14_fx_config")
 
-[node name="Interactables" type="Node2D" parent="."]
+[node name="Interactables" type="Node2D" parent="." unique_id=1852025108]
 
-[node name="Flagpole" parent="Interactables" instance=ExtResource("16_flagpole")]
+[node name="Flagpole" parent="Interactables" unique_id=971393191 instance=ExtResource("16_flagpole")]
 position = Vector2(5200, 384)
 
-[node name="Castle" parent="Interactables" instance=ExtResource("17_castle")]
+[node name="Castle" parent="Interactables" unique_id=1470318645 instance=ExtResource("17_castle")]
 position = Vector2(5344, 384)
 
-[node name="KillZone" type="Area2D" parent="."]
+[node name="KillZone" type="Area2D" parent="." unique_id=53585732]
 position = Vector2(2720, 512)
 script = ExtResource("3_killzone")
 
-[node name="KillShape" type="CollisionShape2D" parent="KillZone"]
+[node name="KillShape" type="CollisionShape2D" parent="KillZone" unique_id=663932542]
 shape = SubResource("RectangleShape2D_killzone")
 
-[node name="LevelBounds" type="StaticBody2D" parent="."]
+[node name="LevelBounds" type="StaticBody2D" parent="." unique_id=837322079]
 position = Vector2(-16, 224)
 collision_mask = 0
 
-[node name="BoundsShape" type="CollisionShape2D" parent="LevelBounds"]
+[node name="BoundsShape" type="CollisionShape2D" parent="LevelBounds" unique_id=220547462]
 shape = SubResource("RectangleShape2D_bounds")
 
-[node name="Player" parent="." instance=ExtResource("2_player")]
+[node name="Player" parent="." unique_id=1868123582 instance=ExtResource("2_player")]
 position = Vector2(160, 384)
 
-[node name="HUD" parent="." instance=ExtResource("5_hud")]
+[node name="HUD" parent="." unique_id=2073191118 instance=ExtResource("5_hud")]
 
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=559921319]
 environment = SubResource("Environment_bloom")
