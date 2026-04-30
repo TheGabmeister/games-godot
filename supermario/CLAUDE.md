@@ -219,6 +219,8 @@ needs a one-shot guard to prevent firing every frame. `DeathState` uses
 - All visuals must use primitive shapes and `_draw()` — no sprite textures.
 - Conventions in `README.md` (typed signatures, no `class_name`, `StateIds` over string literals, `_prefix` privacy) apply.
 
+## Asset Pipeline
+
 - **Sprites**: each entity/item gets its own SVG and PNG file, exported via Inkscape. 
   - Inkscape path: `"/c/Program Files/Inkscape/bin/inkscape.exe"`. Export: `inkscape input.svg --export-type=png --export-filename=output.png -w 64 -h 64`.
 - **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`).
