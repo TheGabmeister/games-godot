@@ -29,20 +29,13 @@ static func build(texture: Texture2D, columns: int, animations: Dictionary) -> S
 	return frames
 
 
-static func ensure_sprite(
-	parent: Node,
-	node_name: StringName,
+static func configure(
+	sprite: AnimatedSprite2D,
 	texture: Texture2D,
 	columns: int,
 	animations: Dictionary,
 	animation: StringName = &"default"
-) -> AnimatedSprite2D:
-	var sprite := parent.get_node_or_null(NodePath(node_name)) as AnimatedSprite2D
-	if sprite == null:
-		sprite = AnimatedSprite2D.new()
-		sprite.name = node_name
-		parent.add_child(sprite)
+) -> void:
 	sprite.sprite_frames = build(texture, columns, animations)
 	sprite.animation = animation
 	sprite.centered = false
-	return sprite

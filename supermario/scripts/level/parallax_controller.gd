@@ -14,18 +14,25 @@ const ANIMATIONS := {
 @export var parallax_hills: float = 0.5
 
 var _camera: Camera2D
-var _hill_sprites: Array[AnimatedSprite2D] = []
-var _cloud_sprites: Array[AnimatedSprite2D] = []
-var _bush_sprites: Array[AnimatedSprite2D] = []
+@onready var _hill_sprites: Array[AnimatedSprite2D] = [
+	$Hill0, $Hill1, $Hill2, $Hill3, $Hill4, $Hill5,
+]
+@onready var _cloud_sprites: Array[AnimatedSprite2D] = [
+	$Cloud0, $Cloud1, $Cloud2, $Cloud3, $Cloud4, $Cloud5,
+	$Cloud6, $Cloud7, $Cloud8, $Cloud9, $Cloud10, $Cloud11,
+]
+@onready var _bush_sprites: Array[AnimatedSprite2D] = [
+	$Bush0, $Bush1, $Bush2, $Bush3, $Bush4, $Bush5,
+]
 
 
 func _ready() -> void:
-	for i in 6:
-		_hill_sprites.append(SpriteFramesBuilder.ensure_sprite(self, StringName("Hill%d" % i), SHEET, 3, ANIMATIONS, &"hill"))
-	for i in 12:
-		_cloud_sprites.append(SpriteFramesBuilder.ensure_sprite(self, StringName("Cloud%d" % i), SHEET, 3, ANIMATIONS, &"cloud"))
-	for i in 6:
-		_bush_sprites.append(SpriteFramesBuilder.ensure_sprite(self, StringName("Bush%d" % i), SHEET, 3, ANIMATIONS, &"bush"))
+	for sprite in _hill_sprites:
+		SpriteFramesBuilder.configure(sprite, SHEET, 3, ANIMATIONS, &"hill")
+	for sprite in _cloud_sprites:
+		SpriteFramesBuilder.configure(sprite, SHEET, 3, ANIMATIONS, &"cloud")
+	for sprite in _bush_sprites:
+		SpriteFramesBuilder.configure(sprite, SHEET, 3, ANIMATIONS, &"bush")
 
 
 func _process(_delta: float) -> void:

@@ -119,3 +119,18 @@ script = ExtResource("14_flash")
 
 [node name="MotionTrail" type="Node2D" parent="."]
 script = ExtResource("15_trail")
+
+[node name="Trail0" type="AnimatedSprite2D" parent="MotionTrail"]
+centered = false
+
+[node name="Trail1" type="AnimatedSprite2D" parent="MotionTrail"]
+centered = false
+
+[node name="Trail2" type="AnimatedSprite2D" parent="MotionTrail"]
+centered = false
+
+[node name="Trail3" type="AnimatedSprite2D" parent="MotionTrail"]
+centered = false
+
+[node name="Trail4" type="AnimatedSprite2D" parent="MotionTrail"]
+centered = false

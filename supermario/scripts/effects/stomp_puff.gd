@@ -7,16 +7,18 @@ const ANIMATIONS := {
 }
 
 var _timer: float = 0.0
-var _sprites: Array[AnimatedSprite2D] = []
 const DURATION := 0.2
+
+@onready var _sprites: Array[AnimatedSprite2D] = [
+	$Puff0, $Puff1, $Puff2, $Puff3, $Puff4, $Puff5,
+]
 
 
 func _ready() -> void:
-	for i in 6:
-		var sprite := SpriteFramesBuilder.ensure_sprite(self, StringName("Puff%d" % i), SHEET, 6, ANIMATIONS)
+	for sprite in _sprites:
+		SpriteFramesBuilder.configure(sprite, SHEET, 6, ANIMATIONS)
 		sprite.position = Vector2(-16, -16)
 		sprite.scale = Vector2(0.35, 0.35)
-		_sprites.append(sprite)
 
 
 func _process(delta: float) -> void:

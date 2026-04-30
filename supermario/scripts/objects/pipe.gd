@@ -18,6 +18,10 @@ var _player_ref: CharacterBody2D
 @onready var _warp_zone: Area2D = $WarpZone
 @onready var _col_shape: CollisionShape2D = $CollisionShape2D
 @onready var _warp_shape: CollisionShape2D = $WarpZone/WarpShape
+@onready var _cap_sprite: AnimatedSprite2D = $CapSprite
+@onready var _body_sprites: Array[AnimatedSprite2D] = [
+	$BodySprite0, $BodySprite1, $BodySprite2, $BodySprite3,
+]
 
 
 func _ready() -> void:
@@ -44,12 +48,16 @@ func _ready() -> void:
 
 func _build_sprites() -> void:
 	var h: float = pipe_height * TILE_SIZE
-	var cap := SpriteFramesBuilder.ensure_sprite(self, &"CapSprite", SHEET, 2, ANIMATIONS, &"cap")
-	cap.position = Vector2(-32, -h - 8)
-	cap.scale = Vector2(2.0, 1.0)
+	SpriteFramesBuilder.configure(_cap_sprite, SHEET, 2, ANIMATIONS, &"cap")
+	_cap_sprite.position = Vector2(-32, -h - 8)
+	_cap_sprite.scale = Vector2(2.0, 1.0)
 
-	for i in pipe_height:
-		var body := SpriteFramesBuilder.ensure_sprite(self, StringName("BodySprite%d" % i), SHEET, 2, ANIMATIONS, &"body")
+	for i in _body_sprites.size():
+		var body := _body_sprites[i]
+		SpriteFramesBuilder.configure(body, SHEET, 2, ANIMATIONS, &"body")
+		body.visible = i < pipe_height
+		if not body.visible:
+			continue
 		body.position = Vector2(-24, -h + 16 + i * TILE_SIZE)
 		body.scale = Vector2(1.5, 1.0)
 

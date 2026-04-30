@@ -14,20 +14,19 @@ const ANIMATIONS := {
 
 var _flag_offset_y: float = 0.0
 var _triggered: bool = false
-var _pole_sprite: AnimatedSprite2D
-var _ball_sprite: AnimatedSprite2D
-var _flag_sprite: AnimatedSprite2D
-var _base_sprite: AnimatedSprite2D
-
 @onready var _detect_area: Area2D = $DetectArea
+@onready var _pole_sprite: AnimatedSprite2D = $PoleSprite
+@onready var _ball_sprite: AnimatedSprite2D = $BallSprite
+@onready var _flag_sprite: AnimatedSprite2D = $FlagSprite
+@onready var _base_sprite: AnimatedSprite2D = $BaseSprite
 
 
 func _ready() -> void:
 	_detect_area.body_entered.connect(_on_body_entered)
-	_pole_sprite = SpriteFramesBuilder.ensure_sprite(self, &"PoleSprite", SHEET, 4, ANIMATIONS, &"pole")
-	_ball_sprite = SpriteFramesBuilder.ensure_sprite(self, &"BallSprite", SHEET, 4, ANIMATIONS, &"ball")
-	_flag_sprite = SpriteFramesBuilder.ensure_sprite(self, &"FlagSprite", SHEET, 4, ANIMATIONS, &"flag")
-	_base_sprite = SpriteFramesBuilder.ensure_sprite(self, &"BaseSprite", SHEET, 4, ANIMATIONS, &"base")
+	SpriteFramesBuilder.configure(_pole_sprite, SHEET, 4, ANIMATIONS, &"pole")
+	SpriteFramesBuilder.configure(_ball_sprite, SHEET, 4, ANIMATIONS, &"ball")
+	SpriteFramesBuilder.configure(_flag_sprite, SHEET, 4, ANIMATIONS, &"flag")
+	SpriteFramesBuilder.configure(_base_sprite, SHEET, 4, ANIMATIONS, &"base")
 	_update_sprites()
 
 

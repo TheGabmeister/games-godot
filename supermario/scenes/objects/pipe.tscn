@@ -17,6 +17,21 @@ collision_mask = 0
 script = ExtResource("1_pipe")
 entry_sound = ExtResource("2_pipe_sfx")
 
+[node name="CapSprite" type="AnimatedSprite2D" parent="."]
+centered = false
+
+[node name="BodySprite0" type="AnimatedSprite2D" parent="."]
+centered = false
+
+[node name="BodySprite1" type="AnimatedSprite2D" parent="."]
+centered = false
+
+[node name="BodySprite2" type="AnimatedSprite2D" parent="."]
+centered = false
+
+[node name="BodySprite3" type="AnimatedSprite2D" parent="."]
+centered = false
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -16)
 shape = SubResource("RectangleShape2D_body")

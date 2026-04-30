@@ -66,6 +66,78 @@ mouse_filter = 2
 [node name="ParallaxDecor" type="Node2D" parent="Background" unique_id=354653872]
 script = ExtResource("4_parallax")
 
+[node name="Hill0" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Hill1" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Hill2" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Hill3" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Hill4" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Hill5" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud0" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud1" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud2" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud3" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud4" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud5" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud6" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud7" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud8" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud9" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud10" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Cloud11" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Bush0" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Bush1" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Bush2" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Bush3" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Bush4" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
+[node name="Bush5" type="AnimatedSprite2D" parent="Background/ParallaxDecor"]
+centered = false
+
 [node name="TileMapLayer_Ground" type="TileMapLayer" parent="." unique_id=234901537]
 
 [node name="Blocks" type="Node2D" parent="." unique_id=1371528365]

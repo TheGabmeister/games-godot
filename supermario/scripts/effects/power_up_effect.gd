@@ -7,13 +7,14 @@ const ANIMATIONS := {
 }
 
 var _timer: float = 0.0
-var _sprite: AnimatedSprite2D
 const DURATION := 0.5
 const MAX_SCALE := 1.5
 
+@onready var _sprite: AnimatedSprite2D = $Sprite
+
 
 func _ready() -> void:
-	_sprite = SpriteFramesBuilder.ensure_sprite(self, &"Sprite", SHEET, 6, ANIMATIONS)
+	SpriteFramesBuilder.configure(_sprite, SHEET, 6, ANIMATIONS)
 	_sprite.position = Vector2(-16, -16)
 
 

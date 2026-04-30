@@ -5,3 +5,6 @@
 [node name="Castle" type="Node2D"]
 scale = Vector2(2, 2)
 script = ExtResource("1_castle")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+centered = false

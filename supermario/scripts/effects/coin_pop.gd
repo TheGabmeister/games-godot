@@ -10,15 +10,16 @@ var _velocity: Vector2 = Vector2(0, -280.0)
 var _timer: float = 0.0
 var _spawn_y: float = 0.0
 var _initialized: bool = false
-var _sprite: AnimatedSprite2D
 const GRAVITY := 900.0
 const LIFETIME := 0.5
 const SPIN_RATE := 6.0
 const FADE_TIME := 0.1
 
+@onready var _sprite: AnimatedSprite2D = $Sprite
+
 
 func _ready() -> void:
-	_sprite = SpriteFramesBuilder.ensure_sprite(self, &"Sprite", SHEET, 4, ANIMATIONS, &"spin")
+	SpriteFramesBuilder.configure(_sprite, SHEET, 4, ANIMATIONS, &"spin")
 	_sprite.position = Vector2(-16, -24)
 	_sprite.scale = Vector2(0.65, 0.65)
 	_sprite.play()

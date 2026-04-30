@@ -1,6 +1,6 @@
 extends "res://scripts/player/player_states/player_state.gd"
 
-const PowerUpEffect := preload("res://scripts/effects/power_up_effect.gd")
+const PowerUpEffectScene := preload("res://scenes/effects/power_up_effect.tscn")
 
 var _timer: float = 0.0
 var _source_state_name: StringName = &""
@@ -18,8 +18,7 @@ func enter() -> void:
 	player.get_tree().paused = true
 
 	# Spawn pickup ring effect
-	var ring := Node2D.new()
-	ring.set_script(PowerUpEffect)
+	var ring := PowerUpEffectScene.instantiate() as Node2D
 	ring.process_mode = Node.PROCESS_MODE_ALWAYS
 	ring.global_position = player.global_position + Vector2(0, -16)
 	ring.z_index = 5

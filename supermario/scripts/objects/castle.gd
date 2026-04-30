@@ -6,10 +6,10 @@ const ANIMATIONS := {
 	&"default": {"frames": [0], "fps": 1.0, "loop": false},
 }
 
-var _sprite: AnimatedSprite2D
+@onready var _sprite: AnimatedSprite2D = $Sprite
 
 
 func _ready() -> void:
-	_sprite = SpriteFramesBuilder.ensure_sprite(self, &"Sprite", SHEET, 1, ANIMATIONS)
+	SpriteFramesBuilder.configure(_sprite, SHEET, 1, ANIMATIONS)
 	_sprite.position = Vector2(-40, -70)
 	_sprite.scale = Vector2(2.5, 2.5)

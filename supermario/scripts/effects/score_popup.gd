@@ -18,7 +18,10 @@ const ANIMATIONS := {
 var _effects: Resource
 var _timer: float = 0.0
 var _points: int = 0
-var _digit_sprites: Array[AnimatedSprite2D] = []
+
+@onready var _digit_sprites: Array[AnimatedSprite2D] = [
+	$Digit0, $Digit1, $Digit2, $Digit3,
+]
 
 
 func setup(points: int, effects_config: Resource) -> void:
@@ -41,14 +44,14 @@ func _process(delta: float) -> void:
 
 func _build_digits() -> void:
 	for sprite in _digit_sprites:
-		sprite.queue_free()
-	_digit_sprites.clear()
+		sprite.visible = false
 
 	var text := str(_points)
 	var start_x := -float(text.length()) * 4.0
-	for i in text.length():
+	for i in mini(text.length(), _digit_sprites.size()):
 		var digit := StringName(text[i])
-		var sprite := SpriteFramesBuilder.ensure_sprite(self, StringName("Digit%d" % i), SHEET, 10, ANIMATIONS, digit)
+		var sprite := _digit_sprites[i]
+		SpriteFramesBuilder.configure(sprite, SHEET, 10, ANIMATIONS, digit)
 		sprite.position = Vector2(start_x + i * 8.0 - 16.0, -24.0)
 		sprite.scale = Vector2(0.35, 0.35)
-		_digit_sprites.append(sprite)
+		sprite.visible = true

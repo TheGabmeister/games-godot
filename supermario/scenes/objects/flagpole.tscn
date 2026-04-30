@@ -10,6 +10,18 @@ size = Vector2(32, 320)
 script = ExtResource("1_flagpole")
 flagpole_sound = ExtResource("2_flagpole_sfx")
 
+[node name="PoleSprite" type="AnimatedSprite2D" parent="."]
+centered = false
+
+[node name="BallSprite" type="AnimatedSprite2D" parent="."]
+centered = false
+
+[node name="FlagSprite" type="AnimatedSprite2D" parent="."]
+centered = false
+
+[node name="BaseSprite" type="AnimatedSprite2D" parent="."]
+centered = false
+
 [node name="DetectArea" type="Area2D" parent="."]
 collision_layer = 512
 collision_mask = 2
