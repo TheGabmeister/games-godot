@@ -8,7 +8,6 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/question_block.tscn" id="6_qblock"]
 [ext_resource type="PackedScene" path="res://scenes/objects/brick_block.tscn" id="7_brick"]
 [ext_resource type="PackedScene" path="res://scenes/objects/coin.tscn" id="8_coin"]
-[ext_resource type="PackedScene" uid="uid://u3o4u5bg6shc" path="res://scenes/pickup_base.tscn" id="8_o1a77"]
 [ext_resource type="PackedScene" path="res://scenes/objects/hidden_block.tscn" id="9_hidden"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/goomba.tscn" id="10_goomba"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/koopa.tscn" id="11_koopa"]
@@ -19,10 +18,7 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/flagpole.tscn" id="16_flagpole"]
 [ext_resource type="PackedScene" path="res://scenes/objects/castle.tscn" id="17_castle"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/piranha_plant.tscn" id="18_piranha"]
-[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="19_pause"]
-[ext_resource type="PackedScene" path="res://scenes/ui/game_over.tscn" id="20_gameover"]
-[ext_resource type="PackedScene" path="res://scenes/ui/level_complete.tscn" id="21_complete"]
-[ext_resource type="SpriteFrames" path="res://resources/sprite_frames/background_decor_frames.tres" id="22_decor_frames"]
+[ext_resource type="SpriteFrames" uid="uid://pq6wjx6tungr" path="res://resources/sprite_frames/background_decor_frames.tres" id="22_decor_frames"]
 
 [sub_resource type="Shader" id="Shader_sky"]
 code = "shader_type canvas_item;
@@ -325,9 +321,6 @@ position = Vector2(1856, 384)
 warp_target = NodePath("../Pipe_28")
 pipe_height = 4
 
-[node name="PickupBase" parent="Pipes" unique_id=1707778480 instance=ExtResource("8_o1a77")]
-position = Vector2(1078, 329)
-
 [node name="Coins" type="Node2D" parent="." unique_id=1534874590]
 
 [node name="Coin_10_11" parent="Coins" unique_id=451277757 instance=ExtResource("8_coin")]
@@ -448,11 +441,6 @@ position = Vector2(96, 384)
 
 [node name="HUD" parent="." unique_id=1262654791 instance=ExtResource("5_hud")]
 
-[node name="PauseMenu" parent="." unique_id=818682720 instance=ExtResource("19_pause")]
-
-[node name="GameOver" parent="." unique_id=1458616558 instance=ExtResource("20_gameover")]
-
-[node name="LevelComplete" parent="." unique_id=377034789 instance=ExtResource("21_complete")]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=916214624]
 environment = SubResource("Environment_bloom")

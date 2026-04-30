@@ -34,7 +34,8 @@
       "WebFetch(domain:www.gotut.net)",
       "WebFetch(domain:forum.godotengine.org)",
       "WebFetch(domain:dev.to)",
-      "Bash(\"d:\\\\Godot_v4.6.2-stable_win64.exe\" --headless --path \"c:\\\\dev\\\\games-godot\\\\supermario\" --quit)"
+      "Bash(\"d:\\\\Godot_v4.6.2-stable_win64.exe\" --headless --path \"c:\\\\dev\\\\games-godot\\\\supermario\" --quit)",
+      "Bash(xargs grep *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Admin\\.claude\\projects\\c--dev-games-godot-supermario\\memory"

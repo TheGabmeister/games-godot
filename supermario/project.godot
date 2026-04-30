@@ -27,6 +27,7 @@ SfxManager="*res://scripts/autoloads/sfx_manager.gd"
 MusicManager="*res://scripts/autoloads/music_manager.gd"
 SceneManager="*res://scripts/autoloads/scene_manager.gd"
 CameraEffects="*res://scripts/autoloads/camera_effects.gd"
+UIManager="*res://scripts/autoloads/ui_manager.gd"
 
 [display]
 

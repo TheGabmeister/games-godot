@@ -15,9 +15,6 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/pipe.tscn" id="15_pipe"]
 [ext_resource type="PackedScene" path="res://scenes/objects/flagpole.tscn" id="16_flagpole"]
 [ext_resource type="PackedScene" path="res://scenes/objects/castle.tscn" id="17_castle"]
-[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="19_pause"]
-[ext_resource type="PackedScene" path="res://scenes/ui/game_over.tscn" id="20_gameover"]
-[ext_resource type="PackedScene" path="res://scenes/ui/level_complete.tscn" id="21_complete"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_killzone"]
 size = Vector2(5440, 64)
@@ -211,11 +208,6 @@ position = Vector2(160, 384)
 
 [node name="HUD" parent="." instance=ExtResource("5_hud")]
 
-[node name="PauseMenu" parent="." instance=ExtResource("19_pause")]
-
-[node name="GameOver" parent="." instance=ExtResource("20_gameover")]
-
-[node name="LevelComplete" parent="." instance=ExtResource("21_complete")]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_bloom")
