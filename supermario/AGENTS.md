@@ -110,6 +110,7 @@ fault.
   `"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`.
 - **Music**: Python scripts in `tools/music/` use `midiutil` to generate MIDI,
   FluidSynth to render WAV, and ffmpeg to convert to OGG.
+  - Python: `C:/Users/Admin/AppData/Local/Python/pythoncore-3.14-64/python.exe`
   - FluidSynth: `D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe`
   - ffmpeg: `D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe`
   - Soundfont: `D:/GeneralUser-GS/GeneralUser-GS.sf2`
