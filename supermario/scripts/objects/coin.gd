@@ -1,8 +1,10 @@
 extends Area2D
 
+const PickupHelper := preload("res://scripts/pickups/pickup_helper.gd")
+
 @export var collect_sound: AudioStream
 
-var _collected: bool = false
+var _pickup := PickupHelper.new()
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
 
@@ -13,14 +15,5 @@ func _ready() -> void:
 
 
 func _on_body_entered(_body: Node2D) -> void:
-	_collect()
-
-
-func _collect() -> void:
-	if _collected:
-		return
-	_collected = true
-	if collect_sound != null:
-		EventBus.sfx_requested.emit(collect_sound)
-	GameManager.add_coin(global_position)
-	queue_free()
+	if _pickup.try_collect(self, collect_sound):
+		GameManager.add_coin(global_position)

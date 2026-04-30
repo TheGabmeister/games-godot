@@ -1,12 +1,13 @@
 extends CharacterBody2D
 
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
+const PickupHelper := preload("res://scripts/pickups/pickup_helper.gd")
 
 @export var item_config: Resource  # ItemConfig
 
 var _direction: float = 1.0
 var _emerge := EmergeHelper.new()
-var _collected: bool = false
+var _pickup := PickupHelper.new()
 var _bounce_velocity: float = -250.0
 
 @onready var hurtbox: Area2D = $Hurtbox
@@ -21,7 +22,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if _collected:
+	if _pickup.collected:
 		return
 
 	if not _emerge.done:
@@ -43,9 +44,5 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_body_entered(body: Node) -> void:
-	if _collected:
-		return
-	if body.has_method("power_up"):
-		_collected = true
+	if body.has_method("power_up") and _pickup.try_collect(self):
 		body.power_up(&"starman", global_position)
-		queue_free()

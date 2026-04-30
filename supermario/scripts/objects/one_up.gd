@@ -1,13 +1,14 @@
 extends CharacterBody2D
 
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
+const PickupHelper := preload("res://scripts/pickups/pickup_helper.gd")
 
 @export var item_config: Resource  # ItemConfig
 @export var collect_sound: AudioStream
 
 var _direction: float = 1.0
 var _emerge := EmergeHelper.new()
-var _collected: bool = false
+var _pickup := PickupHelper.new()
 
 @onready var hurtbox: Area2D = $Hurtbox
 @onready var _sprite: AnimatedSprite2D = $Sprite
@@ -21,7 +22,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if _collected:
+	if _pickup.collected:
 		return
 
 	if not _emerge.done:
@@ -39,15 +40,5 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_body_entered(body: Node) -> void:
-	if _collected:
-		return
-	if body.is_in_group("player"):
-		_collected = true
+	if body.is_in_group("player") and _pickup.try_collect(self, collect_sound):
 		GameManager.earn_one_up()
-		_play_sound(collect_sound)
-		queue_free()
-
-
-func _play_sound(sound: AudioStream) -> void:
-	if sound != null:
-		EventBus.sfx_requested.emit(sound)

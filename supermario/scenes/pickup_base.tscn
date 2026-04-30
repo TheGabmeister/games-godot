@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://u3o4u5bg6shc"]
-
-[ext_resource type="Script" uid="uid://qlvl7ueonoa8" path="res://scripts/pickups/pickup_base.gd" id="1_0jk41"]
-
-[node name="PickupBase" type="Node2D" unique_id=1707778480]
-script = ExtResource("1_0jk41")
