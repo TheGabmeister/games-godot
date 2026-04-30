@@ -5,7 +5,6 @@ signal sfx_requested(sound: AudioStream)
 signal music_requested(music: AudioStream)
 signal music_stop_requested
 signal music_duck_requested(enabled: bool)
-signal level_music_requested
 
 # Player
 signal player_died
@@ -26,7 +25,7 @@ signal time_tick(time_remaining: int)
 signal one_up_earned
 
 # Level
-signal level_started(world: int, level: int)
+signal level_started(display_name: String)
 signal level_completed
 signal flagpole_reached(height_ratio: float)
 

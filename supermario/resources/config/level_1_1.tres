@@ -1,0 +1,10 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/level_config.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://wyxy0cynt2mu" path="res://scenes/levels/world_1_1.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "World 1-1"
+scene = ExtResource("2_scene")
+time_limit = 400.0

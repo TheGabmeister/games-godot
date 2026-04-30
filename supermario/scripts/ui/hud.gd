@@ -24,7 +24,8 @@ func _ready() -> void:
 	EventBus.level_started.connect(_on_level_started)
 	_on_score_changed(GameManager.score)
 	_on_coins_changed(GameManager.coins)
-	_on_level_started(GameManager.current_world, GameManager.current_level)
+	var config := GameManager.get_current_level()
+	_on_level_started(config.display_name if config else "")
 	_on_time_tick(ceili(GameManager.time_remaining))
 
 
@@ -46,7 +47,7 @@ func _on_time_tick(time_remaining: int) -> void:
 		time_label.remove_theme_color_override("font_color")
 
 
-func _on_level_started(world: int, level: int) -> void:
-	world_label.text = "%d-%d" % [world, level]
+func _on_level_started(display_name: String) -> void:
+	world_label.text = display_name
 	_time_warning_active = false
 	time_label.remove_theme_color_override("font_color")

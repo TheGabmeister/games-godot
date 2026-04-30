@@ -3,22 +3,21 @@ extends Node
 enum PowerState { SMALL, BIG, FIRE }
 enum GameState { TITLE, PLAYING, PAUSED, GAME_OVER, LEVEL_COMPLETE, TRANSITIONING }
 
-const LEVEL_SCENES: Dictionary = {
-	"1-1": "res://scenes/levels/world_1_1.tscn",
-	"1-2": "res://scenes/levels/world_1_2.tscn",
-}
+const LevelConfig := preload("res://scripts/config/level_config.gd")
 
-const LEVEL_ORDER: Array[String] = ["1-1", "1-2"]
+var levels: Array[Resource] = [
+	preload("res://resources/config/level_1_1.tres"),
+	preload("res://resources/config/level_1_2.tres"),
+]
 
 var score: int = 0
 var coins: int = 0
 var lives: int = 3
 var time_remaining: float = 400.0
-var current_world: int = 1
-var current_level: int = 1
 var current_power_state: PowerState = PowerState.SMALL
 var game_state: GameState = GameState.TITLE
 
+var _level_index: int = 0
 var _timer_active: bool = false
 var _last_time_tick: int = -1
 
@@ -44,29 +43,19 @@ func _process(delta: float) -> void:
 
 func start_new_game() -> void:
 	_reset_run_state()
-	_enter_level(LEVEL_SCENES[LEVEL_ORDER[0]])
+	_enter_level(0)
 
 
 func advance_to_next_level() -> void:
-	var key := get_current_level_key()
-	var idx := LEVEL_ORDER.find(key)
-	if idx < 0 or idx + 1 >= LEVEL_ORDER.size():
-		# No more levels — back to title.
+	if _level_index + 1 >= levels.size():
 		return_to_title()
 		return
-	var next_key: String = LEVEL_ORDER[idx + 1]
-	var parts := next_key.split("-")
-	current_world = int(parts[0])
-	current_level = int(parts[1])
-	# power_state preserved across level transitions (classic SMB behavior)
-	_enter_level(LEVEL_SCENES[next_key])
+	_enter_level(_level_index + 1)
 
 
 func respawn_current_level() -> void:
-	# Player lost a life — drop back to Small Mario and reload the level.
 	current_power_state = PowerState.SMALL
-	var key := get_current_level_key()
-	_enter_level(LEVEL_SCENES[key])
+	_enter_level(_level_index)
 
 
 func return_to_title() -> void:
@@ -80,22 +69,29 @@ func reset_for_title() -> void:
 	game_state = GameState.TITLE
 
 
-# --- Level transition flow ---
-# Single source of truth for "load a level scene and start playing".
-# Callers: start_new_game, advance_to_next_level, respawn_current_level.
-func _enter_level(scene_path: String) -> void:
+func _enter_level(index: int) -> void:
+	_level_index = index
+	var config := levels[index] as LevelConfig
 	set_game_state(GameState.TRANSITIONING)
-	get_tree().change_scene_to_file(scene_path)
+	get_tree().change_scene_to_packed(config.scene)
 	set_game_state(GameState.PLAYING)
-	start_level_timer()
+	_start_level(config)
+
+
+func _start_level(config: LevelConfig) -> void:
+	time_remaining = config.time_limit
+	_last_time_tick = -1
+	_timer_active = true
+	if config.music:
+		EventBus.music_requested.emit(config.music)
+	EventBus.level_started.emit(config.display_name)
 
 
 func _reset_run_state() -> void:
 	score = 0
 	coins = 0
 	lives = 3
-	current_world = 1
-	current_level = 1
+	_level_index = 0
 	current_power_state = PowerState.SMALL
 
 
@@ -124,8 +120,6 @@ func lose_life() -> void:
 		EventBus.game_over.emit()
 	else:
 		EventBus.player_respawned.emit()
-		# Defer the actual reload so death-state callers finish cleanly
-		# before the scene is swapped out from under them.
 		respawn_current_level.call_deferred()
 
 
@@ -150,15 +144,20 @@ func set_game_state(state: GameState) -> void:
 			_timer_active = false
 
 
-func start_level_timer() -> void:
-	time_remaining = 400.0
-	_last_time_tick = -1
-	_timer_active = true
-	EventBus.level_started.emit(current_world, current_level)
-
-
 func stop_level_timer() -> void:
 	_timer_active = false
+
+
+func get_current_level() -> Resource:
+	if _level_index >= 0 and _level_index < levels.size():
+		return levels[_level_index]
+	return null
+
+
+func earn_one_up() -> void:
+	lives += 1
+	EventBus.one_up_earned.emit()
+	EventBus.lives_changed.emit(lives)
 
 
 func _on_player_died() -> void:
@@ -172,16 +171,6 @@ func _on_level_completed() -> void:
 	var time_bonus := ceili(time_remaining) * 50
 	add_score(time_bonus)
 	set_game_state(GameState.LEVEL_COMPLETE)
-
-
-func earn_one_up() -> void:
-	lives += 1
-	EventBus.one_up_earned.emit()
-	EventBus.lives_changed.emit(lives)
-
-
-func get_current_level_key() -> String:
-	return "%d-%d" % [current_world, current_level]
 
 
 func _power_state_name(state: PowerState) -> StringName:
