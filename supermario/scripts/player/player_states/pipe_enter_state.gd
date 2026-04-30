@@ -50,7 +50,6 @@ func setup(pipe: Node2D, target: Node2D) -> void:
 
 func _start_fade() -> void:
 	_phase = 1
-	await SceneManager.fade_out(0.3)
 	_reposition()
 
 
@@ -64,12 +63,9 @@ func _reposition() -> void:
 		exit_pos = _target_pipe.global_position + Vector2(0, -64)
 	player.global_position = exit_pos + Vector2(0, 64)
 
-	# Reset camera position to prevent jarring snap
 	player.camera.reset_smoothing()
 	player.camera.reset_no_backtrack()
 
-	# Fade in then slide out
-	await SceneManager.fade_in(0.3)
 	var tween := player.create_tween()
 	tween.tween_property(player, "global_position", exit_pos, 0.5)
 	tween.tween_callback(_finish)

@@ -44,7 +44,7 @@ func _process(delta: float) -> void:
 
 func start_new_game() -> void:
 	_reset_run_state()
-	await _enter_level(LEVEL_SCENES[LEVEL_ORDER[0]])
+	_enter_level(LEVEL_SCENES[LEVEL_ORDER[0]])
 
 
 func advance_to_next_level() -> void:
@@ -59,19 +59,19 @@ func advance_to_next_level() -> void:
 	current_world = int(parts[0])
 	current_level = int(parts[1])
 	# power_state preserved across level transitions (classic SMB behavior)
-	await _enter_level(LEVEL_SCENES[next_key])
+	_enter_level(LEVEL_SCENES[next_key])
 
 
 func respawn_current_level() -> void:
 	# Player lost a life — drop back to Small Mario and reload the level.
 	current_power_state = PowerState.SMALL
 	var key := get_current_level_key()
-	await _enter_level(LEVEL_SCENES[key])
+	_enter_level(LEVEL_SCENES[key])
 
 
 func return_to_title() -> void:
 	set_game_state(GameState.TITLE)
-	SceneManager.change_scene("res://scenes/ui/title_screen.tscn")
+	get_tree().change_scene_to_file("res://scenes/ui/title_screen.tscn")
 
 
 func reset_for_title() -> void:
@@ -85,9 +85,7 @@ func reset_for_title() -> void:
 # Callers: start_new_game, advance_to_next_level, respawn_current_level.
 func _enter_level(scene_path: String) -> void:
 	set_game_state(GameState.TRANSITIONING)
-	await SceneManager.fade_out()
-	SceneManager.change_scene_no_fade(scene_path)
-	await SceneManager.show_level_intro(current_world, current_level, lives)
+	get_tree().change_scene_to_file(scene_path)
 	set_game_state(GameState.PLAYING)
 	start_level_timer()
 
