@@ -25,7 +25,9 @@
       "Bash(godot --headless --path . --quit)",
       "Bash(d:/Godot_v4.6.2-stable_win64.exe --headless --path . --quit)",
       "Read(//c/Users/Admin/.claude/projects/c--dev-games-godot/**)",
-      "Read(//c/Users/Admin/.claude/projects//**)"
+      "Read(//c/Users/Admin/.claude/projects//**)",
+      "Bash(git log *)",
+      "Bash(\"d:/Godot_v4.6.2-stable_win64.exe\" --headless --path \"c:/dev/games-godot/supermario\" --quit)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Admin\\.claude\\projects\\c--dev-games-godot-supermario\\memory"
