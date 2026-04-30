@@ -1,27 +1,33 @@
 extends Node2D
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const SHEET := preload("res://sprites/flagpole_sheet.png")
 const POLE_HEIGHT: float = 320.0
+const ANIMATIONS := {
+	&"pole": {"frames": [0], "fps": 1.0, "loop": false},
+	&"ball": {"frames": [1], "fps": 1.0, "loop": false},
+	&"flag": {"frames": [2], "fps": 1.0, "loop": false},
+	&"base": {"frames": [3], "fps": 1.0, "loop": false},
+}
 
 @export var flagpole_sound: AudioStream
 
 var _flag_offset_y: float = 0.0
 var _triggered: bool = false
-var _pole_sprite: Sprite2D
-var _ball_sprite: Sprite2D
-var _flag_sprite: Sprite2D
-var _base_sprite: Sprite2D
+var _pole_sprite: AnimatedSprite2D
+var _ball_sprite: AnimatedSprite2D
+var _flag_sprite: AnimatedSprite2D
+var _base_sprite: AnimatedSprite2D
 
 @onready var _detect_area: Area2D = $DetectArea
 
 
 func _ready() -> void:
 	_detect_area.body_entered.connect(_on_body_entered)
-	_pole_sprite = SpriteHelper.ensure_sprite(self, &"PoleSprite", SHEET)
-	_ball_sprite = SpriteHelper.ensure_sprite(self, &"BallSprite", SHEET)
-	_flag_sprite = SpriteHelper.ensure_sprite(self, &"FlagSprite", SHEET)
-	_base_sprite = SpriteHelper.ensure_sprite(self, &"BaseSprite", SHEET)
+	_pole_sprite = SpriteFramesBuilder.ensure_sprite(self, &"PoleSprite", SHEET, 4, ANIMATIONS, &"pole")
+	_ball_sprite = SpriteFramesBuilder.ensure_sprite(self, &"BallSprite", SHEET, 4, ANIMATIONS, &"ball")
+	_flag_sprite = SpriteFramesBuilder.ensure_sprite(self, &"FlagSprite", SHEET, 4, ANIMATIONS, &"flag")
+	_base_sprite = SpriteFramesBuilder.ensure_sprite(self, &"BaseSprite", SHEET, 4, ANIMATIONS, &"base")
 	_update_sprites()
 
 
@@ -88,10 +94,11 @@ func _process(_delta: float) -> void:
 
 
 func _update_sprites() -> void:
-	SpriteHelper.set_cell(_pole_sprite, 0, 4, Vector2(-16, -POLE_HEIGHT), Vector2(1.0, 10.0))
-	SpriteHelper.set_cell(_ball_sprite, 1, 4, Vector2(-16, -POLE_HEIGHT - 16))
-	SpriteHelper.set_cell(_flag_sprite, 2, 4, Vector2(-42, -POLE_HEIGHT + _flag_offset_y))
-	SpriteHelper.set_cell(_base_sprite, 3, 4, Vector2(-16, -32))
+	_pole_sprite.position = Vector2(-16, -POLE_HEIGHT)
+	_pole_sprite.scale = Vector2(1.0, 10.0)
+	_ball_sprite.position = Vector2(-16, -POLE_HEIGHT - 16)
+	_flag_sprite.position = Vector2(-42, -POLE_HEIGHT + _flag_offset_y)
+	_base_sprite.position = Vector2(-16, -32)
 
 
 func _play_sound(sound: AudioStream) -> void:

@@ -1,8 +1,12 @@
 extends StaticBody2D
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const SHEET := preload("res://sprites/pipe_sheet.png")
 const TILE_SIZE: float = 32.0
+const ANIMATIONS := {
+	&"cap": {"frames": [0], "fps": 1.0, "loop": false},
+	&"body": {"frames": [1], "fps": 1.0, "loop": false},
+}
 
 @export var warp_target: NodePath
 @export var pipe_height: int = 2  # in tiles
@@ -40,12 +44,14 @@ func _ready() -> void:
 
 func _build_sprites() -> void:
 	var h: float = pipe_height * TILE_SIZE
-	var cap := SpriteHelper.ensure_sprite(self, &"CapSprite", SHEET)
-	SpriteHelper.set_cell(cap, 0, 2, Vector2(-32, -h - 8), Vector2(2.0, 1.0))
+	var cap := SpriteFramesBuilder.ensure_sprite(self, &"CapSprite", SHEET, 2, ANIMATIONS, &"cap")
+	cap.position = Vector2(-32, -h - 8)
+	cap.scale = Vector2(2.0, 1.0)
 
 	for i in pipe_height:
-		var body := SpriteHelper.ensure_sprite(self, StringName("BodySprite%d" % i), SHEET)
-		SpriteHelper.set_cell(body, 1, 2, Vector2(-24, -h + 16 + i * TILE_SIZE), Vector2(1.5, 1.0))
+		var body := SpriteFramesBuilder.ensure_sprite(self, StringName("BodySprite%d" % i), SHEET, 2, ANIMATIONS, &"body")
+		body.position = Vector2(-24, -h + 16 + i * TILE_SIZE)
+		body.scale = Vector2(1.5, 1.0)
 
 
 func _process(_delta: float) -> void:

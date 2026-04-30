@@ -2,25 +2,30 @@ extends Node2D
 
 ## Places repeating sprite-based cloud, hill, and bush decorations with parallax.
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const SHEET := preload("res://sprites/background_decor_sheet.png")
+const ANIMATIONS := {
+	&"cloud": {"frames": [0], "fps": 1.0, "loop": false},
+	&"hill": {"frames": [1], "fps": 1.0, "loop": false},
+	&"bush": {"frames": [2], "fps": 1.0, "loop": false},
+}
 
 @export var parallax_clouds: float = 0.3
 @export var parallax_hills: float = 0.5
 
 var _camera: Camera2D
-var _hill_sprites: Array[Sprite2D] = []
-var _cloud_sprites: Array[Sprite2D] = []
-var _bush_sprites: Array[Sprite2D] = []
+var _hill_sprites: Array[AnimatedSprite2D] = []
+var _cloud_sprites: Array[AnimatedSprite2D] = []
+var _bush_sprites: Array[AnimatedSprite2D] = []
 
 
 func _ready() -> void:
 	for i in 6:
-		_hill_sprites.append(SpriteHelper.ensure_sprite(self, StringName("Hill%d" % i), SHEET))
+		_hill_sprites.append(SpriteFramesBuilder.ensure_sprite(self, StringName("Hill%d" % i), SHEET, 3, ANIMATIONS, &"hill"))
 	for i in 12:
-		_cloud_sprites.append(SpriteHelper.ensure_sprite(self, StringName("Cloud%d" % i), SHEET))
+		_cloud_sprites.append(SpriteFramesBuilder.ensure_sprite(self, StringName("Cloud%d" % i), SHEET, 3, ANIMATIONS, &"cloud"))
 	for i in 6:
-		_bush_sprites.append(SpriteHelper.ensure_sprite(self, StringName("Bush%d" % i), SHEET))
+		_bush_sprites.append(SpriteFramesBuilder.ensure_sprite(self, StringName("Bush%d" % i), SHEET, 3, ANIMATIONS, &"bush"))
 
 
 func _process(_delta: float) -> void:
@@ -78,5 +83,6 @@ func _update_bushes(cam_x: float) -> void:
 		idx += 1
 
 
-func _place_sprite(sprite: Sprite2D, frame: int, pos: Vector2, sprite_scale: Vector2) -> void:
-	SpriteHelper.set_cell(sprite, frame, 3, pos, sprite_scale)
+func _place_sprite(sprite: AnimatedSprite2D, _frame: int, pos: Vector2, sprite_scale: Vector2) -> void:
+	sprite.position = pos
+	sprite.scale = sprite_scale

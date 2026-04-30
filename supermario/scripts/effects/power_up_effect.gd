@@ -1,17 +1,20 @@
 extends Node2D
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const SHEET := preload("res://sprites/effects_sheet.png")
+const ANIMATIONS := {
+	&"default": {"frames": [3], "fps": 1.0, "loop": false},
+}
 
 var _timer: float = 0.0
-var _sprite: Sprite2D
+var _sprite: AnimatedSprite2D
 const DURATION := 0.5
 const MAX_SCALE := 1.5
 
 
 func _ready() -> void:
-	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
-	SpriteHelper.set_cell(_sprite, 3, 6, Vector2(-16, -16))
+	_sprite = SpriteFramesBuilder.ensure_sprite(self, &"Sprite", SHEET, 6, ANIMATIONS)
+	_sprite.position = Vector2(-16, -16)
 
 
 func _process(delta: float) -> void:

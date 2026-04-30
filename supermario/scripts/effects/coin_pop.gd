@@ -1,13 +1,16 @@
 extends Node2D
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const SHEET := preload("res://sprites/coin_sheet.png")
+const ANIMATIONS := {
+	&"spin": {"frames": [0, 1, 2, 3], "fps": 24.0, "loop": true},
+}
 
 var _velocity: Vector2 = Vector2(0, -280.0)
 var _timer: float = 0.0
 var _spawn_y: float = 0.0
 var _initialized: bool = false
-var _sprite: Sprite2D
+var _sprite: AnimatedSprite2D
 const GRAVITY := 900.0
 const LIFETIME := 0.5
 const SPIN_RATE := 6.0
@@ -15,8 +18,10 @@ const FADE_TIME := 0.1
 
 
 func _ready() -> void:
-	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
-	SpriteHelper.set_cell(_sprite, 0, 4, Vector2(-16, -24), Vector2(0.65, 0.65))
+	_sprite = SpriteFramesBuilder.ensure_sprite(self, &"Sprite", SHEET, 4, ANIMATIONS, &"spin")
+	_sprite.position = Vector2(-16, -24)
+	_sprite.scale = Vector2(0.65, 0.65)
+	_sprite.play()
 
 
 func _process(delta: float) -> void:
@@ -31,9 +36,6 @@ func _process(delta: float) -> void:
 	if _timer >= LIFETIME or (_velocity.y > 0 and global_position.y >= _spawn_y):
 		queue_free()
 		return
-
-	var frame := int(_timer * SPIN_RATE) % 4
-	SpriteHelper.set_cell(_sprite, frame, 4, Vector2(-16, -24), Vector2(0.65, 0.65))
 
 	var remaining: float = LIFETIME - _timer
 	if remaining < FADE_TIME:

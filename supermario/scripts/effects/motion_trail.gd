@@ -1,12 +1,15 @@
 extends Node2D
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SpriteFramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const SHEET := preload("res://sprites/effects_sheet.png")
+const ANIMATIONS := {
+	&"default": {"frames": [4], "fps": 1.0, "loop": false},
+}
 
 var _effects: Resource
 var _trail_positions: Array[Vector2] = []
 var _trail_alphas: Array[float] = []
-var _sprites: Array[Sprite2D] = []
+var _sprites: Array[AnimatedSprite2D] = []
 var _distance_accum: float = 0.0
 var _last_pos: Vector2 = Vector2.ZERO
 const MAX_TRAIL := 5
@@ -16,8 +19,9 @@ const MIN_SPEED := 180.0
 func _ready() -> void:
 	_effects = (owner as CharacterBody2D).effects if owner else preload("res://resources/config/effects_default.tres")
 	for i in MAX_TRAIL:
-		var sprite := SpriteHelper.ensure_sprite(self, StringName("Trail%d" % i), SHEET)
-		SpriteHelper.set_cell(sprite, 4, 6, Vector2(-16, -24), Vector2(0.5, 0.7))
+		var sprite := SpriteFramesBuilder.ensure_sprite(self, StringName("Trail%d" % i), SHEET, 6, ANIMATIONS)
+		sprite.position = Vector2(-16, -24)
+		sprite.scale = Vector2(0.5, 0.7)
 		sprite.visible = false
 		_sprites.append(sprite)
 
