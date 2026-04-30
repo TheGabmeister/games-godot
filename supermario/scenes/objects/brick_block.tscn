@@ -1,7 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/brick_block.gd" id="1_brick"]
 [ext_resource type="Resource" path="res://resources/config/block_bump_default.tres" id="2_bump"]
+[ext_resource type="AudioStream" path="res://audio/sfx/block_bump.wav" id="3_bump_sfx"]
+[ext_resource type="AudioStream" path="res://audio/sfx/block_break.wav" id="4_break_sfx"]
+[ext_resource type="AudioStream" path="res://audio/sfx/coin.wav" id="5_coin_sfx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_block"]
 size = Vector2(16, 16)
@@ -9,6 +12,9 @@ size = Vector2(16, 16)
 [node name="BrickBlock" type="StaticBody2D"]
 script = ExtResource("1_brick")
 bump_config = ExtResource("2_bump")
+bump_sound = ExtResource("3_bump_sfx")
+break_sound = ExtResource("4_break_sfx")
+coin_sound = ExtResource("5_coin_sfx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -8)

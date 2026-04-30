@@ -1,7 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/koopa_shell.gd" id="1_shell"]
 [ext_resource type="Script" path="res://scripts/enemies/koopa_shell_drawer.gd" id="2_drawer"]
+[ext_resource type="AudioStream" path="res://audio/sfx/kick.wav" id="3_kick_sfx"]
+[ext_resource type="AudioStream" path="res://audio/sfx/stomp.wav" id="4_stomp_sfx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
 size = Vector2(12, 12)
@@ -16,6 +18,8 @@ size = Vector2(16, 12)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("1_shell")
+kick_sound = ExtResource("3_kick_sfx")
+stomp_sound = ExtResource("4_stomp_sfx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -6)

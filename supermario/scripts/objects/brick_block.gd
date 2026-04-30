@@ -1,6 +1,8 @@
 extends "res://scripts/objects/block_base.gd"
 
 @export var coin_count: int = 0
+@export var break_sound: AudioStream
+@export var coin_sound: AudioStream
 
 var _used: bool = false
 
@@ -33,16 +35,20 @@ func bump_from_below() -> void:
 	if coin_count > 0:
 		start_bump()
 		coin_count -= 1
+		_play_sound(coin_sound)
 		GameManager.add_coin(global_position + Vector2(0, -16))
+		play_bump_sound()
 		EventBus.block_bumped.emit(global_position)
 		if coin_count == 0:
 			_used = true
 		return
 
 	if is_big:
+		_play_sound(break_sound)
 		EventBus.block_broken.emit(global_position)
 		GameManager.add_score(50, global_position)
 		queue_free()
 	else:
 		start_bump()
+		play_bump_sound()
 		EventBus.block_bumped.emit(global_position)

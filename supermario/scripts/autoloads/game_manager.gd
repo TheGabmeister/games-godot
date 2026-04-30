@@ -3,6 +3,8 @@ extends Node
 enum PowerState { SMALL, BIG, FIRE }
 enum GameState { TITLE, PLAYING, PAUSED, GAME_OVER, LEVEL_COMPLETE, TRANSITIONING }
 
+const OneUpSound := preload("res://audio/sfx/1up.wav")
+
 const LEVEL_SCENES: Dictionary = {
 	"1-1": "res://scenes/levels/world_1_1.tscn",
 	"1-2": "res://scenes/levels/world_1_2.tscn",
@@ -175,6 +177,7 @@ func _on_level_completed() -> void:
 
 func earn_one_up() -> void:
 	lives += 1
+	EventBus.sfx_requested.emit(OneUpSound)
 	EventBus.one_up_earned.emit()
 	EventBus.lives_changed.emit(lives)
 

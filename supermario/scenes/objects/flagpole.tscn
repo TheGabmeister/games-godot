@@ -1,12 +1,14 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/flagpole.gd" id="1_flagpole"]
+[ext_resource type="AudioStream" path="res://audio/sfx/flagpole.wav" id="2_flagpole_sfx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_detect"]
 size = Vector2(16, 160)
 
 [node name="Flagpole" type="Node2D"]
 script = ExtResource("1_flagpole")
+flagpole_sound = ExtResource("2_flagpole_sfx")
 
 [node name="DetectArea" type="Area2D" parent="."]
 collision_layer = 512

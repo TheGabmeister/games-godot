@@ -1,5 +1,8 @@
 extends Node
 
+# Audio
+signal sfx_requested(sound: AudioStream)
+
 # Player
 signal player_died
 signal player_respawned

@@ -5,7 +5,8 @@ func enter() -> void:
 	var speed_ratio: float = absf(player.velocity.x) / player.movement.run_speed
 	var jump_boost: float = lerpf(1.0, player.movement.high_speed_jump_boost, speed_ratio)
 	player.velocity.y = player.movement.jump_velocity * jump_boost
-	AudioManager.play_sfx(&"jump")
+	if player.has_method("play_jump_sound"):
+		player.play_jump_sound()
 
 
 func process_physics(delta: float) -> void:

@@ -2,6 +2,8 @@ extends "res://scripts/enemies/enemy_base.gd"
 
 const KoopaShellScene := preload("res://scenes/enemies/koopa_shell.tscn")
 
+@export var stomp_sound: AudioStream
+
 
 func _ready() -> void:
 	super()
@@ -18,6 +20,7 @@ func stomp_kill() -> bool:
 	if _is_dead:
 		return false
 	_is_dead = true
+	_play_sound(stomp_sound)
 	EventBus.enemy_stomped.emit(global_position)
 	CameraEffects.shake(2.0, 0.1)
 	# Spawn shell at this position
@@ -27,3 +30,8 @@ func stomp_kill() -> bool:
 	shell.activate()
 	call_deferred("queue_free")
 	return true
+
+
+func _play_sound(sound: AudioStream) -> void:
+	if sound != null:
+		EventBus.sfx_requested.emit(sound)

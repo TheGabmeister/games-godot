@@ -6,6 +6,7 @@ const FireFlowerScene := preload("res://scenes/objects/fire_flower.tscn")
 const StarmanScene := preload("res://scenes/objects/starman.tscn")
 
 @export var contents: StringName = &"coin"
+@export var coin_sound: AudioStream
 
 var _used: bool = false
 var _pulse_time: float = 0.0
@@ -45,6 +46,7 @@ func bump_from_below() -> void:
 		return
 	_used = true
 	start_bump()
+	play_bump_sound()
 	EventBus.block_bumped.emit(global_position)
 	_spawn_contents()
 
@@ -53,6 +55,7 @@ func _spawn_contents() -> void:
 	var spawn_pos: Vector2 = global_position + Vector2(0, -16)
 	match contents:
 		&"coin":
+			_play_sound(coin_sound)
 			GameManager.add_coin(spawn_pos)
 			EventBus.item_spawned.emit(&"coin", spawn_pos)
 		&"mushroom":

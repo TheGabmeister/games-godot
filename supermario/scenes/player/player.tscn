@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=26 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Resource" path="res://resources/config/player_movement_default.tres" id="10_movement"]
@@ -19,6 +19,12 @@
 [ext_resource type="Script" path="res://scripts/player/player_states/pipe_enter_state.gd" id="17_pipe"]
 [ext_resource type="Script" path="res://scripts/player/player_states/flagpole_state.gd" id="18_flagpole"]
 [ext_resource type="Script" path="res://scripts/player/camera_controller.gd" id="19_camcontroller"]
+[ext_resource type="AudioStream" path="res://audio/sfx/jump.wav" id="20_jump_sfx"]
+[ext_resource type="AudioStream" path="res://audio/sfx/jump_big.wav" id="21_jump_big_sfx"]
+[ext_resource type="AudioStream" path="res://audio/sfx/powerup.wav" id="22_powerup_sfx"]
+[ext_resource type="AudioStream" path="res://audio/sfx/powerdown.wav" id="23_powerdown_sfx"]
+[ext_resource type="AudioStream" path="res://audio/sfx/death.wav" id="24_death_sfx"]
+[ext_resource type="AudioStream" path="res://audio/sfx/fireball.wav" id="25_fireball_sfx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
 size = Vector2(12, 14)
@@ -36,6 +42,12 @@ collision_mask = 1
 script = ExtResource("1_player")
 movement = ExtResource("10_movement")
 effects = ExtResource("16_effects")
+jump_sound = ExtResource("20_jump_sfx")
+jump_big_sound = ExtResource("21_jump_big_sfx")
+powerup_sound = ExtResource("22_powerup_sfx")
+powerdown_sound = ExtResource("23_powerdown_sfx")
+death_sound = ExtResource("24_death_sfx")
+fireball_sound = ExtResource("25_fireball_sfx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -7)

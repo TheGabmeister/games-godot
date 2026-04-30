@@ -10,6 +10,12 @@ const MAX_FIREBALLS: int = 2
 
 @export var movement: Resource  # PlayerMovementConfig
 @export var effects: Resource  # EffectsConfig
+@export var jump_sound: AudioStream
+@export var jump_big_sound: AudioStream
+@export var powerup_sound: AudioStream
+@export var powerdown_sound: AudioStream
+@export var death_sound: AudioStream
+@export var fireball_sound: AudioStream
 
 var coyote_active: bool = false
 var jump_buffered: bool = false
@@ -41,6 +47,8 @@ func _ready() -> void:
 	add_to_group("player")
 	stomp_detector.area_entered.connect(_on_stomp_area_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+	EventBus.player_powered_up.connect(_on_player_powered_up)
+	EventBus.player_damaged.connect(_on_player_damaged)
 	# Sync collision size and drawer form with the current GameManager
 	# power state. Required because power is preserved across level
 	# transitions (e.g., finishing 1-1 as Fire Mario should spawn Fire
@@ -170,6 +178,7 @@ func has_ceiling_clearance() -> bool:
 func die() -> void:
 	if _is_star_powered:
 		_end_star_power()
+	_play_sound(death_sound)
 	stomp_detector.set_deferred("monitoring", false)
 	hurtbox.set_deferred("monitoring", false)
 	hurtbox.set_deferred("monitorable", false)
@@ -217,6 +226,13 @@ func take_damage() -> void:
 func start_invincibility() -> void:
 	_is_invincible = true
 	_invincibility_timer = movement.invincibility_duration
+
+
+func play_jump_sound() -> void:
+	if GameManager.current_power_state == GameManager.PowerState.SMALL or jump_big_sound == null:
+		_play_sound(jump_sound)
+	else:
+		_play_sound(jump_big_sound)
 
 
 func _on_stomp_area_entered(area: Area2D) -> void:
@@ -332,7 +348,7 @@ func _spawn_fireball() -> void:
 	fireball.global_position = global_position + Vector2(dir * 10.0, -10.0)
 	_active_fireballs += 1
 	fireball.tree_exited.connect(func() -> void: _active_fireballs -= 1)
-	AudioManager.play_sfx(&"fireball")
+	_play_sound(fireball_sound)
 
 
 # --- Pipe Entry ---
@@ -351,3 +367,16 @@ func start_flagpole(flagpole: Node2D) -> void:
 	if fp_state and fp_state.has_method("setup"):
 		fp_state.setup(flagpole)
 		state_machine.transition_to(StateIds.FLAGPOLE)
+
+
+func _on_player_powered_up(_power_up_type: StringName) -> void:
+	_play_sound(powerup_sound)
+
+
+func _on_player_damaged() -> void:
+	_play_sound(powerdown_sound)
+
+
+func _play_sound(sound: AudioStream) -> void:
+	if sound != null:
+		EventBus.sfx_requested.emit(sound)

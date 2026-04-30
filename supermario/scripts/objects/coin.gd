@@ -1,5 +1,7 @@
 extends Area2D
 
+@export var collect_sound: AudioStream
+
 var _spin_time: float = 0.0
 var _collected: bool = false
 
@@ -36,5 +38,7 @@ func _collect() -> void:
 	if _collected:
 		return
 	_collected = true
+	if collect_sound != null:
+		EventBus.sfx_requested.emit(collect_sound)
 	GameManager.add_coin(global_position)
 	queue_free()

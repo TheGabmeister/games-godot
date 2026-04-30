@@ -1,6 +1,7 @@
 extends StaticBody2D
 
 @export var bump_config: Resource  # BlockBumpConfig
+@export var bump_sound: AudioStream
 
 var _bumping: bool = false
 var _bump_time: float = 0.0
@@ -29,5 +30,14 @@ func start_bump() -> void:
 	_bump_time = 0.0
 
 
+func play_bump_sound() -> void:
+	_play_sound(bump_sound)
+
+
 func bump_from_below() -> void:
 	pass
+
+
+func _play_sound(sound: AudioStream) -> void:
+	if sound != null:
+		EventBus.sfx_requested.emit(sound)

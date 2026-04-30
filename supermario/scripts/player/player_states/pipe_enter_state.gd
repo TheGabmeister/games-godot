@@ -20,7 +20,8 @@ func enter() -> void:
 	player.z_index = 0
 	player.z_as_relative = false
 
-	AudioManager.play_sfx(&"pipe")
+	if _pipe.has_method("play_entry_sound"):
+		_pipe.play_entry_sound()
 
 	# Center on pipe and slide down
 	var entry_x: float = _pipe.global_position.x

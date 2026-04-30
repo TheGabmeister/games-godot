@@ -3,6 +3,7 @@ extends "res://scripts/objects/block_base.gd"
 const MushroomScene := preload("res://scenes/objects/mushroom.tscn")
 
 @export var contents: StringName = &"coin"
+@export var coin_sound: AudioStream
 
 var _revealed: bool = false
 
@@ -42,6 +43,7 @@ func _reveal_and_bump() -> void:
 	collision_shape.set_deferred("disabled", false)
 	trigger_area.set_deferred("monitoring", false)
 	start_bump()
+	play_bump_sound()
 	EventBus.block_bumped.emit(global_position)
 	queue_redraw()
 	_spawn_contents()
@@ -51,6 +53,7 @@ func _spawn_contents() -> void:
 	var spawn_pos: Vector2 = global_position + Vector2(0, -16)
 	match contents:
 		&"coin":
+			_play_sound(coin_sound)
 			GameManager.add_coin(spawn_pos)
 			EventBus.item_spawned.emit(&"coin", spawn_pos)
 		&"1up":

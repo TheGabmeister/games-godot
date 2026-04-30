@@ -1,9 +1,11 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/level_complete.gd" id="1_complete"]
+[ext_resource type="AudioStream" path="res://audio/sfx/stage_clear.wav" id="2_stage_clear_sfx"]
 
 [node name="LevelComplete" type="CanvasLayer"]
 script = ExtResource("1_complete")
+stage_clear_sound = ExtResource("2_stage_clear_sfx")
 
 [node name="Background" type="ColorRect" parent="."]
 anchors_preset = 15

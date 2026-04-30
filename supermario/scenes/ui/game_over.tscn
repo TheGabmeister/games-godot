@@ -1,9 +1,11 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/game_over_screen.gd" id="1_gameover"]
+[ext_resource type="AudioStream" path="res://audio/sfx/game_over.wav" id="2_game_over_sfx"]
 
 [node name="GameOver" type="CanvasLayer"]
 script = ExtResource("1_gameover")
+game_over_sound = ExtResource("2_game_over_sfx")
 
 [node name="Background" type="ColorRect" parent="."]
 anchors_preset = 15

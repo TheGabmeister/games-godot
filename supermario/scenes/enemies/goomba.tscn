@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/goomba.gd" id="1_goomba"]
 [ext_resource type="Resource" path="res://resources/config/goomba_config.tres" id="3_config"]
 [ext_resource type="Script" path="res://scripts/enemies/goomba_drawer.gd" id="2_drawer"]
+[ext_resource type="AudioStream" path="res://audio/sfx/stomp.wav" id="4_stomp_sfx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
 size = Vector2(12, 14)
@@ -15,6 +16,7 @@ collision_layer = 4
 collision_mask = 1
 script = ExtResource("1_goomba")
 config = ExtResource("3_config")
+stomp_sound = ExtResource("4_stomp_sfx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -7)

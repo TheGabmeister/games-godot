@@ -7,6 +7,9 @@ const SHELL_COMBO_POINTS := [500, 800, 1000, 2000, 5000, 8000]
 
 enum State { IDLE, MOVING }
 
+@export var kick_sound: AudioStream
+@export var stomp_sound: AudioStream
+
 var shell_state: State = State.IDLE
 var direction: float = 0.0
 var _is_active: bool = false
@@ -57,7 +60,7 @@ func try_kick(kick_direction: float) -> bool:
 	_combo_count = 0
 	_hitbox.monitorable = false
 	_damage_area.monitoring = true
-	AudioManager.play_sfx(&"kick")
+	_play_sound(kick_sound)
 	return true
 
 
@@ -71,7 +74,7 @@ func stomp_kill() -> bool:
 		direction = 0.0
 		_combo_count = 0
 		_damage_area.monitoring = false
-		AudioManager.play_sfx(&"stomp")
+		_play_sound(stomp_sound)
 		return false  # No points for stopping a shell
 	else:
 		# Stomp idle shell → kick it away from player
@@ -173,3 +176,8 @@ func _award_combo_points(pos: Vector2) -> void:
 	else:
 		# 1-UP
 		GameManager.earn_one_up()
+
+
+func _play_sound(sound: AudioStream) -> void:
+	if sound != null:
+		EventBus.sfx_requested.emit(sound)

@@ -3,6 +3,8 @@ extends Node2D
 const POLE_HEIGHT: float = 160.0  # 10 tiles
 const BALL_RADIUS: float = 4.0
 
+@export var flagpole_sound: AudioStream
+
 var _flag_offset_y: float = 0.0  # 0 = top, POLE_HEIGHT = bottom
 var _triggered: bool = false
 
@@ -63,7 +65,7 @@ func _on_body_entered(body: Node2D) -> void:
 
 	EventBus.flagpole_reached.emit(height_ratio)
 	GameManager.add_score(bonus, Vector2(global_position.x, grab_y))
-	AudioManager.play_sfx(&"flagpole")
+	_play_sound(flagpole_sound)
 
 	slide_flag_to_bottom()
 
@@ -73,6 +75,11 @@ func _on_body_entered(body: Node2D) -> void:
 
 func _process(_delta: float) -> void:
 	queue_redraw()
+
+
+func _play_sound(sound: AudioStream) -> void:
+	if sound != null:
+		EventBus.sfx_requested.emit(sound)
 
 
 func _draw() -> void:

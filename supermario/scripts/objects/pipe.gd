@@ -2,6 +2,7 @@ extends StaticBody2D
 
 @export var warp_target: NodePath
 @export var pipe_height: int = 2  # in tiles (each tile = 16px)
+@export var entry_sound: AudioStream
 
 var _player_on_top: bool = false
 var _player_ref: CharacterBody2D
@@ -54,6 +55,11 @@ func get_entry_position() -> Vector2:
 
 func get_exit_position() -> Vector2:
 	return global_position + Vector2(0, -pipe_height * 16.0 - 1.0)
+
+
+func play_entry_sound() -> void:
+	if entry_sound != null:
+		EventBus.sfx_requested.emit(entry_sound)
 
 
 func _on_warp_zone_body_entered(body: Node2D) -> void:

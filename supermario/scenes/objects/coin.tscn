@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/coin.gd" id="1_coin"]
+[ext_resource type="AudioStream" path="res://audio/sfx/coin.wav" id="2_coin_sfx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_coin"]
 size = Vector2(8, 14)
@@ -9,6 +10,7 @@ size = Vector2(8, 14)
 collision_layer = 32
 collision_mask = 2
 script = ExtResource("1_coin")
+collect_sound = ExtResource("2_coin_sfx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_coin")
