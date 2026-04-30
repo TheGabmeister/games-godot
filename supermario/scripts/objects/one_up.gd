@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
+const OneUpSound := preload("res://audio/sfx/1up.wav")
 
 @export var item_config: Resource  # ItemConfig
 
@@ -16,7 +17,7 @@ func _ready() -> void:
 	set_collision_layer_value(1, false)
 	set_collision_mask_value(1, false)
 	hurtbox.body_entered.connect(_on_body_entered)
-	_sprite.play(&"red")
+	_sprite.play(&"1up")
 
 
 func _physics_process(delta: float) -> void:
@@ -40,7 +41,13 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node) -> void:
 	if _collected:
 		return
-	if body.has_method("power_up"):
+	if body.is_in_group("player"):
 		_collected = true
-		body.power_up(&"mushroom", global_position)
+		GameManager.earn_one_up()
+		_play_sound(OneUpSound)
 		queue_free()
+
+
+func _play_sound(sound: AudioStream) -> void:
+	if sound != null:
+		EventBus.sfx_requested.emit(sound)

@@ -1,6 +1,6 @@
 extends "res://scripts/objects/block_base.gd"
 
-const MushroomScene := preload("res://scenes/objects/mushroom.tscn")
+const OneUpScene := preload("res://scenes/objects/one_up.tscn")
 
 @export var contents: StringName = &"coin"
 @export var coin_sound: AudioStream
@@ -55,10 +55,8 @@ func _spawn_contents() -> void:
 			GameManager.add_coin(spawn_pos)
 			EventBus.item_spawned.emit(&"coin", spawn_pos)
 		&"1up":
-			var item := MushroomScene.instantiate() as Node2D
+			var item := OneUpScene.instantiate() as Node2D
 			get_parent().add_child(item)
-			if item.has_method("set_one_up"):
-				item.set_one_up(true)
 			item.global_position = spawn_pos
 			EventBus.item_spawned.emit(&"1up", spawn_pos)
 		_:
