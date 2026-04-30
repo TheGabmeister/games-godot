@@ -31,8 +31,8 @@ Palette="*res://scripts/color_palette.gd"
 
 [display]
 
-window/size/viewport_width=1200
-window/size/viewport_height=900
+window/size/viewport_width=1024
+window/size/viewport_height=768
 window/stretch/mode="canvas_items"
 
 [input]
