@@ -1,41 +1,35 @@
 extends Area2D
 
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SHEET := preload("res://sprites/powerups_sheet.png")
 
 @export var item_config: Resource  # ItemConfig
 
 var _emerge := EmergeHelper.new()
 var _collected: bool = false
+var _anim_time: float = 0.0
+var _sprite: Sprite2D
 
 
 func _ready() -> void:
-	# Emerge start position is captured lazily by EmergeHelper on the first
-	# tick. _ready() fires synchronously inside the spawning question block's
-	# add_child(), BEFORE the spawner sets global_position.
 	monitoring = false
 	body_entered.connect(_on_body_entered)
-	queue_redraw()
+	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
+	SpriteHelper.set_cell(_sprite, 2, 5, Vector2(-16, -30))
 
 
 func _process(delta: float) -> void:
 	if _collected:
 		return
 
+	_anim_time += delta
+	SpriteHelper.set_cell(_sprite, 2 + int(_anim_time * 6.0) % 3, 5, Vector2(-16, -30))
+
 	if not _emerge.done:
 		global_position.y = _emerge.update(delta, global_position.y, item_config.emerge_duration, item_config.emerge_height)
 		if _emerge.done:
 			monitoring = true
-
-
-func _draw() -> void:
-	draw_rect(Rect2(-1, -8, 2, 8), Palette.PIRANHA_GREEN)
-	for i in 5:
-		var angle: float = (float(i) / 5.0) * TAU - PI * 0.5
-		var px: float = cos(angle) * 3.5
-		var py: float = -11.0 + sin(angle) * 3.5
-		var petal_color: Color = Palette.FIRE_ORANGE if i % 2 == 0 else Palette.FIRE_RED
-		draw_circle(Vector2(px, py), 3.0, petal_color)
-	draw_circle(Vector2(0, -11), 1.8, Palette.STAR_YELLOW)
 
 
 func _on_body_entered(body: Node) -> void:

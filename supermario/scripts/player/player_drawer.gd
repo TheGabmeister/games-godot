@@ -1,13 +1,23 @@
 extends Node2D
 
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const StateIds := preload("res://scripts/player/player_state_ids.gd")
+const PLAYER_SHEET := preload("res://sprites/player_sheet.png")
+const COLUMNS := 6
+
 var power_state: int = 0  # GameManager.PowerState
 var is_crouching: bool = false
 var star_power_active: bool = false
 
-# Animation state
 var _walk_cycle: float = 0.0
 var _is_moving: bool = false
 var _star_cycle: float = 0.0
+var _sprite: Sprite2D
+
+
+func _ready() -> void:
+	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", PLAYER_SHEET)
+	SpriteHelper.set_cell(_sprite, 0, COLUMNS, Vector2(-16, -30))
 
 
 func _process(delta: float) -> void:
@@ -20,119 +30,51 @@ func _process(delta: float) -> void:
 			_walk_cycle = 0.0
 	if star_power_active:
 		_star_cycle += delta * 8.0
-	queue_redraw()
-
-
-func _draw() -> void:
-	if power_state == 0:  # SMALL
-		_draw_small_mario()
+		_sprite.modulate = _star_color()
 	else:
-		if is_crouching:
-			_draw_crouching_mario()
-		else:
-			_draw_big_mario()
+		_sprite.modulate = Color.WHITE
+
+	SpriteHelper.set_cell(_sprite, _get_frame(), COLUMNS, Vector2(-16, -30))
 
 
-func _draw_small_mario() -> void:
-	# 16x16, origin at bottom center
-	var foot_offset := _get_foot_offset()
+func _get_frame() -> int:
+	var state_name := _get_state_name()
+	if power_state == GameManager.PowerState.SMALL:
+		if state_name == StateIds.DEATH:
+			return 4
+		if state_name == StateIds.JUMP or state_name == StateIds.FALL:
+			return 3
+		if _is_moving:
+			return 1 + (int(_walk_cycle * 8.0) % 2)
+		return 0
 
-	# Feet (two small rectangles)
-	draw_rect(Rect2(-5, -3, 4, 3), Palette.MARIO_RED)
-	draw_rect(Rect2(1 + foot_offset, -3, 4, 3), Palette.MARIO_RED)
-
-	# Body / overalls
-	draw_rect(Rect2(-6, -11, 12, 8), Palette.MARIO_BLUE)
-
-	# Shirt / arms
-	draw_rect(Rect2(-5, -13, 10, 3), Palette.MARIO_RED)
-
-	# Head / skin
-	draw_rect(Rect2(-4, -16, 8, 4), Palette.MARIO_SKIN)
-
-	# Hat
-	draw_rect(Rect2(-6, -18, 11, 3), _hat_color())
-
-	# Eyes
-	draw_rect(Rect2(0, -15, 2, 2), Color.WHITE)
-	draw_rect(Rect2(1, -15, 1, 1), Color.BLACK)
-
-
-func _draw_big_mario() -> void:
-	# 16x32, origin at bottom center
-	var foot_offset := _get_foot_offset()
-
-	# Feet
-	draw_rect(Rect2(-5, -4, 4, 4), Palette.MARIO_RED)
-	draw_rect(Rect2(1 + foot_offset, -4, 4, 4), Palette.MARIO_RED)
-
-	# Legs / overalls lower
-	draw_rect(Rect2(-6, -14, 12, 10), Palette.MARIO_BLUE)
-
-	# Belt line
-	draw_rect(Rect2(-6, -15, 12, 1), Palette.MARIO_RED.darkened(0.3))
-
-	# Shirt / torso
-	draw_rect(Rect2(-6, -22, 12, 7), _hat_color())
-
-	# Arms
-	draw_rect(Rect2(-7, -20, 2, 5), Palette.MARIO_SKIN)
-	draw_rect(Rect2(5, -20, 2, 5), Palette.MARIO_SKIN)
-
-	# Head / skin
-	draw_rect(Rect2(-5, -27, 10, 6), Palette.MARIO_SKIN)
-
-	# Hat
-	draw_rect(Rect2(-6, -30, 12, 4), _hat_color())
-
-	# Eyes
-	draw_rect(Rect2(0, -26, 2, 2), Color.WHITE)
-	draw_rect(Rect2(1, -26, 1, 1), Color.BLACK)
-
-	# Nose
-	draw_rect(Rect2(2, -24, 2, 2), Palette.MARIO_SKIN.darkened(0.15))
-
-
-func _draw_crouching_mario() -> void:
-	# Big Mario crouching — compressed to ~16x16, origin at bottom center
-	var foot_offset := _get_foot_offset()
-
-	# Feet
-	draw_rect(Rect2(-5, -3, 4, 3), Palette.MARIO_RED)
-	draw_rect(Rect2(1 + foot_offset, -3, 4, 3), Palette.MARIO_RED)
-
-	# Body compressed
-	draw_rect(Rect2(-6, -11, 12, 8), Palette.MARIO_BLUE)
-
-	# Shirt
-	draw_rect(Rect2(-6, -14, 12, 3), _hat_color())
-
-	# Head tucked
-	draw_rect(Rect2(-4, -17, 8, 4), Palette.MARIO_SKIN)
-
-	# Hat
-	draw_rect(Rect2(-6, -19, 11, 3), _hat_color())
-
-	# Eyes
-	draw_rect(Rect2(0, -16, 2, 2), Color.WHITE)
-	draw_rect(Rect2(1, -16, 1, 1), Color.BLACK)
-
-
-func _hat_color() -> Color:
-	if star_power_active:
-		var idx := int(_star_cycle) % 4
-		match idx:
-			0: return Palette.STAR_YELLOW
-			1: return Palette.MARIO_RED
-			2: return Color(0.2, 0.8, 0.3)
-			3: return Palette.MARIO_FIRE_WHITE
-		return Palette.STAR_YELLOW
-	if power_state == 2:  # FIRE
-		return Palette.MARIO_FIRE_WHITE
-	return Palette.MARIO_RED
-
-
-func _get_foot_offset() -> float:
+	var base := 11 if power_state == GameManager.PowerState.FIRE else 5
+	if is_crouching:
+		return base + 4
+	if state_name == StateIds.FLAGPOLE:
+		return base + 5
+	if state_name == StateIds.JUMP or state_name == StateIds.FALL:
+		return base + 3
 	if _is_moving:
-		return sin(_walk_cycle * TAU) * 2.0
-	return 0.0
+		return base + 1 + (int(_walk_cycle * 8.0) % 2)
+	return base
+
+
+func _get_state_name() -> StringName:
+	var state_machine := owner.get_node_or_null("StateMachine") if owner else null
+	if state_machine == null:
+		return &""
+	var current_state: Node = state_machine.current_state
+	return current_state.name if current_state else &""
+
+
+func _star_color() -> Color:
+	match int(_star_cycle) % 4:
+		0:
+			return Color(1.0, 1.0, 0.5)
+		1:
+			return Color(1.0, 0.55, 0.55)
+		2:
+			return Color(0.55, 1.0, 0.65)
+		_:
+			return Color(0.75, 0.9, 1.0)

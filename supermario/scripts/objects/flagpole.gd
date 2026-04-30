@@ -1,18 +1,28 @@
 extends Node2D
 
-const POLE_HEIGHT: float = 320.0  # 10 tiles
-const BALL_RADIUS: float = 8.0
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SHEET := preload("res://sprites/flagpole_sheet.png")
+const POLE_HEIGHT: float = 320.0
 
 @export var flagpole_sound: AudioStream
 
-var _flag_offset_y: float = 0.0  # 0 = top, POLE_HEIGHT = bottom
+var _flag_offset_y: float = 0.0
 var _triggered: bool = false
+var _pole_sprite: Sprite2D
+var _ball_sprite: Sprite2D
+var _flag_sprite: Sprite2D
+var _base_sprite: Sprite2D
 
 @onready var _detect_area: Area2D = $DetectArea
 
 
 func _ready() -> void:
 	_detect_area.body_entered.connect(_on_body_entered)
+	_pole_sprite = SpriteHelper.ensure_sprite(self, &"PoleSprite", SHEET)
+	_ball_sprite = SpriteHelper.ensure_sprite(self, &"BallSprite", SHEET)
+	_flag_sprite = SpriteHelper.ensure_sprite(self, &"FlagSprite", SHEET)
+	_base_sprite = SpriteHelper.ensure_sprite(self, &"BaseSprite", SHEET)
+	_update_sprites()
 
 
 func get_pole_top_y() -> float:
@@ -59,7 +69,7 @@ func _on_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
 	_triggered = true
-	var grab_y: float = body.global_position.y - 16.0  # approximate center
+	var grab_y: float = body.global_position.y - 16.0
 	var height_ratio: float = get_height_ratio(grab_y)
 	var bonus: int = get_height_bonus(height_ratio)
 
@@ -74,26 +84,16 @@ func _on_body_entered(body: Node2D) -> void:
 
 
 func _process(_delta: float) -> void:
-	queue_redraw()
+	_update_sprites()
+
+
+func _update_sprites() -> void:
+	SpriteHelper.set_cell(_pole_sprite, 0, 4, Vector2(-16, -POLE_HEIGHT), Vector2(1.0, 10.0))
+	SpriteHelper.set_cell(_ball_sprite, 1, 4, Vector2(-16, -POLE_HEIGHT - 16))
+	SpriteHelper.set_cell(_flag_sprite, 2, 4, Vector2(-42, -POLE_HEIGHT + _flag_offset_y))
+	SpriteHelper.set_cell(_base_sprite, 3, 4, Vector2(-16, -32))
 
 
 func _play_sound(sound: AudioStream) -> void:
 	if sound != null:
 		EventBus.sfx_requested.emit(sound)
-
-
-func _draw() -> void:
-	# Pole
-	draw_rect(Rect2(-4, -POLE_HEIGHT, 8, POLE_HEIGHT), Color(0.6, 0.6, 0.6))
-	# Ball on top
-	draw_circle(Vector2(0, -POLE_HEIGHT), BALL_RADIUS, Palette.STAR_YELLOW)
-	# Flag (triangle)
-	var flag_y: float = -POLE_HEIGHT + 16.0 + _flag_offset_y
-	var flag_points := PackedVector2Array([
-		Vector2(-4, flag_y),
-		Vector2(-36, flag_y + 16),
-		Vector2(-4, flag_y + 32),
-	])
-	draw_colored_polygon(flag_points, Color(0.1, 0.7, 0.15))
-	# Base block
-	draw_rect(Rect2(-16, -16, 32, 16), Palette.GROUND_GREEN)

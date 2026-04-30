@@ -1,10 +1,19 @@
 extends Node2D
 
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SHEET := preload("res://sprites/effects_sheet.png")
+
 var _velocity: Vector2 = Vector2.ZERO
 var _timer: float = 0.0
 var _rotation_speed: float = 0.0
+var _sprite: Sprite2D
 const GRAVITY := 600.0
 const LIFETIME := 1.0
+
+
+func _ready() -> void:
+	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
+	SpriteHelper.set_cell(_sprite, 0, 6, Vector2(-16, -16), Vector2(0.45, 0.45))
 
 
 func setup(vel: Vector2) -> void:
@@ -20,9 +29,3 @@ func _process(delta: float) -> void:
 	_velocity.y += GRAVITY * delta
 	position += _velocity * delta
 	rotation += _rotation_speed * delta
-	queue_redraw()
-
-
-func _draw() -> void:
-	draw_rect(Rect2(-3, -3, 6, 6), Palette.BRICK_RED)
-	draw_rect(Rect2(-3, -3, 6, 6), Palette.BRICK_DARK, false, 1.0)

@@ -1,5 +1,7 @@
 extends Node2D
 
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SHEET := preload("res://sprites/piranha_plant_sheet.png")
 const EMERGE_HEIGHT: float = 24.0
 const EMERGE_DURATION: float = 0.8
 const WAIT_TOP_DURATION: float = 1.5
@@ -18,6 +20,8 @@ var _player_in_zone: bool = false
 @onready var _hitbox_shape: CollisionShape2D = $Hitbox/HitboxShape
 @onready var _proximity_zone: Area2D = $ProximityZone
 
+var _sprite: Sprite2D
+
 
 func _ready() -> void:
 	set_physics_process(false)
@@ -26,6 +30,8 @@ func _ready() -> void:
 	_hitbox_shape.position.y = 0.0
 	_proximity_zone.body_entered.connect(_on_proximity_body_entered)
 	_proximity_zone.body_exited.connect(_on_proximity_body_exited)
+	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
+	SpriteHelper.set_cell(_sprite, 0, 4, Vector2(-16, -30))
 
 
 func activate() -> void:
@@ -117,7 +123,7 @@ func _physics_process(delta: float) -> void:
 	_hitbox_shape.set_deferred("disabled", not is_visible)
 	_hitbox_shape.position.y = _offset_y - 8.0
 
-	queue_redraw()
+	_update_sprite()
 
 
 func _on_proximity_body_entered(_body: Node2D) -> void:
@@ -128,22 +134,9 @@ func _on_proximity_body_exited(_body: Node2D) -> void:
 	_player_in_zone = false
 
 
-func _draw() -> void:
-	if _is_dead or not _is_active:
+func _update_sprite() -> void:
+	if _sprite == null:
 		return
-
-	var base_y: float = _offset_y
-
-	# Stem
-	draw_rect(Rect2(-3, base_y, 6, -base_y), Palette.PIRANHA_GREEN)
-
-	# Head (only draw if visible)
-	if base_y < -2.0:
-		# Head body
-		draw_rect(Rect2(-7, base_y - 10, 14, 10), Palette.PIRANHA_GREEN)
-		# Lips / spots
-		draw_rect(Rect2(-8, base_y - 10, 16, 3), Palette.PIRANHA_RED)
-		draw_rect(Rect2(-8, base_y - 1, 16, 2), Palette.PIRANHA_RED)
-		# White teeth
-		draw_rect(Rect2(-4, base_y - 7, 2, 3), Color.WHITE)
-		draw_rect(Rect2(2, base_y - 7, 2, 3), Color.WHITE)
+	_sprite.visible = _is_active and not _is_dead and _state != State.WAITING_BOTTOM
+	var frame := clampi(roundi(absf(_offset_y) / 8.0), 0, 3)
+	SpriteHelper.set_cell(_sprite, frame, 4, Vector2(-16, -30 + _offset_y))

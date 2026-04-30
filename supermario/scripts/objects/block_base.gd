@@ -22,7 +22,6 @@ func _process(delta: float) -> void:
 			_bumping = false
 		else:
 			_bump_offset = -bump_config.bump_amplitude * sin(t * PI)
-		queue_redraw()
 
 
 func start_bump() -> void:

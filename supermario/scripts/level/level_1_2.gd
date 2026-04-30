@@ -5,6 +5,8 @@ const TilesetBuilder := preload("res://scripts/level/tileset_builder.gd")
 const TILE_SIZE := 32
 const LEVEL_HEIGHT := 14
 const LEVEL_WIDTH := 170  # tiles
+const UNDERGROUND_TOP := Vector2i(2, 0)
+const UNDERGROUND_FILL := Vector2i(3, 0)
 
 @export var level_music: AudioStream
 
@@ -47,13 +49,13 @@ func _paint_terrain() -> void:
 	for x in LEVEL_WIDTH:
 		if _is_pit(x):
 			continue
-		tilemap.set_cell(Vector2i(x, 12), 0, Vector2i(0, 0))
-		tilemap.set_cell(Vector2i(x, 13), 0, Vector2i(1, 0))
+		tilemap.set_cell(Vector2i(x, 12), 0, UNDERGROUND_TOP)
+		tilemap.set_cell(Vector2i(x, 13), 0, UNDERGROUND_FILL)
 
 	# Ceiling: rows 0-1
 	for x in LEVEL_WIDTH:
-		tilemap.set_cell(Vector2i(x, 0), 0, Vector2i(1, 0))
-		tilemap.set_cell(Vector2i(x, 1), 0, Vector2i(0, 0))
+		tilemap.set_cell(Vector2i(x, 0), 0, UNDERGROUND_FILL)
+		tilemap.set_cell(Vector2i(x, 1), 0, UNDERGROUND_TOP)
 
 	# Raised platforms
 	_paint_platform(20, 30, 8)   # floating platform
@@ -65,7 +67,7 @@ func _paint_terrain() -> void:
 	# Staircase to exit at the end
 	for i in 4:
 		for row in range(12 - 1 - i, 12):
-			tilemap.set_cell(Vector2i(155 + i, row), 0, Vector2i(1, 0))
+			tilemap.set_cell(Vector2i(155 + i, row), 0, UNDERGROUND_FILL)
 
 
 func _is_pit(x: int) -> bool:
@@ -79,6 +81,6 @@ func _is_pit(x: int) -> bool:
 
 func _paint_platform(start_x: int, end_x: int, row: int) -> void:
 	for x in range(start_x, end_x):
-		tilemap.set_cell(Vector2i(x, row), 0, Vector2i(0, 0))
+		tilemap.set_cell(Vector2i(x, row), 0, UNDERGROUND_TOP)
 
 

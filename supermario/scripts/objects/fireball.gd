@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SHEET := preload("res://sprites/fireball_sheet.png")
 const SPEED: float = 500.0
 const GRAVITY: float = 1200.0
 const BOUNCE_VELOCITY: float = -360.0
@@ -7,6 +9,8 @@ const MAX_FALL: float = 800.0
 
 var _direction: float = 1.0
 var _alive: bool = true
+var _anim_time: float = 0.0
+var _sprite: Sprite2D
 
 @onready var _hitbox: Area2D = $Hitbox
 
@@ -14,11 +18,16 @@ var _alive: bool = true
 func _ready() -> void:
 	_hitbox.area_entered.connect(_on_hitbox_area_entered)
 	velocity = Vector2(_direction * SPEED, 0.0)
+	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
+	SpriteHelper.set_cell(_sprite, 0, 4, Vector2(-16, -20), Vector2(0.5, 0.5))
 
 
 func _physics_process(delta: float) -> void:
 	if not _alive:
 		return
+
+	_anim_time += delta
+	SpriteHelper.set_cell(_sprite, int(_anim_time * 12.0) % 4, 4, Vector2(-16, -20), Vector2(0.5, 0.5))
 
 	velocity.y = minf(velocity.y + GRAVITY * delta, MAX_FALL)
 	velocity.x = _direction * SPEED
@@ -31,7 +40,6 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor():
 		velocity.y = BOUNCE_VELOCITY
 
-	# Off-screen cleanup
 	if global_position.y > 600.0 or global_position.x < -64.0:
 		queue_free()
 
@@ -58,9 +66,3 @@ func _on_hitbox_area_entered(area: Area2D) -> void:
 func _die() -> void:
 	_alive = false
 	queue_free()
-
-
-func _draw() -> void:
-	# Small fireball: 8x8 circle with orange/red
-	draw_circle(Vector2(0, -4), 4.0, Palette.FIRE_ORANGE)
-	draw_circle(Vector2(0, -4), 2.0, Palette.FIRE_RED)

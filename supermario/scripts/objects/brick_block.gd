@@ -1,30 +1,31 @@
 extends "res://scripts/objects/block_base.gd"
 
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SHEET := preload("res://sprites/blocks_sheet.png")
+const COLUMNS := 6
+
 @export var coin_count: int = 0
 @export var break_sound: AudioStream
 @export var coin_sound: AudioStream
 
 var _used: bool = false
+var _sprite: Sprite2D
 
 
-func _draw() -> void:
-	var y_off: float = _bump_offset
-	if _used:
-		draw_rect(Rect2(-8, -16 + y_off, 16, 16), Palette.BLOCK_BROWN)
-		draw_rect(Rect2(-8, -16 + y_off, 16, 2), Palette.BLOCK_BROWN.darkened(0.3))
-		draw_rect(Rect2(-8, -2 + y_off, 16, 2), Palette.BLOCK_BROWN.darkened(0.3))
-		draw_rect(Rect2(-8, -16 + y_off, 2, 16), Palette.BLOCK_BROWN.darkened(0.3))
-		draw_rect(Rect2(6, -16 + y_off, 2, 16), Palette.BLOCK_BROWN.darkened(0.3))
-	else:
-		draw_rect(Rect2(-8, -16 + y_off, 16, 16), Palette.BRICK_RED)
-		draw_line(Vector2(-8, -8 + y_off), Vector2(8, -8 + y_off), Palette.BRICK_DARK, 1.0)
-		draw_line(Vector2(-8, 0 + y_off), Vector2(8, 0 + y_off), Palette.BRICK_DARK, 1.0)
-		draw_line(Vector2(-4, -16 + y_off), Vector2(-4, -8 + y_off), Palette.BRICK_DARK, 1.0)
-		draw_line(Vector2(4, -16 + y_off), Vector2(4, -8 + y_off), Palette.BRICK_DARK, 1.0)
-		draw_line(Vector2(0, -8 + y_off), Vector2(0, 0 + y_off), Palette.BRICK_DARK, 1.0)
-		draw_line(Vector2(-4, 0 + y_off), Vector2(-4, -1 + y_off), Palette.BRICK_DARK, 1.0)
-		draw_line(Vector2(4, 0 + y_off), Vector2(4, -1 + y_off), Palette.BRICK_DARK, 1.0)
-		draw_rect(Rect2(-8, -16 + y_off, 16, 16), Palette.BRICK_DARK, false, 1.0)
+func _ready() -> void:
+	super._ready()
+	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
+	_update_sprite()
+
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	_update_sprite()
+
+
+func _update_sprite() -> void:
+	var frame := 5 if _used else 4
+	SpriteHelper.set_cell(_sprite, frame, COLUMNS, Vector2(-16, -26 + _bump_offset), Vector2(0.8, 0.8))
 
 
 func bump_from_below() -> void:

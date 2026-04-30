@@ -1,8 +1,17 @@
 extends Node2D
 
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SHEET := preload("res://sprites/effects_sheet.png")
+
 var _timer: float = 0.0
+var _sprite: Sprite2D
 const DURATION := 0.5
-const MAX_RADIUS := 24.0
+const MAX_SCALE := 1.5
+
+
+func _ready() -> void:
+	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
+	SpriteHelper.set_cell(_sprite, 3, 6, Vector2(-16, -16))
 
 
 func _process(delta: float) -> void:
@@ -10,17 +19,7 @@ func _process(delta: float) -> void:
 	if _timer >= DURATION:
 		queue_free()
 		return
-	queue_redraw()
-
-
-func _draw() -> void:
 	var t: float = _timer / DURATION
-	var radius: float = MAX_RADIUS * t
-	var alpha: float = 1.0 - t
-	var color := Color(1.0, 0.95, 0.6, alpha * 0.5)
-	# Expanding ring
-	draw_arc(Vector2.ZERO, radius, 0, TAU, 24, color, 2.0)
-	# Inner glow
-	if t < 0.5:
-		var inner_alpha: float = (0.5 - t) * 2.0 * 0.4
-		draw_circle(Vector2.ZERO, radius * 0.5, Color(1.0, 1.0, 0.8, inner_alpha))
+	var s := maxf(0.1, MAX_SCALE * t)
+	_sprite.scale = Vector2(s, s)
+	_sprite.modulate.a = 1.0 - t

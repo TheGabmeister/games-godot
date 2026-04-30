@@ -1,8 +1,10 @@
 extends StaticBody2D
 
-@export var warp_target: NodePath
+const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const SHEET := preload("res://sprites/pipe_sheet.png")
 const TILE_SIZE: float = 32.0
 
+@export var warp_target: NodePath
 @export var pipe_height: int = 2  # in tiles
 @export var entry_sound: AudioStream
 
@@ -15,20 +17,17 @@ var _player_ref: CharacterBody2D
 
 
 func _ready() -> void:
-	collision_layer = 1  # Terrain
+	collision_layer = 1
 	collision_mask = 0
 	z_index = 5
 	z_as_relative = false
 
-	# Each instance needs its own shape — scene sub-resources are shared across
-	# instances, so modifying one pipe's shape would resize all of them.
 	var h: float = pipe_height * TILE_SIZE
 	var body_shape := RectangleShape2D.new()
 	body_shape.size = Vector2(TILE_SIZE * 2.0, h)
 	_col_shape.shape = body_shape
 	_col_shape.position = Vector2(0, -h / 2.0)
 
-	# Position warp zone on top of the pipe
 	var warp_shape := RectangleShape2D.new()
 	warp_shape.size = Vector2(TILE_SIZE * 1.5, TILE_SIZE * 0.5)
 	_warp_shape.shape = warp_shape
@@ -36,6 +35,17 @@ func _ready() -> void:
 
 	_warp_zone.body_entered.connect(_on_warp_zone_body_entered)
 	_warp_zone.body_exited.connect(_on_warp_zone_body_exited)
+	_build_sprites()
+
+
+func _build_sprites() -> void:
+	var h: float = pipe_height * TILE_SIZE
+	var cap := SpriteHelper.ensure_sprite(self, &"CapSprite", SHEET)
+	SpriteHelper.set_cell(cap, 0, 2, Vector2(-32, -h - 8), Vector2(2.0, 1.0))
+
+	for i in pipe_height:
+		var body := SpriteHelper.ensure_sprite(self, StringName("BodySprite%d" % i), SHEET)
+		SpriteHelper.set_cell(body, 1, 2, Vector2(-24, -h + 16 + i * TILE_SIZE), Vector2(1.5, 1.0))
 
 
 func _process(_delta: float) -> void:
@@ -74,15 +84,3 @@ func _on_warp_zone_body_exited(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		_player_on_top = false
 		_player_ref = null
-
-
-func _draw() -> void:
-	var h: float = pipe_height * TILE_SIZE
-	# Pipe head (wider lip)
-	draw_rect(Rect2(-32, -h, 64, 16), Palette.PIPE_GREEN_LIGHT)
-	draw_rect(Rect2(-32, -h, 8, 16), Palette.PIPE_GREEN)
-	draw_rect(Rect2(24, -h, 8, 16), Palette.PIPE_GREEN)
-	# Pipe body
-	draw_rect(Rect2(-24, -h + 16, 48, h - 16), Palette.PIPE_GREEN_LIGHT)
-	draw_rect(Rect2(-24, -h + 16, 8, h - 16), Palette.PIPE_GREEN)
-	draw_rect(Rect2(16, -h + 16, 8, h - 16), Palette.PIPE_GREEN)
