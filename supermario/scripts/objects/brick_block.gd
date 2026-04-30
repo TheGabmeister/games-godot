@@ -1,31 +1,29 @@
 extends "res://scripts/objects/block_base.gd"
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const SHEET := preload("res://sprites/blocks_sheet.png")
-const COLUMNS := 6
 
 @export var coin_count: int = 0
 @export var break_sound: AudioStream
 @export var coin_sound: AudioStream
 
 var _used: bool = false
-var _sprite: Sprite2D
+
+@onready var _sprite: AnimatedSprite2D = $Sprite
 
 
 func _ready() -> void:
 	super._ready()
-	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
-	_update_sprite()
+	_sprite.sprite_frames = FramesBuilder.build(SHEET, 6, {
+		&"active": {"frames": [4], "fps": 1.0, "loop": false},
+		&"used": {"frames": [5], "fps": 1.0, "loop": false},
+	})
+	_sprite.play(&"active")
 
 
 func _process(delta: float) -> void:
 	super._process(delta)
-	_update_sprite()
-
-
-func _update_sprite() -> void:
-	var frame := 5 if _used else 4
-	SpriteHelper.set_cell(_sprite, frame, COLUMNS, Vector2(-16, -26 + _bump_offset), Vector2(0.8, 0.8))
+	_sprite.position.y = -26 + _bump_offset
 
 
 func bump_from_below() -> void:
@@ -42,6 +40,7 @@ func bump_from_below() -> void:
 		EventBus.block_bumped.emit(global_position)
 		if coin_count == 0:
 			_used = true
+			_sprite.play(&"used")
 		return
 
 	if is_big:

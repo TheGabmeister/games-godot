@@ -16,3 +16,7 @@ item_config = ExtResource("2_item")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -7)
 shape = SubResource("RectangleShape2D_flower")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(-16, -30)
+centered = false

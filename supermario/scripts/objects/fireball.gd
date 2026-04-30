@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const SHEET := preload("res://sprites/fireball_sheet.png")
 const SPEED: float = 500.0
 const GRAVITY: float = 1200.0
@@ -9,25 +9,23 @@ const MAX_FALL: float = 800.0
 
 var _direction: float = 1.0
 var _alive: bool = true
-var _anim_time: float = 0.0
-var _sprite: Sprite2D
 
 @onready var _hitbox: Area2D = $Hitbox
+@onready var _sprite: AnimatedSprite2D = $Sprite
 
 
 func _ready() -> void:
 	_hitbox.area_entered.connect(_on_hitbox_area_entered)
 	velocity = Vector2(_direction * SPEED, 0.0)
-	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
-	SpriteHelper.set_cell(_sprite, 0, 4, Vector2(-16, -20), Vector2(0.5, 0.5))
+	_sprite.sprite_frames = FramesBuilder.build(SHEET, 4, {
+		&"spin": {"frames": [0, 1, 2, 3], "fps": 12.0},
+	})
+	_sprite.play(&"spin")
 
 
 func _physics_process(delta: float) -> void:
 	if not _alive:
 		return
-
-	_anim_time += delta
-	SpriteHelper.set_cell(_sprite, int(_anim_time * 12.0) % 4, 4, Vector2(-16, -20), Vector2(0.5, 0.5))
 
 	velocity.y = minf(velocity.y + GRAVITY * delta, MAX_FALL)
 	velocity.x = _direction * SPEED

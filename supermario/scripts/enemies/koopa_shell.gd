@@ -1,8 +1,7 @@
 extends CharacterBody2D
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
-const SHEET_COLUMNS := 4
-const SPRITE_OFFSET := Vector2(-16, -30)
+const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
+const SHEET := preload("res://sprites/koopa_shell_sheet.png")
 
 const GRAVITY := 1800.0
 const SHELL_SPEED := 600.0
@@ -21,12 +20,11 @@ var _is_dead: bool = false
 var _flip_dying: bool = false
 var _combo_count: int = 0
 var _kick_immune_timer: float = 0.0
-var _spin_cycle: float = 0.0
 
 @onready var _hitbox: Area2D = $Hitbox
 @onready var _damage_area: Area2D = $DamageArea
 @onready var _visuals: Node2D = $Visuals
-@onready var _sprite: Sprite2D = $Visuals/Sprite
+@onready var _sprite: AnimatedSprite2D = $Visuals/Sprite
 
 
 func _ready() -> void:
@@ -35,13 +33,22 @@ func _ready() -> void:
 	add_to_group("enemies")
 	_damage_area.area_entered.connect(_on_damage_area_entered)
 	_damage_area.monitoring = false
+	_sprite.sprite_frames = FramesBuilder.build(SHEET, 4, {
+		&"idle": {"frames": [0], "fps": 1.0, "loop": false},
+		&"spin": {"frames": [0, 1, 2, 3], "fps": 8.0},
+	})
+	_sprite.play(&"idle")
 
 
-func _process(delta: float) -> void:
-	if absf(velocity.x) > 5.0:
-		_spin_cycle += absf(velocity.x) * delta * 0.04
-	var frame := int(_spin_cycle * 8.0) % SHEET_COLUMNS
-	SpriteHelper.set_cell(_sprite, frame, SHEET_COLUMNS, SPRITE_OFFSET)
+func _process(_delta: float) -> void:
+	if shell_state == State.MOVING and absf(velocity.x) > 5.0:
+		if _sprite.animation != &"spin":
+			_sprite.play(&"spin")
+		_sprite.speed_scale = absf(velocity.x) * 0.04
+	else:
+		if _sprite.animation != &"idle":
+			_sprite.play(&"idle")
+		_sprite.speed_scale = 1.0
 
 
 func activate() -> void:
@@ -81,27 +88,24 @@ func stomp_kill() -> bool:
 	if _is_dead:
 		return false
 	if shell_state == State.MOVING:
-		# Freeze moving shell to idle
 		shell_state = State.IDLE
 		velocity.x = 0.0
 		direction = 0.0
 		_combo_count = 0
 		_damage_area.monitoring = false
 		_play_sound(stomp_sound)
-		return false  # No points for stopping a shell
+		return false
 	else:
-		# Stomp idle shell → kick it away from player
 		var players := get_tree().get_nodes_in_group("player")
 		if players.size() > 0:
 			var kick_dir := signf(global_position.x - players[0].global_position.x)
 			if kick_dir == 0.0:
 				kick_dir = 1.0
 			try_kick(kick_dir)
-		return false  # No points for kicking
+		return false
 
 
 func shell_kill() -> void:
-	# Killed by another moving shell
 	if _is_dead:
 		return
 	_is_dead = true
@@ -135,7 +139,6 @@ func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
 
-	# Kick immunity countdown
 	if _kick_immune_timer > 0.0:
 		_kick_immune_timer -= delta
 		if _kick_immune_timer <= 0.0:
@@ -159,17 +162,15 @@ func _on_damage_area_entered(area: Area2D) -> void:
 	if shell_state != State.MOVING:
 		return
 	if area == _hitbox:
-		return  # Self-detection
+		return
 	var enemy = area.get_parent()
 	if not is_instance_valid(enemy) or enemy == self:
 		return
 	if enemy.has_method("is_dead") and enemy.is_dead():
 		return
-	# Skip other moving shells
 	if enemy.has_method("try_kick") and enemy.has_method("is_dangerous"):
 		if enemy.is_dangerous():
 			return
-	# Kill the enemy
 	if enemy.has_method("shell_kill"):
 		enemy.shell_kill()
 	elif enemy.has_method("non_stomp_kill"):
@@ -187,7 +188,6 @@ func _award_combo_points(pos: Vector2) -> void:
 		var points: int = SHELL_COMBO_POINTS[_combo_count - 1]
 		GameManager.add_score(points, pos)
 	else:
-		# 1-UP
 		GameManager.earn_one_up()
 
 

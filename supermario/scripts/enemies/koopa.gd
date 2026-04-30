@@ -1,30 +1,25 @@
 extends "res://scripts/enemies/enemy_base.gd"
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
-const SHEET_COLUMNS := 3
-const SPRITE_OFFSET := Vector2(-16, -30)
+const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
+const SHEET := preload("res://sprites/koopa_sheet.png")
 const KoopaShellScene := preload("res://scenes/enemies/koopa_shell.tscn")
 
 @export var stomp_sound: AudioStream
 
-var _walk_cycle: float = 0.0
-
-@onready var _sprite: Sprite2D = $Visuals/Sprite
+@onready var _sprite: AnimatedSprite2D = $Visuals/Sprite
 
 
 func _ready() -> void:
 	super()
 	_enemy_type = &"koopa"
+	_sprite.sprite_frames = FramesBuilder.build(SHEET, 3, {
+		&"walk": {"frames": [0, 1], "fps": 8.0},
+	})
+	_sprite.play(&"walk")
 
 
-func _process(delta: float) -> void:
-	var is_moving := absf(velocity.x) > 5.0
-	if is_moving:
-		_walk_cycle += absf(velocity.x) * delta * 0.06
-	else:
-		_walk_cycle = 0.0
-	var frame := int(_walk_cycle * 8.0) % 2 if is_moving else 0
-	SpriteHelper.set_cell(_sprite, frame, SHEET_COLUMNS, SPRITE_OFFSET)
+func _process(_delta: float) -> void:
+	_sprite.speed_scale = absf(velocity.x) * 0.06 if absf(velocity.x) > 5.0 else 0.0
 
 
 func _physics_process(delta: float) -> void:
@@ -40,7 +35,6 @@ func stomp_kill() -> bool:
 	_play_sound(stomp_sound)
 	EventBus.enemy_stomped.emit(global_position)
 	CameraEffects.shake(2.0, 0.1)
-	# Spawn shell at this position
 	var shell := KoopaShellScene.instantiate()
 	shell.position = position
 	get_parent().add_child(shell)

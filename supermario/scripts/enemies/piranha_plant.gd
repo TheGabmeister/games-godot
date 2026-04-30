@@ -1,6 +1,6 @@
 extends Node2D
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const SHEET := preload("res://sprites/piranha_plant_sheet.png")
 const EMERGE_HEIGHT: float = 24.0
 const EMERGE_DURATION: float = 0.8
@@ -11,7 +11,7 @@ enum State { WAITING_BOTTOM, EMERGING, WAITING_TOP, RETRACTING }
 
 var _state: State = State.WAITING_BOTTOM
 var _timer: float = 0.0
-var _offset_y: float = 0.0  # 0 = hidden, -EMERGE_HEIGHT = fully emerged
+var _offset_y: float = 0.0
 var _is_active: bool = false
 var _is_dead: bool = false
 var _player_in_zone: bool = false
@@ -19,8 +19,7 @@ var _player_in_zone: bool = false
 @onready var _hitbox: Area2D = $Hitbox
 @onready var _hitbox_shape: CollisionShape2D = $Hitbox/HitboxShape
 @onready var _proximity_zone: Area2D = $ProximityZone
-
-var _sprite: Sprite2D
+@onready var _sprite: AnimatedSprite2D = $Sprite
 
 
 func _ready() -> void:
@@ -30,8 +29,9 @@ func _ready() -> void:
 	_hitbox_shape.position.y = 0.0
 	_proximity_zone.body_entered.connect(_on_proximity_body_entered)
 	_proximity_zone.body_exited.connect(_on_proximity_body_exited)
-	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
-	SpriteHelper.set_cell(_sprite, 0, 4, Vector2(-16, -30))
+	_sprite.sprite_frames = FramesBuilder.build(SHEET, 4, {
+		&"emerge": {"frames": [0, 1, 2, 3], "fps": 1.0, "loop": false},
+	})
 
 
 func activate() -> void:
@@ -96,7 +96,7 @@ func _physics_process(delta: float) -> void:
 					_state = State.EMERGING
 					_timer = 0.0
 				else:
-					_timer = 0.0  # keep waiting
+					_timer = 0.0
 
 		State.EMERGING:
 			var t: float = minf(_timer / EMERGE_DURATION, 1.0)
@@ -118,12 +118,13 @@ func _physics_process(delta: float) -> void:
 				_state = State.WAITING_BOTTOM
 				_timer = 0.0
 
-	# Update hitbox — disable when fully retracted
 	var is_visible: bool = _state != State.WAITING_BOTTOM
 	_hitbox_shape.set_deferred("disabled", not is_visible)
 	_hitbox_shape.position.y = _offset_y - 8.0
 
-	_update_sprite()
+	_sprite.visible = _is_active and not _is_dead and is_visible
+	_sprite.position.y = -30 + _offset_y
+	_sprite.frame = clampi(roundi(absf(_offset_y) / 8.0), 0, 3)
 
 
 func _on_proximity_body_entered(_body: Node2D) -> void:
@@ -132,11 +133,3 @@ func _on_proximity_body_entered(_body: Node2D) -> void:
 
 func _on_proximity_body_exited(_body: Node2D) -> void:
 	_player_in_zone = false
-
-
-func _update_sprite() -> void:
-	if _sprite == null:
-		return
-	_sprite.visible = _is_active and not _is_dead and _state != State.WAITING_BOTTOM
-	var frame := clampi(roundi(absf(_offset_y) / 8.0), 0, 3)
-	SpriteHelper.set_cell(_sprite, frame, 4, Vector2(-16, -30 + _offset_y))

@@ -1,8 +1,7 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/mushroom.gd" id="1_mushroom"]
 [ext_resource type="Resource" path="res://resources/config/item_default.tres" id="3_item"]
-[ext_resource type="Texture2D" path="res://sprites/powerups_sheet.png" id="2_sheet"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(12, 14)
@@ -21,12 +20,9 @@ item_config = ExtResource("3_item")
 position = Vector2(0, -7)
 shape = SubResource("RectangleShape2D_body")
 
-[node name="Sprite" type="Sprite2D" parent="."]
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(-16, -30)
-texture = ExtResource("2_sheet")
 centered = false
-region_enabled = true
-region_rect = Rect2(0, 0, 32, 32)
 
 [node name="Hurtbox" type="Area2D" parent="."]
 collision_layer = 32

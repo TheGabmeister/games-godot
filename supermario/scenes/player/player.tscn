@@ -1,10 +1,9 @@
-[gd_scene load_steps=26 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Resource" path="res://resources/config/player_movement_default.tres" id="10_movement"]
 [ext_resource type="Resource" path="res://resources/config/camera_default.tres" id="11_camera"]
 [ext_resource type="Resource" path="res://resources/config/effects_default.tres" id="16_effects"]
-[ext_resource type="Texture2D" path="res://sprites/player_sheet.png" id="2_sheet"]
 [ext_resource type="Script" path="res://scripts/player/state_machine.gd" id="3_sm"]
 [ext_resource type="Script" path="res://scripts/player/player_states/idle_state.gd" id="4_idle"]
 [ext_resource type="Script" path="res://scripts/player/player_states/run_state.gd" id="5_run"]
@@ -56,12 +55,9 @@ shape = SubResource("RectangleShape2D_col")
 [node name="Visuals" type="Node2D" parent="."]
 scale = Vector2(2, 2)
 
-[node name="Sprite" type="Sprite2D" parent="Visuals"]
+[node name="Sprite" type="AnimatedSprite2D" parent="Visuals"]
 position = Vector2(-16, -30)
-texture = ExtResource("2_sheet")
 centered = false
-region_enabled = true
-region_rect = Rect2(0, 0, 32, 32)
 
 [node name="StateMachine" type="Node" parent="."]
 script = ExtResource("3_sm")

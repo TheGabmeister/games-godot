@@ -1,6 +1,6 @@
 extends "res://scripts/objects/block_base.gd"
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const SHEET := preload("res://sprites/blocks_sheet.png")
 const MushroomScene := preload("res://scenes/objects/mushroom.tscn")
 
@@ -8,29 +8,25 @@ const MushroomScene := preload("res://scenes/objects/mushroom.tscn")
 @export var coin_sound: AudioStream
 
 var _revealed: bool = false
-var _sprite: Sprite2D
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var trigger_area: Area2D = $TriggerArea
+@onready var _sprite: AnimatedSprite2D = $Sprite
 
 
 func _ready() -> void:
 	super._ready()
 	collision_shape.disabled = true
 	trigger_area.body_entered.connect(_on_body_entered)
-	_sprite = SpriteHelper.ensure_sprite(self, &"Sprite", SHEET)
+	_sprite.sprite_frames = FramesBuilder.build(SHEET, 6, {
+		&"used": {"frames": [3], "fps": 1.0, "loop": false},
+	})
 	_sprite.visible = false
-	_update_sprite()
 
 
 func _process(delta: float) -> void:
 	super._process(delta)
-	_update_sprite()
-
-
-func _update_sprite() -> void:
-	_sprite.visible = _revealed
-	SpriteHelper.set_cell(_sprite, 3, 6, Vector2(-16, -26 + _bump_offset), Vector2(0.8, 0.8))
+	_sprite.position.y = -26 + _bump_offset
 
 
 func _on_body_entered(body: Node2D) -> void:
@@ -47,6 +43,8 @@ func _reveal_and_bump() -> void:
 	_revealed = true
 	collision_shape.set_deferred("disabled", false)
 	trigger_area.set_deferred("monitoring", false)
+	_sprite.visible = true
+	_sprite.play(&"used")
 	start_bump()
 	play_bump_sound()
 	EventBus.block_bumped.emit(global_position)

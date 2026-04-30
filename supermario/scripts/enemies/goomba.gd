@@ -1,30 +1,30 @@
 extends "res://scripts/enemies/enemy_base.gd"
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
-const SHEET_COLUMNS := 3
-const SPRITE_OFFSET := Vector2(-16, -30)
+const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
+const SHEET := preload("res://sprites/goomba_sheet.png")
 const SQUISH_DURATION := 0.5
 
 @export var stomp_sound: AudioStream
 
 var _squish_dying: bool = false
 var _squish_timer: float = 0.0
-var _walk_cycle: float = 0.0
 
-@onready var _sprite: Sprite2D = $Visuals/Sprite
+@onready var _sprite: AnimatedSprite2D = $Visuals/Sprite
 
 
 func _ready() -> void:
 	super()
 	_enemy_type = &"goomba"
+	_sprite.sprite_frames = FramesBuilder.build(SHEET, 3, {
+		&"walk": {"frames": [0, 1], "fps": 8.0},
+		&"squished": {"frames": [2], "fps": 1.0, "loop": false},
+	})
+	_sprite.play(&"walk")
 
 
-func _process(delta: float) -> void:
-	if absf(velocity.x) > 5.0:
-		_walk_cycle += absf(velocity.x) * delta * 0.06
-	else:
-		_walk_cycle = 0.0
-	_update_sprite()
+func _process(_delta: float) -> void:
+	if not _squish_dying:
+		_sprite.speed_scale = absf(velocity.x) * 0.06 if absf(velocity.x) > 5.0 else 0.0
 
 
 func _physics_process(delta: float) -> void:
@@ -52,12 +52,7 @@ func _start_squish_death() -> void:
 	_disable_all_collision()
 	velocity = Vector2.ZERO
 	_squish_timer = SQUISH_DURATION
-	_update_sprite()
-
-
-func _update_sprite() -> void:
-	var frame := 2 if _squish_dying else int(_walk_cycle * 8.0) % 2
-	SpriteHelper.set_cell(_sprite, frame, SHEET_COLUMNS, SPRITE_OFFSET)
+	_sprite.play(&"squished")
 
 
 func _play_sound(sound: AudioStream) -> void:

@@ -1,33 +1,32 @@
 extends CharacterBody2D
 
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
 const EmergeHelper := preload("res://scripts/objects/emerge_helper.gd")
-const SHEET_COLUMNS := 5
-const SPRITE_OFFSET := Vector2(-16, -30)
+const SHEET := preload("res://sprites/powerups_sheet.png")
 
 @export var item_config: Resource  # ItemConfig
 
 var _direction: float = 1.0
 var _emerge := EmergeHelper.new()
 var _collected: bool = false
-var _is_one_up: bool = false
 
 @onready var hurtbox: Area2D = $Hurtbox
-@onready var _sprite: Sprite2D = $Sprite
+@onready var _sprite: AnimatedSprite2D = $Sprite
 
 
 func _ready() -> void:
-	# Emerge start position is captured lazily by EmergeHelper on the first
-	# physics tick. _ready() fires synchronously inside the spawner's
-	# add_child(), BEFORE the spawner sets global_position.
 	set_collision_layer_value(1, false)
 	set_collision_mask_value(1, false)
 	hurtbox.body_entered.connect(_on_body_entered)
+	_sprite.sprite_frames = FramesBuilder.build(SHEET, 5, {
+		&"red": {"frames": [0], "fps": 1.0, "loop": false},
+		&"1up": {"frames": [1], "fps": 1.0, "loop": false},
+	})
+	_sprite.play(&"red")
 
 
 func set_one_up(value: bool) -> void:
-	_is_one_up = value
-	SpriteHelper.set_cell(_sprite, 1 if _is_one_up else 0, SHEET_COLUMNS, SPRITE_OFFSET)
+	_sprite.play(&"1up" if value else &"red")
 
 
 func _physics_process(delta: float) -> void:

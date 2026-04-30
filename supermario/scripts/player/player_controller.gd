@@ -3,14 +3,13 @@ extends CharacterBody2D
 const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000]
 const FireballScene := preload("res://scenes/objects/fireball.tscn")
 const StateIds := preload("res://scripts/player/player_state_ids.gd")
-const SpriteHelper := preload("res://scripts/visuals/sprite_region_helper.gd")
+const FramesBuilder := preload("res://scripts/visuals/sprite_frames_builder.gd")
+const SHEET := preload("res://sprites/player_sheet.png")
 
 const STAR_POWER_DURATION: float = 10.0
 const STAR_WARNING_TIME: float = 2.0
 const MAX_FIREBALLS: int = 2
 const VISUAL_SCALE: float = 2.0
-const SHEET_COLUMNS := 6
-const SPRITE_OFFSET := Vector2(-16, -30)
 
 @export var movement: Resource  # PlayerMovementConfig
 @export var effects: Resource  # EffectsConfig
@@ -45,12 +44,11 @@ var _active_fireballs: int = 0
 # flicker animation so the sprite alternates between Small and Big frames while
 # the actual power transition is locked in.
 var displayed_power_state: int = 0
-var _walk_cycle: float = 0.0
 var _star_cycle: float = 0.0
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var visuals: Node2D = $Visuals
-@onready var _sprite: Sprite2D = $Visuals/Sprite
+@onready var _sprite: AnimatedSprite2D = $Visuals/Sprite
 @onready var state_machine: Node = $StateMachine
 @onready var camera: Camera2D = $Camera2D
 @onready var stomp_detector: Area2D = $StompDetector
@@ -63,6 +61,22 @@ func _ready() -> void:
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
 	EventBus.player_powered_up.connect(_on_player_powered_up)
 	EventBus.player_damaged.connect(_on_player_damaged)
+	_sprite.sprite_frames = FramesBuilder.build(SHEET, 6, {
+		&"small_idle": {"frames": [0], "fps": 1.0, "loop": false},
+		&"small_walk": {"frames": [1, 2], "fps": 8.0},
+		&"small_jump": {"frames": [3], "fps": 1.0, "loop": false},
+		&"small_death": {"frames": [4], "fps": 1.0, "loop": false},
+		&"big_idle": {"frames": [5], "fps": 1.0, "loop": false},
+		&"big_walk": {"frames": [6, 7], "fps": 8.0},
+		&"big_jump": {"frames": [8], "fps": 1.0, "loop": false},
+		&"big_crouch": {"frames": [9], "fps": 1.0, "loop": false},
+		&"big_flag": {"frames": [10], "fps": 1.0, "loop": false},
+		&"fire_idle": {"frames": [11], "fps": 1.0, "loop": false},
+		&"fire_walk": {"frames": [12, 13], "fps": 8.0},
+		&"fire_jump": {"frames": [14], "fps": 1.0, "loop": false},
+		&"fire_crouch": {"frames": [15], "fps": 1.0, "loop": false},
+		&"fire_flag": {"frames": [16], "fps": 1.0, "loop": false},
+	})
 	# Sync collision size with the current GameManager power state. Required
 	# because power is preserved across level transitions (e.g., finishing 1-1
 	# as Fire Mario should spawn Fire Mario in 1-2), but the scene file bakes
@@ -331,45 +345,49 @@ func _end_star_power() -> void:
 # --- Sprite Animation ---
 
 func _update_sprite_frame(delta: float) -> void:
-	var is_moving := absf(velocity.x) > 10.0
-	if is_moving:
-		_walk_cycle += absf(velocity.x) * delta * 0.05
-	else:
-		_walk_cycle = 0.0
-
 	if _is_star_powered:
 		_star_cycle += delta * 8.0
 		_sprite.modulate = _star_color()
 	else:
 		_sprite.modulate = Color.WHITE
 
-	SpriteHelper.set_cell(_sprite, _get_frame_index(is_moving), SHEET_COLUMNS, SPRITE_OFFSET)
+	var anim := _get_animation_name()
+	if _sprite.animation != anim:
+		_sprite.play(anim)
+
+	if anim.ends_with("_walk"):
+		_sprite.speed_scale = absf(velocity.x) * 0.05
+	else:
+		_sprite.speed_scale = 1.0
 
 
-func _get_frame_index(is_moving: bool) -> int:
+func _get_animation_name() -> StringName:
+	var prefix: String
+	match displayed_power_state:
+		GameManager.PowerState.SMALL:
+			prefix = "small"
+		GameManager.PowerState.FIRE:
+			prefix = "fire"
+		_:
+			prefix = "big"
+
 	var current_state: Node = state_machine.current_state
 	var state_name: StringName = current_state.name if current_state else &""
-	var power_state := displayed_power_state
 
-	if power_state == GameManager.PowerState.SMALL:
-		if state_name == StateIds.DEATH:
-			return 4
-		if state_name == StateIds.JUMP or state_name == StateIds.FALL:
-			return 3
-		if is_moving:
-			return 1 + (int(_walk_cycle * 8.0) % 2)
-		return 0
+	if state_name == StateIds.DEATH:
+		return &"small_death"
 
-	var base := 11 if power_state == GameManager.PowerState.FIRE else 5
-	if _is_crouching:
-		return base + 4
-	if state_name == StateIds.FLAGPOLE:
-		return base + 5
+	if prefix != "small":
+		if _is_crouching:
+			return StringName(prefix + "_crouch")
+		if state_name == StateIds.FLAGPOLE:
+			return StringName(prefix + "_flag")
+
 	if state_name == StateIds.JUMP or state_name == StateIds.FALL:
-		return base + 3
-	if is_moving:
-		return base + 1 + (int(_walk_cycle * 8.0) % 2)
-	return base
+		return StringName(prefix + "_jump")
+	if absf(velocity.x) > 10.0:
+		return StringName(prefix + "_walk")
+	return StringName(prefix + "_idle")
 
 
 func _star_color() -> Color:
