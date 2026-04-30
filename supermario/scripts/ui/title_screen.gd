@@ -19,7 +19,7 @@ func _process(delta: float) -> void:
 
 	if not _ready_for_input:
 		return
-	if Input.is_action_just_pressed(&"jump") or Input.is_action_just_pressed(&"pause"):
+	if Input.is_action_just_pressed(&"start") or Input.is_action_just_pressed(&"jump") or Input.is_action_just_pressed(&"pause"):
 		_start_game()
 
 

@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://wyxy0cynt2mu"]
 
 [ext_resource type="Script" uid="uid://bmtm45l8dnhcn" path="res://scripts/level/level_base.gd" id="1_level"]
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="Script" uid="uid://b3e14k2o5frpw" path="res://scripts/level/kill_zone.gd" id="3_killzone"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://scenes/objects/question_block.tscn" id="6_qblock"]
@@ -288,7 +287,7 @@ collision_mask = 0
 [node name="BoundsShape" type="CollisionShape2D" parent="LevelBounds" unique_id=430782478]
 shape = SubResource("RectangleShape2D_bounds")
 
-[node name="Player" parent="." unique_id=1309786246 instance=ExtResource("2_player")]
+[node name="PlayerStart" type="Marker2D" parent="."]
 position = Vector2(96, 384)
 
 [node name="HUD" parent="." unique_id=1262654791 instance=ExtResource("5_hud")]

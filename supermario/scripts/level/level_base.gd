@@ -3,18 +3,31 @@ extends Node2D
 const TILE_SIZE := 32
 const LEVEL_HEIGHT := 14  # tiles
 
+const _player_scene := preload("res://scenes/player/player.tscn")
+
 @export var level_width_tiles: int = 212
 @export var level_music: AudioStream
 
-@onready var player: CharacterBody2D = $Player
-@onready var camera: Camera2D
+var player: CharacterBody2D
+var camera: Camera2D
 
 
 func _ready() -> void:
 	EventBus.level_started.connect(_on_level_started)
 	EventBus.level_music_requested.connect(_request_level_music)
+	_spawn_player()
 	camera = player.get_node("Camera2D") as Camera2D
 	_setup_camera()
+
+
+func _spawn_player() -> void:
+	var start := get_node_or_null("PlayerStart") as Marker2D
+	player = _player_scene.instantiate()
+	if start:
+		player.position = start.position
+	else:
+		push_warning("No PlayerStart found — spawning player at scene origin")
+	add_child(player)
 
 
 func _on_level_started(_world: int, _level: int) -> void:
