@@ -18,15 +18,15 @@ func _ready() -> void:
 func _on_score_awarded(points: int, pos: Vector2) -> void:
 	if pos == Vector2.ZERO:
 		return
-	var popup := _spawn_effect(ScorePopupScript, pos + Vector2(0, -8), 5)
+	var popup := _spawn_effect(ScorePopupScript, pos + Vector2(0, -16), 5)
 	popup.setup(points, effects_config)
 
 
 func _on_block_broken(pos: Vector2) -> void:
 	for i in 4:
-		var particle := _spawn_effect(BrickParticle, pos + Vector2(0, -8), 4)
+		var particle := _spawn_effect(BrickParticle, pos + Vector2(0, -16), 4)
 		var angle: float = -PI * 0.25 - PI * 0.5 * (float(i) / 3.0)
-		var speed: float = 120.0 + randf() * 60.0
+		var speed: float = 240.0 + randf() * 120.0
 		particle.setup(Vector2(cos(angle) * speed, sin(angle) * speed))
 
 

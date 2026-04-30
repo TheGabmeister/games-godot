@@ -1,8 +1,8 @@
 extends "res://scripts/player/player_states/player_state.gd"
 
-const SLIDE_SPEED: float = 120.0
-const WALK_SPEED: float = 60.0
-const CASTLE_OFFSET: float = 80.0  # walk distance past flagpole to castle
+const SLIDE_SPEED: float = 240.0
+const WALK_SPEED: float = 120.0
+const CASTLE_OFFSET: float = 160.0  # walk distance past flagpole to castle
 
 var _flagpole: Node2D
 var _phase: int = 0  # 0=slide_down, 1=pause, 2=walk_to_castle
@@ -22,8 +22,8 @@ func enter() -> void:
 	player.hurtbox.set_deferred("monitorable", false)
 
 	# Snap to pole
-	player.global_position.x = _flagpole.get_pole_x() + 6.0
-	player.visuals.scale.x = -1.0  # face left (toward pole)
+	player.global_position.x = _flagpole.get_pole_x() + 12.0
+	player.visuals.scale = Vector2(-2.0, 2.0)  # face left (toward pole)
 
 	_target_x = _flagpole.global_position.x + CASTLE_OFFSET
 
@@ -49,8 +49,8 @@ func process_frame(delta: float) -> void:
 				_phase = 1
 				_timer = 0.0
 				# Face right toward castle
-				player.visuals.scale.x = 1.0
-				player.global_position.x = _flagpole.global_position.x + 8.0
+				player.visuals.scale = Vector2(2.0, 2.0)
+				player.global_position.x = _flagpole.global_position.x + 16.0
 
 		1:  # Brief pause
 			_timer += delta

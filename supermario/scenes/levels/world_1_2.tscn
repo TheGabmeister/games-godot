@@ -20,10 +20,10 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/level_complete.tscn" id="21_complete"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_killzone"]
-size = Vector2(2720, 32)
+size = Vector2(5440, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bounds"]
-size = Vector2(16, 448)
+size = Vector2(32, 896)
 
 [sub_resource type="Environment" id="Environment_bloom"]
 background_mode = 3
@@ -50,135 +50,135 @@ mouse_filter = 2
 
 ; --- Early section: intro blocks ---
 [node name="Brick_10_8" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(168, 144)
+position = Vector2(336, 288)
 
 [node name="QBlock_11_8" parent="Blocks" instance=ExtResource("6_qblock")]
-position = Vector2(184, 144)
+position = Vector2(368, 288)
 contents = &"mushroom"
 
 [node name="Brick_12_8" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(200, 144)
+position = Vector2(400, 288)
 
 [node name="Brick_13_8" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(216, 144)
+position = Vector2(432, 288)
 
 ; --- Platform section blocks ---
 [node name="QBlock_25_7" parent="Blocks" instance=ExtResource("6_qblock")]
-position = Vector2(408, 120)
+position = Vector2(816, 240)
 
 [node name="Brick_35_5" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(568, 88)
+position = Vector2(1136, 176)
 
 [node name="QBlock_36_5" parent="Blocks" instance=ExtResource("6_qblock")]
-position = Vector2(584, 88)
+position = Vector2(1168, 176)
 contents = &"fire_flower"
 
 [node name="Brick_37_5" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(600, 88)
+position = Vector2(1200, 176)
 
 ; --- Mid section ---
 [node name="Brick_70_8" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(1128, 144)
+position = Vector2(2256, 288)
 
 [node name="Brick_71_8" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(1144, 144)
+position = Vector2(2288, 288)
 
 [node name="QBlock_72_8" parent="Blocks" instance=ExtResource("6_qblock")]
-position = Vector2(1160, 144)
+position = Vector2(2320, 288)
 
 [node name="Brick_73_8" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(1176, 144)
+position = Vector2(2352, 288)
 
 [node name="MultiCoin_75_8" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(1208, 144)
+position = Vector2(2416, 288)
 coin_count = 8
 
 ; --- Late section ---
 [node name="QBlock_120_7" parent="Blocks" instance=ExtResource("6_qblock")]
-position = Vector2(1928, 120)
+position = Vector2(3856, 240)
 contents = &"mushroom"
 
 [node name="Brick_125_8" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(2008, 144)
+position = Vector2(4016, 288)
 
 [node name="Brick_126_8" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(2024, 144)
+position = Vector2(4048, 288)
 
 [node name="Brick_127_8" parent="Blocks" instance=ExtResource("7_brick")]
-position = Vector2(2040, 144)
+position = Vector2(4080, 288)
 
 [node name="Pipes" type="Node2D" parent="."]
 
 [node name="Pipe_entry" parent="Pipes" instance=ExtResource("15_pipe")]
-position = Vector2(48, 192)
+position = Vector2(96, 384)
 
 [node name="Coins" type="Node2D" parent="."]
 
 [node name="Coin_22_7a" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(360, 120)
+position = Vector2(720, 240)
 
 [node name="Coin_22_7b" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(376, 120)
+position = Vector2(752, 240)
 
 [node name="Coin_22_7c" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(392, 120)
+position = Vector2(784, 240)
 
 [node name="Coin_55_5a" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(888, 88)
+position = Vector2(1776, 176)
 
 [node name="Coin_55_5b" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(904, 88)
+position = Vector2(1808, 176)
 
 [node name="Coin_55_5c" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(920, 88)
+position = Vector2(1840, 176)
 
 [node name="Coin_85_7a" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(1368, 120)
+position = Vector2(2736, 240)
 
 [node name="Coin_85_7b" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(1384, 120)
+position = Vector2(2768, 240)
 
 [node name="Coin_115_5a" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(1848, 88)
+position = Vector2(3696, 176)
 
 [node name="Coin_115_5b" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(1864, 88)
+position = Vector2(3728, 176)
 
 [node name="Coin_115_5c" parent="Coins" instance=ExtResource("8_coin")]
-position = Vector2(1880, 88)
+position = Vector2(3760, 176)
 
 [node name="Enemies" type="Node2D" parent="."]
 script = ExtResource("12_spawner")
 
 [node name="Goomba_15" parent="Enemies" instance=ExtResource("10_goomba")]
-position = Vector2(248, 192)
+position = Vector2(496, 384)
 
 [node name="Goomba_30a" parent="Enemies" instance=ExtResource("10_goomba")]
-position = Vector2(488, 192)
+position = Vector2(976, 384)
 
 [node name="Goomba_30b" parent="Enemies" instance=ExtResource("10_goomba")]
-position = Vector2(520, 192)
+position = Vector2(1040, 384)
 
 [node name="Koopa_45" parent="Enemies" instance=ExtResource("11_koopa")]
-position = Vector2(728, 192)
+position = Vector2(1456, 384)
 
 [node name="Goomba_60a" parent="Enemies" instance=ExtResource("10_goomba")]
-position = Vector2(968, 192)
+position = Vector2(1936, 384)
 
 [node name="Goomba_60b" parent="Enemies" instance=ExtResource("10_goomba")]
-position = Vector2(1000, 192)
+position = Vector2(2000, 384)
 
 [node name="Goomba_90" parent="Enemies" instance=ExtResource("10_goomba")]
-position = Vector2(1448, 192)
+position = Vector2(2896, 384)
 
 [node name="Koopa_105" parent="Enemies" instance=ExtResource("11_koopa")]
-position = Vector2(1688, 192)
+position = Vector2(3376, 384)
 
 [node name="Goomba_130a" parent="Enemies" instance=ExtResource("10_goomba")]
-position = Vector2(2088, 192)
+position = Vector2(4176, 384)
 
 [node name="Goomba_130b" parent="Enemies" instance=ExtResource("10_goomba")]
-position = Vector2(2120, 192)
+position = Vector2(4240, 384)
 
 [node name="Effects" type="Node2D" parent="."]
 script = ExtResource("13_effects")
@@ -187,27 +187,27 @@ effects_config = ExtResource("14_fx_config")
 [node name="Interactables" type="Node2D" parent="."]
 
 [node name="Flagpole" parent="Interactables" instance=ExtResource("16_flagpole")]
-position = Vector2(2600, 192)
+position = Vector2(5200, 384)
 
 [node name="Castle" parent="Interactables" instance=ExtResource("17_castle")]
-position = Vector2(2672, 192)
+position = Vector2(5344, 384)
 
 [node name="KillZone" type="Area2D" parent="."]
-position = Vector2(1360, 256)
+position = Vector2(2720, 512)
 script = ExtResource("3_killzone")
 
 [node name="KillShape" type="CollisionShape2D" parent="KillZone"]
 shape = SubResource("RectangleShape2D_killzone")
 
 [node name="LevelBounds" type="StaticBody2D" parent="."]
-position = Vector2(-8, 112)
+position = Vector2(-16, 224)
 collision_mask = 0
 
 [node name="BoundsShape" type="CollisionShape2D" parent="LevelBounds"]
 shape = SubResource("RectangleShape2D_bounds")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector2(80, 192)
+position = Vector2(160, 384)
 
 [node name="HUD" parent="." instance=ExtResource("5_hud")]
 

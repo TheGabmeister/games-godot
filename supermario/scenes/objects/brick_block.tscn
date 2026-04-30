@@ -10,6 +10,7 @@
 size = Vector2(16, 16)
 
 [node name="BrickBlock" type="StaticBody2D"]
+scale = Vector2(2, 2)
 script = ExtResource("1_brick")
 bump_config = ExtResource("2_bump")
 bump_sound = ExtResource("3_bump_sfx")

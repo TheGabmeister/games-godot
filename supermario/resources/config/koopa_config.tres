@@ -4,5 +4,5 @@
 
 [resource]
 script = ExtResource("1_script")
-patrol_speed = 35.0
-gravity = 900.0
+patrol_speed = 70.0
+gravity = 1800.0

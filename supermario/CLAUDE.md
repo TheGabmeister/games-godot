@@ -187,7 +187,7 @@ var polygon := PackedVector2Array([
 ])
 ```
 
-Using `(0, 0)` to `(TILE_SIZE, TILE_SIZE)` shifts the collision 8 px right and
+Using `(0, 0)` to `(TILE_SIZE, TILE_SIZE)` shifts the collision 16 px right and
 down from the visual.
 
 ### Shared Sub-Resources in Instanced Scenes

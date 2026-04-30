@@ -36,7 +36,7 @@ func bump_from_below() -> void:
 		start_bump()
 		coin_count -= 1
 		_play_sound(coin_sound)
-		GameManager.add_coin(global_position + Vector2(0, -16))
+		GameManager.add_coin(global_position + Vector2(0, -32))
 		play_bump_sound()
 		EventBus.block_bumped.emit(global_position)
 		if coin_count == 0:

@@ -9,6 +9,7 @@ size = Vector2(14, 20)
 size = Vector2(64, 32)
 
 [node name="PiranhaPlant" type="Node2D"]
+scale = Vector2(2, 2)
 script = ExtResource("1_piranha")
 
 [node name="Hitbox" type="Area2D" parent="."]

@@ -83,7 +83,7 @@ func _start_flip_death() -> void:
 	_flip_dying = true
 	_disable_all_collision()
 	_visuals.scale.y = -1
-	velocity = Vector2(velocity.x * 0.5, -200.0)
+	velocity = Vector2(velocity.x * 0.5, -400.0)
 
 
 func _disable_all_collision() -> void:
@@ -96,7 +96,7 @@ func _disable_all_collision() -> void:
 func _process_flip_death(delta: float) -> void:
 	velocity.y += config.gravity * delta
 	global_position += velocity * delta
-	if global_position.y > 500.0:
+	if global_position.y > 1000.0:
 		call_deferred("queue_free")
 
 

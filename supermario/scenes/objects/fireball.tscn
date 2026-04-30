@@ -9,6 +9,7 @@ size = Vector2(6, 6)
 size = Vector2(8, 8)
 
 [node name="Fireball" type="CharacterBody2D"]
+scale = Vector2(2, 2)
 collision_layer = 0
 collision_mask = 1
 script = ExtResource("1_fireball")

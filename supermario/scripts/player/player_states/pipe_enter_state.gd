@@ -27,7 +27,7 @@ func enter() -> void:
 	var entry_x: float = _pipe.global_position.x
 	player.global_position.x = entry_x
 
-	var slide_target := player.global_position + Vector2(0, 32)
+	var slide_target := player.global_position + Vector2(0, 64)
 	var tween := player.create_tween()
 	tween.tween_property(player, "global_position", slide_target, 0.5)
 	tween.tween_callback(_start_fade)
@@ -61,8 +61,8 @@ func _reposition() -> void:
 	if _target_pipe.has_method("get_exit_position"):
 		exit_pos = _target_pipe.get_exit_position()
 	else:
-		exit_pos = _target_pipe.global_position + Vector2(0, -32)
-	player.global_position = exit_pos + Vector2(0, 32)
+		exit_pos = _target_pipe.global_position + Vector2(0, -64)
+	player.global_position = exit_pos + Vector2(0, 64)
 
 	# Reset camera position to prevent jarring snap
 	player.camera.reset_smoothing()

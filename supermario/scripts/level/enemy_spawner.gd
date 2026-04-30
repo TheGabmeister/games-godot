@@ -1,7 +1,7 @@
 extends Node2D
 
-@export var activation_distance: float = 320.0
-@export var cleanup_distance: float = 320.0
+@export var activation_distance: float = 640.0
+@export var cleanup_distance: float = 640.0
 
 
 func _process(_delta: float) -> void:

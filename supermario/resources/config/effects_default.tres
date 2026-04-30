@@ -4,9 +4,9 @@
 
 [resource]
 script = ExtResource("1_script")
-score_popup_rise_speed = 40.0
+score_popup_rise_speed = 80.0
 score_popup_duration = 0.5
 damage_flash_duration = 0.1
-motion_trail_spacing = 4.0
+motion_trail_spacing = 8.0
 grow_shrink_duration = 0.8
 grow_flicker_rate = 10.0

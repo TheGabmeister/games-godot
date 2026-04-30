@@ -21,7 +21,7 @@ func enter() -> void:
 	var ring := Node2D.new()
 	ring.set_script(PowerUpEffect)
 	ring.process_mode = Node.PROCESS_MODE_ALWAYS
-	ring.global_position = player.global_position + Vector2(0, -8)
+	ring.global_position = player.global_position + Vector2(0, -16)
 	ring.z_index = 5
 	player.get_parent().add_child(ring)
 

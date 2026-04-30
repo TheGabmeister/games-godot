@@ -1,7 +1,7 @@
 extends Node2D
 
-const POLE_HEIGHT: float = 160.0  # 10 tiles
-const BALL_RADIUS: float = 4.0
+const POLE_HEIGHT: float = 320.0  # 10 tiles
+const BALL_RADIUS: float = 8.0
 
 @export var flagpole_sound: AudioStream
 
@@ -29,7 +29,7 @@ func get_pole_x() -> float:
 
 func slide_flag_to_bottom() -> void:
 	var tween := create_tween()
-	tween.tween_property(self, "_flag_offset_y", POLE_HEIGHT - 16.0, 0.8)
+	tween.tween_property(self, "_flag_offset_y", POLE_HEIGHT - 32.0, 0.8)
 
 
 func get_height_ratio(grab_y: float) -> float:
@@ -59,7 +59,7 @@ func _on_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
 	_triggered = true
-	var grab_y: float = body.global_position.y - 8.0  # approximate center
+	var grab_y: float = body.global_position.y - 16.0  # approximate center
 	var height_ratio: float = get_height_ratio(grab_y)
 	var bonus: int = get_height_bonus(height_ratio)
 
@@ -84,16 +84,16 @@ func _play_sound(sound: AudioStream) -> void:
 
 func _draw() -> void:
 	# Pole
-	draw_rect(Rect2(-2, -POLE_HEIGHT, 4, POLE_HEIGHT), Color(0.6, 0.6, 0.6))
+	draw_rect(Rect2(-4, -POLE_HEIGHT, 8, POLE_HEIGHT), Color(0.6, 0.6, 0.6))
 	# Ball on top
 	draw_circle(Vector2(0, -POLE_HEIGHT), BALL_RADIUS, Palette.STAR_YELLOW)
 	# Flag (triangle)
-	var flag_y: float = -POLE_HEIGHT + 8.0 + _flag_offset_y
+	var flag_y: float = -POLE_HEIGHT + 16.0 + _flag_offset_y
 	var flag_points := PackedVector2Array([
-		Vector2(-2, flag_y),
-		Vector2(-18, flag_y + 8),
-		Vector2(-2, flag_y + 16),
+		Vector2(-4, flag_y),
+		Vector2(-36, flag_y + 16),
+		Vector2(-4, flag_y + 32),
 	])
 	draw_colored_polygon(flag_points, Color(0.1, 0.7, 0.15))
 	# Base block
-	draw_rect(Rect2(-8, -8, 16, 8), Palette.GROUND_GREEN)
+	draw_rect(Rect2(-16, -16, 32, 16), Palette.GROUND_GREEN)

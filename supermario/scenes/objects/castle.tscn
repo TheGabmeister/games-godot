@@ -3,4 +3,5 @@
 [ext_resource type="Script" path="res://scripts/objects/castle.gd" id="1_castle"]
 
 [node name="Castle" type="Node2D"]
+scale = Vector2(2, 2)
 script = ExtResource("1_castle")

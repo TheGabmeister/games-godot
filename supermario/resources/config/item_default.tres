@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_script")
-mushroom_speed = 60.0
-mushroom_gravity = 600.0
-emerge_height = 16.0
+mushroom_speed = 120.0
+mushroom_gravity = 1200.0
+emerge_height = 32.0
 emerge_duration = 0.4

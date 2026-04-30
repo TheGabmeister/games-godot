@@ -4,7 +4,7 @@
 [ext_resource type="AudioStream" path="res://audio/sfx/flagpole.wav" id="2_flagpole_sfx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_detect"]
-size = Vector2(16, 160)
+size = Vector2(32, 320)
 
 [node name="Flagpole" type="Node2D"]
 script = ExtResource("1_flagpole")
@@ -15,5 +15,5 @@ collision_layer = 512
 collision_mask = 2
 
 [node name="DetectShape" type="CollisionShape2D" parent="DetectArea"]
-position = Vector2(0, -80)
+position = Vector2(0, -160)
 shape = SubResource("RectangleShape2D_detect")

@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
-const GRAVITY := 900.0
-const SHELL_SPEED := 300.0
+const GRAVITY := 1800.0
+const SHELL_SPEED := 600.0
 const KICK_IMMUNITY := 0.15
 const SHELL_COMBO_POINTS := [500, 800, 1000, 2000, 5000, 8000]
 
@@ -98,7 +98,7 @@ func shell_kill() -> void:
 	_hitbox.set_deferred("monitorable", false)
 	_damage_area.monitoring = false
 	_visuals.scale.y = -1
-	velocity = Vector2(0.0, -200.0)
+	velocity = Vector2(0.0, -400.0)
 
 
 func non_stomp_kill() -> void:
@@ -116,7 +116,7 @@ func _physics_process(delta: float) -> void:
 	if _flip_dying:
 		velocity.y += GRAVITY * delta
 		global_position += velocity * delta
-		if global_position.y > 500.0:
+		if global_position.y > 1000.0:
 			call_deferred("queue_free")
 		return
 	if _is_dead:

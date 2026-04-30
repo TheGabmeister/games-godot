@@ -1,9 +1,9 @@
 extends CharacterBody2D
 
-const SPEED: float = 250.0
-const GRAVITY: float = 600.0
-const BOUNCE_VELOCITY: float = -180.0
-const MAX_FALL: float = 400.0
+const SPEED: float = 500.0
+const GRAVITY: float = 1200.0
+const BOUNCE_VELOCITY: float = -360.0
+const MAX_FALL: float = 800.0
 
 var _direction: float = 1.0
 var _alive: bool = true
@@ -32,7 +32,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = BOUNCE_VELOCITY
 
 	# Off-screen cleanup
-	if global_position.y > 300.0 or global_position.x < -32.0:
+	if global_position.y > 600.0 or global_position.x < -64.0:
 		queue_free()
 
 

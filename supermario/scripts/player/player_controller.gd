@@ -7,6 +7,7 @@ const StateIds := preload("res://scripts/player/player_state_ids.gd")
 const STAR_POWER_DURATION: float = 10.0
 const STAR_WARNING_TIME: float = 2.0
 const MAX_FIREBALLS: int = 2
+const VISUAL_SCALE: float = 2.0
 
 @export var movement: Resource  # PlayerMovementConfig
 @export var effects: Resource  # EffectsConfig
@@ -137,9 +138,9 @@ func apply_deceleration(delta: float) -> void:
 
 func update_facing(direction: float) -> void:
 	if direction > 0.0:
-		visuals.scale.x = 1.0
+		visuals.scale = Vector2(VISUAL_SCALE, VISUAL_SCALE)
 	elif direction < 0.0:
-		visuals.scale.x = -1.0
+		visuals.scale = Vector2(-VISUAL_SCALE, VISUAL_SCALE)
 
 
 func start_coyote_timer() -> void:
@@ -346,7 +347,7 @@ func _spawn_fireball() -> void:
 		dir = 1.0
 	fireball.setup(dir)
 	get_parent().add_child(fireball)
-	fireball.global_position = global_position + Vector2(dir * 10.0, -10.0)
+	fireball.global_position = global_position + Vector2(dir * 20.0, -20.0)
 	_active_fireballs += 1
 	fireball.tree_exited.connect(func() -> void: _active_fireballs -= 1)
 	_play_sound(fireball_sound)

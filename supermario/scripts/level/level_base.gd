@@ -2,7 +2,7 @@ extends Node2D
 
 const TilesetBuilder := preload("res://scripts/level/tileset_builder.gd")
 
-const TILE_SIZE := 16
+const TILE_SIZE := 32
 const LEVEL_HEIGHT := 14  # tiles
 
 @export var level_width_tiles: int = 212

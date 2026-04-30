@@ -50,7 +50,7 @@ func _reveal_and_bump() -> void:
 
 
 func _spawn_contents() -> void:
-	var spawn_pos: Vector2 = global_position + Vector2(0, -16)
+	var spawn_pos: Vector2 = global_position + Vector2(0, -32)
 	match contents:
 		&"coin":
 			_play_sound(coin_sound)

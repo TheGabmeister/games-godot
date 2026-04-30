@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_script")
-look_ahead_distance = 24.0
-look_ahead_speed = 80.0
+look_ahead_distance = 48.0
+look_ahead_speed = 160.0
 smoothing_speed = 10.0
-no_backtrack_offset = 256.0
+no_backtrack_offset = 512.0

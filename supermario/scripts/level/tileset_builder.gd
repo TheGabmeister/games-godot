@@ -4,8 +4,8 @@ extends Node
 ## Two-tile atlas: tile 0 is the top (with stripe), tile 1 is the fill.
 ## All visual variation between levels comes from the two color args.
 
-const TILE_SIZE := 16
-const TOP_STRIPE_HEIGHT := 3
+const TILE_SIZE := 32
+const TOP_STRIPE_HEIGHT := 6
 
 
 static func create_tileset(top_color: Color, fill_color: Color) -> TileSet:

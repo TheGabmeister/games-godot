@@ -34,12 +34,12 @@ parse/load errors, then running the game windowed to verify gameplay.
 
 | Setting        | Value                                       |
 |----------------|---------------------------------------------|
-| Viewport       | 512 × 448 (32 × 28 visible 16 px tiles)     |
-| Window         | 1024 × 896                                  |
+| Viewport       | 1200 × 900                                  |
+| Window         | Uses viewport size                          |
 | Stretch        | `canvas_items`, aspect `keep`               |
 | Renderer       | Forward Plus (required for 2D bloom/glow)   |
 | Physics        | Godot 2D (Jolt is enabled for 3D but unused)|
-| Tile grid      | 16 × 16 px                                  |
+| Tile grid      | 32 × 32 px                                  |
 
 ### Input Actions
 
@@ -223,7 +223,7 @@ Scene-instanced scripts (player, enemies, blocks, items) use `@export var config
 ## Visual Style
 
 - All visuals use primitive shapes: `Polygon2D`, `Line2D`, `draw_rect`, `draw_circle`, `draw_polygon`, `ColorRect`.
-- Geometry stays aligned to the 16 px grid.
+- Geometry stays aligned to the 32 px grid.
 - Bold silhouettes, high contrast, no tiny detail.
 - Named colors live exclusively in `scripts/color_palette.gd` (accessed as `Palette.*`). No hard-coded hex values in gameplay code.
 - WorldEnvironment uses subtle bloom; Forward Plus is required for the glow.
@@ -245,5 +245,5 @@ Scene-instanced scripts (player, enemies, blocks, items) use `@export var config
 4. **EventBus-based decoupling** — HUD, audio, scoring, and effects react to gameplay without hard scene dependencies.
 5. **Forward Plus renderer** — the visual pitch depends on subtle bloom and post-processing on a 2D canvas.
 6. **`_draw()`-driven character rendering** — the project intentionally avoids sprite production and benefits from procedural animation control (palette swaps, walk cycles).
-7. **16 px grid** — preserves classic Mario spacing and keeps scene authoring simple.
+7. **32 px grid** — preserves classic Mario spacing and keeps scene authoring simple.
 8. **Per-category Resource tunables, not a god-object.** Categories are clear from gameplay structure, and `.tres` variants give designer-friendly tuning without code changes.
