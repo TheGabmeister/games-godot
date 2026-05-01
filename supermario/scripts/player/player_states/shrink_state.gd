@@ -1,7 +1,5 @@
 extends "res://scripts/player/player_states/player_state.gd"
 
-const PowerStates := preload("res://scripts/player/player_power_states.gd")
-
 var _timer: float = 0.0
 var _source_state_name: StringName = &""
 var _source_velocity: Vector2 = Vector2.ZERO
@@ -34,7 +32,7 @@ func process_frame(delta: float) -> void:
 	# Flicker between big and small drawing
 	var flicker_cycle: float = _timer * player.effects.grow_flicker_rate
 	var show_small := int(flicker_cycle) % 2 == 0
-	player.displayed_power_state = PowerStates.SMALL if show_small else PowerStates.BIG
+	player.displayed_power_state = GameManager.PowerState.SMALL if show_small else GameManager.PowerState.BIG
 
 	if _timer >= player.effects.grow_shrink_duration:
 		var return_state: StringName = _source_state_name

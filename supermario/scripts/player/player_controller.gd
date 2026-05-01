@@ -2,13 +2,9 @@ extends CharacterBody2D
 
 signal died
 signal death_animation_finished
-signal power_state_changed(new_state: int)
-signal score_requested(points: int, position: Vector2)
-signal one_up_requested
 
 const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000]
 const FireballScene := preload("res://scenes/objects/fireball.tscn")
-const PowerStates := preload("res://scripts/player/player_power_states.gd")
 const StateIds := preload("res://scripts/player/player_state_ids.gd")
 
 const STAR_POWER_DURATION: float = 10.0
@@ -28,7 +24,6 @@ const VISUAL_SCALE: float = 2.0
 
 var coyote_active: bool = false
 var jump_buffered: bool = false
-var power_state: int = PowerStates.SMALL
 
 var _coyote_timer: float = 0.0
 var _jump_buffer_timer: float = 0.0
@@ -45,11 +40,11 @@ var _star_timer: float = 0.0
 var _active_fireballs: int = 0
 
 # Sprite animation
-# `displayed_power_state` is normally synced to power_state in
+# `displayed_power_state` is normally synced to GameManager.current_power_state in
 # update_collision_shape(), but GrowState / ShrinkState override it during the
 # flicker animation so the sprite alternates between Small and Big frames while
 # the actual power transition is locked in.
-var displayed_power_state: int = PowerStates.SMALL
+var displayed_power_state: int = 0
 var _star_cycle: float = 0.0
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -67,8 +62,10 @@ func _ready() -> void:
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
 	EventBus.player_powered_up.connect(_on_player_powered_up)
 	EventBus.player_damaged.connect(_on_player_damaged)
-	# Sync collision size with the injected power state. Required because power
-	# is preserved across level transitions, but the scene file bakes in Small.
+	# Sync collision size with the current GameManager power state. Required
+	# because power is preserved across level transitions (e.g., finishing 1-1
+	# as Fire Mario should spawn Fire Mario in 1-2), but the scene file bakes
+	# in the Small collision.
 	update_collision_shape()
 
 
@@ -168,7 +165,7 @@ func buffer_jump() -> void:
 
 
 func can_crouch() -> bool:
-	return power_state != PowerStates.SMALL
+	return GameManager.current_power_state != GameManager.PowerState.SMALL
 
 
 func set_crouching(crouching: bool) -> void:
@@ -177,7 +174,7 @@ func set_crouching(crouching: bool) -> void:
 
 
 func has_ceiling_clearance() -> bool:
-	if power_state == PowerStates.SMALL:
+	if GameManager.current_power_state == GameManager.PowerState.SMALL:
 		return true
 	var space := get_world_2d().direct_space_state
 	var query := PhysicsRayQueryParameters2D.create(
@@ -203,38 +200,38 @@ func die() -> void:
 
 func power_up(item_type: StringName, _position: Vector2 = Vector2.ZERO) -> void:
 	if item_type == &"starman":
-		score_requested.emit(1000, global_position)
+		GameManager.add_score(1000, global_position)
 		_start_star_power()
 		return
 
-	var current := power_state
+	var current := GameManager.current_power_state
 	var new_state: int = current
 	match item_type:
 		&"mushroom":
-			if current == PowerStates.SMALL:
-				new_state = PowerStates.BIG
+			if current == GameManager.PowerState.SMALL:
+				new_state = GameManager.PowerState.BIG
 		&"fire_flower":
-			if current == PowerStates.SMALL:
-				new_state = PowerStates.BIG
+			if current == GameManager.PowerState.SMALL:
+				new_state = GameManager.PowerState.BIG
 			else:
-				new_state = PowerStates.FIRE
+				new_state = GameManager.PowerState.FIRE
 
 	if new_state == current:
-		score_requested.emit(1000, global_position)
+		GameManager.add_score(1000, global_position)
 		return
 
-	set_power_state(new_state)
-	score_requested.emit(1000, global_position)
+	GameManager.set_power_state(new_state)
+	GameManager.add_score(1000, global_position)
 	state_machine.transition_to(StateIds.GROW)
 
 
 func take_damage() -> void:
 	if _is_invincible:
 		return
-	if power_state == PowerStates.SMALL:
+	if GameManager.current_power_state == GameManager.PowerState.SMALL:
 		die()
 	else:
-		set_power_state(PowerStates.SMALL)
+		GameManager.set_power_state(GameManager.PowerState.SMALL)
 		state_machine.transition_to(StateIds.SHRINK)
 
 
@@ -244,7 +241,7 @@ func start_invincibility() -> void:
 
 
 func play_jump_sound() -> void:
-	if power_state == PowerStates.SMALL or jump_big_sound == null:
+	if GameManager.current_power_state == GameManager.PowerState.SMALL or jump_big_sound == null:
 		_play_sound(jump_sound)
 	else:
 		_play_sound(jump_big_sound)
@@ -263,9 +260,9 @@ func _on_stomp_area_entered(area: Area2D) -> void:
 			points = STOMP_COMBO_POINTS[_stomp_combo]
 		else:
 			points = 0
-			one_up_requested.emit()
+			GameManager.earn_one_up()
 		if points > 0:
-			score_requested.emit(points, enemy.global_position)
+			GameManager.add_score(points, enemy.global_position)
 		_stomp_combo += 1
 	velocity.y = movement.stomp_bounce_velocity
 
@@ -300,20 +297,13 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 
 func update_collision_shape() -> void:
 	var shape := collision_shape.shape as RectangleShape2D
-	if _is_crouching or power_state == PowerStates.SMALL:
+	if _is_crouching or GameManager.current_power_state == GameManager.PowerState.SMALL:
 		shape.size = movement.small_collision
 		collision_shape.position.y = -movement.small_collision.y / 2.0
 	else:
 		shape.size = movement.big_collision
 		collision_shape.position.y = -movement.big_collision.y / 2.0
-	displayed_power_state = power_state
-
-
-func set_power_state(new_state: int) -> void:
-	if power_state == new_state:
-		return
-	power_state = new_state
-	power_state_changed.emit(power_state)
+	displayed_power_state = GameManager.current_power_state
 
 
 # --- Star Power ---
@@ -359,9 +349,9 @@ func _update_sprite_frame(delta: float) -> void:
 func _get_animation_name() -> StringName:
 	var prefix: String
 	match displayed_power_state:
-		PowerStates.SMALL:
+		GameManager.PowerState.SMALL:
 			prefix = "small"
-		PowerStates.FIRE:
+		GameManager.PowerState.FIRE:
 			prefix = "fire"
 		_:
 			prefix = "big"
@@ -400,7 +390,7 @@ func _star_color() -> Color:
 # --- Fireballs ---
 
 func _check_fireball_input() -> void:
-	if power_state != PowerStates.FIRE:
+	if GameManager.current_power_state != GameManager.PowerState.FIRE:
 		return
 	if _active_fireballs >= MAX_FIREBALLS:
 		return

@@ -77,26 +77,8 @@ func _emit_time_tick() -> void:
 func _spawn_player() -> void:
 	var start := get_node_or_null("PlayerStart") as Marker2D
 	player = player_scene.instantiate()
-	player.power_state = GameManager.current_power_state
-	player.power_state_changed.connect(_on_player_power_state_changed)
-	player.score_requested.connect(_on_player_score_requested)
-	player.one_up_requested.connect(_on_player_one_up_requested)
 	if start:
 		player.position = start.position
 	else:
 		push_warning("No PlayerStart found — spawning player at scene origin")
 	add_child(player)
-
-
-func _on_player_power_state_changed(new_state: int) -> void:
-	GameManager.set_power_state(new_state)
-
-
-func _on_player_score_requested(points: int, position: Vector2) -> void:
-	GameManager.add_score(points, position)
-
-
-func _on_player_one_up_requested() -> void:
-	GameManager.earn_one_up()
-
-
