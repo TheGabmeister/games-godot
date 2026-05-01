@@ -97,7 +97,7 @@ Four elements — there is no separate Holy/Light element:
 - **Water/Ice** — Marle, Frog, Magus. (Water and Ice are the same element internally; both characters' "Water" and "Ice" tech names alias to it.)
 - **Shadow** — Robo, Magus. Robo is the only basic party member with Shadow-element offensive techs (Laser Spin, Shock). His healing techs (Cure Beam, Heal Beam) are non-elemental, and Area Bomb is Fire-typed.
 
-**Ayla has no element**; all her techs are physical. Plain attacks are non-elemental physical, though some weapons add an element to physical hits (e.g., Bolt Sword adds Lightning).
+**Ayla has no element**; all her techs are physical. Regular weapon attacks in the SNES game are **non-elemental physical** — even weapons whose names suggest an element (Bolt Sword, Flash Blade) do not actually carry that element on swings. Elemental damage comes from techs, not from the basic attack command.
 
 Resistance multipliers run 0% / 50% / 100% / 200%, plus an "absorb" state where a hit heals the target. Some bosses cycle their own elemental absorption mid-fight — most notably **Magus**, whose **Magic Wall** continuously rotates which element he absorbs, forcing the party to read the cue and switch damage types each round.
 
@@ -301,27 +301,146 @@ After clearing the game, NG+ is unlocked from the cleared save. Carried over: le
 
 ### 6.1 Weapons
 
-Each character uses a unique weapon class. Acquisition: shops for early/mid tiers; chests, drops, Charm, and quest rewards for mid/late.
+Each character uses a unique weapon class. Slots are class-locked: you cannot put Crono's katana on anyone else.
 
-- **Crono — Katanas.** Notable: **Slasher / Slasher 2** (boosted critical-hit rate), **Rainbow** (ultimate; forged by Melchior from a Sun Stone + 10 Rainbow Shells, or found as a Black Omen chest).
-- **Marle — Crossbows / Bowguns.** Ultimate: **Valkerye** (high attack, anti-dragon bonus).
-- **Lucca — Guns.** Ultimate: **Wondershot** (Sun Stone forging). Damage is a multiplier rolled on the **last digit of the in-game seconds counter** — possible rolls are ×1/10, ×1/2, ×1, ×2, ×3 of the calculated base. Highly variable, so it's a "swing" weapon.
-- **Robo — Mechanical arms.** Ultimate: **Crisis Arm** (Geno Dome). Damage is tied to the **last digit of Robo's current HP**: the calculated attack value is multiplied by the digit (HP ending in 9 hits hardest; HP ending in 0 deals nothing). Players manipulate Robo's HP to land a 9 before swinging. Also notable: **Terra Arm**.
-- **Frog — Broadswords.** Ultimate: **Masamune (upgraded)**, achieved by reforging via the Sun Stone after the Cyrus's Grave sidequest at Northern Ruins. Alternate: **Brave Sword**.
-- **Ayla — Fists (locked).** Ayla's "weapon" cannot be equipped or unequipped. Her fists upgrade automatically by **level brackets**:
+#### Weapon stat schema
 
-  | Levels | Fist tier | Notes |
-  |---|---|---|
-  | 1–23 | Fist | base |
-  | 24–47 | Fist (T2) | higher crit rate |
-  | 48–71 | Fist (T3) | higher crit rate |
-  | 72–95 | Iron Fist | crits can inflict **Chaos** status |
-  | 96–99 | Bronze Fist | low crit rate, but **crits deal 9999 damage** |
+Every weapon record carries:
 
-  The fists remain equipped even during the Blackbird sequence (where everyone else is stripped of gear). Ayla is the only character who never has an open weapon slot.
-- **Magus — Scythes.** Ultimate: **Doomsickle (Doom Scythe)** at Northern Ruins. Damage is **multiplied by 1 + (number of fallen allies)**: full party = base damage; one ally KO'd = 2× damage; two allies KO'd = 3× damage. A "last man standing" weapon.
+| Field | Notes |
+|---|---|
+| **Attack Power** (AP) | Base damage value used by the damage formula. |
+| **Critical Hit %** | If non-zero, overrides the character's base crit rate. Otherwise the wielder's base rate is used: Crono 10%, Marle 20%, Lucca 20%, Robo 10%, Frog 23%, Magus 10%. Ayla's varies by fist tier. |
+| **Special** | Optional. Stat bonus, on-hit status, anti-type multiplier, or a custom damage formula that overrides AP entirely. |
 
-**Critical hit specialty.** Slasher/Slasher 2 (Crono), Bronze Fist (Ayla), and weapon-specific crit boosts on the Hero Medal (Frog/Masamune) define the crit-build path.
+**Critical hit damage:** ×2 by default. Some weapons override to ×4 (Shiva Edge — only when crit fires) or to a flat 9999 (Bronze Fist; Apocalypse Arm in DS port).
+
+#### Damage formula (physical attack)
+
+Different characters route off different stats — this is non-obvious and matters for builds:
+
+- **Crono, Frog, Robo, Magus** — Power-driven. 1 PWR ≈ 4/3 effective attack contribution.
+- **Ayla** — Power-driven, more efficient: 1 PWR ≈ 1.75 attack.
+- **Marle and Lucca** — **Hit-driven**, not Power. 1 Hit ≈ 2/3 attack contribution. They want **Hit Ring / Sight Cap**, not Power Ring.
+
+Effective damage roughly: `(Weapon AP + character contribution from Power or Hit) × random factor − target Stamina/Defense`. Crit doubles (or overrides). The full formula with multipliers and caps lives at StrategyWiki's Formulae page (see §11) — flagged in §10 to verify before locking in numbers.
+
+#### Crono — Katanas
+
+| Weapon | AP | Special | Acquisition |
+|---|---:|---|---|
+| Mop | 1 | joke weapon; charm only | Charm a specific Nu |
+| Wood Sword | 3 | — | starting weapon |
+| Iron Blade | 7 | — | shop, 1000 AD Truce |
+| Steel Saber | 15 | — | shop |
+| Lode Sword | 20 | — | shop, 600 AD |
+| Bolt Sword | 25 | — | chest, 2300 AD (despite the name, **no Lightning element**) |
+| Red Katana | 30 | — | chest |
+| Flint Edge | 40 | — | chest, 12,000 BC |
+| Slasher | 43 | +2 Speed | drop from Slash, Magus's Castle |
+| Aeon Blade | 70 | — | shop, late Antiquity |
+| Demon Edge | 90 | — | chest, late game |
+| Alloy Blade | 110 | — | chest, Black Omen |
+| Star Sword | 125 | — | chest |
+| Vedic Blade | 135 | — | chest |
+| Swallow | 145 | +3 Speed | chest |
+| Kali Blade | 150 | 2× crit rate | chest |
+| Slasher 2 | 155 | crit boost | chest |
+| Shiva Edge | 170 | crit deals ×4 (~7% rate) | chest |
+| **Rainbow** | **220** | **70% crit rate** | forged by Melchior from Sun Stone + 10 Rainbow Shells, or chest in Black Omen |
+
+#### Marle — Crossbows / Bowguns
+
+| Weapon | AP | Special | Acquisition |
+|---|---:|---|---|
+| Bronze Bow | 3 | — | starting weapon |
+| Iron Bow | 15 | — | shop |
+| Lode Bow | 20 | — | shop |
+| Robin Bow | 25 | — | chest / shop |
+| Sage Bow | 40 | — | chest |
+| Dream Bow | 60 | — | chest |
+| Comet Arrow | 80 | — | chest |
+| Sonic Arrow | 100 | inflicts **Slow** on hit | chest |
+| Siren | 140 | inflicts **Stop** on hit | chest, Northern Ruins |
+| Stardust Bow | 150 | inflicts Chaos; 2× crit rate | chest |
+| **Valkerye** | **180** | **2× crit rate**; anti-dragon bonus | Sun Stone forging chain |
+
+#### Lucca — Guns
+
+| Weapon | AP | Special | Acquisition |
+|---|---:|---|---|
+| Air Gun | 5 | — | starting weapon |
+| Dart Gun | 7 | — | shop |
+| Auto Gun | 15 | — | shop / chest |
+| Plasma Gun | 25 | inflicts **Stop on machines** | chest |
+| Ruby Gun | 40 | — | chest, 12,000 BC |
+| Dream Gun | 60 | — | chest |
+| Mega Blast | 80 | — | chest |
+| Shock Wave | 110 | inflicts **Chaos** | chest, Black Omen |
+| **Wondershot** | **250** | damage rolls ×1/10, ×1/2, ×1, ×2, or ×3 of base on the in-game seconds counter — variable | Sun Stone forging chain |
+
+#### Robo — Mechanical arms
+
+| Weapon | AP | Special | Acquisition |
+|---|---:|---|---|
+| Tin Arm | 20 | — | starting equipment |
+| Hammer Arm | 25 | — | shop |
+| Mirage Hand | 25 | — | chest |
+| Stone Arm | 40 | — | chest |
+| Doom Finger | 50 | — | chest |
+| Magma Hand | 70 | — | chest |
+| Megaton Arm | 90 | — | chest |
+| Big Hand | 105 | — | chest |
+| Kaiser Arm | 120 | — | chest, Black Omen |
+| Giga Arm | 135 | — | chest |
+| Terra Arm | 150 | — | Geno Dome reward |
+| **Crisis Arm** | **1** (override) | **damage = base × (last digit of Robo's current HP)** — HP ending in 9 hits hardest; ending in 0 deals nothing | Geno Dome |
+
+#### Frog — Broadswords
+
+| Weapon | AP | Special | Acquisition |
+|---|---:|---|---|
+| Bronze Edge | 6 | — | joining equipment |
+| Iron Sword | 10 | — | shop |
+| Masamune (initial) | 75 | story-required; lowers Magus's magic defense; affects Mammon Machine | reforged by Melchior from Bent Hilt + Bent Sword + Dreamstone |
+| Flash Blade | 90 | — | chest |
+| Pearl Edge | 105 | 1.5× damage vs magic-type enemies | chest |
+| Rune Blade | 120 | +4 Magic | chest |
+| Demon Hit | 120 | 2× damage vs magic-type enemies | chest |
+| Brave Sword | 135 | 2× damage vs magic-type enemies | chest, Northern Ruins |
+| **Masamune (upgraded)** | **200** | 2× damage vs magic-type enemies; affects Mammon Machine and Lavos's Magus-form copy | Cyrus's Grave sidequest at Northern Ruins reforges it via the Sun Stone |
+
+#### Ayla — Fists (locked, auto-upgrade by level)
+
+| Levels | Fist tier | Crit rate | Special |
+|---|---|---:|---|
+| 1–23 | Fist I | 20% | base |
+| 24–47 | Fist II | 25% | — |
+| 48–71 | Fist III | 30% | — |
+| 72–95 | Iron Fist | 35% | crits inflict **Chaos** status |
+| 96–99 | Bronze Fist | 10% | **crits deal flat 9999 damage** (even on bosses and Lavos) |
+
+Ayla cannot equip or unequip. Her fists remain on her even during the Blackbird sequence where everyone else is stripped of gear.
+
+#### Magus — Scythes
+
+| Weapon | AP | Special | Acquisition |
+|---|---:|---|---|
+| Dark Scythe | 120 | — | joining equipment |
+| Hurricane | 135 | — | chest |
+| Star Scythe | 150 | — | chest |
+| Judgment Scythe | 155 | — | chest |
+| **Doom Sickle (Doomsickle)** | **160** | **damage × (1 + fallen allies)** — base, 2×, or 3× depending on KO count | chest, Northern Ruins |
+
+#### Critical-hit build path
+
+The "crit-build" centerpiece weapons are: **Slasher / Slasher 2 / Kali Blade / Shiva Edge / Rainbow** (Crono); **Stardust Bow / Valkerye** (Marle); **Bronze Fist** (Ayla); upgraded **Masamune + Hero Medal accessory** (Frog). Stack with Speed for more turns to fish for crits.
+
+#### DS-port-only weapons (out of scope for v1)
+
+The DS port adds Dimensional-Vortex weapons not in the SNES original: **Dreamseeker** (Crono, 240 AP / 90% crit), **Venus Bow** (Marle, always 777 / no crit), **Spellslinger** (Lucca, scales with MP), **Apocalypse Arm** (Robo, 1 AP / crits = 9999), **Dreamreaper** (Magus, 180 AP / 4× crit). Treat as stretch goals.
+
+> **Acquisition column caveat:** the AP values above come from cross-checking almarsguides, arrpeegeez, Caves of Narshe, and the Wikibooks Equipment List. Where sources disagreed, the lower (more conservative) figure is used. Specific chest locations and shop-vs-chest splits will need a final ROM-data verification pass before implementation — added to §10.
 
 ### 6.2 Armor & Helms
 
@@ -484,6 +603,8 @@ Items still needing pinned numbers before we lock data tables:
 7. **Magic Wall / Black Hole / Dark Mist exact behaviors** — Magic Wall % reduction, Black Hole pull/instakill rules, Dark Mist single-target vs. AoE.
 8. **Sealed Chest / Sealed Door item table** — full list of locations and the lesser/greater item pair at each.
 9. **Norstein Bekkler prizes per game tier** — exact rewards at 10 / 40 / 80 Silver Point cost levels.
+10. **Per-weapon attack power and acquisition source** — the §6.1 tables draw from cross-checked community guides; final pass should verify AP values and chest-vs-shop sources against ROM data (Data Crystal / TCRF) before locking the data file.
+11. **Physical damage formula constants** — the per-weapon AP tables are pinned, but the full damage equation (random multiplier range, defense subtraction model, crit multiplier ordering) needs a verified pass against StrategyWiki's Formulae page and DragonKnightZero's Mechanics Guide.
 
 These should be filled in as we build out per-system data tables. Resolved items previously listed here (Crono tech order; Wonder Shot / Crisis Arm / Doomsickle formulas; Sun Shades vs. Prism Specs effects; Ayla's weapon-slot lock; Sun Stone questline ownership; ending #13 identity) are now baked into the body of this spec.
 
