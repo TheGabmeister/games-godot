@@ -24,7 +24,9 @@
       "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/party/marle_sheet.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/party/marle_sheet.png -w 768 -h 64)",
       "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/party/lucca_sheet.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/party/lucca_sheet.png -w 768 -h 64)",
       "Bash(\"D:/Godot_v4.6.2-stable_win64.exe\" --import --headless --path \"c:/dev/games-godot/chrono-trigger\")",
-      "Bash(\"D:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/chrono-trigger\")"
+      "Bash(\"D:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/chrono-trigger\")",
+      "Bash(\"D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe\" -i \"c:/dev/games-godot/chrono-trigger/music/battle.ogg\")",
+      "Bash(\"D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe\" -i \"c:/dev/games-godot/chrono-trigger/music/battle.ogg\" -t 23 -c:a libvorbis -q:a 6 \"c:/dev/games-godot/chrono-trigger/music/battle_trimmed.ogg\" -y)"
     ]
   }
 }
