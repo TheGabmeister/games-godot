@@ -16,19 +16,33 @@ enum State { FIELD, DIALOGUE, BATTLE }
 
 ## Scene changes
 
-The debug room gains an enemy. The NPC stays for dialogue testing.
+Player, NPC, and Enemy are separate `.tscn` scenes instanced in `debug_room.tscn`. Per-instance properties (position, dialogue, enemy data) are set on the instance.
 
 ```
-debug_room (Node2D)
-├── ... (existing Phase 1 nodes)
-├── Enemy (Area2D)
-│   ├── AnimatedSprite2D  — enemy_sheet.png via SpriteFrames
-│   └── CollisionShape2D  — CircleShape2D, radius ~48px (~1 tile trigger distance)
-└── BattleUI (CanvasLayer)
-    ├── ATBBar            — player's ATB gauge (ProgressBar or TextureProgressBar)
-    ├── EnemyHPBar        — enemy HP display (ProgressBar + Label)
-    ├── PlayerHPLabel     — "HP: X / Y" text
-    └── CommandMenu       — "Attack" button (VBoxContainer with a single option for now)
+scenes/player.tscn (CharacterBody2D)
+├── AnimatedSprite2D  — crono_frames.tres
+├── FlashEffect       — flash_effect.gd, targets AnimatedSprite2D
+├── CollisionShape2D  — RectangleShape2D
+└── InteractRay       — RayCast2D
+
+scenes/enemy.tscn (Area2D)
+├── AnimatedSprite2D  — SpriteFrames (set per enemy type)
+├── FlashEffect       — flash_effect.gd, targets AnimatedSprite2D
+└── CollisionShape2D  — CircleShape2D, radius 48px
+
+scenes/npc.tscn (StaticBody2D)
+├── AnimatedSprite2D  — SpriteFrames
+└── CollisionShape2D
+
+debug_room.tscn (Node2D)
+├── ... (walls, floor)
+├── Player            — instance of player.tscn
+├── NPC               — instance of npc.tscn, dialogue set per instance
+├── Enemy             — instance of enemy.tscn, data set per instance
+├── BattleManager     — battle_manager.gd
+├── Camera            — camera.gd, follows Player
+├── DialogueBox       — dialogue_box.gd
+└── BattleUI          — battle_ui.gd, connects to BattleManager via export
 ```
 
 The enemy uses Area2D (not StaticBody2D) so the player walks *into* it to trigger battle, rather than being blocked.
@@ -108,29 +122,30 @@ This is a simplified version of the SPEC §6.1 formula. Good enough for Phase 2;
 
 ## Battle animations
 
-Three visual states per combatant, handled by the AnimatedSprite2D:
+Each combatant owns its own animation methods (`play_attack()`, `play_idle()`, `play_hit(direction)`) — battle_manager calls them uniformly without knowing implementation details.
 
 **Attacking:**
-- Combatant steps forward briefly (tween position ~16px toward target over 0.15s), holds for a moment, then steps back.
-- Play an "attack" animation if available, otherwise use the idle sprite during the lunge.
+- Combatant plays attack animation via `play_attack()`, then lunges ~16px toward target (tween, 0.15s), then retreats.
+- Player's attack animation is direction-aware (`attack_down`, `attack_up`, etc.).
 
 **Taking damage (hit):**
-- Sprite flashes white 3 times rapidly (modulate to white then back, ~0.08s per flash).
-- A damage number (Label) pops up above the target, floats upward, and fades out over ~0.6s. Crit numbers are larger or a different color.
+- Target plays `play_hit(direction)` — player recoils via tween; enemy plays hit sprite.
+- FlashEffect component (child node) handles the white flash: applies a ShaderMaterial with `flash.gdshader`, tweens `flash_amount` 0→1→0 three times.
+- battle_manager emits `damage_dealt` signal; battle_ui spawns a floating damage number (Label, fades up over 0.6s). Crit numbers are gold/larger.
 
 **Dying:**
-- Sprite flashes then fades out (modulate alpha 1.0 → 0.0 over 0.4s).
+- Enemy owns `play_death()`: plays die animation + fades out (modulate alpha 1.0 → 0.0 over 0.4s).
 - Node removed after fade completes.
 
-All animations are non-blocking tweens managed by the battle_manager. ATB gauges **pause** during an attack animation so actions don't overlap. The sequence for one attack:
+ATB gauges **pause** during an attack animation (`_animating` flag) so actions don't overlap. The sequence for one attack:
 
 1. ATB gauges pause.
-2. Attacker lunges toward target (~0.15s).
+2. Attacker plays attack animation + lunges toward target (~0.15s).
 3. Damage applied, target flashes + damage number pops (~0.3s).
 4. Attacker returns to position (~0.15s).
 5. ATB gauges resume.
 
-Total: ~0.6s per attack. Fast enough to not feel sluggish.
+Total: ~0.6s per attack.
 
 ## Battle music
 
@@ -198,14 +213,32 @@ All in `scripts/`.
 
 - Add `BATTLE` to the State enum.
 
-### battle_manager.gd (on a new BattleManager Node in the scene, or as autoload)
+### battle_manager.gd (on BattleManager Node)
 
-Owns the combat loop. Responsibilities:
-- Holds references to the player combatant data and the enemy combatant data.
+Owns the combat loop. Has **no reference to battle_ui** — communicates entirely via signals:
+
+- `battle_started(player_hp, player_max_hp, enemy_name, enemy_hp, enemy_max_hp)`
+- `battle_ended`
+- `atb_updated(value)`
+- `command_ready_changed(is_ready)`
+- `player_hp_changed(current_hp, max_hp)`
+- `enemy_hp_changed(enemy_name, current_hp, max_hp)`
+- `damage_dealt(world_position, amount, is_critical)`
+- `victory_achieved(exp_reward, gold_reward, tp_reward)`
+- `player_defeated`
+
+Responsibilities:
 - Runs ATB fill in `_process()` when `GameState.current == BATTLE`.
 - Manages turn order: when a gauge fills, triggers the corresponding action.
-- Applies damage, checks win/lose conditions.
-- Emits signals: `battle_started`, `battle_ended(result)`, `combatant_acted(who, action, damage)`.
+- Applies damage formula, checks win/lose conditions.
+- Orchestrates attack sequence (lunge/retreat tweens), calls `play_attack()` / `play_hit()` / `play_idle()` on combatants uniformly.
+
+### battle_ui.gd (on BattleUI)
+
+- Has `@export var battle_manager_path: NodePath`.
+- In `_ready()`, connects to all battle_manager signals and connects its own `attack_selected` signal back to `battle_manager._on_attack_selected`.
+- Updates display in response to signals. Owns damage number spawning.
+- Command menu input gated on `GameState.current == BATTLE` and command ready state.
 
 ### enemy_data.gd (resource)
 
@@ -215,20 +248,25 @@ Owns the combat loop. Responsibilities:
 
 - Has `@export var data: EnemyData` — assigned in the inspector to a `.tres` file.
 - Detects player contact via `body_entered` signal.
-- Triggers battle start (calls battle_manager or emits a signal).
-- Runtime HP tracked separately from the resource (resource is the template, runtime state is mutable).
-- `die()` method: plays a short effect then `queue_free()`.
-
-### battle_ui.gd (on BattleUI)
-
-- Listens to battle_manager signals to update display.
-- Shows/hides ATB bar, enemy HP bar, command menu, results, game over.
-- Command menu input gated on `GameState.current == BATTLE` and Crono's ATB being full.
+- Triggers battle start (calls battle_manager).
+- Owns animation methods: `play_idle()`, `play_attack()`, `play_hit(direction)`, `play_die()`, `play_death()` (die + fade-out tween).
 
 ### player.gd (modified)
 
 - No changes to movement logic — GameState gate already prevents movement during BATTLE.
-- Expose Crono's combat stats (or let battle_manager hardcode them).
+- Owns battle animation methods: `play_attack()` (direction-aware), `play_idle()`, `play_hit(direction)` (recoil tween).
+- Stats are hardcoded in battle_manager for Phase 2.
+
+### flash_effect.gd (reusable component)
+
+- Attached as child node of any entity that needs hit flashes.
+- Has `@export var target: NodePath` pointing to the CanvasItem to flash.
+- `flash()` method: applies ShaderMaterial with `flash.gdshader`, tweens `flash_amount` 0→1→0 three times, then restores original material.
+
+### flash.gdshader
+
+- `canvas_item` shader with a `flash_amount` uniform.
+- Mixes the texture RGB toward white based on `flash_amount`.
 
 ## Sprite sheet changes
 
@@ -323,7 +361,7 @@ No new input actions needed. The command menu uses `interact` to confirm and arr
 - [x] Crono lunges toward the enemy when attacking, then returns
 - [x] Crono plays the attack sprite during the lunge
 - [x] Enemy lunges toward Crono when attacking, then returns
-- [ ] Target flashes white when hit
+- [x] Target flashes white when hit
 - [x] Damage number floats up and fades out above the target
 - [x] Crit damage numbers are visually distinct (larger or different color)
 - [x] ATB gauges pause during attack animations
