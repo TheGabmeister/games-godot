@@ -3,12 +3,10 @@ extends Node
 enum PowerState { SMALL, BIG, FIRE }
 enum GameState { TITLE, PLAYING, PAUSED, GAME_OVER, LEVEL_COMPLETE, TRANSITIONING }
 
-const LevelConfig := preload("res://scripts/config/level_config.gd")
+const _config := preload("res://resources/config/game_config.tres")
 
-var levels: Array[Resource] = [
-	preload("res://resources/config/level_1_1.tres"),
-	preload("res://resources/config/level_1_2.tres"),
-]
+var levels: Array[Resource]:
+	get: return _config.levels
 
 var score: int = 0
 var coins: int = 0
@@ -71,14 +69,14 @@ func reset_for_title() -> void:
 
 func _enter_level(index: int) -> void:
 	_level_index = index
-	var config := levels[index] as LevelConfig
+	var config: Resource = levels[index]
 	set_game_state(GameState.TRANSITIONING)
 	get_tree().change_scene_to_packed(config.scene)
 	set_game_state(GameState.PLAYING)
 	_start_level(config)
 
 
-func _start_level(config: LevelConfig) -> void:
+func _start_level(config: Resource) -> void:
 	time_remaining = config.time_limit
 	_last_time_tick = -1
 	_timer_active = true
