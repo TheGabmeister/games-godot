@@ -7,7 +7,6 @@ signal music_stop_requested
 signal music_duck_requested(enabled: bool)
 
 # Player
-signal player_died
 signal player_respawned
 signal player_powered_up(power_up_type: StringName)
 signal player_power_state_changed(old_state: int, new_state: int)

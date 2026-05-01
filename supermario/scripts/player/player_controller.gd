@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+signal died
+
 const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000]
 const FireballScene := preload("res://scenes/objects/fireball.tscn")
 const StateIds := preload("res://scripts/player/player_state_ids.gd")
@@ -192,7 +194,7 @@ func die() -> void:
 	hurtbox.set_deferred("monitoring", false)
 	hurtbox.set_deferred("monitorable", false)
 	state_machine.transition_to(StateIds.DEATH)
-	EventBus.player_died.emit()
+	died.emit()
 
 
 func power_up(item_type: StringName, _position: Vector2 = Vector2.ZERO) -> void:

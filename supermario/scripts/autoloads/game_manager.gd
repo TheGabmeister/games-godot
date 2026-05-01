@@ -20,7 +20,6 @@ var _last_time_tick: int = -1
 
 
 func _ready() -> void:
-	EventBus.player_died.connect(_on_player_died)
 	EventBus.level_completed.connect(_on_level_completed)
 
 
@@ -30,7 +29,7 @@ func _process(delta: float) -> void:
 		if time_remaining <= 0.0:
 			time_remaining = 0.0
 			_timer_active = false
-			EventBus.player_died.emit()
+			on_player_died()
 		else:
 			var current_tick: int = ceili(time_remaining)
 			if current_tick != _last_time_tick:
@@ -157,7 +156,7 @@ func earn_one_up() -> void:
 	EventBus.lives_changed.emit(lives)
 
 
-func _on_player_died() -> void:
+func on_player_died() -> void:
 	_timer_active = false
 	EventBus.music_stop_requested.emit()
 

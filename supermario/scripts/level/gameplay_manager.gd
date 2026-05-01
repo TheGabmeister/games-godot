@@ -7,6 +7,7 @@ var player: CharacterBody2D
 
 func _ready() -> void:
 	_spawn_player()
+	player.died.connect(GameManager.on_player_died)
 
 
 func _spawn_player() -> void:
