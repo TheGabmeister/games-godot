@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 const SPEED := 150.0
+const STOP_DISTANCE := 24.0
 
 @export var leader_path: NodePath
 @export var follow_delay: int = 20
@@ -23,6 +24,12 @@ func _physics_process(_delta: float) -> void:
 	if _leader == null:
 		return
 	if not _leader.has_meta("position_history"):
+		return
+
+	if global_position.distance_to(_leader.global_position) <= STOP_DISTANCE:
+		velocity = Vector2.ZERO
+		_play_idle_animation()
+		move_and_slide()
 		return
 
 	var history: PackedVector2Array = _leader.get_meta("position_history")
