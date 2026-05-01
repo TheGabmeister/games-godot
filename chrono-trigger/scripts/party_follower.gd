@@ -23,6 +23,8 @@ func _physics_process(_delta: float) -> void:
 		return
 	if _leader == null:
 		return
+	if not animated_sprite.sprite_frames:
+		return
 	if not _leader.has_meta("position_history"):
 		return
 

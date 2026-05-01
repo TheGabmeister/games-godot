@@ -7,8 +7,6 @@
 [ext_resource type="PackedScene" path="res://scenes/npc.tscn" id="16"]
 [ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="17"]
 [ext_resource type="PackedScene" path="res://scenes/party_member.tscn" id="18"]
-[ext_resource type="SpriteFrames" path="res://party/marle_frames.tres" id="19"]
-[ext_resource type="SpriteFrames" path="res://party/lucca_frames.tres" id="20"]
 [ext_resource type="Resource" path="res://party/crono.tres" id="21"]
 [ext_resource type="Resource" path="res://party/marle.tres" id="22"]
 [ext_resource type="Resource" path="res://party/lucca.tres" id="23"]
@@ -25,109 +23,102 @@ size = Vector2(32, 480)
 [sub_resource type="RectangleShape2D" id="wall_right_shape"]
 size = Vector2(32, 480)
 
-[node name="DebugRoom" type="Node2D"]
+[node name="DebugRoom" type="Node2D" unique_id=745195721]
 
-[node name="Floor" type="ColorRect" parent="."]
+[node name="Floor" type="ColorRect" parent="." unique_id=1818183792]
 offset_right = 640.0
 offset_bottom = 480.0
 color = Color(0.769, 0.659, 0.51, 1)
 
-[node name="WallTop" type="StaticBody2D" parent="."]
+[node name="WallTop" type="StaticBody2D" parent="." unique_id=2140777039]
 position = Vector2(320, 16)
 
-[node name="WallTopRect" type="ColorRect" parent="WallTop"]
+[node name="WallTopRect" type="ColorRect" parent="WallTop" unique_id=2067982795]
 offset_left = -320.0
 offset_top = -16.0
 offset_right = 320.0
 offset_bottom = 16.0
 color = Color(0.4, 0.4, 0.4, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallTop"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallTop" unique_id=390237801]
 shape = SubResource("wall_top_shape")
 
-[node name="WallBottom" type="StaticBody2D" parent="."]
+[node name="WallBottom" type="StaticBody2D" parent="." unique_id=17921038]
 position = Vector2(320, 464)
 
-[node name="WallBottomRect" type="ColorRect" parent="WallBottom"]
+[node name="WallBottomRect" type="ColorRect" parent="WallBottom" unique_id=1012968721]
 offset_left = -320.0
 offset_top = -16.0
 offset_right = 320.0
 offset_bottom = 16.0
 color = Color(0.4, 0.4, 0.4, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottom"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottom" unique_id=577520943]
 shape = SubResource("wall_bottom_shape")
 
-[node name="WallLeft" type="StaticBody2D" parent="."]
+[node name="WallLeft" type="StaticBody2D" parent="." unique_id=1589853455]
 position = Vector2(16, 240)
 
-[node name="WallLeftRect" type="ColorRect" parent="WallLeft"]
+[node name="WallLeftRect" type="ColorRect" parent="WallLeft" unique_id=1843223228]
 offset_left = -16.0
 offset_top = -240.0
 offset_right = 16.0
 offset_bottom = 240.0
 color = Color(0.4, 0.4, 0.4, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft" unique_id=1241899719]
 shape = SubResource("wall_left_shape")
 
-[node name="WallRight" type="StaticBody2D" parent="."]
+[node name="WallRight" type="StaticBody2D" parent="." unique_id=1965844821]
 position = Vector2(624, 240)
 
-[node name="WallRightRect" type="ColorRect" parent="WallRight"]
+[node name="WallRightRect" type="ColorRect" parent="WallRight" unique_id=1121174814]
 offset_left = -16.0
 offset_top = -240.0
 offset_right = 16.0
 offset_bottom = 240.0
 color = Color(0.4, 0.4, 0.4, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight" unique_id=1816089927]
 shape = SubResource("wall_right_shape")
 
-[node name="Camera" type="Camera2D" parent="."]
+[node name="Camera" type="Camera2D" parent="." unique_id=176726062]
 position = Vector2(320, 240)
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0
 script = ExtResource("7")
 target = NodePath("../Player")
 
-[node name="Player" parent="." instance=ExtResource("15")]
+[node name="Player" parent="." unique_id=1121003177 instance=ExtResource("15")]
 position = Vector2(200, 240)
 data = ExtResource("21")
 
-[node name="Marle" parent="." instance=ExtResource("18")]
+[node name="Marle" parent="." unique_id=1445411373 instance=ExtResource("18")]
 position = Vector2(170, 270)
 leader_path = NodePath("../Player")
-follow_delay = 20
 data = ExtResource("22")
 
-[node name="AnimatedSprite2D" parent="Marle" index="0"]
-sprite_frames = ExtResource("19")
-
-[node name="Lucca" parent="." instance=ExtResource("18")]
+[node name="Lucca" parent="." unique_id=1157695866 instance=ExtResource("18")]
 position = Vector2(170, 210)
 leader_path = NodePath("../Player")
 follow_delay = 40
 data = ExtResource("23")
 
-[node name="AnimatedSprite2D" parent="Lucca" index="0"]
-sprite_frames = ExtResource("20")
-
-[node name="NPC" parent="." instance=ExtResource("16")]
+[node name="NPC" parent="." unique_id=1384677867 instance=ExtResource("16")]
 position = Vector2(400, 240)
 dialogue = ExtResource("6")
 
-[node name="Enemy1" parent="." instance=ExtResource("17")]
-position = Vector2(505, 290)
+[node name="Enemy1" parent="." unique_id=1445109841 instance=ExtResource("17")]
+position = Vector2(506, 290)
 data = ExtResource("12")
 encounter_group = "a"
 
-[node name="Enemy2" parent="." instance=ExtResource("17")]
+[node name="Enemy2" parent="." unique_id=259202200 instance=ExtResource("17")]
 position = Vector2(535, 330)
 data = ExtResource("12")
 encounter_group = "a"
 
-[node name="Enemy3" parent="." instance=ExtResource("17")]
+[node name="Enemy3" parent="." unique_id=962188357 instance=ExtResource("17")]
 position = Vector2(505, 370)
 data = ExtResource("12")
 encounter_group = "a"

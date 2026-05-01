@@ -572,11 +572,11 @@ No changes from Phase 2. The formula is the same, just applied with per-characte
 - [x] Results show combined EXP, G, TP from all enemies
 
 ### Command menu
-- [ ] Menu shows Attack and Item options
-- [ ] Up/down navigates between Attack and Item
-- [ ] Interact confirms selection
-- [ ] Selecting Attack opens enemy target selection
-- [ ] Selecting Item opens item submenu
+- [x] Menu shows Attack and Item options
+- [x] Up/down navigates between Attack and Item
+- [x] Interact confirms selection
+- [x] Selecting Attack opens enemy target selection
+- [x] Selecting Item opens item submenu
 
 ### Item usage
 - [ ] Item submenu shows Tonic with count
