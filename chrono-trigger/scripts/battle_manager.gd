@@ -26,22 +26,16 @@ var _player_command_ready := false
 var _animating := false
 var _battle_finished := false
 var _rng := RandomNumberGenerator.new()
-var _music_playback: AudioStreamGeneratorPlayback
-var _music_sample_index := 0
-var _music_mix_rate := 22050.0
 
 func _ready() -> void:
 	_rng.randomize()
 	battle_ui.attack_selected.connect(_on_attack_selected)
-	var music_stream := AudioStreamGenerator.new()
-	music_stream.mix_rate = _music_mix_rate
-	music_stream.buffer_length = 0.35
-	battle_music.stream = music_stream
+	if battle_music.stream:
+		battle_music.stream.set("loop", true)
 
 func _process(delta: float) -> void:
 	if GameState.current != GameState.State.BATTLE:
 		return
-	_fill_music_buffer()
 	if _enemy == null or _enemy_data == null:
 		return
 	if _animating or _battle_finished:
@@ -78,8 +72,6 @@ func start_battle(enemy: Area2D) -> void:
 	battle_ui.start_battle(_player_hp, PLAYER_MAX_HP, _enemy_name(), _enemy_hp, _enemy_stat("max_hp"))
 	if battle_music.stream:
 		battle_music.play()
-		_music_playback = battle_music.get_stream_playback()
-		_music_sample_index = 0
 
 func _on_attack_selected() -> void:
 	if GameState.current != GameState.State.BATTLE:
@@ -230,19 +222,3 @@ func _enemy_name() -> String:
 
 func _enemy_stat(property_name: String) -> int:
 	return int(_enemy_data.get(property_name))
-
-func _fill_music_buffer() -> void:
-	if _music_playback == null:
-		return
-
-	var notes := [261.63, 329.63, 392.0, 523.25, 392.0, 329.63, 293.66, 392.0]
-	while _music_playback.can_push_buffer(1):
-		var beat := int(floor(_music_sample_index / (_music_mix_rate / 4.0))) % notes.size()
-		var frequency: float = notes[beat]
-		var time := float(_music_sample_index) / _music_mix_rate
-		var tone := sin(TAU * frequency * time)
-		var harmony := 0.45 * sin(TAU * (frequency / 2.0) * time)
-		var pulse := 1.0 if int(floor(_music_sample_index / (_music_mix_rate / 12.0))) % 2 == 0 else 0.65
-		var sample := float((tone + harmony) * pulse * 0.16)
-		_music_playback.push_frame(Vector2(sample, sample))
-		_music_sample_index += 1

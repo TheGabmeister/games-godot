@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://scripts/battle_manager.gd" id="9"]
 [ext_resource type="Script" path="res://scripts/battle_ui.gd" id="10"]
 [ext_resource type="Resource" path="res://enemies/imp.tres" id="12"]
+[ext_resource type="AudioStream" path="res://music/battle.ogg" id="13"]
 
 [sub_resource type="RectangleShape2D" id="wall_top_shape"]
 size = Vector2(640, 32)
@@ -137,6 +138,7 @@ battle_ui_path = NodePath("../BattleUI")
 music_player_path = NodePath("../BattleMusic")
 
 [node name="BattleMusic" type="AudioStreamPlayer" parent="." unique_id=522984708]
+stream = ExtResource("13")
 volume_db = -12.0
 
 [node name="Camera" type="Camera2D" parent="." unique_id=731743553]

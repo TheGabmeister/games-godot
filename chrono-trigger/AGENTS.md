@@ -83,6 +83,7 @@ Configured external tools:
 - FluidSynth: `D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe`
 - ffmpeg: `D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe`
 - SoundFont: `D:/GeneralUser-GS/GeneralUser-GS.sf2`
+- Python: `C:/Users/Admin/AppData/Local/Python/pythoncore-3.14-64/python.exe`
 
 Python scripts in `tools/music/` use `midiutil` to generate MIDI → FluidSynth renders with a soundfont to WAV → ffmpeg converts to OGG.
 
