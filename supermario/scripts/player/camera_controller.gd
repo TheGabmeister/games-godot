@@ -2,8 +2,8 @@ extends Camera2D
 
 ## Side-scrolling camera with look-ahead in the facing direction and a
 ## ratcheting left limit (no-backtrack). Reads facing from the parent
-## character's `Visuals` child and composes screen shake from CameraEffects.
-## Auto-detects level bounds from the first TileMapLayer in the scene.
+## character's `Visuals` child. Auto-detects level bounds from the
+## first TileMapLayer in the scene.
 
 const TILE_SIZE := 32
 const MARGIN_TILES := 2
@@ -48,9 +48,7 @@ func _find_tilemap() -> TileMapLayer:
 func _process(delta: float) -> void:
 	var target_ahead: float = signf(_visuals.scale.x) * cam_config.look_ahead_distance
 	_look_ahead = move_toward(_look_ahead, target_ahead, cam_config.look_ahead_speed * delta)
-	var shake := CameraEffects.get_shake_offset()
-	offset.x = _look_ahead + shake.x
-	offset.y = shake.y
+	offset.x = _look_ahead
 
 	var cam_left: float = _player.global_position.x + _look_ahead - cam_config.no_backtrack_offset
 	if cam_left > _max_x:

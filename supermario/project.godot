@@ -25,7 +25,6 @@ EventBus="*res://scripts/autoloads/event_bus.gd"
 GameManager="*res://scripts/autoloads/game_manager.gd"
 SfxManager="*res://scripts/autoloads/sfx_manager.gd"
 MusicManager="*res://scripts/autoloads/music_manager.gd"
-CameraEffects="*res://scripts/autoloads/camera_effects.gd"
 UIManager="*res://scripts/autoloads/ui_manager.gd"
 
 [display]

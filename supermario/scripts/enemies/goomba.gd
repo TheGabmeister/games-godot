@@ -36,7 +36,6 @@ func stomp_kill() -> bool:
 	_is_dead = true
 	_play_sound(stomp_sound)
 	EventBus.enemy_stomped.emit(global_position)
-	CameraEffects.shake(2.0, 0.1)
 	_start_squish_death()
 	return true
 

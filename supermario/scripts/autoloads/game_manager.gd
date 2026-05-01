@@ -3,6 +3,8 @@ extends Node
 enum PowerState { SMALL, BIG, FIRE }
 enum GameState { TITLE, PLAYING, PAUSED, GAME_OVER, LEVEL_COMPLETE, TRANSITIONING }
 
+
+# .gd autoloads can't use @export, so game-wide config lives in a .tres editable in the inspector.
 const _config := preload("res://resources/config/game_config.tres")
 
 var score: int = 0

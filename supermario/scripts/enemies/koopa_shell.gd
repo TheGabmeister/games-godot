@@ -173,7 +173,7 @@ func _on_damage_area_entered(area: Area2D) -> void:
 	_combo_count += 1
 	_award_combo_points(enemy.global_position)
 	EventBus.combo_stomp.emit(_combo_count, enemy.global_position)
-	CameraEffects.shake(minf(1.5 + _combo_count * 0.5, 5.0), 0.1)
+
 
 
 func _award_combo_points(pos: Vector2) -> void:
