@@ -23,15 +23,16 @@ One scene file: `scenes/debug_room.tscn` — the project's main scene.
 
 ```
 debug_room (Node2D)
-├── TileMapLayer          — floor + wall tiles, walls have physics collision
+├── Floor (ColorRect)     — tan background
+├── WallTop/Bottom/Left/Right (StaticBody2D) — gray walls with collision
 ├── Player (CharacterBody2D)
 │   ├── AnimatedSprite2D  — crono_sheet.png via SpriteFrames
 │   ├── CollisionShape2D  — player body collision (RectangleShape2D)
-│   ├── InteractRay (RayCast2D) — short ray in facing direction, detects interactables
-│   └── Camera2D          — child of player, auto-follows
+│   └── InteractRay (RayCast2D) — short ray in facing direction, detects interactables
 ├── NPC (StaticBody2D)
 │   ├── AnimatedSprite2D  — npc_sheet.png via SpriteFrames
 │   └── CollisionShape2D  — blocks player from walking through
+├── Camera (Camera2D)     — follows Player via camera.gd, position smoothing
 └── DialogueBox (CanvasLayer)
     └── PanelContainer
         ├── NameLabel     — speaker name, colored
@@ -108,21 +109,15 @@ Add these to `project.godot` input map (or configure in editor):
 
 ## Camera
 
-Camera2D as a child of the Player node. Position smoothing enabled so it doesn't feel jarring. No other camera logic needed for Phase 1.
+Camera2D is a standalone node (sibling of Player) with `camera.gd`. Follows the Player via `@export var target: NodePath`. Position smoothing enabled.
 
-## Tilemap
+## Room layout
 
-A single TileMapLayer with:
-- A floor tile (walkable, no collision).
-- A wall tile (with physics layer collision so `move_and_slide` stops the player).
-
-The debug room is a small rectangular space — roughly 20x15 tiles at 32px each (fits neatly in 1200×900 with room to spare). Walls around the border, open floor inside, NPC placed somewhere in the middle area.
-
-Tile art: `props/floor.png` and `props/wall.png` from the sprites table above.
+The debug room uses ColorRect for the floor and StaticBody2D nodes for the 4 walls (with ColorRect children for visuals). Room size: 640×480 px. TileMapLayer deferred to a later phase when we need varied room layouts.
 
 ## Sprites
 
-SVG source files exported to PNG via Inkscape. 32×32 pixels per tile/character.
+SVG source files exported to PNG via Inkscape. 64×64 pixels per tile/character. Re-export all with `bash tools/export_sprites.sh`.
 
 | File | Description |
 |------|-------------|
@@ -131,16 +126,16 @@ SVG source files exported to PNG via Inkscape. 32×32 pixels per tile/character.
 | `props/floor.svg` → `floor.png` | Floor tile — warm tan/brown. |
 | `props/wall.svg` → `wall.png` | Wall tile — darker gray, visually reads as solid. |
 
-Export commands:
+Export commands (also in `tools/export_sprites.sh`):
 ```
-"/c/Program Files/Inkscape/bin/inkscape.exe" player/crono_sheet.svg --export-type=png --export-filename=player/crono_sheet.png -w 256 -h 32
-"/c/Program Files/Inkscape/bin/inkscape.exe" npc/npc_sheet.svg --export-type=png --export-filename=npc/npc_sheet.png -w 256 -h 32
-"/c/Program Files/Inkscape/bin/inkscape.exe" <folder>/<name>.svg --export-type=png --export-filename=<folder>/<name>.png -w 32 -h 32
+"/c/Program Files/Inkscape/bin/inkscape.exe" player/crono_sheet.svg --export-type=png --export-filename=player/crono_sheet.png -w 512 -h 64
+"/c/Program Files/Inkscape/bin/inkscape.exe" npc/npc_sheet.svg --export-type=png --export-filename=npc/npc_sheet.png -w 512 -h 64
+"/c/Program Files/Inkscape/bin/inkscape.exe" <folder>/<name>.svg --export-type=png --export-filename=<folder>/<name>.png -w 64 -h 64
 ```
 
 ### Crono sprite sheet layout
 
-Horizontal strip: 256×32 px (8 frames × 32px each). Each 32×32 cell is one frame.
+Horizontal strip: 512×64 px (8 frames × 64px each). Each 64×64 cell is one frame.
 
 ```
 | down_0 | down_1 | up_0 | up_1 | left_0 | left_1 | right_0 | right_1 |
@@ -155,7 +150,7 @@ Simple top-down character. Walk frames differ by leg position (one leg forward v
 
 ### NPC sprite sheet layout
 
-Same format as Crono: 256×32 px horizontal strip, 8 frames of 32×32.
+Same format as Crono: 512×64 px horizontal strip, 8 frames of 64×64.
 
 ```
 | down_0 | down_1 | up_0 | up_1 | left_0 | left_1 | right_0 | right_1 |
