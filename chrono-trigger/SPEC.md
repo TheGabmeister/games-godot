@@ -649,7 +649,12 @@ Minor diversions woven through the world. None are individually game-changing, b
 
 ## 9. Bestiary
 
-Enemies are organized by era. Most enemies have a typical elemental weakness reflecting their habitat. The full data tables (HP, EXP, G, TP, weakness, drop, charm, boss mechanics) are in [docs/bestiary.md](docs/bestiary.md). Summary by era below.
+Enemies are organized by era. Most enemies have a typical elemental weakness reflecting their habitat. Full data tables are split across three docs:
+
+- [docs/bestiary.md](docs/bestiary.md) — stat tables (HP, EXP, G, TP, weakness, drop, charm) for regular enemies and bosses, plus regular enemy behavior (paired mechanics, state changes, counters, status inflictors)
+- [docs/boss-ai.md](docs/boss-ai.md) — per-boss AI specs: attack lists, phase transitions, counter triggers, kill-order requirements, ATB speed values
+
+Summary by era below.
 
 ### 9.1 65,000,000 BC — Dinosaurs & Reptites
 Reptite warriors and mages, raptors (Kilwala, Terrasaur, Megasaur), pterosaurs (Avian Rex), giant insects, Roundillo / Rolypoly. Many lightning-weak. **Bosses:** Nizbel, Nizbel II, Black Tyranno, Azala.

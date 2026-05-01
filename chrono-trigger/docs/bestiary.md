@@ -4,6 +4,8 @@ Referenced from [SPEC.md §9](../SPEC.md). SNES original names used throughout.
 
 **Data confidence:** Values marked `(*)` are cross-verified across 2+ sources. Values marked `(~)` came from a single source or had minor discrepancies — verify against ROM data ([Data Crystal](https://datacrystal.tcrf.net/wiki/Chrono_Trigger_(SNES)/List_of_Enemies)) before locking.
 
+**Companion docs:** Boss AI patterns (attacks, phases, counters) are in [docs/boss-ai.md](boss-ai.md). Regular enemy behavior (paired mechanics, state changes, counters) is in the "Regular Enemy Behavior" section at the bottom of this file.
+
 ---
 
 ## Regular Enemies by Era
@@ -220,6 +222,94 @@ Gold is 0 throughout Prehistory (no currency system).
 4. **Counter patterns to implement:** Heckran (counter physical), Lavos Spawn Shell (Needle counter), Queen Zeal Hands (Life Shaver / MP Buster), Dalton (Iron Orb on physical), Son of Sun (fire counter on wrong Flame).
 5. **Charm vs Drop** are separate loot tables. Charm = Ayla's mid-battle steal. Drop = automatic post-battle reward.
 
+---
+
+## Regular Enemy Behavior
+
+Most regular enemies are basic physical attackers. This section documents enemies with **interesting AI** — state changes, counter patterns, paired mechanics, or special attacks. Enemies not listed here use basic physical attacks only.
+
+### Paired / Interactive Enemies
+
+These enemies have behavior that changes based on whether a partner enemy is alive in the same fight.
+
+| Enemy A | Enemy B | Interaction | Era |
+|---|---|---|---|
+| Juggler | Outlaw | Attacking Outlaw while Juggler alive triggers Fire Whirl Dual Tech counter (Fire AoE). Kill Juggler first. | 600 AD |
+| Jinn | Ghul | Ghul shields Jinn from physical damage. Kill Ghul first. | 12,000 BC |
+| Jinn | Barghest | If they get close to each other, they perform a combined ~120 damage AoE. | 12,000 BC |
+| Cave Ape | Shist | Ape throws Shist at party as counter-attack when hit. Kill Shists first. | 65M BC |
+| Reptite | Volcanite | Whoever hits Volcanite first determines target of ember shower — hit it before Reptite does to redirect damage at enemies. | 65M BC |
+| Exterminator | Rat | Exterminator fires lasers at whatever moves — often kills its own Rats (friendly fire). | 2300 AD |
+| Acid | Alkaline | Can fuse into an explosion. Attacking Alkaline while Acid alive may trigger counter. Kill Acids first. | 2300 AD |
+| Narble | Ghaj | Narble counters magic with MP Buster (MP → 0). Ghaj counters physical with instant death. Use physical on Narble, magic on Ghaj. | Black Omen |
+| Bellbird | Ogan | Bellbird wakes sleeping Ogans on the overworld. In battle, Bellbird may counter-ring to inflict Chaos. | 600 AD |
+
+### State-Change / Transformation Enemies
+
+| Enemy | Mechanic | Era |
+|---|---|---|
+| Ogan | Armed (high DEF) → hit with Fire → hammer destroyed → Disarmed (low DEF) | 600 AD |
+| Shist | Hit once → transforms into Pahoehoe → hit again → erupts (Fire AoE) | 65M BC |
+| Bomber Bird | On death → spawns Stone Imp at full HP | 12,000 BC |
+| Gold Eaglet | After 2 hits → transforms into Red Eaglet (weaker) | 65M BC |
+| Juggler | Swaps physical/magical immunity with each hit type | 600 AD |
+
+### Counter / Self-Destruct Enemies
+
+| Enemy | Trigger | Counter | Era |
+|---|---|---|---|
+| Tubster | any attack | hard physical hit back (every time) | Black Omen |
+| Narble | magic attack | MP Buster (caster's MP → 0) | Black Omen |
+| Ghaj | physical attack | instant death on attacker | Black Omen |
+| Roly Bomber | death or timer | self-destruct AoE | 600 AD |
+| Laser Guard | non-fatal damage | self-destruct AoE; can chain to other Laser Guards | 2300 AD |
+| Green Imp | being hit | Jump Kick counter | 600 AD |
+
+### Status-Inflicting Enemies
+
+| Enemy | Attack | Status | Era |
+|---|---|---|---|
+| Naga-ette | Nagamour (Slow Kiss) | Slow | 600 AD |
+| Cybot | La La La | Chaos (all party) | Black Omen |
+| Cybot | Iron Sphere | halves target's current HP | Black Omen |
+| Cave Bat | Sonic Wave | Sleep | 1000 AD |
+| Fly Trap | Pollen | Poison | 65M BC |
+| Bellbird | Ring Bell (counter) | Chaos | 600 AD |
+| Rubble | Lock (battle start) | Lock (disables Techs + Items); then flees after ~3 turns | 12,000 BC |
+| Gargoyle | HP-to-1 attack | reduces target HP to 1 | 12,000 BC |
+| Nu | Head-Butt | reduces target HP to 1 | various |
+
+### Physical-Immune Enemies (magic only)
+
+| Enemy | Notes | Era |
+|---|---|---|
+| Shadow | immune to all physical; must use magic/Techs | 2300 AD |
+| Acid | DEF 255; physical immune; use magic | 2300 AD |
+
+### MP/HP Drain Enemies
+
+| Enemy | Attack | Effect | Era |
+|---|---|---|---|
+| Jinn Bottle | Absorb / Drain | drains MP and HP from target | 1000 AD |
+| Cave Bat | Blood Suck | drains HP | 1000 AD |
+
+### Enemies with Notable Elemental Mechanics
+
+| Enemy | Mechanic | Era |
+|---|---|---|
+| Megasaur | Lightning lowers defense (mini-Nizbel mechanic) | 65M BC |
+| Scouter / Red Scout / Blue Scout | counter with elemental AoE if hit with wrong element; use matching weakness | 12,000 BC |
+| Tubster | weak to Fire; use Fire to kill efficiently despite counter | Black Omen |
+
+### Charm-Farming Targets
+
+| Enemy | Charm Item | Location | Notes |
+|---|---|---|---|
+| Tubster | Power Tab | Black Omen | respawns if you leave and re-enter room |
+| Flyclops | Gold Stud | Black Omen | 75% MP cost reduction |
+| Nu | Mop (joke) / Third Eye | Hunting Range / various | appears during rain |
+| Rubble | — (high EXP/TP only) | Mt. Woe | 1,000 EXP + 100 TP on kill; flees fast |
+
 ## Sources
 
 - [StrategyWiki — Enemies](https://strategywiki.org/wiki/Chrono_Trigger/Enemies) / [Bosses](https://strategywiki.org/wiki/Chrono_Trigger/Bosses)
@@ -231,3 +321,8 @@ Gold is 0 throughout Prehistory (no currency system).
 - [Caves of Narshe — Enemies](https://www.cavesofnarshe.com/ct/enemies.php)
 - [Chrono Compendium — Monsters](https://www.chronocompendium.com/Term/Monsters_(Chrono_Trigger).html)
 - [chronotrigger.wiki.gg — Enemies](https://chronotrigger.wiki.gg/wiki/Enemies)
+- [GirkDently's Enemy AI Script Guide (GameFAQs)](https://gamefaqs.gamespot.com/snes/563538-chrono-trigger/faqs/78740)
+- [Shinrin's Bestiary (GameFAQs)](https://gamefaqs.gamespot.com/ds/950181-chrono-trigger/faqs/55029)
+- [Chrono Compendium — Monster Techs](https://www.chronocompendium.com/Term/Monster_Techs.html)
+- [Data Crystal — Enemy AI Documentation](https://datacrystal.tcrf.net/wiki/Chrono_Trigger_(SNES)/Enemy_AI_Documentation)
+- [RPG Shrines — Enemy Attacks](http://shrines.rpgclassics.com/snes/ct/eattacks.shtml)
