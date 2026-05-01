@@ -1,53 +1,51 @@
 extends CharacterBody2D
 
 const SPEED := 150.0
-const RAY_LENGTH := 20.0
-const HISTORY_SIZE := 120
 
+@export var leader_path: NodePath
+@export var follow_delay: int = 20
 @export var data: CharacterData
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
-@onready var interact_ray: RayCast2D = $InteractRay
 
 var facing := Vector2.DOWN
-var _position_history: PackedVector2Array = PackedVector2Array()
+var _leader: Node2D
 
 func _ready() -> void:
-	_play_idle_animation()
-	set_meta("position_history", _position_history)
+	_leader = get_node_or_null(leader_path)
+	if animated_sprite.sprite_frames:
+		_play_idle_animation()
 
 func _physics_process(_delta: float) -> void:
 	if GameState.current != GameState.State.FIELD:
 		velocity = Vector2.ZERO
 		return
+	if _leader == null:
+		return
+	if not _leader.has_meta("position_history"):
+		return
 
-	var input := Vector2.ZERO
-	input.x = Input.get_axis("move_left", "move_right")
-	input.y = Input.get_axis("move_up", "move_down")
-	input = input.normalized()
+	var history: PackedVector2Array = _leader.get_meta("position_history")
+	if history.size() < follow_delay:
+		return
 
-	velocity = input * SPEED
-
-	if input != Vector2.ZERO:
-		facing = input.snapped(Vector2.ONE).normalized()
-		interact_ray.target_position = facing * RAY_LENGTH
-		_play_walk_animation()
-	else:
+	var target_pos := history[history.size() - follow_delay]
+	var diff := target_pos - global_position
+	if diff.length() < 2.0:
+		velocity = Vector2.ZERO
 		_play_idle_animation()
+	else:
+		velocity = diff.normalized() * SPEED
+		facing = diff.normalized().snapped(Vector2.ONE).normalized()
+		_play_walk_animation()
 
 	move_and_slide()
-	_record_position()
-
-	if Input.is_action_just_pressed("interact"):
-		_try_interact()
 
 func _play_walk_animation() -> void:
-	var anim := _direction_name()
-	animated_sprite.play("walk_" + anim)
+	animated_sprite.play("walk_" + _direction_name())
 
 func _play_idle_animation() -> void:
-	var anim := _direction_name()
-	animated_sprite.play("idle_" + anim)
+	animated_sprite.play("idle_" + _direction_name())
 
 func _direction_name() -> String:
 	if abs(facing.x) > abs(facing.y):
@@ -76,16 +74,3 @@ func play_hit(hit_direction: Vector2) -> void:
 	tween.tween_property(self, "global_position", start_pos + recoil * 8.0, 0.06)
 	tween.tween_property(self, "global_position", start_pos - recoil * 4.0, 0.06)
 	tween.tween_property(self, "global_position", start_pos, 0.08)
-
-func _record_position() -> void:
-	_position_history.append(global_position)
-	if _position_history.size() > HISTORY_SIZE:
-		_position_history.remove_at(0)
-	set_meta("position_history", _position_history)
-
-func _try_interact() -> void:
-	if not interact_ray.is_colliding():
-		return
-	var collider := interact_ray.get_collider()
-	if collider and collider.is_in_group("interactable"):
-		collider.interact()

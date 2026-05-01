@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Crono"
+max_hp = 70
+power = 5
+speed = 12
+stamina = 5
+strike_percent = 10.0
+weapon_ap = 3

@@ -20,7 +20,11 @@
       "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/props/floor.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/props/floor.png -w 64 -h 64)",
       "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/props/wall.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/props/wall.png -w 64 -h 64)",
       "Bash(\"D:/Godot_v4.6.2-stable_win64.exe\" --headless --quit --path \"c:/dev/games-godot/chrono-trigger\")",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/party/marle_sheet.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/party/marle_sheet.png -w 768 -h 64)",
+      "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/party/lucca_sheet.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/party/lucca_sheet.png -w 768 -h 64)",
+      "Bash(\"D:/Godot_v4.6.2-stable_win64.exe\" --import --headless --path \"c:/dev/games-godot/chrono-trigger\")",
+      "Bash(\"D:/Godot_v4.6.2-stable_win64.exe\" --path \"c:/dev/games-godot/chrono-trigger\")"
     ]
   }
 }

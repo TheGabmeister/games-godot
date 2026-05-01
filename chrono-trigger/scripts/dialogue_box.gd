@@ -13,6 +13,7 @@ var _current_line_length := 0
 var _typewriting := false
 
 func _ready() -> void:
+	add_to_group(Groups.DIALOGUE_BOX)
 	panel.visible = false
 
 func _process(delta: float) -> void:

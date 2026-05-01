@@ -1,6 +1,8 @@
 extends Area2D
 
 @export var data: Resource
+@export var encounter_group: String = ""
+@export var is_boss: bool = false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -20,7 +22,7 @@ func _on_body_entered(body: Node2D) -> void:
 	if not body is CharacterBody2D:
 		return
 
-	var battle_manager := get_node_or_null("/root/DebugRoom/BattleManager")
+	var battle_manager := get_tree().get_first_node_in_group(Groups.BATTLE_MANAGER)
 	if battle_manager == null:
 		return
 
@@ -30,6 +32,12 @@ func _on_body_entered(body: Node2D) -> void:
 
 func set_battle_collision_enabled(enabled: bool) -> void:
 	collision_shape.set_deferred("disabled", not enabled)
+
+func reset_for_encounter() -> void:
+	battle_started = false
+	set_deferred("monitoring", true)
+	set_battle_collision_enabled(true)
+	modulate.a = 1.0
 
 func play_idle() -> void:
 	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("idle"):

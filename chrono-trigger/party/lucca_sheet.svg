@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 32">
+  <!-- Frame 0: down_0 (idle, facing camera) -->
+  <g transform="translate(0,0)">
+    <rect x="11" y="14" width="10" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="16" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M11,8 Q11,2 16,3 Q21,2 21,8 L19,7 L16,4 L13,7 Z" fill="#A064B4"/>
+    <rect x="14" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="17" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="17" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+  </g>
+  <!-- Frame 1: down_1 (walk, facing camera) -->
+  <g transform="translate(32,0)">
+    <rect x="11" y="14" width="10" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="16" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M11,8 Q11,2 16,3 Q21,2 21,8 L19,7 L16,4 L13,7 Z" fill="#A064B4"/>
+    <rect x="14" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="17" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="10" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="19" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+  </g>
+  <!-- Frame 2: up_0 (idle, facing away) -->
+  <g transform="translate(64,0)">
+    <rect x="11" y="14" width="10" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="16" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M10,9 Q10,1 16,2 Q22,1 22,9 L20,8 L16,3 L12,8 Z" fill="#A064B4"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="17" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+  </g>
+  <!-- Frame 3: up_1 (walk, facing away) -->
+  <g transform="translate(96,0)">
+    <rect x="11" y="14" width="10" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="16" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M10,9 Q10,1 16,2 Q22,1 22,9 L20,8 L16,3 L12,8 Z" fill="#A064B4"/>
+    <rect x="10" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="19" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+  </g>
+  <!-- Frame 4: left_0 (idle, facing left) -->
+  <g transform="translate(128,0)">
+    <rect x="12" y="14" width="9" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="15" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M10,8 Q11,2 15,3 Q20,2 20,8 L18,7 L15,4 L12,7 Z" fill="#A064B4"/>
+    <rect x="12" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="16" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+  </g>
+  <!-- Frame 5: left_1 (walk, facing left) -->
+  <g transform="translate(160,0)">
+    <rect x="12" y="14" width="9" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="15" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M10,8 Q11,2 15,3 Q20,2 20,8 L18,7 L15,4 L12,7 Z" fill="#A064B4"/>
+    <rect x="12" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="10" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="18" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+  </g>
+  <!-- Frame 6: right_0 (idle, facing right) -->
+  <g transform="translate(192,0)">
+    <rect x="11" y="14" width="9" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="17" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M12,8 Q12,2 17,3 Q22,2 22,8 L20,7 L17,4 L14,7 Z" fill="#A064B4"/>
+    <rect x="19" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="17" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+  </g>
+  <!-- Frame 7: right_1 (walk, facing right) -->
+  <g transform="translate(224,0)">
+    <rect x="11" y="14" width="9" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="17" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M12,8 Q12,2 17,3 Q22,2 22,8 L20,7 L17,4 L14,7 Z" fill="#A064B4"/>
+    <rect x="19" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="10" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="19" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+  </g>
+  <!-- Frame 8: atk_down -->
+  <g transform="translate(256,0)">
+    <rect x="11" y="14" width="10" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="16" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M11,8 Q11,2 16,3 Q21,2 21,8 L19,7 L16,4 L13,7 Z" fill="#A064B4"/>
+    <rect x="14" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="17" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="17" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="20" y="17" width="8" height="2" rx="1" fill="#888888"/>
+    <rect x="27" y="16" width="3" height="4" fill="#AAAAAA"/>
+  </g>
+  <!-- Frame 9: atk_up -->
+  <g transform="translate(288,0)">
+    <rect x="11" y="14" width="10" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="16" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M10,9 Q10,1 16,2 Q22,1 22,9 L20,8 L16,3 L12,8 Z" fill="#A064B4"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="17" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="4" y="13" width="8" height="2" rx="1" fill="#888888"/>
+    <rect x="2" y="12" width="3" height="4" fill="#AAAAAA"/>
+  </g>
+  <!-- Frame 10: atk_left -->
+  <g transform="translate(320,0)">
+    <rect x="12" y="14" width="9" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="15" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M10,8 Q11,2 15,3 Q20,2 20,8 L18,7 L15,4 L12,7 Z" fill="#A064B4"/>
+    <rect x="12" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="16" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="2" y="16" width="11" height="2" rx="1" fill="#888888"/>
+    <rect x="0.5" y="15" width="3" height="4" fill="#AAAAAA"/>
+  </g>
+  <!-- Frame 11: atk_right -->
+  <g transform="translate(352,0)">
+    <rect x="11" y="14" width="9" height="10" rx="1" fill="#A064B4"/>
+    <circle cx="17" cy="9" r="5" fill="#F2C4A0"/>
+    <path d="M12,8 Q12,2 17,3 Q22,2 22,8 L20,7 L17,4 L14,7 Z" fill="#A064B4"/>
+    <rect x="19" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="17" y="24" width="3" height="5" rx="1" fill="#DDD"/>
+    <rect x="19" y="16" width="11" height="2" rx="1" fill="#888888"/>
+    <rect x="28.5" y="15" width="3" height="4" fill="#AAAAAA"/>
+  </g>
+</svg>

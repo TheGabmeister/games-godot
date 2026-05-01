@@ -11,5 +11,5 @@ func _ready() -> void:
 func interact() -> void:
 	if dialogue == null:
 		return
-	var dialogue_box := get_node("/root/DebugRoom/DialogueBox")
+	var dialogue_box := get_tree().get_first_node_in_group(Groups.DIALOGUE_BOX)
 	dialogue_box.start(dialogue)
