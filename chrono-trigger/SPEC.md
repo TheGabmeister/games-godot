@@ -38,8 +38,8 @@ This document deliberately stays at the spec level: features, systems, character
 - **Turn order is emergent**, not scripted. Whoever fills first acts first. Multiple ready actors queue in fill order.
 - **Party of three** active members in any battle. Roster of seven recruitable characters; swapping happens at the End of Time.
 - **Targeting and shapes.** Techs have geometric AoE shapes that interact with on-field positions: single-target, line, cone, circle-around-self, circle-around-target. Pre-positioning the party before triggering a fight, and waiting for enemies to cluster, are core tactical levers.
-- **Escape.** "Run" is continuous and time-based (player holds the run input; an escape value accumulates). Some battles are flagged un-runnable (most bosses, story fights). Enemies can still hit the party while it flees.
-- **Counter.** Some enemies counter every attack; some counter only on specific damage types (e.g., Magus's elemental barriers counter mismatched elements). The **Rage Band** and **Frenzy Band** accessories give the wearer a chance to counter when struck. The **Berserker** accessory forces auto-attacks but boosts stats.
+- **Escape.** Not a menu command — player holds **L+R** simultaneously. An escape value accumulates over time; bosses and story fights are flagged un-runnable. Enemies can still hit the party while it flees.
+- **Counter.** Some enemies counter every attack; some counter only on specific damage types (e.g., Magus's elemental barriers counter mismatched elements). Certain accessories grant player characters a counter-attack chance (see §6.3).
 - **Game over** triggers when all three active party members are KO'd, except in the scripted Crono death scene at the Ocean Palace where the loss is canonical and unavoidable.
 - **Battle rewards.** Each victory awards EXP, G (gold), and Tech Points (TP). EXP and TP go only to surviving members of the active party of three — benched characters earn nothing, which is the central reason era-swap rotation matters.
 
@@ -61,9 +61,7 @@ Techs are character abilities that cost MP. They are organized in three tiers.
 
 **Triple Techs** — Combo abilities between all three active members. Same gauge/MP rules. Some Triples require a unique key item (a "Rock") to be held by one of the participants, and only one Rock is in the inventory at a time, so swapping Rocks gates which Triple is currently selectable. Rocks: Black, Blue, Silver, Gold, White.
 
-**Magus has no Dual/Triple Techs in the SNES original** (canon: he doesn't bond with the party). The DS port adds Magus combos; v1 ships SNES-only.
-
-The full canonical tech roster (Singles, Duals, Triples) is enumerated in [docs/techs.md](docs/techs.md) — a separate doc to keep this spec readable.
+The full canonical tech roster (Singles, Duals, Triples) is enumerated in [docs/techs.md](docs/techs.md). Magus's Dual/Triple restrictions are noted in his §4 character entry.
 
 ### 2.3 Stats & Progression
 
@@ -101,8 +99,6 @@ Four elements — there is no separate Holy/Light element:
 
 Resistance multipliers run 0% / 50% / 100% / 200%, plus an "absorb" state where a hit heals the target. Some bosses cycle their own elemental absorption mid-fight — most notably **Magus**, whose **Magic Wall** continuously rotates which element he absorbs, forcing the party to read the cue and switch damage types each round.
 
-**Magus's spells** are roughly 30% stronger than the same-name spells cast by Crono / Marle / Lucca, since he is the late-game black-mage recruit.
-
 #### Spekkio, the Master of War
 
 Spekkio resides at the End of Time and grants the four magic-using characters their first elemental Single Tech via an "awakening." His own visible form scales to the **lead character's level** at the moment of encounter — encountering him at higher level yields a harder (optional) battle:
@@ -138,12 +134,6 @@ Positive statuses (granted by player techs like Marle's Haste, Lucca's Protect, 
 - **Shade / Specs** — utility buffs available via items.
 
 Status protection comes from accessories (Ribbon, Vigil's Hat, Amulet) and certain armor pieces.
-
-### 2.6 Saving
-
-- **In dungeons / interior maps**: save only at **save point sparkles** (small blue/white twinkles on the floor). Stepping on one and confirming opens the save menu.
-- **On the world map**: open the menu and save anywhere.
-- **Shelter** consumable: full party HP+MP restore, **usable only on save points**. Single-use, consumed.
 
 ---
 
@@ -293,7 +283,7 @@ Endings are determined by **when in the story Lavos is defeated**. Lavos can be 
 
 ### 5.4 New Game+
 
-After clearing the game, NG+ is unlocked from the cleared save. Carried over: levels, equipment, items, gold, learned techs, consumed stat tabs. Reset: story progression, plot key items, the Epoch's time-travel ability.
+See §10.9 for full carry-over/reset details. In short: levels, equipment, items, learned techs carry over. Story flags, key items, and the Epoch reset. Gold resets to 200G. A warp-to-Lavos option is unlocked early, enabling the 13 endings based on when Lavos is fought.
 
 ---
 
@@ -323,7 +313,7 @@ Different characters route off different stats — this is non-obvious and matte
 - **Ayla** — Power-driven, more efficient: 1 PWR ≈ 1.75 attack.
 - **Marle and Lucca** — **Hit-driven**, not Power. 1 Hit ≈ 2/3 attack contribution. They want **Hit Ring / Sight Cap**, not Power Ring.
 
-Effective damage roughly: `(Weapon AP + character contribution from Power or Hit) × random factor − target Stamina/Defense`. Crit doubles (or overrides). The full formula with multipliers and caps lives at StrategyWiki's Formulae page (see §11) — flagged in §10 to verify before locking in numbers.
+Effective damage roughly: `(Weapon AP + character contribution from Power or Hit) × random factor − target Stamina/Defense`. Crit doubles (or overrides). The full formula with multipliers and caps lives at StrategyWiki's Formulae page (see §12 References) — flagged in §11 to verify before locking in numbers.
 
 #### Crono — Katanas
 
@@ -439,8 +429,6 @@ The "crit-build" centerpiece weapons are: **Slasher / Slasher 2 / Kali Blade / S
 #### DS-port-only weapons (out of scope for v1)
 
 The DS port adds Dimensional-Vortex weapons not in the SNES original: **Dreamseeker** (Crono, 240 AP / 90% crit), **Venus Bow** (Marle, always 777 / no crit), **Spellslinger** (Lucca, scales with MP), **Apocalypse Arm** (Robo, 1 AP / crits = 9999), **Dreamreaper** (Magus, 180 AP / 4× crit). Treat as stretch goals.
-
-> **Acquisition column caveat:** the AP values above come from cross-checking almarsguides, arrpeegeez, Caves of Narshe, and the Wikibooks Equipment List. Where sources disagreed, the lower (more conservative) figure is used. Specific chest locations and shop-vs-chest splits will need a final ROM-data verification pass before implementation — added to §10.
 
 ### 6.2 Armor & Helms
 
@@ -628,22 +616,31 @@ Minor diversions woven through the world. None are individually game-changing, b
 - **Hunting Range (65,000,000 BC).** Hunt wild prehistoric animals to drop **Petal**, **Fang**, **Horn**, **Feather** (the same items Ayla can Charm). Trade them to the Ioka Trading Hut for special equipment.
 - **Drinking contest with Ayla (65,000,000 BC).** Part of Ayla's recruitment sequence at Ioka — Ayla challenges the party, knocks them out, and the Reptite raid follows; the party joins forces with her after.
 - **Johnny's Race (2300 AD).** With the **Bike Key** from Doan, race the robot Johnny down the abandoned highway in Lab 32 to bypass the obstacle. Re-runnable for fun once unlocked.
-- **The Trial verdict (1000 AD).** Effectively a minigame in that earlier behavior is graded; see §5.1 beat 3.
 
 ---
 
-## 8. Economy
+## 8. Economy & Shops
 
-- **Currency:** G (Gold). Single currency.
-- **Shops by era:** Truce, Porre, Choras, Medina, Bekkler's Carnival (1000 AD); Truce / Dorino / Porre / Choras / Medina (600 AD); Trann / Arris / Proto / Keeper's Domes (2300 AD); Enhasa / Kajar / Zeal Palace / Algetty / Last Village (12,000 BC); Ioka Trading Hut (65M BC, trades petals/fangs/horns/feathers).
-- **Medina dynamic pricing:** In 1000 AD, Medina shopkeepers initially mark up prices ~170× against humans. After story beats (defeating Magus, the Jerky sidequest changing Porre's culture) the **Trading Post** opens with dramatically lower prices.
-- **Bekkler's Carnival:** Silver Points (not G) buy Crono's Clone, Poyozo Doll, Power Tab, etc.
-- **Gear acquisition tiers:**
-  - *G-only (shop):* tonics, basic weapons, early helms, Bandana, Power/Magic Ring, Shelter, Heal, Revive, basic armor.
-  - *Chest-only:* most mid/late weapons, Speed Belt, Defender, Wall Ring.
-  - *Charm-only:* Gold Stud, Megalixir, Sun Shades, top-tier elemental Plate, several Tabs.
-  - *Quest-reward only:* Greendream, Hero Medal, Robo's Ribbon, Prism Specs, Sun Stone, upgraded Masamune, Wondershot, Rainbow.
-- **Income inflation:** the Wallet accessory boosts G per battle; Black Omen enemies are the canonical farming spot; selling charmed petal/fang/horn/feather stacks is the standard infinite-G loop.
+**Currency:** G (Gold). Single currency. No secondary currency except **Silver Points** at the Millennial Fair (Bekkler's Carnival), which buy Crono's Clone, Poyozo Doll, Power Tab, etc.
+
+**Shops by era:** Truce, Porre, Choras, Medina, Bekkler's Carnival (1000 AD); Truce / Dorino / Porre / Choras / Medina (600 AD); Trann / Arris / Proto / Keeper's Domes (2300 AD); Enhasa / Kajar / Zeal Palace / Algetty / Last Village (12,000 BC); Ioka Trading Hut (65M BC, barter only — see §10.4).
+
+**Shop mechanics:**
+- Triggered by talking to NPC shopkeepers → dialogue → shop menu overlay.
+- Types are not rigid — most are mixed (equipment + consumables). Inns are a fixed-price full-heal service.
+- **Selling:** equipment and consumables at **50% of buy price**. **Accessories cannot be sold.**
+- **Stat comparison** shown when browsing equipment (attack/defense delta per character).
+- **No "buy multiple"** in SNES — each purchase confirmed individually.
+
+**Medina overpricing:** before Ozzie's Fort is cleared, Medina shops charge ~128× normal price (capped at 65,535G — 16-bit max). After Ozzie's Fort, prices drop to normal. Binary toggle, not gradual.
+
+**Gear acquisition tiers:**
+- *G-only (shop):* tonics, basic weapons, early helms, Bandana, Power/Magic Ring, Shelter, Heal, Revive, basic armor.
+- *Chest-only:* most mid/late weapons, Speed Belt, Defender, Wall Ring.
+- *Charm-only:* Gold Stud, Megalixir, Sun Shades, top-tier elemental Plate, several Tabs.
+- *Quest-reward only:* Greendream, Hero Medal, Robo's Ribbon, Prism Specs, Sun Stone, upgraded Masamune, Wondershot, Rainbow.
+
+**Income inflation:** the **Wallet** accessory converts all EXP to Gold (more G per battle, zero EXP gain). Black Omen enemies are the canonical farming spot; selling charmed Petal/Fang/Horn/Feather stacks is the standard infinite-G loop.
 
 ---
 
@@ -674,23 +671,7 @@ Proto-2/3/4 robots, Bugger, Acid/Alkaline pairs, Departed/Decedent (irradiated h
 ### 9.6 Black Omen / Lavos
 A best-of gauntlet drawing from every era plus unique enemies (Mega Mutant, Giga Mutant, Terra Mutant, Lavos Spawn, Side-Kick, Cybot, Tubster). Final fights: Queen Zeal → Mammon Machine → Lavos shell → inner shell → Lavos Core (left Bit / right Bit / center body — only the center body counts).
 
-### 9.7 Major Antagonists & Significant NPCs
-- **Lavos** — parasitic alien, the true final boss.
-- **Queen Zeal** — corrupted ruler of Zeal; sacrifices Schala.
-- **Schala Zeal** — Janus's sister; emotional spine of the late game.
-- **Dalton** — Zealian aristocrat-general; commandeers the Epoch.
-- **Ozzie / Flea / Slash** — Magus's three Mystic generals.
-- **King Guardia (XXI in 600 AD, XXXIII in 1000 AD)** — Marle's ancestor / father.
-- **The Three Gurus** — Melchior (Life; smith in 1000 AD), Belthasar (Reason; builds the Epoch in 2300 AD), Gaspar (Time; runs the End of Time).
-- **Cyrus** — Frog's mentor; ghost at Northern Ruins.
-- **Glenn** — Cyrus's young squire, transformed into Frog.
-- **Azala** — Reptite queen.
-- **Nizbel / Nizbel II** — armored Reptite minibosses.
-- **Yakra / Yakra XIII** — Mystic monsters impersonating Chancellors across eras.
-- **Mother Brain** — rogue AI in Geno Dome.
-- **Giga Gaia** — three-part boss atop Mt. Woe.
-- **Lavos Spawn** — Lavos's offspring; recurring miniboss.
-- **The Prophet** — Magus in disguise in 12,000 BC.
+Antagonists and significant NPCs are covered in the §5 story beats and [docs/boss-ai.md](docs/boss-ai.md).
 
 ---
 
@@ -760,7 +741,7 @@ All cutscenes are **real-time in-engine** using sprites and screen effects — n
 3. ATB battle menu appears.
 4. Enemy sprites shift to battle positions/animations.
 5. Combat proceeds. On victory, results display briefly, menu disappears, player regains control.
-6. Area BGM restarts from the beginning (not resume — see §10.9).
+6. Area BGM restarts from the beginning (not resume — see §10.8).
 
 **Avoidance.** Most encounters are avoidable by maneuvering around enemy sprites. Some are unavoidable (narrow corridors, story fights, ambushes).
 
@@ -801,7 +782,7 @@ Phase 1 items become unavailable once Phase 2 activates — missable.
 | Tech | view-only: learned techs, TP to next, Dual/Triple tabs. Cannot reorder or disable. |
 | Config | battle mode, gauge speed, message speed, window color, controller, stereo/mono, cursor memory (menu/battle/skill-item), gauge display |
 | Party Order | rearrange walking order of active 3 (not swap members) |
-| Save | save to 1 of 3 slots (save points or world map only) |
+| Save | save to 1 of **3 slots**. In dungeons: only at **save point sparkles** (blue/white twinkles). On the world map: anywhere. Shelter consumable (full party HP+MP) is also restricted to save points. |
 
 **Party swapping** is a **separate action** (Y button), only available after reaching the End of Time. Brings up a character selection screen.
 
@@ -821,21 +802,7 @@ Phase 1 items become unavailable once Phase 2 activates — missable.
 
 **Cursor memory** (config option): when enabled, remembers last-used command and last-selected tech/item per character between turns.
 
-### 10.6 Shop System
-
-Shops are triggered by talking to NPC shopkeepers → dialogue → shop menu overlay.
-
-**Shop types are not rigid** — most are mixed (equipment + consumables). Inns are a fixed-price full-heal service (not a shop menu).
-
-**Selling:** equipment and consumables can be sold at **50% of buy price**. **Accessories cannot be sold** — deliberate restriction.
-
-**Stat comparison** is shown when browsing equipment for purchase (attack/defense delta per character).
-
-**No "buy multiple"** in SNES — each purchase is confirmed individually.
-
-**Medina overpricing:** before Ozzie's Fort is cleared, Medina shops charge ~128× normal price (capped at 65,535G — 16-bit max). After Ozzie's Fort, prices drop to normal. Binary toggle, not gradual.
-
-### 10.7 Party Field Movement
+### 10.6 Party Field Movement
 
 **Snake formation.** Leader walks in front (player-controlled); 2 followers trail behind, replaying the leader's position history with a delay.
 
@@ -851,7 +818,7 @@ Shops are triggered by talking to NPC shopkeepers → dialogue → shop menu ove
 
 **Blackbird sequence** — unique: party is stripped of all equipment, items, and gold. Must navigate the dungeon to recover gear from separate storage rooms. Ayla is uniquely valuable (her fists can't be removed). Guards patrol; stealth-oriented navigation through air ducts.
 
-### 10.8 Camera
+### 10.7 Camera
 
 **Field / dungeon:** 3/4 top-down oblique perspective (standard SNES RPG view). **Scrolls smoothly** to follow the player (not screen-by-screen). Small rooms fit entirely in the viewport (camera fixed). Scripted sequences can pan the camera independently of the player.
 
@@ -859,7 +826,7 @@ Shops are triggered by talking to NPC shopkeepers → dialogue → shop menu ove
 
 **No real perspective changes** — the Jet Bike Race (Mode 7 pseudo-3D) is the only exception. All "angle" variation in other areas is achieved through art direction, not camera transformation.
 
-### 10.9 Music & Audio
+### 10.8 Music & Audio
 
 **Battle music transition.** When an encounter triggers, area BGM **hard-cuts** to battle theme (not crossfade). After battle, area BGM **restarts from the beginning** (does not resume).
 
@@ -881,7 +848,7 @@ Shops are triggered by talking to NPC shopkeepers → dialogue → shop menu ove
 
 **64 tracks** across the OST (Yasunori Mitsuda primary, Nobuo Uematsu and Noriko Matsueda contributing). Each major location has its own theme; some locations change music at different story points.
 
-### 10.10 Game State & Progression Flags
+### 10.9 Game State & Progression Flags
 
 **Primary storyline counter.** A single byte (address 7F0000) that increments at each major story event. This counter gates: area access, NPC dialogue, shop inventories, available events, world map locations.
 
@@ -905,7 +872,7 @@ Known early values: 00 = Millennial Fair, 06 = Crono wakes, 0F = Marle vanishes 
 
 **New Game+ flag handling:** story counter resets to 00. All progression flags reset. Character levels, techs, equipment, and consumables carry over. Gold resets to 200G. Key items removed and re-granted at their normal story points. Warp-to-Lavos option unlocked early (right Telepod at Fair, End of Time bucket).
 
-### 10.11 Scene Structure
+### 10.10 Scene Structure
 
 **5 explorable overworld maps** (65M BC, 12,000 BC, 600 AD, 1000 AD, 2300 AD), plus the End of Time hub (3–4 rooms) and 1999 AD (battle stage only).
 
@@ -940,19 +907,17 @@ Total: ~500 indexed map entries in the ROM (some unused/duplicates).
 
 Items still needing pinned numbers before we lock data tables:
 
-1. **Per-tech TP thresholds for non-Crono characters** — Crono's are documented in §4 (Cyclone 5 / Slash 90 / Spincut 160 / Life 400 / Lightning 2 500 / Confuse 800 / Luminaire 1000). Other characters' thresholds need a pass against Chrono Wiki / StrategyWiki.
-2. **Per-tech MP costs** — partial table exists for Crono; full per-character table needed.
-3. **Per-character stat-growth tables** — gains per level, especially the L60+ attenuation; pulled from Geni's stat-growth FAQ on GameFAQs.
-4. **Charm rates per enemy** — Yunalesca's Charm FAQ on GameFAQs is the canonical source.
-5. **Medina / Trading Post price multipliers** — exact pre- and post-Jerky values per item.
-6. **Spell-resistance tables per enemy** — every enemy's element multiplier vector (0/50/100/200/absorb).
-7. **Magic Wall / Black Hole / Dark Mist exact behaviors** — Magic Wall % reduction, Black Hole pull/instakill rules, Dark Mist single-target vs. AoE.
-8. **Sealed Chest / Sealed Door item table** — full list of locations and the lesser/greater item pair at each.
-9. **Norstein Bekkler prizes per game tier** — exact rewards at 10 / 40 / 80 Silver Point cost levels.
-10. **Per-weapon attack power and acquisition source** — the §6.1 tables draw from cross-checked community guides; final pass should verify AP values and chest-vs-shop sources against ROM data (Data Crystal / TCRF) before locking the data file.
-11. **Physical damage formula constants** — the per-weapon AP tables are pinned, but the full damage equation (random multiplier range, defense subtraction model, crit multiplier ordering) needs a verified pass against StrategyWiki's Formulae page and DragonKnightZero's Mechanics Guide.
+1. **Per-character stat-growth tables** — gains per level, especially the L60+ attenuation; pulled from Geni's stat-growth FAQ on GameFAQs.
+2. **Charm rates per enemy** — Yunalesca's Charm FAQ on GameFAQs is the canonical source.
+3. **Spell-resistance tables per enemy** — every enemy's element multiplier vector (0/50/100/200/absorb).
+4. **Magic Wall / Black Hole / Dark Mist exact behaviors** — Magic Wall % reduction, Black Hole pull/instakill rules, Dark Mist single-target vs. AoE.
+5. **Sealed Chest / Sealed Door item table** — full list of locations and the lesser/greater item pair at each.
+6. **Norstein Bekkler prizes per game tier** — exact rewards at 10 / 40 / 80 Silver Point cost levels.
+7. **Per-weapon AP verification** — the §6.1 tables draw from cross-checked community guides; final pass should verify against ROM data (Data Crystal / TCRF).
+8. **Physical damage formula constants** — the full damage equation (random multiplier range, defense subtraction model, crit multiplier ordering) needs a verified pass against StrategyWiki's Formulae page and DragonKnightZero's Mechanics Guide.
+9. **Medina exact price multiplier** — currently listed as ~128×; exact value needs ROM verification.
 
-These should be filled in as we build out per-system data tables. Resolved items previously listed here (Crono tech order; Wonder Shot / Crisis Arm / Doomsickle formulas; Sun Shades vs. Prism Specs effects; Ayla's weapon-slot lock; Sun Stone questline ownership; ending #13 identity) are now baked into the body of this spec.
+Resolved since last pass: per-tech TP thresholds and MP costs for all 7 characters are now in [docs/techs.md](docs/techs.md).
 
 ---
 
