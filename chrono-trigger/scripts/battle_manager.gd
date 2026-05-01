@@ -10,11 +10,10 @@ const PLAYER_WEAPON_AP := 3
 
 @export var player_path: NodePath
 @export var battle_ui_path: NodePath
-@export var music_player_path: NodePath
+@export var battle_music: AudioStream
 
 @onready var player: CharacterBody2D = get_node(player_path)
 @onready var battle_ui: CanvasLayer = get_node(battle_ui_path)
-@onready var battle_music: AudioStreamPlayer = get_node(music_player_path)
 
 var _enemy: Area2D
 var _enemy_data: Resource
@@ -30,8 +29,6 @@ var _rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	_rng.randomize()
 	battle_ui.attack_selected.connect(_on_attack_selected)
-	if battle_music.stream:
-		battle_music.stream.set("loop", true)
 
 func _process(delta: float) -> void:
 	if GameState.current != GameState.State.BATTLE:
@@ -70,8 +67,7 @@ func start_battle(enemy: Area2D) -> void:
 	_enemy.set_battle_collision_enabled(false)
 	GameState.change(GameState.State.BATTLE)
 	battle_ui.start_battle(_player_hp, PLAYER_MAX_HP, _enemy_name(), _enemy_hp, _enemy_stat("max_hp"))
-	if battle_music.stream:
-		battle_music.play()
+	MusicManager.play_music(battle_music)
 
 func _on_attack_selected() -> void:
 	if GameState.current != GameState.State.BATTLE:
@@ -169,7 +165,7 @@ func _check_battle_end() -> void:
 func _victory() -> void:
 	_battle_finished = true
 	battle_ui.set_command_ready(false)
-	battle_music.stop()
+	MusicManager.stop_music()
 	await _play_enemy_death()
 	battle_ui.show_results(_enemy_stat("exp_reward"), _enemy_stat("gold_reward"), _enemy_stat("tp_reward"))
 	await get_tree().create_timer(2.0).timeout
@@ -184,7 +180,7 @@ func _victory() -> void:
 func _game_over() -> void:
 	_battle_finished = true
 	battle_ui.show_game_over()
-	battle_music.stop()
+	MusicManager.stop_music()
 	await get_tree().create_timer(2.0).timeout
 	get_tree().reload_current_scene()
 

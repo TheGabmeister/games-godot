@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://b00p8kn1u7ror"]
 
-[ext_resource type="Script" uid="uid://c6qky6uwaet2r" path="res://scripts/player.gd" id="1"]
-[ext_resource type="Script" uid="uid://bqxuy0knyb63v" path="res://scripts/npc.gd" id="2"]
-[ext_resource type="Script" uid="uid://bicfj7tonwv8o" path="res://scripts/dialogue_box.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/npc.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/dialogue_box.gd" id="3"]
 [ext_resource type="SpriteFrames" path="res://player/crono_frames.tres" id="4"]
 [ext_resource type="SpriteFrames" path="res://npc/npc_frames.tres" id="5"]
 [ext_resource type="Resource" path="res://dialogue/npc_greeting.tres" id="6"]
@@ -138,11 +138,7 @@ shape = SubResource("enemy_trigger_shape")
 script = ExtResource("9")
 player_path = NodePath("../Player")
 battle_ui_path = NodePath("../BattleUI")
-music_player_path = NodePath("../BattleMusic")
-
-[node name="BattleMusic" type="AudioStreamPlayer" parent="." unique_id=522984708]
-stream = ExtResource("13")
-volume_db = -12.0
+battle_music = ExtResource("13")
 
 [node name="Camera" type="Camera2D" parent="." unique_id=731743553]
 position = Vector2(320, 240)
