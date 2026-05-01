@@ -1,25 +1,26 @@
 # Chrono Trigger — Godot Recreation Spec
 
-A gameplay-focused recreation of Square's 1995 SNES JRPG *Chrono Trigger* in the Godot engine. This spec is **not** a pixel-perfect or asset-perfect remake; it documents the rules, content, and systems we want to reproduce so the design surface matches the original.
+A systems-focused Godot implementation inspired by Square's 1995 SNES JRPG *Chrono Trigger*. The goal is to build **scalable game architecture** — not to recreate the full game. We implement enough of the original's content (a representative slice of characters, techs, enemies, areas, and story) to validate that our systems and architecture can scale to the scope of the complete game.
 
-This document deliberately stays at the spec level: features, systems, characters, items, enemies, story structure. No code, no Godot node trees, no implementation choices. Those come later.
+This document stays at the spec level: features, systems, characters, items, enemies, story structure. It describes the *full* original design surface as a reference; actual implementation will be selective. No code, no Godot node trees, no implementation choices. Those come later.
 
 ---
 
 ## 1. Design Goals & Non-Goals
 
 ### Goals
-- Faithful reproduction of the **Active Time Battle (ATB)** system, including the field-to-battle continuity (no separate battle screen).
-- All seven playable characters with their full Single / Dual / Triple Tech rosters.
-- Seven playable eras connected by time gates and the Epoch.
-- The full main quest with its branching, plus the major sidequests.
-- New Game+ with multiple endings tied to when Lavos is defeated.
+- Build a **scalable architecture** for a Chrono Trigger–style JRPG in Godot, proving the systems work at representative scale.
+- Faithful reproduction of the **Active Time Battle (ATB)** system, including field-to-battle continuity (no separate battle screen).
+- A **representative subset** of playable characters, Single / Dual / Triple Techs, enemies, and areas — enough to stress-test every major system.
+- Core progression systems: time-era travel, storyline gating, New Game+, and branching endings — implemented end-to-end even if content is partial.
 - An economy and item system rich enough to support meaningful build choices (accessories, charm-only gear, elemental armor).
+- Data-driven design so that scaling from the subset to full content is an authoring task, not an engineering one.
 
 ### Non-Goals
+- Recreating all of the original game's content (full map set, full bestiary, full quest line). We implement only enough to validate architecture.
 - 1:1 pixel-art reproduction of SNES sprites, tilesets, or animations.
 - Reproduction of the original soundtrack (Yasunori Mitsuda's score is not redistributable).
-- DS-port-only content in v1 (Lost Sanctum, Dimensional Vortex, Magus dual/triple techs). Treat as stretch goals.
+- DS-port-only content (Lost Sanctum, Dimensional Vortex, Magus dual/triple techs). Treat as stretch goals.
 - Online multiplayer.
 
 ---
