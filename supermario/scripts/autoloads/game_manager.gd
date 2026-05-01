@@ -14,27 +14,13 @@ var time_remaining: float = 400.0
 var current_power_state: PowerState = PowerState.SMALL
 var game_state: GameState = GameState.TITLE
 
+var timer_active: bool = false
+
 var _level_index: int = 0
-var _timer_active: bool = false
-var _last_time_tick: int = -1
 
 
 func _ready() -> void:
 	EventBus.level_completed.connect(_on_level_completed)
-
-
-func _process(delta: float) -> void:
-	if _timer_active and game_state == GameState.PLAYING:
-		time_remaining -= delta
-		if time_remaining <= 0.0:
-			time_remaining = 0.0
-			_timer_active = false
-			on_player_died()
-		else:
-			var current_tick: int = ceili(time_remaining)
-			if current_tick != _last_time_tick:
-				_last_time_tick = current_tick
-				EventBus.time_tick.emit(current_tick)
 
 
 func start_new_game() -> void:
@@ -61,7 +47,7 @@ func return_to_title() -> void:
 
 func reset_for_title() -> void:
 	_reset_run_state()
-	_timer_active = false
+	timer_active = false
 	game_state = GameState.TITLE
 
 
@@ -76,8 +62,7 @@ func _enter_level(index: int) -> void:
 
 func _start_level(config: Resource) -> void:
 	time_remaining = config.time_limit
-	_last_time_tick = -1
-	_timer_active = true
+	timer_active = true
 	if config.music:
 		EventBus.music_requested.emit(config.music)
 	EventBus.level_started.emit(config.display_name)
@@ -137,11 +122,11 @@ func set_game_state(state: GameState) -> void:
 		GameState.PLAYING:
 			EventBus.game_resumed.emit()
 		GameState.GAME_OVER:
-			_timer_active = false
+			timer_active = false
 
 
 func stop_level_timer() -> void:
-	_timer_active = false
+	timer_active = false
 
 
 func get_current_level() -> Resource:
@@ -156,13 +141,8 @@ func earn_one_up() -> void:
 	EventBus.lives_changed.emit(lives)
 
 
-func on_player_died() -> void:
-	_timer_active = false
-	EventBus.music_stop_requested.emit()
-
-
 func _on_level_completed() -> void:
-	_timer_active = false
+	timer_active = false
 	EventBus.music_stop_requested.emit()
 	var time_bonus := ceili(time_remaining) * 50
 	add_score(time_bonus)

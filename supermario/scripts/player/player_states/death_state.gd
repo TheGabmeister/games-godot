@@ -30,4 +30,4 @@ func process_frame(delta: float) -> void:
 
 	if _death_timer >= _timing.death_duration and not _life_lost:
 		_life_lost = true
-		GameManager.lose_life()
+		player.death_animation_finished.emit()

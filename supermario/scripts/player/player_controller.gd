@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 signal died
+signal death_animation_finished
 
 const STOMP_COMBO_POINTS := [100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000]
 const FireballScene := preload("res://scenes/objects/fireball.tscn")
