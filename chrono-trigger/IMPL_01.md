@@ -4,22 +4,34 @@
 
 Crono walks around a debug room, talks to an NPC, and reads dialogue in a typewriter textbox. No combat, no menus, no inventory. Placeholder art throughout.
 
+## Project folder structure
+
+```
+res://
+├── dialogue/          — DialogueData .tres files
+├── npc/               — NPC sprites and audio
+├── player/            — player sprites and audio
+├── props/             — tilemap/environment sprites and audio
+├── scenes/            — all .tscn files (debug_room, player, npc, dialogue_box)
+├── scripts/           — all .gd files (game_state, player, npc, dialogue_box, dialogue_data)
+└── docs/              — spec companion files (techs, bestiary, boss-ai)
+```
+
 ## Scene layout
 
-One scene file: `debug_room.tscn` — the project's main scene.
+One scene file: `scenes/debug_room.tscn` — the project's main scene.
 
 ```
 debug_room (Node2D)
 ├── TileMapLayer          — floor + wall tiles, walls have physics collision
 ├── Player (CharacterBody2D)
-│   ├── Sprite2D          — crono.png
+│   ├── AnimatedSprite2D  — crono_sheet.png via SpriteFrames
 │   ├── CollisionShape2D  — player body collision (RectangleShape2D)
+│   ├── InteractRay (RayCast2D) — short ray in facing direction, detects interactables
 │   └── Camera2D          — child of player, auto-follows
 ├── NPC (StaticBody2D)
-│   ├── Sprite2D          — npc.png
-│   ├── CollisionShape2D  — blocks player from walking through
-│   └── InteractZone (Area2D)
-│       └── CollisionShape2D  — larger radius, detects player proximity
+│   ├── AnimatedSprite2D  — npc_sheet.png via SpriteFrames
+│   └── CollisionShape2D  — blocks player from walking through
 └── DialogueBox (CanvasLayer)
     └── PanelContainer
         ├── NameLabel     — speaker name, colored
@@ -28,29 +40,52 @@ debug_room (Node2D)
 
 ## Scripts
 
+All scripts live in `scripts/`. All scenes live in `scenes/`.
+
+### game_state.gd (autoload)
+
+Registered as an autoload named `GameState` in Project Settings.
+
+- `enum State { FIELD, DIALOGUE }` — expanded in later phases (MENU, BATTLE, CUTSCENE).
+- `var current: State = State.FIELD`
+- `func change(new_state: State)` — sets `current` and emits a `state_changed(new_state)` signal so nodes can react if needed.
+
 ### player.gd (on Player)
 
+- All input is gated on `GameState.current == GameState.State.FIELD`.
 - Reads directional input each physics frame (ui_left/right/up/down).
 - Normalizes the input vector for diagonal consistency.
 - Sets velocity and calls `move_and_slide()`.
-- Tracks facing direction (last nonzero input direction) for future use.
-- Checks for interact input (ui_accept). If pressed and an NPC is in range, tells the NPC to start interaction.
-- Movement is disabled while dialogue is active.
+- Tracks facing direction (last nonzero input direction). Updates the InteractRay's `target_position` to point in that direction.
+- On interact input: checks if InteractRay is colliding. If the collider is in the "interactable" group, calls `interact()` on it.
+
+### dialogue_data.gd (resource)
+
+```gdscript
+class_name DialogueData
+extends Resource
+
+@export var speaker_name: String
+@export var lines: PackedStringArray
+```
+
+Authored as `.tres` files in `dialogue/` (e.g., `dialogue/npc_greeting.tres`). Each file is one conversation.
 
 ### npc.gd (on NPC)
 
-- Has an `@export var lines: PackedStringArray` — the dialogue lines this NPC speaks, set in the inspector.
-- InteractZone uses `body_entered` / `body_exited` signals to track whether the player is close enough to interact.
-- When triggered by the player, emits a signal or calls the DialogueBox directly with its lines.
+- Has an `@export var dialogue: DialogueData` — assigned in the inspector to a `.tres` file.
+- Node is added to the "interactable" group.
+- `interact()` method: calls the DialogueBox with `dialogue`.
 
 ### dialogue_box.gd (on DialogueBox)
 
-- `start(speaker_name: String, lines: PackedStringArray)` — shows the panel, begins typewriting the first line.
+- `start(data: DialogueData)` — shows the panel, sets `GameState.change(State.DIALOGUE)`, begins typewriting the first line using `data.speaker_name` and `data.lines`.
+- All input is gated on `GameState.current == GameState.State.DIALOGUE`.
 - Each frame during typewrite: appends one character to visible text. Speed is a const (characters per second).
-- On ui_accept press:
+- On interact press:
   - If typewriting is in progress → instantly show the full line.
   - If the full line is already displayed → advance to next line, or close if it was the last line.
-- Emits a `dialogue_finished` signal when all lines are done. Player script listens to this to re-enable movement.
+- On close: sets `GameState.change(State.FIELD)`.
 - The panel is hidden by default.
 
 ## Input map
@@ -65,6 +100,12 @@ Add these to `project.godot` input map (or configure in editor):
 | move_right   | D / Right arrow   | Left stick right / D-pad right | movement        |
 | interact     | Z / Enter         | A (bottom face button)    | talk to NPC, advance dialogue |
 
+## Display
+
+- **Resolution:** 1200×900 (4:3).
+- Set in `project.godot` under `display/window/size` — `viewport_width=1200`, `viewport_height=900`.
+- Stretch mode: `canvas_items`, aspect: `keep` — scales cleanly to larger displays.
+
 ## Camera
 
 Camera2D as a child of the Player node. Position smoothing enabled so it doesn't feel jarring. No other camera logic needed for Phase 1.
@@ -75,32 +116,69 @@ A single TileMapLayer with:
 - A floor tile (walkable, no collision).
 - A wall tile (with physics layer collision so `move_and_slide` stops the player).
 
-The debug room is a small rectangular space — roughly 12x10 tiles at 16px each. Walls around the border, open floor inside, NPC placed somewhere in the middle area.
+The debug room is a small rectangular space — roughly 20x15 tiles at 32px each (fits neatly in 1200×900 with room to spare). Walls around the border, open floor inside, NPC placed somewhere in the middle area.
 
-Tile art: `floor.png` and `wall.png` from the sprites table above.
+Tile art: `props/floor.png` and `props/wall.png` from the sprites table above.
 
 ## Sprites
 
-SVG source files in `assets/sprites/`, exported to PNG via Inkscape. 16x16 pixels to match the tilemap cell size.
+SVG source files exported to PNG via Inkscape. 32×32 pixels per tile/character.
 
 | File | Description |
 |------|-------------|
-| `assets/sprites/crono.svg` → `crono.png` | Crono — simple top-down character shape. Blue/white color scheme. |
-| `assets/sprites/npc.svg` → `npc.png` | Generic NPC — distinct silhouette from Crono. Green/brown color scheme. |
-| `assets/sprites/floor.svg` → `floor.png` | Floor tile — warm tan/brown. |
-| `assets/sprites/wall.svg` → `wall.png` | Wall tile — darker gray, visually reads as solid. |
+| `player/crono_sheet.svg` → `crono_sheet.png` | Crono sprite sheet — 4 directions × 2 walk frames = 8 frames in a horizontal strip. Blue/white color scheme. See sprite sheet layout below. |
+| `npc/npc_sheet.svg` → `npc_sheet.png` | NPC sprite sheet — 4 directions × 2 idle frames = 8 frames in a horizontal strip. Green/brown color scheme. See NPC sprite sheet layout below. |
+| `props/floor.svg` → `floor.png` | Floor tile — warm tan/brown. |
+| `props/wall.svg` → `wall.png` | Wall tile — darker gray, visually reads as solid. |
 
-Export command for each:
+Export commands:
 ```
-"/c/Program Files/Inkscape/bin/inkscape.exe" assets/sprites/<name>.svg --export-type=png --export-filename=assets/sprites/<name>.png -w 16 -h 16
+"/c/Program Files/Inkscape/bin/inkscape.exe" player/crono_sheet.svg --export-type=png --export-filename=player/crono_sheet.png -w 256 -h 32
+"/c/Program Files/Inkscape/bin/inkscape.exe" npc/npc_sheet.svg --export-type=png --export-filename=npc/npc_sheet.png -w 256 -h 32
+"/c/Program Files/Inkscape/bin/inkscape.exe" <folder>/<name>.svg --export-type=png --export-filename=<folder>/<name>.png -w 32 -h 32
 ```
 
-These are simple placeholder sprites — flat colors with minimal detail. Just enough to distinguish player from NPC from wall from floor.
+### Crono sprite sheet layout
+
+Horizontal strip: 256×32 px (8 frames × 32px each). Each 32×32 cell is one frame.
+
+```
+| down_0 | down_1 | up_0 | up_1 | left_0 | left_1 | right_0 | right_1 |
+```
+
+- **down_0 / down_1** — facing camera, idle and walk step.
+- **up_0 / up_1** — facing away, idle and walk step.
+- **left_0 / left_1** — facing left, idle and walk step.
+- **right_0 / right_1** — facing right, idle and walk step.
+
+Simple top-down character. Walk frames differ by leg position (one leg forward vs. the other). Keep it minimal — the goal is to read direction and movement, not detailed animation.
+
+### NPC sprite sheet layout
+
+Same format as Crono: 256×32 px horizontal strip, 8 frames of 32×32.
+
+```
+| down_0 | down_1 | up_0 | up_1 | left_0 | left_1 | right_0 | right_1 |
+```
+
+The NPC doesn't walk, so the two frames per direction are a subtle idle animation (e.g., slight body shift or blink). Plays on loop while standing. The NPC faces down by default.
+
+### Animation setup
+
+Both Player and NPC use `AnimatedSprite2D` with a `SpriteFrames` resource built from their respective sprite sheets.
+
+**Player animations:**
+- 4 walk animations: `walk_down`, `walk_up`, `walk_left`, `walk_right` — 2 frames each, looping at ~6 FPS.
+- 4 idle animations: `idle_down`, `idle_up`, `idle_left`, `idle_right` — 2 frames each, looping at ~3 FPS.
+- `player.gd` plays the walk animation matching the facing direction when moving, switches to idle when stopped.
+
+**NPC animations:**
+- 4 idle animations: `idle_down`, `idle_up`, `idle_left`, `idle_right` — 2 frames each, looping at ~3 FPS.
+- Defaults to `idle_down`. No walk animations needed for Phase 1.
 
 ## What we skip
 
-- Animation / sprite sheets — Crono is a static sprite that doesn't animate. Facing direction is tracked but not visually reflected yet.
 - Party followers — just one character.
 - Save/load, menus, inventory — not until Phase 5.
 - Audio — no sounds or music yet.
-- Any abstraction beyond what three scripts need. No autoloads, no signal bus, no manager classes.
+- No signal bus or manager classes beyond GameState.
