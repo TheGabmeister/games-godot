@@ -57,24 +57,24 @@ When making changes in this repo:
 - The active boot scene is `res://scenes/ui/title_screen.tscn`; `scenes/main.tscn`
   is only a shell stub right now.
 - `GameManager` owns persistent run state, level config lookup, level entry,
-  respawns, progression, score, coins, lives, power state, and music start
-  requests. It stores `time_remaining` and `timer_active`, but does not tick the
-  timer and does not reference the player.
+  player spawning, respawns, progression, score, coins, lives, power state,
+  pause/unpause, the level timer, timeout death, player death/life handling,
+  level-complete time bonus, and music start/stop requests. This project favors
+  the simple central manager over thin per-level orchestration abstractions.
 - Game-wide level order/config lives in `resources/config/game_config.tres` as
   an ordered array of `LevelConfig` resources. Each `LevelConfig` owns the
   level display name, scene, time limit, and music.
-- Playable level roots should use `scripts/level/gameplay_manager.gd` as the
-  scene script, expose `player_scene`, and contain a `PlayerStart` `Marker2D`.
-  `GameplayManager` spawns the player, drives the countdown timer, emits
-  `time_tick`, kills the player on timeout, and mediates player death signals
-  before calling `GameManager.lose_life()`.
+- Playable level roots should be plain scene-authored `Node2D` roots and
+  contain a `PlayerStart` `Marker2D`. Do not add a level-root manager script
+  just to spawn the player or tick the timer; `GameManager` handles that.
 - `SfxManager` and `MusicManager` are playback plumbing only. Gameplay, UI, and
   level callers own their `AudioStream` references and request playback through
-  EventBus (`sfx_requested`, `music_requested`, `music_stop_requested`, and
-  `music_duck_requested`). Do not add centralized SFX/music registries back to
-  the managers.
-- `UIManager` autoload owns persistent pause, game-over, and level-complete UI
-  overlays. Do not place those overlay scenes directly in level scenes.
+  EventBus (`sfx_requested`, `music_requested`, and `music_stop_requested`). Do
+  not add centralized SFX/music registries back to the managers.
+- `UIManager` autoload owns persistent game-over UI only. Pause is handled by
+  `GameManager` as a simple sound plus `get_tree().paused` freeze, with no
+  pause menu. Level completion advances from `GameManager` after a short delay,
+  with no level-complete overlay scene.
 - Playable levels use container nodes such as `Blocks`, `Pipes`, `Coins`,
   `Enemies`, `Effects`, and `Interactables`. Interactive gameplay objects should
   generally be scene instances under those containers, not TileMap-authored
@@ -88,8 +88,8 @@ When making changes in this repo:
   state-name literals.
 - Player death is signal-driven. `player_controller.gd` emits `died` when death
   starts, and `DeathState` emits `death_animation_finished` when the bounce
-  animation ends. `GameplayManager` listens to those signals; the player should
-  not call `GameManager.lose_life()` directly.
+  animation ends. `GameManager` listens to those signals from the spawned
+  player and owns life loss/respawn decisions.
 - Player camera feel lives in `scripts/player/camera_controller.gd`, while
   camera bounds are auto-detected from the first `TileMapLayer` in the level.
 - Level terrain is hand-painted in level `.tscn` files using `TileMapLayer` and

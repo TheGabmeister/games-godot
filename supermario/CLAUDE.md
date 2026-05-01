@@ -19,20 +19,6 @@ once you start editing code.
 
 When in doubt: for code one person owns and rarely changes, lean KISS. For interfaces many contributors touch, lean locality of change.
 
-
-## Validation
-
-No automated test suite. Validate changes by:
-- `godot --headless --path . --quit` to catch script parse errors and missing-resource warnings
-- Running the game windowed (`godot --path .`) to verify gameplay
-- Spot-checking the relevant subsystem manually after touching it
-
-If `godot` is not on PATH, use `d:\Godot_v4.6.2-stable_win64.exe`.
-
-**Known quirk:** `--headless --quit` exits before indexing new `class_name`
-scripts. The project avoids `class_name` entirely; use `preload()` with
-`res://` paths instead (e.g., `extends "res://scripts/player/player_states/player_state.gd"`).
-
 ## Implementation Notes
 
 These expand on the system summaries in `README.md` with details that aren't
@@ -40,60 +26,25 @@ obvious from reading the code in isolation.
 
 ### GameManager
 
-- `.gd` autoloads can't use `@export`, so game-wide config lives in `resources/config/game_config.tres` (a `GameConfig` resource), loaded via `preload`. The config holds the ordered `levels` array of `LevelConfig` resources.
+- `.gd` autoloads can't use `@export`, so game-wide config lives in `resources/config/game_config.tres` (a `GameConfig` resource), loaded via `preload`.
 - Run-state reset (score / coins / lives / power) is centralized in `_reset_run_state()`. Both `start_new_game()` and `reset_for_title()` call it — don't duplicate the reset logic.
 - `_enter_level()` has exactly three callers: `start_new_game()`, `advance_to_next_level()`, `respawn_current_level()`. Do not add a fourth — extend one of these.
-- Level navigation is index-based via `_level_index` into `_config.levels`. Each `LevelConfig` resource holds `display_name`, `scene`, `time_limit`, and `music`.
-- Music playback is triggered by GameManager in `_start_level()` from the level config — level scripts do not handle music.
-- **GameManager does not own the level timer tick.** It stores `time_remaining` and `timer_active` (read by HUD and level-complete scoring), but the countdown, tick emission, and timeout-kill are driven by `GameplayManager` in the level scene. GameManager's `_start_level()` sets `time_remaining` and `timer_active = true`; GameplayManager decrements each frame.
-- **GameManager does not listen for player death.** The death flow is: Player emits `died` → GameplayManager stops timer and music → Player emits `death_animation_finished` → GameplayManager calls `GameManager.lose_life()`. GameManager never references the player.
-
-### GameplayManager
-
-`gameplay_manager.gd` is the per-level scene script (replaces the former
-`level_base.gd`). It mediates between the Player and GameManager so that
-neither knows about the other's internals.
-
-Responsibilities:
-- Spawns the player at the `PlayerStart` marker.
-- Drives the level countdown timer (reads `GameManager.timer_active`, decrements `GameManager.time_remaining`, emits `EventBus.time_tick`, calls `player.die()` on timeout).
-- Subscribes to the player's `died` and `death_animation_finished` signals. On death: stops timer and music. On animation end: calls `GameManager.lose_life()`.
-
-Dependency direction: GameplayManager → GameManager (calls public methods), GameplayManager → Player (connects to signals, calls `die()`). GameManager does **not** reference GameplayManager or the player.
-
-### SfxManager and MusicManager
-
-- Audio managers are playback plumbing only. Gameplay/UI callers own `AudioStream` references and emit EventBus audio requests.
-- SFX uses `EventBus.sfx_requested(sound)`, handled by `SfxManager`'s pooled `AudioStreamPlayer`s.
-- Music uses `EventBus.music_requested(music)`, `music_stop_requested`, and `music_duck_requested(enabled)`, handled by `MusicManager`'s dual-player crossfade setup.
-
-### UIManager
-
-Autoload that instances `PauseMenu`, `GameOver`, and `LevelComplete` scenes
-once at startup. These UI overlays persist across scene changes — they are
-**not** placed in level scenes. Each is a `CanvasLayer` that connects to
-EventBus signals and manages its own visibility.
+- Music playback is triggered by GameManager in `_start_level()` from the level config — level scenes do not handle music.
+- **GameManager owns the level timer tick.** It stores `time_remaining` and `_timer_active`, drives the countdown in `_process()`, emits `EventBus.time_tick`, and calls `_player.die()` on timeout.
+- **`_spawn_player()`** instances the player scene, positions it at the `PlayerStart` marker, and subscribes to the player's `died` and `death_animation_finished` signals.
+- GameManager has `process_mode = PROCESS_MODE_ALWAYS` so it runs during pause and other tree-paused states.
 
 ### Player System
 
-- **Signals:** `died` (emitted from `die()`), `death_animation_finished` (emitted from `DeathState` when the bounce animation ends). GameplayManager subscribes to both — the player does not call GameManager directly for death/life logic.
+- **Signals:** `died` (emitted from `die()`), `death_animation_finished` (emitted from `DeathState` when the bounce animation ends). GameManager subscribes to both — the player does not call GameManager directly for death/life logic.
 - **Public API:** `update_collision_shape`, `start_invincibility`, `die`, `take_damage`, `power_up(item_type, position)`, `enter_pipe(pipe, target)`, `start_flagpole(flagpole)`. The rule: if cross-file code has a legitimate reason to call it, it's public. Do not add an underscore-prefixed wrapper for callers from outside the file.
 - **Power-state on spawn:** `player_controller._ready()` calls `update_collision_shape()` so a newly instanced player picks up `GameManager.current_power_state`. Load-bearing for Fire Mario persisting across level transitions — `player.tscn` bakes in the Small collision, so without this line Mario would spawn with the wrong collision box on 1-2 after beating 1-1 as Fire Mario.
-- **States transition themselves** (e.g., `state_machine.transition_to(StateIds.JUMP)`). The controller provides movement helpers but does not decide when to switch states.
-- **Tunables:** `@export var movement: PlayerMovementConfig` and `@export var effects: EffectsConfig` are wired in `player.tscn`. `CameraConfig` is wired to the `Camera2D` child node, not the player root.
 
 ### Camera Controller
 
-- Script lives on the `Camera2D` child of the player. Reads facing from the parent's `Visuals` child for look-ahead direction.
-- Auto-detects level bounds from the first `TileMapLayer` in the scene via `get_used_rect()`. No manual camera setup needed in level scripts.
+- Reads facing from the parent's `Visuals` child for look-ahead direction.
+- Auto-detects level bounds from the first `TileMapLayer` in the scene via `get_used_rect()`. No manual camera setup needed in level scenes.
 - Exposes `reset_no_backtrack()` for pipe warps to break the `limit_left` ratchet.
-
-### Level System
-
-- **`gameplay_manager.gd`** is the scene script used by all levels. It spawns the player at a `PlayerStart` (`Marker2D`) node, drives the level timer, and mediates player death events. Has an `@export var player_scene: PackedScene` wired in each level's inspector.
-- **Terrain is hand-painted** in the editor using `TileMapLayer` with a baked `TileSet` resource (`resources/tilesets/terrain_tileset.tres`). Tile data is stored in the `.tscn` files. See `tools/tileset_builder_reference.gd` for how the tileset was originally constructed.
-- Only static terrain uses `TileMapLayer`. Blocks, enemies, and items are individual scene instances under container `Node2D` nodes.
-- **`enemy_spawner.gd`** — activates enemies as the camera approaches `activation_distance`, cleans up enemies left far behind.
 
 ### Block Bump Detection
 
@@ -107,9 +58,10 @@ The player's `check_ceiling_bumps()` (called from `JumpState` after
 exists. Any new interactable solid block must implement this method.
 
 `block_base.gd` owns the bump animation state (`_bumping`, `_bump_time`,
-`_bump_offset`) and the per-frame tween. Subclasses (`brick_block`,
+`_bump_offset`) and the per-frame tween in `_process()`. Subclasses (`brick_block`,
 `question_block`, `hidden_block`) call `start_bump()` to kick it off; the base
-handles the tween and `queue_redraw()`.
+handles the tween and subclass scripts update their `AnimatedSprite2D` position
+from `_bump_offset`.
 
 **Hidden blocks are different.** They start with `CollisionShape2D.disabled = true`
 so the player passes through them — slide-iteration cannot detect them. Instead,
@@ -146,29 +98,20 @@ Usage: `var _pickup := PickupHelper.new()`, then call
 
 ### Enemy System
 
-- Stomp vs damage: both `StompDetector` (feet, masks layer 5) and `Hurtbox` (body, on layer 4 masks layer 5) may fire for the same enemy in one frame. The hurtbox handler skips damage when the player is above and the enemy is stompable. Enemies returning `is_stompable() -> false` (e.g., piranha plants) bypass this guard and always damage on contact.
 - `koopa_shell.gd` is a standalone `CharacterBody2D` with IDLE/MOVING states and combo kill tracking. Koopa spawns it on stomp.
 - `enemy_base._disable_all_collision()` zeros `collision_layer` / `collision_mask` and disables hitbox `monitoring`/`monitorable`. Called from death-animation paths in `enemy_base.gd` and `goomba.gd`.
 
 ### Pipe Warp
 
-- `pipe.gd` (StaticBody2D) renders a `Sprite2D` from `sprites/pipe_sheet.png` (cap + body cells, sized from `pipe_height`) and manages a `WarpZone` `Area2D` on top. When the player is on the zone, grounded, and presses down, `player.enter_pipe(self, target)` is called.
+- `pipe.gd` (StaticBody2D) uses `AnimatedSprite2D` child nodes (cap + body sprites) configured in `pipe.tscn`. The `_build_sprites()` method sets animation names and positions based on `pipe_height`. A `WarpZone` `Area2D` sits on top. When the player is on the zone, grounded, and presses down, `player.enter_pipe(self, target)` is called.
 - **Z-ordering:** Player default `z_index` is 10 (set in `player.tscn`). Pipes are at 5 with `z_as_relative = false`. `PipeEnterState.enter()` caches the previous `z_index`, drops it to 0 (below the pipe rim), and `exit()` restores it. Don't mutate `z_index` from the pipe script — the state owns that lifecycle so death-during-warp can't leave Mario stuck behind geometry.
 - During the tween, the player's `CollisionShape2D.disabled` is toggled via `set_deferred`. Velocity is zeroed and `apply_gravity()` / `move_and_slide()` are skipped — position is driven by Tween directly. Re-enable on exit (also deferred to avoid a one-frame overlap at the destination pipe).
 
-### Effects Spawning
+### Effects
 
-`effects_manager._spawn_effect(script, pos, z)` does the
-`Node2D.new() + set_script() + add_child()` dance in one place. Effects are
-not `.tscn` scenes — they're scriptless `Node2D`s with a script attached at
-runtime (see the comment above `_spawn_effect` for the rationale).
-
-To add an effect: write a `Node2D`-extending script with its own `_process`
-/ `_draw` / lifetime, preload it, and call `_spawn_effect()` from the
+To add an effect: create a `.tscn` scene with a `Node2D` root and script,
+preload it in `effects_manager.gd`, and call `_spawn_effect()` from the
 appropriate signal handler.
-
-Player-attached effects (`damage_flash`, `motion_trail`) are wired directly
-in `player.tscn`, not via the effects manager.
 
 ### Grow / Shrink Pause Rule
 
@@ -184,8 +127,6 @@ Any node that must keep running during grow/shrink needs `PROCESS_MODE_ALWAYS`
 ### UI Behavior
 
 - **Title screen** resets `GameManager` on load and has a 0.3s input delay to prevent stale presses carrying over from the previous run. Accepts `start`, `jump`, or `pause` actions.
-- **Pause menu** (`PROCESS_MODE_WHEN_PAUSED`) ducks music while paused.
-- **Level complete** calls `GameManager.advance_to_next_level()`, which handles both the "next level" and "no more levels -> title" cases.
 
 ### Shared Helpers
 
@@ -249,12 +190,10 @@ elements from cross-script typed arrays.
 - Do not edit generated files: `.godot/*`, `*.import`, `*.uid`.
 - Be careful editing `project.godot` — a single malformed line breaks project loading.
 - Preserve existing line endings and formatting.
-- Visuals come from generated sprite sheets in `sprites/`. To change art, edit `tools/sprites/generate_sprites.py` and re-run it; do not hand-edit the PNG/SVG outputs.
+- Visuals come from generated sprite sheets in `sprites/`. To change art, edit `tools/sprites/generate_sprites.py` and re-run it; do not hand-edit the PNG/SVG outputs. Then run `generate_sprite_frames.py` to update the `SpriteFrames` resources.
 - Conventions in `README.md` (typed signatures, no `class_name`, `StateIds` over string literals, `_prefix` privacy) apply.
 
-## Asset Pipeline
+## Asset Pipeline — Tool Paths
 
-- **Sprites**: each entity/item gets its own SVG and PNG file, exported via Inkscape.
-  - Inkscape path: `"/c/Program Files/Inkscape/bin/inkscape.exe"`. Export: `inkscape input.svg --export-type=png --export-filename=output.png -w 64 -h 64`.
-- **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`).
-- **Music**: Python scripts in `tools/music/` use `midiutil` to generate MIDI -> FluidSynth renders with a soundfont to WAV -> ffmpeg converts to OGG. Tool paths: `D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe`, `D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe`, soundfont `D:/GeneralUser-GS/GeneralUser-GS.sf2`.
+- **Inkscape**: `"/c/Program Files/Inkscape/bin/inkscape.exe"`. Export: `inkscape input.svg --export-type=png --export-filename=output.png -w 64 -h 64`.
+- **rfxgen**: `"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`. SFX files live in `audio/sfx/` as `.wav`.

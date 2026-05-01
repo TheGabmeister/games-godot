@@ -4,7 +4,7 @@ Each phase produces something playable. Early phases hardcode freely; abstractio
 
 ### Phase 1 — A character in a room
 - Player character (Crono) with 8-directional free-form movement.
-- One field map (e.g., Crono's house or a section of Truce village) with collision.
+- One field map, a debug level with collision.
 - Camera follows the player.
 - One NPC that can be interacted with: press interact → dialogue textbox with typewriter text, button to advance.
 - **Validates:** scene setup, character controller, input handling, basic NPC interaction.

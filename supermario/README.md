@@ -8,10 +8,10 @@ piranha plants, pipe warps, the flagpole sequence, and a full title / pause
 
 ## Project Pillars
 
-- **Generated sprite sheets.** Characters, items, blocks, and terrain are SVG-authored in `tools/sprites/generate_sprites.py` and exported as 32 px-cell PNG sheets. Frame selection happens in small per-entity scripts.
+- **Generated sprite sheets.** Characters, items, blocks, and terrain are SVG-authored in `tools/sprites/generate_sprites.py` and exported as 32 px-cell PNG sheets. `tools/sprites/generate_sprite_frames.py` slices these into Godot `SpriteFrames` resources under `resources/sprite_frames/`.
 - **Tight, readable platforming** that feels close to classic SMB.
-- **Modern polish** through particles, glow, screen shake, transitions.
-- **Audio-ready** registry-based architecture; SFX/music plug in by filling paths.
+- **Modern polish** through particles, glow, and transitions.
+- **Audio-ready** architecture; SFX live in `audio/sfx/` as WAV files, music is wired through `LevelConfig` resources.
 
 Out of scope: online play, save files, level editor, mobile-specific controls.
 
@@ -35,10 +35,11 @@ parse/load errors, then running the game windowed to verify gameplay.
 
 | Setting        | Value                                       |
 |----------------|---------------------------------------------|
-| Viewport       | 1200 × 900                                  |
+| Viewport       | 1024 × 768                                  |
 | Window         | Uses viewport size                          |
-| Stretch        | `canvas_items`, aspect `keep`               |
+| Stretch        | `canvas_items`                              |
 | Renderer       | Forward Plus (required for 2D bloom/glow)   |
+| Texture filter | Nearest (pixel-art)                         |
 | Physics        | Godot 2D (Jolt is enabled for 3D but unused)|
 | Tile grid      | 32 × 32 px                                  |
 
@@ -51,39 +52,48 @@ parse/load errors, then running the game windowed to verify gameplay.
 | `run` (also fires fireballs) | Left Shift, J     | West button     |
 | `crouch`                     | S, Down           | D-pad Down      |
 | `pause`                      | Escape, P         | Start           |
+| `start`                      | Enter             | Start           |
 
 ## Repository Layout
 
 ```text
 res://
   scenes/
-    main.tscn                    # Top-level shell
+    main.tscn                    # Unused shell (boot scene is title_screen)
     levels/                      # world_1_1, world_1_2, test_level
     player/                      # player.tscn
     enemies/                     # goomba, koopa, koopa_shell, piranha_plant
-    objects/                     # blocks, items, pipe, flagpole, castle
-    ui/                          # title, hud, pause, game_over, level_complete
+    objects/                     # blocks, items, pipe, flagpole, castle, fireball
+    effects/                     # score_popup, brick_particle, stomp_puff,
+                                 # coin_pop, power_up_effect
+    ui/                          # title_screen, hud, game_over
 
   scripts/
     autoloads/                   # event_bus, game_manager, sfx_manager,
-                                 # music_manager, scene_manager, camera_effects
-    player/                      # controller, drawer, state_machine,
+                                 # music_manager, ui_manager
+    player/                      # controller, camera_controller, state_machine,
                                  # player_states/, player_state_ids.gd
     enemies/                     # enemy_base + per-type scripts
     objects/                     # block_base, blocks, items, pipe, flagpole,
                                  # emerge_helper.gd
     effects/                     # effects_manager + per-effect scripts
-    level/                       # level_base, level_1_2, parallax_controller,
-                                 # tileset_builder, enemy_spawner, kill_zone
+    level/                       # enemy_spawner, kill_zone
     config/                      # Resource subclasses for tunables
-    ui/                          # screen scripts
+    pickups/                     # pickup_helper.gd
+    ui/                          # title_screen, hud, game_over_screen
 
   resources/
     config/                      # .tres tunable instances
+    sprite_frames/               # SpriteFrames .tres for AnimatedSprite2D
+    tilesets/                    # terrain_tileset.tres
     default_bus_layout.tres
 
-  shaders/                       # glow_pulse, star_power, etc.
-  audio/                         # music/, sfx/ (placeholder slots)
+  sprites/                       # Generated PNG sprite sheets (32px cells)
+  shaders/                       # background_gradient
+  audio/sfx/                     # SFX .wav files
+  tools/
+    sprites/                     # generate_sprites.py, generate_sprite_frames.py, svg/
+    tileset_builder_reference.gd # Reference for how the tileset was built
 ```
 
 Generated files under `.godot/`, `*.uid`, and `*.import` are not hand-edited.
@@ -92,44 +102,44 @@ Generated files under `.godot/`, `*.uid`, and `*.import` are not hand-edited.
 
 ### Autoloads (loaded in this order)
 
-1. **EventBus** — pure signal hub. ~30 signals covering player, scoring, enemies, blocks, and game state. Cross-system communication should prefer signals over hard references.
-2. **GameManager** — persistent state (score, coins, lives, timer, power state, game state) and the entire level-transition flow. Single funnel `_enter_level(path)` for all transitions, called by `start_new_game()`, `advance_to_next_level()`, and `respawn_current_level()`.
+1. **EventBus** — pure signal hub. 28 signals covering audio, player, scoring, level, enemies, blocks, and game state. Cross-system communication should prefer signals over hard references.
+2. **GameManager** — persistent state (score, coins, lives, timer, power state, game state), level-transition flow, player spawning, timer countdown, pause/resume, and level-complete scoring. Central authority for run lifecycle.
 3. **SfxManager** — event-driven SFX playback. Callers own `AudioStream` references and emit `EventBus.sfx_requested(sound)`; the manager only owns the SFX player pool.
-4. **MusicManager** — event-driven music playback. Callers own music streams and emit music request/stop/duck events; the manager only owns dual `AudioStreamPlayer` crossfade plumbing.
-5. **SceneManager** — fade transitions and the level-intro overlay. Public API: `change_scene`, `change_scene_no_fade`, `fade_out` / `fade_in`, `show_level_intro`.
-6. **CameraEffects** — screen shake (the camera controller reads `get_shake_offset()` per frame) and freeze-frame via time-scale dip.
+4. **MusicManager** — event-driven music playback. Callers own music streams and emit `music_requested` / `music_stop_requested`; the manager only owns dual `AudioStreamPlayer` crossfade plumbing.
+5. **UIManager** — instances the `GameOver` overlay scene once at startup. The overlay persists across scene changes — it is **not** placed in level scenes.
 
 ### Game Flow
 
 ```
 Title Screen
-  → start_new_game() → _enter_level(1-1)
-                         → TRANSITIONING → fade_out → scene swap
-                         → show_level_intro (2.5s)
-                         → PLAYING + timer start
+  → start_new_game() → _enter_level(0)
+                         → TRANSITIONING → scene swap + player spawn
+                         → PLAYING + timer start + music
 
-Flagpole → level_completed → tally → advance_to_next_level()
-                                     OR return_to_title()
-Death → lose_life()
+Flagpole → flagpole_reached → timer stops
+        → level_completed → stops music, stage_clear SFX, time bonus
+                          → LEVEL_COMPLETE → 2s delay → advance_to_next_level()
+                                                        OR return_to_title()
+Death → _on_player_died → stops timer + music
+     → _on_death_animation_finished → lose_life()
         → lives > 0  → respawn_current_level (deferred, power → SMALL)
-        → lives = 0  → GAME_OVER → game_over_screen → return_to_title()
-Pause ↔ Resume (Escape)
+        → lives = 0  → GAME_OVER → game_over screen (3s) → return_to_title()
+Pause ↔ Resume (Escape/P) — GameManager toggles tree.paused
 ```
 
 `GameManager._enter_level()` is the only place level transitions happen. Level
-scripts (`level_base.gd`, `level_1_2.gd`) are pure scene construction — they
-paint terrain and set up the camera, but never touch run state, timers, or the
-intro overlay.
+scenes are pure data — they contain terrain, blocks, enemies, and markers but
+no attached scripts. GameManager spawns the player at the `PlayerStart` marker.
 
 ### Player System
 
 State machine with child nodes:
 
-- **`player_controller.gd`** (CharacterBody2D) — movement helpers, collision shape management, stomp/damage handling, fireball shooting, star power, pipe entry, flagpole grab. Tunables come from `@export var movement: PlayerMovementConfig` and `@export var effects: EffectsConfig` wired in `player.tscn`.
-- **`camera_controller.gd`** — script on the `Camera2D` child of the player. Owns horizontal look-ahead, screen-shake compositing, and the no-backtrack `limit_left` ratchet.
+- **`player_controller.gd`** (CharacterBody2D) — movement helpers, collision shape management, stomp/damage handling, fireball shooting, star power, pipe entry, flagpole grab. Tunables come from `@export var movement: Resource` and `@export var effects: Resource` wired in `player.tscn`.
+- **`camera_controller.gd`** — script on the `Camera2D` child of the player. Owns horizontal look-ahead and the no-backtrack `limit_left` ratchet.
 - **`state_machine.gd`** — delegates `_process` / `_physics_process` / `_unhandled_input` to the active state.
 - **States** in `scripts/player/player_states/`: `Idle`, `Run`, `Jump`, `Fall`, `Crouch`, `Death`, `Grow`, `Shrink`, `PipeEnter`, `Flagpole`. Each state owns its own transition logic.
-- **Sprite frame selection** lives in `player_controller._update_sprite_frame()` — picks frames from `sprites/player_sheet.png` based on `displayed_power_state`, movement velocity, current state name, and crouch flag. Star power tints the sprite via `_sprite.modulate`.
+- **Sprite animation** lives in `player_controller._update_sprite_frame()` — calls `AnimatedSprite2D.play()` with animation names (e.g., `small_idle`, `big_walk`, `fire_jump`) built from `displayed_power_state` and current movement/state. Star power tints the sprite via `_sprite.modulate`.
 
 State-name references go through `scripts/player/player_state_ids.gd` (a constants-only `RefCounted`). Use `state_machine.transition_to(StateIds.JUMP)`, never `&"JumpState"` string literals — a rename in the scene tree would otherwise be silent.
 
@@ -137,10 +147,10 @@ Star power is a flag on the controller (`_is_star_powered`), not a state. Fireba
 
 ### Level System
 
-- **`level_base.gd`** (overworld) and **`level_1_2.gd`** (underground) construct scenes only — they paint terrain via the shared builder and place interactive objects.
-- **`tileset_builder.gd`** — parameterized procedural TileSet builder. `create_tileset(top_color, fill_color)` returns a 2-tile atlas with collision polygons, used by both levels with different palette colors.
+- Level scenes are pure `.tscn` data — hand-painted terrain, placed blocks/enemies, a `PlayerStart` marker, and an `Effects` node. No scene scripts.
+- **GameManager** spawns the player at the `PlayerStart` (`Marker2D`) node and drives all run lifecycle (timer, death, level complete).
+- **Terrain is hand-painted** in the editor using `TileMapLayer` with a baked `TileSet` resource (`resources/tilesets/terrain_tileset.tres`). See `tools/tileset_builder_reference.gd` for how the tileset was originally constructed.
 - Only static terrain uses `TileMapLayer`. Blocks, enemies, and items are individual scene instances under container `Node2D` nodes.
-- **`parallax_controller.gd`** — places repeating cloud/hill/bush sprites from `sprites/background_decor_sheet.png` with parallax driven by the player camera's screen center.
 - **`enemy_spawner.gd`** — activates enemies as the camera approaches `activation_distance`, cleans up enemies left far behind.
 
 ### Enemy System
@@ -159,24 +169,27 @@ Star power is a flag on the controller (`_is_star_powered`), not a state. Fireba
 
 ### Effects System
 
-`effects_manager.gd` is a Node2D in each level. It listens for EventBus signals
-(`score_awarded`, `block_broken`, `enemy_stomped`, `item_spawned(coin)`) and
-spawns effects via the private `_spawn_effect(script, pos, z)` helper.
+`effects_manager.gd` is a `Node2D` placed in each level scene. It listens for
+EventBus signals (`score_awarded`, `block_broken`, `enemy_stomped`,
+`item_spawned(coin)`) and spawns effects via preloaded `.tscn` scenes.
 
-Per-effect scripts in `scripts/effects/`: `score_popup`, `brick_particle`,
-`stomp_puff`, `coin_pop`, `damage_flash`, `motion_trail`, `power_up_effect`.
+Effect scenes in `scenes/effects/`: `score_popup`, `brick_particle`,
+`stomp_puff`, `coin_pop`, `power_up_effect`. Each is a `Node2D` with an
+`AnimatedSprite2D` child and a script that handles animation and lifetime.
 
-Effects are scriptless `Node2D`s with a script attached at runtime — they are
-not `.tscn` scenes. To add one: write a `Node2D`-extending script with its own
-`_process` / `_draw` / lifetime, preload it, then call `_spawn_effect()` from
-the appropriate signal handler.
+The manager's `_spawn_effect(scene, pos, z)` helper calls `scene.instantiate()`,
+sets position and z_index, then `add_child()`.
+
+Player-attached effects (`damage_flash`, `motion_trail`) are wired directly
+in `player.tscn`, not via the effects manager.
 
 ### UI Layer
 
 - **Title screen** (`title_screen.gd`) — the main scene set in `project.godot`.
-- **Pause menu** (`pause_menu.gd`) — `PROCESS_MODE_WHEN_PAUSED` `CanvasLayer`. Toggles `get_tree().paused` and ducks music.
-- **Game over** (`game_over_screen.gd`) — `PROCESS_MODE_ALWAYS`. Shows for 3s on `game_over`, returns to title.
-- **Level complete** (`level_complete.gd`) — `PROCESS_MODE_ALWAYS`. Score tally, then calls `GameManager.advance_to_next_level()`.
+- **HUD** (`hud.gd`) — `CanvasLayer` instanced in each level scene. Displays score, coins, world name, timer. Listens to EventBus signals.
+- **Game over** (`game_over_screen.gd`) — `PROCESS_MODE_ALWAYS` `CanvasLayer`, instanced once by `UIManager`. Shows for 3s on `game_over`, returns to title.
+- **Pause** — handled by `GameManager` directly via `get_tree().paused`. No separate pause menu scene.
+- **Level complete** — handled by `GameManager._on_level_completed()`: stops timer/music, plays stage clear SFX, calculates time bonus, then advances after a 2s delay.
 
 ### Tunables
 
@@ -187,12 +200,14 @@ extends `Resource` with `@export` vars; consuming scenes assign concrete
 
 | Resource              | Covers                                                       |
 |-----------------------|--------------------------------------------------------------|
+| `GameConfig`          | ordered `levels` array of `LevelConfig` resources            |
+| `LevelConfig`         | display_name, scene, time_limit, music                       |
 | `PlayerMovementConfig`| walk/run speed, gravity, jump, coyote time, collision sizes  |
 | `CameraConfig`        | look-ahead, smoothing, no-backtrack offset                   |
 | `EnemyConfig`         | patrol speed, gravity (one `.tres` per enemy type)           |
 | `BlockBumpConfig`     | bump amplitude/duration/pulse                                |
 | `ItemConfig`          | mushroom speed/gravity, emerge height/duration               |
-| `LevelTimingConfig`   | intro, fade, death timing                                    |
+| `LevelTimingConfig`   | intro/fade duration, death animation timing                  |
 | `EffectsConfig`       | popup speed, flash duration, trail spacing, grow/shrink rate |
 
 Scene-instanced scripts (player, enemies, blocks, items) use `@export var config: Resource` wired in the `.tscn`. Autoloads and state nodes that can't use `@export` use `const preload("res://resources/config/...")` as a justified exception.
@@ -222,7 +237,8 @@ Scene-instanced scripts (player, enemies, blocks, items) use `@export var config
 ## Visual Style
 
 - Sprite sheets generated from `tools/sprites/generate_sprites.py` (SVG → Inkscape → PNG). Each cell is 32×32; sheets are laid out as `cols × rows` grids.
-- Per-entity drawer scripts use `Sprite2D.region_rect` to pick the frame; `scripts/visuals/sprite_region_helper.gd` is the shared helper.
+- `tools/sprites/generate_sprite_frames.py` slices sheets into `SpriteFrames` resources (`.tres`) under `resources/sprite_frames/`, defining animation sequences with `AtlasTexture` sub-resources.
+- Per-entity scripts use `AnimatedSprite2D` with these `SpriteFrames` resources and call `_sprite.play(animation_name)` to select frames.
 - Geometry stays aligned to the 32 px grid.
 - Bold silhouettes, high contrast, no tiny detail.
 - WorldEnvironment uses subtle bloom; Forward Plus is required for the glow.
@@ -243,6 +259,6 @@ Scene-instanced scripts (player, enemies, blocks, items) use `@export var config
 3. **Dedicated player state machine** — movement, damage, growth, pipes, and flagpole behaviors would otherwise turn into brittle condition chains in the controller.
 4. **EventBus-based decoupling** — HUD, audio, scoring, and effects react to gameplay without hard scene dependencies.
 5. **Forward Plus renderer** — the visual pitch depends on subtle bloom and post-processing on a 2D canvas.
-6. **Sprite-sheet rendering with code-side frame selection** — sheets are generated programmatically (no hand-painted assets), and per-entity scripts pick frames from state. Keeps art reproducible while leaving animation logic in code.
+6. **Sprite-sheet rendering with `AnimatedSprite2D`** — sheets are generated programmatically (no hand-painted assets), sliced into `SpriteFrames` resources, and per-entity scripts select animations by name. Keeps art reproducible while leveraging Godot's built-in animation system.
 7. **32 px grid** — preserves classic Mario spacing and keeps scene authoring simple.
 8. **Per-category Resource tunables, not a god-object.** Categories are clear from gameplay structure, and `.tres` variants give designer-friendly tuning without code changes.
