@@ -385,6 +385,13 @@ func get_living_enemies() -> Array:
 			result.append(i)
 	return result
 
+func get_living_party() -> Array:
+	var result: Array = []
+	for i in _party.size():
+		if not _party[i]["is_ko"]:
+			result.append(i)
+	return result
+
 func get_enemy_node(index: int) -> Node2D:
 	if index >= 0 and index < _enemy_nodes.size():
 		return _enemy_nodes[index]

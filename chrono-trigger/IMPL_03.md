@@ -593,30 +593,30 @@ No changes from Phase 2. The formula is the same, just applied with per-characte
 - [x] Single remaining enemy auto-targets (skip selection)
 
 ### Escape
-- [ ] Holding escape_left + escape_right fills escape gauge
-- [ ] Releasing either button stops the gauge
-- [ ] When gauge fills, battle ends and field resumes
-- [ ] Enemies remain on field after escape (can re-trigger)
-- [ ] Enemies can still attack during escape attempt
-- [ ] Escape is blocked when any enemy has is_boss = true
+- [x] Holding escape_left + escape_right fills escape gauge
+- [x] Releasing either button stops the gauge
+- [x] When gauge fills, battle ends and field resumes
+- [x] Enemies remain on field after escape (can re-trigger)
+- [x] Enemies can still attack during escape attempt
+- [x] Escape is blocked when any enemy has is_boss = true
 
 ### Wait/Active mode
-- [ ] In Active mode, all gauges fill during submenus
-- [ ] In Wait mode, non-acting gauges pause during item list and target selection
-- [ ] Wait mode does NOT pause gauges at the top-level command menu (Attack/Item)
+- [x] In Active mode, all gauges fill during submenus
+- [x] In Wait mode, non-acting gauges pause during item list and target selection
+- [x] Wait mode does NOT pause gauges at the top-level command menu (Attack/Item)
 
 ### Enemy AI
-- [ ] Enemies attack random living party members
-- [ ] Enemies do not target KO'd party members
-- [ ] Multiple enemies act independently based on their ATB
+- [x] Enemies attack random living party members
+- [x] Enemies do not target KO'd party members
+- [x] Multiple enemies act independently based on their ATB
 
 ### Game over
-- [ ] Game over triggers when all 3 party members reach 0 HP
-- [ ] Game over does NOT trigger if at least one member is alive
+- [x] Game over triggers when all 3 party members reach 0 HP
+- [x] Game over does NOT trigger if at least one member is alive
 
 ### Battle animations
-- [ ] All 3 party members play attack/idle/hit animations correctly
-- [ ] All enemies play attack/idle/hit/die animations correctly
-- [ ] Lunge direction is correct for each attacker→target pair
-- [ ] FlashEffect works on all combatants
-- [ ] Damage numbers appear at the correct target positions
+- [x] All 3 party members play attack/idle/hit animations correctly
+- [x] All enemies play attack/idle/hit/die animations correctly
+- [x] Lunge direction is correct for each attacker→target pair
+- [x] FlashEffect works on all combatants
+- [x] Damage numbers appear at the correct target positions

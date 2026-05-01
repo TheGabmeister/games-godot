@@ -10,6 +10,7 @@ var _command_cursor := 0
 var _target_cursor := 0
 var _item_cursor := 0
 var _living_enemies: Array = []
+var _living_party: Array = []
 var _items: Array = []
 var _selected_item: ItemData = null
 
@@ -285,6 +286,10 @@ func _enter_item_list() -> void:
 	bm.set_in_submenu(true)
 
 func _enter_target_ally() -> void:
+	var bm := get_node(battle_manager_path)
+	_living_party = bm.get_living_party()
+	if _living_party.is_empty():
+		return
 	_target_cursor = 0
 	_menu_state = MenuState.TARGET_ALLY
 	_command_menu.visible = false
@@ -319,7 +324,8 @@ func _confirm_item() -> void:
 	_menu_state = MenuState.HIDDEN
 	_command_menu.visible = false
 	_clear_row_cursors()
-	bm._on_item_used(_selected_item, _target_cursor)
+	var party_idx: int = _living_party[_target_cursor]
+	bm._on_item_used(_selected_item, party_idx)
 
 func _cycle_enemy_target(dir: int) -> void:
 	_target_cursor = (_target_cursor + dir) % _living_enemies.size()
@@ -328,7 +334,7 @@ func _cycle_enemy_target(dir: int) -> void:
 	_update_enemy_target_display()
 
 func _cycle_ally_target(dir: int) -> void:
-	var size := _party_rows.size()
+	var size := _living_party.size()
 	_target_cursor = (_target_cursor + dir) % size
 	if _target_cursor < 0:
 		_target_cursor += size
@@ -362,8 +368,9 @@ func _update_item_display() -> void:
 
 func _update_ally_target_display() -> void:
 	_clear_row_cursors()
-	if _target_cursor >= 0 and _target_cursor < _party_rows.size():
-		_party_rows[_target_cursor]["marker"].text = ">"
+	if _target_cursor >= 0 and _target_cursor < _living_party.size():
+		var party_idx: int = _living_party[_target_cursor]
+		_party_rows[party_idx]["marker"].text = ">"
 
 func _clear_row_cursors() -> void:
 	for row in _party_rows:
