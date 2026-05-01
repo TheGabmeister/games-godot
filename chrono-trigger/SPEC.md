@@ -444,33 +444,132 @@ The DS port adds Dimensional-Vortex weapons not in the SNES original: **Dreamsee
 
 ### 6.2 Armor & Helms
 
-Universal across all characters; no class restriction. Tiers run from cloth (Hide Tunic) through metal (Iron / Gold / Lode / Aeon) to high-magic (Mist Robe, Lumin Robe, Zodiac Cape, Nova Armor, Moon Armor).
+Universal across all characters unless marked. Gender keys: **(M)** = males only (Crono, Frog, Robo, Magus), **(F)** = females only (Marle, Lucca, Ayla), **(Lucca)** / **(Magus)** = that character only. No marker = all characters.
 
-Notable:
-- **Elemental resistance set** — White / Black / Blue / Red Vest → upgraded to White / Black / Blue / Red Mail. Each color covers one element: White = Lightning, Black = Shadow, Blue = Water, Red = Fire. The Mail tier fully nullifies its element.
-- **Ruby Vest** — halves Fire (chest, Heckran's Cave / Lucca's mom sidequest).
-- **Taban Vest / Suit / Helm** — given by Lucca's father at story milestones.
-- **Prism Dress / Prism Helm** — forged from Rainbow Shell; halve **all** elemental damage. Top-tier.
-- **Haste Helm** — auto-Haste at battle start (Black Omen drop/Charm).
-- **Ozzie Pants** — joke item dropped from Ozzie; large defense vs. specific enemy types.
+#### Body Armor
+
+| Name | Def | Special | Acquisition |
+|---|---:|---|---|
+| Hide Tunic | 5 | — | starting (Crono, Marle) |
+| Karate Gi | 10 | — | shop 300G |
+| Bronze Mail | 16 | — | shop 520G (M) |
+| Maiden Suit | 18 | — | chest, Cathedral (F) |
+| Iron Suit | 25 | — | shop 800G |
+| Titan Vest | 33 | — | shop 1200G |
+| Taban Vest | 33 | Fire halved; Speed +2 | gift from Taban (Lucca) |
+| Gold Suit | 39 | — | shop 1300G |
+| Ruby Vest | 45 | Fire halved | trade at Ioka (3 Fangs + 3 Feathers); chest |
+| Dark Mail | 45 | M.Def +5 | chest, Magus's Castle (M) |
+| Red Vest | 45 | Fire halved | sealed chest 600 AD (base) |
+| Blue Vest | 45 | Water halved | sealed chest 600 AD (base) |
+| White Vest | 45 | Lightning halved | sealed chest 600 AD (base) |
+| Black Vest | 45 | Shadow halved | sealed chest 600 AD (base) |
+| Meso Mail | 52 | — | chest, Tyranno Lair |
+| Mist Robe | 54 | — | chest, Magus's Castle (F) |
+| Lumin Robe | 63 | M.Def +5 | shop 6500G, Algetty (F) |
+| Flash Mail | 64 | — | shop 8500G, Algetty (M) |
+| Red Mail | 70 | **Absorbs Fire** (heals HP) | sealed chest 1000 AD (powered-up) |
+| Blue Mail | 70 | **Absorbs Water** (heals HP) | sealed chest 1000 AD (powered-up) |
+| White Mail | 70 | **Absorbs Lightning** (heals HP) | sealed chest 1000 AD (powered-up) |
+| Black Mail | 70 | **Absorbs Shadow** (heals HP) | sealed chest 1000 AD (powered-up) |
+| Lode Vest | 71 | — | shop 8500G, Kajar |
+| Aeon Suit | 75 | — | shop 9000G, Last Village |
+| Raven Armor | 76 | — | starting (Magus) |
+| Ruby Armor | 78 | Fire reduced 80% | trade at Ioka (10 each of Petal/Fang/Feather/Horn); Charm from Rust Tyranno |
+| Taban Suit | 79 | Fire reduced 90%; Speed +3 | gift from Taban after Zeal falls (Lucca) |
+| Zodiac Cape | 80 | M.Def +10 | chest, Black Omen (F) |
+| Nova Armor | 82 | Status immunity | chest, Black Omen; Charm from Fangbeast (M) |
+| Gloom Cape | 84 | — | chest, Ozzie's Fort (Magus) |
+| Moon Armor | 85 | M.Def +10 | sealed chest 1000 AD, Northern Ruins (powered-up from Nova) (M) |
+| **Prism Dress** | **99** | **Magic damage −33% (auto-Barrier)** | Rainbow Shell quest (Melchior: 1 Dress OR 3 Helms); Charm from Queen Zeal (F) |
+
+**Vest → Mail upgrade trick:** for each elemental color, inspect the sealed chest in 600 AD without taking it, take the Mail in 1000 AD, then return to 600 AD to also collect the Vest. Both obtained per playthrough.
+
+#### Helms
+
+| Name | Def | Special | Acquisition |
+|---|---:|---|---|
+| Hide Cap | 3 | — | starting (Crono, Marle, Lucca) |
+| Bronze Helm | 8 | — | shop 200G; starting (Frog) |
+| Iron Helm | 14 | — | shop 500G |
+| Beret | 17 | — | shop 700G (F) |
+| Gold Helm | 18 | — | chest, Denadoro; given by Knight Captain (M) |
+| Rock Helm | 20 | — | trade at Ioka; starting (Ayla) |
+| CeraTopper | 23 | — | chest, Tyranno Lair (×2, missable) |
+| Taban Helm | 24 | M.Def +10 | gift from Taban (Lucca) |
+| Glow Helm | 25 | — | shop 2300G, Algetty (M) |
+| Doom Helm | 29 | — | starting (Magus) |
+| Lode Helm | 29 | — | shop 6500G, Kajar |
+| Sight Cap | 30 | prevents Chaos | chest, Ozzie's Fort / Giant's Claw; shop 20000G |
+| Memory Cap | 30 | prevents Lock | chest, Death Peak; shop 20000G |
+| Time Hat | 30 | prevents Stop + Slow | chest, Mt. Woe; shop 30000G |
+| Aeon Helm | 33 | — | shop 7800G, Last Village |
+| R'bow Helm | 35 | Lightning halved | Charm from Red Mudbeast |
+| Mermaid Cap | 35 | Water halved | Charm from Blue Mudbeast |
+| Dark Helm | 35 | Shadow halved | chest, Death Peak (M) |
+| **Haste Helm** | **35** | **auto-Haste** | chest, Black Omen; Charm from Elder Lavos Spawn (head) |
+| Vigil Hat | 36 | status immunity | chest, Geno Dome / Black Omen; shop 50000G |
+| Safe Helm | 38 | auto-Protect (phys. damage −33%) | chest, Forest Ruins (choice: this OR Swallow) |
+| **Prism Helm** | **40** | **M.Def +9; magic damage −33%; status immunity** | Rainbow Shell quest (Melchior: 3 Helms OR 1 Dress) |
+| Gloom Helm | 42 | status immunity; Speed +1 | chest, Ozzie's Fort (Magus) |
+| Ozzie Pants | 45 | auto-Chaos + HP drain on wearer (joke) | Charm from Ozzie |
 
 ### 6.3 Accessories
 
-One slot per character. Major axis of build variety. Grouped by effect:
+One slot per character. Accessories **cannot be bought or sold** — all are obtained from chests, sealed chests/doors, quest rewards, Charm, or as starting equipment.
 
-**Stat boosts.** Power Ring, Power Glove, Power Scarf (Power+); Magic Ring, Magic Scarf (Magic+); Silver Earring / Gold Earring (Max HP+); Silver Stud / Gold Stud (MP cost reduction — Gold Stud reduces to 1/4 cost; Charm-only from Rubble in Black Omen); Hit Ring (Hit+); Defender (Defense+).
+| Name | Effect | Acquisition |
+|---|---|---|
+| Bandana | Speed +1 | starting (Crono) |
+| Ribbon | Hit +2 | starting (Marle) |
+| Power Glove | Power +2 | chest, Truce Canyon 600 AD |
+| Power Scarf | Power +4 | starting (Ayla) |
+| Power Ring | Power +6 | sealed chest, Guardia Forest 1000 AD |
+| Magic Scarf | Magic +2 | chests, Heckran Cave / Fiendlord's Keep / Cursed Woods |
+| Magic Ring | Magic +6 | sealed chest, Magic Cave 600 AD |
+| Defender | Stamina +2 | chest, Cathedral 600 AD; starting (Robo) |
+| Muscle Ring | Stamina +6 | chest, Sunken Desert; Charm from Incognito / Tera Mutant (upper) |
+| Hit Ring | Hit +10 | sealed door, Arris Dome; Charm from Giga Mutant (upper) |
+| Speed Belt | Speed +2 | chest, Cathedral 600 AD |
+| Dash Ring | Speed +3 | sealed chest, Heckran Cave; chest, Ozzie's Fort; Charm from Flyclops |
+| Silver Earring | Max HP +25% | chest, Denadoro Mts. |
+| Gold Earring | Max HP +50% | sealed door, Arris Dome; Charm from Synchrite |
+| Silver Stud | MP cost ×0.5 | chest, Denadoro Mts. |
+| **Gold Stud** | **MP cost ×0.25** | sealed door, Trann Dome; Charm from Flyclops |
+| Wall Ring | M.Def +10 | sealed chest, Heckran Cave 1000 AD |
+| Sight Scope | shows enemy HP | starting (Lucca) |
+| Charm Top | boosts Charm success rate (Ayla) | sealed door, Bangor Dome |
+| Berserker | auto-Berserk + auto-Protect; phys. damage ×1.5; uncontrollable | chest, Lab 16 (2300 AD) |
+| Rage Band | 50% counter-attack chance | chest, Sewers 2300 AD |
+| Frenzy Band | 80% counter-attack chance | chest, Giant's Claw 600 AD |
+| Third Eye | Evade ×2.5 | Hunting Range (Nu when raining); Charm from Nizbel / Nizbel II |
+| Wallet | converts all EXP to Gold | sealed door, Bangor Dome |
+| **Amulet** | **status immunity (all negative)** | starting (Magus); dropped if Magus killed at North Cape |
+| Flea Vest | M.Def +12 | Charm from Flea, Ozzie's Fort |
+| Magic Seal | Magic +5, M.Def +5 | chest, Black Omen |
+| Power Seal | Power +10, Stamina +10 | chest, Black Omen; Charm from Tera Mutant (lower) |
+| **Green Dream** | **auto-revive once per battle** | quest reward: Fiona's Forest |
+| **Hero Medal** | Masamune crit rate → 50% (Frog only) | Tata's house, Porre 600 AD |
+| **Sun Shades** | **all damage dealt +25%** | quest reward: Sun Stone (Taban forges it) |
+| **Prism Specs** | **all damage dealt +50%** | quest reward: Rainbow Shell + Sun Stone (Melchior forges) |
 
-**Status / immunity.** Wall Ring (magic defense), Ribbon (Speed+ and minor protections), Bandana (Speed+; early shop), Third Eye (evasion), Vigil's Hat (status protection), Charm Top (boosts Ayla's Charm rate), **Amulet** (Magus's; status immunity + magic defense; he joins with it equipped).
+**Robo's Ribbon** is not an equippable accessory — defeating Atropos XR in Geno Dome permanently adds +3 Speed and +10 M.Def to Robo's base stats.
 
-**Auto-cast / on-event.** Berserker (forces auto-attack but boosts stats — loses control), Rage Band / Frenzy Band (counter-attack chance), **Greendream** (auto-revive once when KO'd; Fiona's Forest reward), **Hero Medal** (boosts Masamune crit rate when on Frog), **Robo's Ribbon** (Robo's signature; Geno Dome reward).
+#### Triple Tech Rock accessories
 
-**Utility / movement.** Dash Ring (doubles overworld movement speed), Speed Belt (Speed+ in battle — one of the best accessories), Wallet (more G per battle).
+Rocks occupy the accessory slot on one participant. Only one Rock effect is active at a time.
 
-**Damage modifiers.**
-- **Prism Specs** — **+50% damage dealt** (applies to both physical attacks and techs). Found in the Guardia Castle treasure room after the King's Trial sidequest. One of the strongest accessories in the game.
-- **Sun Shades** — **+25% physical damage dealt, +50% magical damage dealt**. Acquired via the Sun Stone quest chain.
+| Rock | Enables | Characters | Acquisition |
+|---|---|---|---|
+| Black Rock | Dark Eternal | Marle + Lucca + Magus | Kajar 12,000 BC (book puzzle) |
+| Blue Rock | Omega Flare | Lucca + Robo + Magus | chest, Giant's Claw |
+| Gold Rock | Grand Dream | Marle + Frog + Robo | Denadoro Mts. (Frog must lead) |
+| Silver Rock | Spin Strike | Frog + Robo + Ayla | Laruba Ruins (post-Zeal-fall) |
+| White Rock | Poyozo Dance | Marle + Lucca + Ayla | chest, Black Omen |
 
-Both accessories *increase* damage; neither halves anything. The two stack with party damage buffs (e.g., Haste's effective DPS multiplier from extra turns).
+#### DS-port-only accessories (out of scope for v1)
+
+Dragon's Tear, Valor Crest, Champion's Badge, Angel's Tiara, Master's Crown. See DS equipment guides.
 
 ### 6.4 Consumables
 
@@ -550,7 +649,7 @@ Minor diversions woven through the world. None are individually game-changing, b
 
 ## 9. Bestiary
 
-Enemies are organized by era. Most enemies have a typical elemental weakness reflecting their habitat. Each enemy entry will eventually carry: HP, stats, drop item, charm item, charm rate, weakness/resist table.
+Enemies are organized by era. Most enemies have a typical elemental weakness reflecting their habitat. The full data tables (HP, EXP, G, TP, weakness, drop, charm, boss mechanics) are in [docs/bestiary.md](docs/bestiary.md). Summary by era below.
 
 ### 9.1 65,000,000 BC — Dinosaurs & Reptites
 Reptite warriors and mages, raptors (Kilwala, Terrasaur, Megasaur), pterosaurs (Avian Rex), giant insects, Roundillo / Rolypoly. Many lightning-weak. **Bosses:** Nizbel, Nizbel II, Black Tyranno, Azala.
