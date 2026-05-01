@@ -323,7 +323,7 @@ No new input actions needed. The command menu uses `interact` to confirm and arr
 - [x] Crono lunges toward the enemy when attacking, then returns
 - [x] Crono plays the attack sprite during the lunge
 - [x] Enemy lunges toward Crono when attacking, then returns
-- [x] Target flashes white when hit
+- [ ] Target flashes white when hit
 - [x] Damage number floats up and fades out above the target
 - [x] Crit damage numbers are visually distinct (larger or different color)
 - [x] ATB gauges pause during attack animations

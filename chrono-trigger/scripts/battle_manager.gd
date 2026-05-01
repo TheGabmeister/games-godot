@@ -7,6 +7,17 @@ const PLAYER_SPEED := 12
 const PLAYER_STAMINA := 5
 const PLAYER_STRIKE_PERCENT := 10.0
 const PLAYER_WEAPON_AP := 3
+const FLASH_SHADER_CODE := """
+shader_type canvas_item;
+
+uniform float flash_amount = 0.0;
+
+void fragment() {
+	vec4 tex = texture(TEXTURE, UV) * COLOR;
+	tex.rgb = mix(tex.rgb, vec3(1.0), flash_amount);
+	COLOR = tex;
+}
+"""
 
 @export var player_path: NodePath
 @export var battle_ui_path: NodePath
@@ -25,9 +36,12 @@ var _player_command_ready := false
 var _animating := false
 var _battle_finished := false
 var _rng := RandomNumberGenerator.new()
+var _flash_shader: Shader
 
 func _ready() -> void:
 	_rng.randomize()
+	_flash_shader = Shader.new()
+	_flash_shader.code = FLASH_SHADER_CODE
 	battle_ui.attack_selected.connect(_on_attack_selected)
 
 func _process(delta: float) -> void:
@@ -125,7 +139,9 @@ func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critic
 		_player_hp = max(0, _player_hp - damage)
 		battle_ui.update_player_hp(_player_hp, PLAYER_MAX_HP)
 
-	if target.has_method("play_hit"):
+	if target == player:
+		_play_player_hit_animation(direction)
+	elif target.has_method("play_hit"):
 		target.play_hit()
 	_flash_target(target)
 	battle_ui.spawn_damage_number(target.global_position, damage, critical)
@@ -149,9 +165,25 @@ func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critic
 
 func _flash_target(target: Node2D) -> void:
 	var tween := create_tween()
+	var flash_item := target.get_node_or_null("AnimatedSprite2D") as CanvasItem
+	if flash_item == null:
+		flash_item = target as CanvasItem
+	if flash_item == null:
+		return
+
+	var original_material := flash_item.material
+	var flash_material := ShaderMaterial.new()
+	flash_material.shader = _flash_shader
+	flash_material.set_shader_parameter("flash_amount", 0.0)
+	flash_item.material = flash_material
+
 	for i in 3:
-		tween.tween_property(target, "modulate", Color.WHITE, 0.05)
-		tween.tween_property(target, "modulate", Color(1, 1, 1, 1), 0.05)
+		tween.tween_property(flash_material, "shader_parameter/flash_amount", 1.0, 0.05)
+		tween.tween_property(flash_material, "shader_parameter/flash_amount", 0.0, 0.05)
+	tween.finished.connect(func() -> void:
+		if is_instance_valid(flash_item):
+			flash_item.material = original_material
+	)
 
 func _check_battle_end() -> void:
 	if _battle_finished:
@@ -212,6 +244,17 @@ func _play_player_idle_animation() -> void:
 		animation_name = "idle_" + player.get_facing_direction_name()
 	if sprite.sprite_frames and sprite.sprite_frames.has_animation(animation_name):
 		sprite.play(animation_name)
+
+func _play_player_hit_animation(hit_direction: Vector2) -> void:
+	_play_player_idle_animation()
+	var start_position := player.global_position
+	var recoil_direction := hit_direction
+	if recoil_direction == Vector2.ZERO:
+		recoil_direction = Vector2.LEFT
+	var tween := create_tween()
+	tween.tween_property(player, "global_position", start_position + recoil_direction * 8.0, 0.06)
+	tween.tween_property(player, "global_position", start_position - recoil_direction * 4.0, 0.06)
+	tween.tween_property(player, "global_position", start_position, 0.08)
 
 func _enemy_name() -> String:
 	return str(_enemy_data.get("enemy_name"))
