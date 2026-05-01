@@ -9,7 +9,6 @@ const RAY_LENGTH := 20.0
 var facing := Vector2.DOWN
 
 func _ready() -> void:
-	_load_runtime_sprite_frames()
 	_play_idle_animation()
 
 func _physics_process(_delta: float) -> void:
@@ -59,39 +58,3 @@ func _try_interact() -> void:
 	var collider := interact_ray.get_collider()
 	if collider and collider.is_in_group("interactable"):
 		collider.interact()
-
-func _load_runtime_sprite_frames() -> void:
-	var image := Image.load_from_file("res://player/crono_sheet.png")
-	if image == null or image.is_empty():
-		return
-
-	var texture := ImageTexture.create_from_image(image)
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-
-	_add_sheet_animation(frames, texture, "idle_down", [0], 1.0, true)
-	_add_sheet_animation(frames, texture, "idle_up", [2], 1.0, true)
-	_add_sheet_animation(frames, texture, "idle_left", [4], 1.0, true)
-	_add_sheet_animation(frames, texture, "idle_right", [6], 1.0, true)
-	_add_sheet_animation(frames, texture, "walk_down", [0, 1], 6.0, true)
-	_add_sheet_animation(frames, texture, "walk_up", [2, 3], 6.0, true)
-	_add_sheet_animation(frames, texture, "walk_left", [4, 5], 6.0, true)
-	_add_sheet_animation(frames, texture, "walk_right", [6, 7], 6.0, true)
-	if image.get_width() >= 768:
-		_add_sheet_animation(frames, texture, "attack_down", [8], 1.0, false)
-		_add_sheet_animation(frames, texture, "attack_up", [9], 1.0, false)
-		_add_sheet_animation(frames, texture, "attack_left", [10], 1.0, false)
-		_add_sheet_animation(frames, texture, "attack_right", [11], 1.0, false)
-
-	animated_sprite.sprite_frames = frames
-
-func _add_sheet_animation(frames: SpriteFrames, texture: Texture2D, animation_name: String, frame_indexes: Array, speed: float, loop: bool) -> void:
-	frames.add_animation(animation_name)
-	frames.set_animation_speed(animation_name, speed)
-	frames.set_animation_loop(animation_name, loop)
-	for frame_index in frame_indexes:
-		var atlas := AtlasTexture.new()
-		atlas.atlas = texture
-		atlas.region = Rect2(int(frame_index) * 64, 0, 64, 64)
-		frames.add_frame(animation_name, atlas)

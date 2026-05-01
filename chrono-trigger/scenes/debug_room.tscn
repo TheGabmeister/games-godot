@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/enemy.gd" id="8"]
 [ext_resource type="Script" path="res://scripts/battle_manager.gd" id="9"]
 [ext_resource type="Script" path="res://scripts/battle_ui.gd" id="10"]
+[ext_resource type="SpriteFrames" path="res://enemies/imp_frames.tres" id="11"]
 [ext_resource type="Resource" path="res://enemies/imp.tres" id="12"]
 [ext_resource type="AudioStream" path="res://music/battle.ogg" id="13"]
 
@@ -126,6 +127,8 @@ script = ExtResource("8")
 data = ExtResource("12")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Enemy" unique_id=1819690556]
+sprite_frames = ExtResource("11")
+animation = &"idle"
 autoplay = "idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy" unique_id=1371698068]
