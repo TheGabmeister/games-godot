@@ -5,9 +5,6 @@ enum GameState { TITLE, PLAYING, PAUSED, GAME_OVER, LEVEL_COMPLETE, TRANSITIONIN
 
 const _config := preload("res://resources/config/game_config.tres")
 
-var levels: Array[Resource]:
-	get: return _config.levels
-
 var score: int = 0
 var coins: int = 0
 var lives: int = 3
@@ -45,7 +42,7 @@ func start_new_game() -> void:
 
 
 func advance_to_next_level() -> void:
-	if _level_index + 1 >= levels.size():
+	if _level_index + 1 >= _config.levels.size():
 		return_to_title()
 		return
 	_enter_level(_level_index + 1)
@@ -69,7 +66,7 @@ func reset_for_title() -> void:
 
 func _enter_level(index: int) -> void:
 	_level_index = index
-	var config: Resource = levels[index]
+	var config := _config.levels[index]
 	set_game_state(GameState.TRANSITIONING)
 	get_tree().change_scene_to_packed(config.scene)
 	set_game_state(GameState.PLAYING)
@@ -147,8 +144,8 @@ func stop_level_timer() -> void:
 
 
 func get_current_level() -> Resource:
-	if _level_index >= 0 and _level_index < levels.size():
-		return levels[_level_index]
+	if _level_index >= 0 and _level_index < _config.levels.size():
+		return _config.levels[_level_index]
 	return null
 
 
