@@ -56,14 +56,25 @@ When making changes in this repo:
 
 - The active boot scene is `res://scenes/ui/title_screen.tscn`; `scenes/main.tscn`
   is only a shell stub right now.
-- `GameManager` owns run state, timers, level entry, respawns, and progression.
-  Level scripts should stay focused on scene construction, terrain, and camera
-  setup.
+- `GameManager` owns persistent run state, level config lookup, level entry,
+  respawns, progression, score, coins, lives, power state, and music start
+  requests. It stores `time_remaining` and `timer_active`, but does not tick the
+  timer and does not reference the player.
+- Game-wide level order/config lives in `resources/config/game_config.tres` as
+  an ordered array of `LevelConfig` resources. Each `LevelConfig` owns the
+  level display name, scene, time limit, and music.
+- Playable level roots should use `scripts/level/gameplay_manager.gd` as the
+  scene script, expose `player_scene`, and contain a `PlayerStart` `Marker2D`.
+  `GameplayManager` spawns the player, drives the countdown timer, emits
+  `time_tick`, kills the player on timeout, and mediates player death signals
+  before calling `GameManager.lose_life()`.
 - `SfxManager` and `MusicManager` are playback plumbing only. Gameplay, UI, and
   level callers own their `AudioStream` references and request playback through
-  EventBus (`sfx_requested`, `music_requested`, `music_stop_requested`,
-  `music_duck_requested`, and `level_music_requested`). Do not add centralized
-  SFX/music registries back to the managers.
+  EventBus (`sfx_requested`, `music_requested`, `music_stop_requested`, and
+  `music_duck_requested`). Do not add centralized SFX/music registries back to
+  the managers.
+- `UIManager` autoload owns persistent pause, game-over, and level-complete UI
+  overlays. Do not place those overlay scenes directly in level scenes.
 - Playable levels use container nodes such as `Blocks`, `Pipes`, `Coins`,
   `Enemies`, `Effects`, and `Interactables`. Interactive gameplay objects should
   generally be scene instances under those containers, not TileMap-authored
@@ -75,14 +86,16 @@ When making changes in this repo:
 - Player state transitions are scene-node-name based. Use
   `scripts/player/player_state_ids.gd` constants instead of scattering raw
   state-name literals.
+- Player death is signal-driven. `player_controller.gd` emits `died` when death
+  starts, and `DeathState` emits `death_animation_finished` when the bounce
+  animation ends. `GameplayManager` listens to those signals; the player should
+  not call `GameManager.lose_life()` directly.
 - Player camera feel lives in `scripts/player/camera_controller.gd`, while
-  level scripts still set camera limits.
-- Level terrain uses `scripts/level/tileset_builder.gd` to build TileSets from
-  the generated `res://sprites/terrain_sheet.png` atlas. `level_base.gd` and
-  `level_1_2.gd` keep matching `TILE_SIZE` constants for camera limits and
-  scene construction.
-- `scripts/level/parallax_controller.gd` lazily finds the first node in the
-  `"player"` group and expects that node to have a `Camera2D` child.
+  camera bounds are auto-detected from the first `TileMapLayer` in the level.
+- Level terrain is hand-painted in level `.tscn` files using `TileMapLayer` and
+  `resources/tilesets/terrain_tileset.tres`. `tools/tileset_builder_reference.gd`
+  is reference material for how the TileSet was built, not runtime level
+  construction code.
 - Question blocks and brick blocks respond to head hits through
   `player_controller.gd` slide-collision checks. New solid bumpable blocks
   should usually extend `block_base.gd` and expose `bump_from_below()`.

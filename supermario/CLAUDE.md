@@ -42,10 +42,24 @@ obvious from reading the code in isolation.
 
 - `.gd` autoloads can't use `@export`, so game-wide config lives in `resources/config/game_config.tres` (a `GameConfig` resource), loaded via `preload`. The config holds the ordered `levels` array of `LevelConfig` resources.
 - Run-state reset (score / coins / lives / power) is centralized in `_reset_run_state()`. Both `start_new_game()` and `reset_for_title()` call it — don't duplicate the reset logic.
-- Timer ticks (`EventBus.time_tick`) emit only when the displayed integer second changes, deduped via `_last_time_tick`. The cache resets in `_start_level()` so the first tick of every level always emits.
 - `_enter_level()` has exactly three callers: `start_new_game()`, `advance_to_next_level()`, `respawn_current_level()`. Do not add a fourth — extend one of these.
 - Level navigation is index-based via `_level_index` into `_config.levels`. Each `LevelConfig` resource holds `display_name`, `scene`, `time_limit`, and `music`.
 - Music playback is triggered by GameManager in `_start_level()` from the level config — level scripts do not handle music.
+- **GameManager does not own the level timer tick.** It stores `time_remaining` and `timer_active` (read by HUD and level-complete scoring), but the countdown, tick emission, and timeout-kill are driven by `GameplayManager` in the level scene. GameManager's `_start_level()` sets `time_remaining` and `timer_active = true`; GameplayManager decrements each frame.
+- **GameManager does not listen for player death.** The death flow is: Player emits `died` → GameplayManager stops timer and music → Player emits `death_animation_finished` → GameplayManager calls `GameManager.lose_life()`. GameManager never references the player.
+
+### GameplayManager
+
+`gameplay_manager.gd` is the per-level scene script (replaces the former
+`level_base.gd`). It mediates between the Player and GameManager so that
+neither knows about the other's internals.
+
+Responsibilities:
+- Spawns the player at the `PlayerStart` marker.
+- Drives the level countdown timer (reads `GameManager.timer_active`, decrements `GameManager.time_remaining`, emits `EventBus.time_tick`, calls `player.die()` on timeout).
+- Subscribes to the player's `died` and `death_animation_finished` signals. On death: stops timer and music. On animation end: calls `GameManager.lose_life()`.
+
+Dependency direction: GameplayManager → GameManager (calls public methods), GameplayManager → Player (connects to signals, calls `die()`). GameManager does **not** reference GameplayManager or the player.
 
 ### SfxManager and MusicManager
 
@@ -62,6 +76,7 @@ EventBus signals and manages its own visibility.
 
 ### Player System
 
+- **Signals:** `died` (emitted from `die()`), `death_animation_finished` (emitted from `DeathState` when the bounce animation ends). GameplayManager subscribes to both — the player does not call GameManager directly for death/life logic.
 - **Public API:** `update_collision_shape`, `start_invincibility`, `die`, `take_damage`, `power_up(item_type, position)`, `enter_pipe(pipe, target)`, `start_flagpole(flagpole)`. The rule: if cross-file code has a legitimate reason to call it, it's public. Do not add an underscore-prefixed wrapper for callers from outside the file.
 - **Power-state on spawn:** `player_controller._ready()` calls `update_collision_shape()` so a newly instanced player picks up `GameManager.current_power_state`. Load-bearing for Fire Mario persisting across level transitions — `player.tscn` bakes in the Small collision, so without this line Mario would spawn with the wrong collision box on 1-2 after beating 1-1 as Fire Mario.
 - **States transition themselves** (e.g., `state_machine.transition_to(StateIds.JUMP)`). The controller provides movement helpers but does not decide when to switch states.
@@ -75,7 +90,7 @@ EventBus signals and manages its own visibility.
 
 ### Level System
 
-- **`level_base.gd`** is the single level script used by all levels. It spawns the player at a `PlayerStart` (`Marker2D`) node and has an `@export var player_scene: PackedScene` wired in each level's inspector.
+- **`gameplay_manager.gd`** is the scene script used by all levels. It spawns the player at a `PlayerStart` (`Marker2D`) node, drives the level timer, and mediates player death events. Has an `@export var player_scene: PackedScene` wired in each level's inspector.
 - **Terrain is hand-painted** in the editor using `TileMapLayer` with a baked `TileSet` resource (`resources/tilesets/terrain_tileset.tres`). Tile data is stored in the `.tscn` files. See `tools/tileset_builder_reference.gd` for how the tileset was originally constructed.
 - Only static terrain uses `TileMapLayer`. Blocks, enemies, and items are individual scene instances under container `Node2D` nodes.
 - **`enemy_spawner.gd`** — activates enemies as the camera approaches `activation_distance`, cleans up enemies left far behind.
@@ -217,8 +232,8 @@ _col_shape.shape = body_shape
 
 Any callback that triggers a scene transition, life loss, or level completion
 needs a one-shot guard to prevent firing every frame. `DeathState` uses
-`_life_lost`; `FlagpoleState` advances to `_phase = 3` before emitting
-`level_completed`.
+`_life_lost` before emitting `death_animation_finished`; `FlagpoleState`
+advances to `_phase = 3` before emitting `level_completed`.
 
 ### GDScript Typed Array Invariance
 
