@@ -93,7 +93,7 @@ Authored as `.tres` files in `party/`.
 |------|------:|------:|------:|
 | HP | 70 | 65 | 62 |
 | Power | 5 | 2 | 3 |
-| Speed | 12 | 6 | 6 |
+| Speed | 9 | 12 | 6 |
 | Stamina | 5 | 3 | 4 |
 | Strike % | 10 | 8 | 8 |
 | Weapon AP | 3 | 2 | 3 |
@@ -462,7 +462,7 @@ Movement only happens in FIELD state — followers freeze during BATTLE and DIAL
 - Follower 1 (Marle): `follow_delay = 20` (~0.33s behind)
 - Follower 2 (Lucca): `follow_delay = 40` (~0.67s behind)
 
-When the player stops, followers catch up and stop near the player, naturally staggered.
+When the player stops, followers stop at a minimum distance from the leader (24px) rather than walking to the leader's exact position. Party members use collision layer 2 (mask layer 1) so they collide with walls but pass through each other.
 
 ## Scene changes
 
@@ -506,7 +506,7 @@ BattleManager, Inventory, and UI layers live in `gameplay.tscn`. The level scene
    - **Attack** → target selection (cycle enemies) → attack animation → damage.
    - **Item** → item list → select item → target selection (cycle allies) → apply item → consume.
 4. When an enemy's gauge fills → auto-attacks a random living party member.
-5. KO'd party members (HP ≤ 0) can't act, their ATB stops, they're skipped in target selection for items.
+5. KO'd party members (HP ≤ 0) can't act, their ATB stops, they're skipped in ally target selection for items (Tonics can only target living allies).
 6. If all party members KO'd → game over.
 7. If all enemies KO'd → victory.
 
@@ -526,7 +526,7 @@ Same as Phase 2: show "Game Over", reload after 2s.
 
 1. Player holds escape_left + escape_right simultaneously.
 2. Escape gauge fills at `ESCAPE_RATE * delta`.
-3. When gauge ≥ 1.0: battle ends, enemies stay on field (but re-enable collision so they can trigger again).
+3. When gauge ≥ 1.0: battle ends, enemies are removed from the field (matching original game behavior — they respawn on area re-entry, implemented in a later phase).
 4. If any enemy in the encounter has `is_boss = true`, escape gauge doesn't fill.
 
 ## Damage formula
@@ -596,7 +596,7 @@ No changes from Phase 2. The formula is the same, just applied with per-characte
 - [x] Holding escape_left + escape_right fills escape gauge
 - [x] Releasing either button stops the gauge
 - [x] When gauge fills, battle ends and field resumes
-- [x] Enemies remain on field after escape (can re-trigger)
+- [x] Enemies are removed from field after escape
 - [x] Enemies can still attack during escape attempt
 - [x] Escape is blocked when any enemy has is_boss = true
 
