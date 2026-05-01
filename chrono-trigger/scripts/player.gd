@@ -52,6 +52,25 @@ func _direction_name() -> String:
 func get_facing_direction_name() -> String:
 	return _direction_name()
 
+func play_attack() -> void:
+	var anim := "attack_" + _direction_name()
+	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation(anim):
+		animated_sprite.play(anim)
+
+func play_idle() -> void:
+	_play_idle_animation()
+
+func play_hit(hit_direction: Vector2) -> void:
+	_play_idle_animation()
+	var start_pos := global_position
+	var recoil := hit_direction
+	if recoil == Vector2.ZERO:
+		recoil = Vector2.LEFT
+	var tween := create_tween()
+	tween.tween_property(self, "global_position", start_pos + recoil * 8.0, 0.06)
+	tween.tween_property(self, "global_position", start_pos - recoil * 4.0, 0.06)
+	tween.tween_property(self, "global_position", start_pos, 0.08)
+
 func _try_interact() -> void:
 	if not interact_ray.is_colliding():
 		return

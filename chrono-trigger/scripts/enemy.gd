@@ -39,10 +39,16 @@ func play_attack() -> void:
 	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("attack"):
 		animated_sprite.play("attack")
 
-func play_hit() -> void:
+func play_hit(_hit_direction: Vector2 = Vector2.ZERO) -> void:
 	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("hit"):
 		animated_sprite.play("hit")
 
 func play_die() -> void:
 	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("die"):
 		animated_sprite.play("die")
+
+func play_death() -> void:
+	play_die()
+	var tween := create_tween()
+	tween.tween_property(self, "modulate:a", 0.0, 0.4)
+	await tween.finished

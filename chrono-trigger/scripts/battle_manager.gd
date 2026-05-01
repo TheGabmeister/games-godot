@@ -103,10 +103,7 @@ func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critic
 	_animating = true
 	battle_ui.set_command_ready(false)
 
-	if attacker == player:
-		_play_player_attack_animation()
-	elif attacker.has_method("play_attack"):
-		attacker.play_attack()
+	attacker.play_attack()
 
 	var start_position := attacker.global_position
 	var direction := (target.global_position - attacker.global_position).normalized()
@@ -125,10 +122,7 @@ func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critic
 		_player_hp = max(0, _player_hp - damage)
 		battle_ui.update_player_hp(_player_hp, PLAYER_MAX_HP)
 
-	if target == player:
-		_play_player_hit_animation(direction)
-	elif target.has_method("play_hit"):
-		target.play_hit()
+	target.play_hit(direction)
 	var flash_effect := target.get_node_or_null("FlashEffect")
 	if flash_effect:
 		flash_effect.flash()
@@ -139,11 +133,9 @@ func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critic
 	retreat.tween_property(attacker, "global_position", start_position, 0.15)
 	await retreat.finished
 
-	if attacker == player:
-		_play_player_idle_animation()
-	elif attacker.has_method("play_idle") and not _battle_finished:
+	if not _battle_finished:
 		attacker.play_idle()
-	if target.has_method("play_idle") and target == _enemy and _enemy_hp > 0:
+	if target == _enemy and _enemy_hp > 0:
 		target.play_idle()
 
 	_animating = false
@@ -164,7 +156,8 @@ func _victory() -> void:
 	_battle_finished = true
 	battle_ui.set_command_ready(false)
 	MusicManager.stop_music()
-	await _play_enemy_death()
+	if is_instance_valid(_enemy):
+		await _enemy.play_death()
 	battle_ui.show_results(_enemy_stat("exp_reward"), _enemy_stat("gold_reward"), _enemy_stat("tp_reward"))
 	await get_tree().create_timer(2.0).timeout
 	battle_ui.hide_results()
@@ -181,46 +174,6 @@ func _game_over() -> void:
 	MusicManager.stop_music()
 	await get_tree().create_timer(2.0).timeout
 	get_tree().reload_current_scene()
-
-func _play_enemy_death() -> void:
-	if not is_instance_valid(_enemy):
-		return
-	if _enemy.has_method("play_die"):
-		_enemy.play_die()
-	var tween := create_tween()
-	tween.tween_property(_enemy, "modulate:a", 0.0, 0.4)
-	await tween.finished
-
-func _play_player_attack_animation() -> void:
-	var sprite := player.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
-	if sprite == null:
-		return
-	var animation_name := "attack_down"
-	if player.has_method("get_facing_direction_name"):
-		animation_name = "attack_" + player.get_facing_direction_name()
-	if sprite.sprite_frames and sprite.sprite_frames.has_animation(animation_name):
-		sprite.play(animation_name)
-
-func _play_player_idle_animation() -> void:
-	var sprite := player.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
-	if sprite == null:
-		return
-	var animation_name := "idle_down"
-	if player.has_method("get_facing_direction_name"):
-		animation_name = "idle_" + player.get_facing_direction_name()
-	if sprite.sprite_frames and sprite.sprite_frames.has_animation(animation_name):
-		sprite.play(animation_name)
-
-func _play_player_hit_animation(hit_direction: Vector2) -> void:
-	_play_player_idle_animation()
-	var start_position := player.global_position
-	var recoil_direction := hit_direction
-	if recoil_direction == Vector2.ZERO:
-		recoil_direction = Vector2.LEFT
-	var tween := create_tween()
-	tween.tween_property(player, "global_position", start_position + recoil_direction * 8.0, 0.06)
-	tween.tween_property(player, "global_position", start_position - recoil_direction * 4.0, 0.06)
-	tween.tween_property(player, "global_position", start_position, 0.08)
 
 func _enemy_name() -> String:
 	return str(_enemy_data.get("enemy_name"))

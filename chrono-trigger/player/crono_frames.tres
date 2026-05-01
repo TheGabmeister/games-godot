@@ -1,6 +1,22 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://4vhx557xdt0m"]
 
-[ext_resource type="Texture2D" path="res://player/crono_sheet.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://beapuvdnyfixm" path="res://player/crono_sheet.png" id="1"]
+
+[sub_resource type="AtlasTexture" id="atk_down"]
+atlas = ExtResource("1")
+region = Rect2(512, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="atk_left"]
+atlas = ExtResource("1")
+region = Rect2(640, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="atk_right"]
+atlas = ExtResource("1")
+region = Rect2(704, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="atk_up"]
+atlas = ExtResource("1")
+region = Rect2(576, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="down0"]
 atlas = ExtResource("1")
@@ -33,22 +49,6 @@ region = Rect2(448, 0, 64, 64)
 [sub_resource type="AtlasTexture" id="up1"]
 atlas = ExtResource("1")
 region = Rect2(192, 0, 64, 64)
-
-[sub_resource type="AtlasTexture" id="atk_down"]
-atlas = ExtResource("1")
-region = Rect2(512, 0, 64, 64)
-
-[sub_resource type="AtlasTexture" id="atk_up"]
-atlas = ExtResource("1")
-region = Rect2(576, 0, 64, 64)
-
-[sub_resource type="AtlasTexture" id="atk_left"]
-atlas = ExtResource("1")
-region = Rect2(640, 0, 64, 64)
-
-[sub_resource type="AtlasTexture" id="atk_right"]
-atlas = ExtResource("1")
-region = Rect2(704, 0, 64, 64)
 
 [resource]
 animations = [{
