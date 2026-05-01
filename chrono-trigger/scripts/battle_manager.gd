@@ -144,6 +144,14 @@ func _add_enemy(node: Area2D) -> void:
 		"node": node,
 	})
 
+func _consume_active_turn() -> int:
+	var member_idx := _active_member_index
+	_active_member_index = -1
+	_in_submenu = false
+	_party[member_idx]["atb"] = 0.0
+	atb_updated.emit(member_idx, true, 0.0)
+	return member_idx
+
 func _on_attack_selected(target_index: int) -> void:
 	if _active_member_index == -1 or _animating or _battle_finished:
 		return
@@ -152,12 +160,8 @@ func _on_attack_selected(target_index: int) -> void:
 	if _enemies[target_index]["is_dead"]:
 		return
 
-	var member_idx := _active_member_index
-	_active_member_index = -1
-	_in_submenu = false
+	var member_idx := _consume_active_turn()
 	var p: Dictionary = _party[member_idx]
-	p["atb"] = 0.0
-	atb_updated.emit(member_idx, true, 0.0)
 
 	var damage_result := _calculate_damage(p["data"].power, p["data"].weapon_ap, int(_enemies[target_index]["data"].get("stamina")), p["data"].strike_percent)
 	await _play_attack_sequence(p["node"], _enemies[target_index]["node"], damage_result["damage"], damage_result["critical"])
@@ -178,12 +182,7 @@ func _on_item_used(item: ItemData, target_member_index: int) -> void:
 	if target_member_index < 0 or target_member_index >= _party.size():
 		return
 
-	var member_idx := _active_member_index
-	_active_member_index = -1
-	_in_submenu = false
-
-	_party[member_idx]["atb"] = 0.0
-	atb_updated.emit(member_idx, true, 0.0)
+	var member_idx := _consume_active_turn()
 
 	var inventory := get_tree().get_first_node_in_group(Groups.INVENTORY)
 	if inventory:
@@ -201,10 +200,7 @@ func _enemy_act(enemy_index: int) -> void:
 	if _animating or _battle_finished:
 		return
 
-	var living: Array = []
-	for i in _party.size():
-		if not _party[i]["is_ko"]:
-			living.append(i)
+	var living := get_living_party()
 	if living.is_empty():
 		return
 
@@ -265,23 +261,18 @@ func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critic
 
 	if not _battle_finished:
 		attacker.play_idle()
-	if target.has_method("play_idle"):
-		var is_enemy_target := false
-		for e in _enemies:
-			if e["node"] == target and not e["is_dead"]:
-				is_enemy_target = true
-				break
-		if is_enemy_target:
-			target.play_idle()
-		elif not _is_party_ko(target):
-			target.play_idle()
+	if _is_target_alive(target):
+		target.play_idle()
 
 	_animating = false
 
-func _is_party_ko(node: Node2D) -> bool:
+func _is_target_alive(target: Node2D) -> bool:
+	for e in _enemies:
+		if e["node"] == target:
+			return not e["is_dead"]
 	for p in _party:
-		if p["node"] == node:
-			return p["is_ko"]
+		if p["node"] == target:
+			return not p["is_ko"]
 	return false
 
 func _process_escape(delta: float) -> void:
@@ -295,11 +286,7 @@ func _process_escape(delta: float) -> void:
 			MusicManager.stop_music()
 			escaped.emit()
 			battle_ended.emit()
-			for node in _enemy_nodes:
-				if is_instance_valid(node):
-					node.queue_free()
-			_enemy_nodes.clear()
-			_enemies.clear()
+			_free_enemies()
 			_active_member_index = -1
 			GameState.change(GameState.State.FIELD)
 	else:
@@ -332,7 +319,6 @@ func _victory() -> void:
 	_battle_finished = true
 	command_ready_changed.emit(0, false)
 	MusicManager.stop_music()
-
 	_write_back_state()
 
 	var total_exp := 0
@@ -347,11 +333,7 @@ func _victory() -> void:
 	await get_tree().create_timer(2.0).timeout
 	battle_ended.emit()
 
-	for node in _enemy_nodes:
-		if is_instance_valid(node):
-			node.queue_free()
-	_enemy_nodes.clear()
-	_enemies.clear()
+	_free_enemies()
 	_active_member_index = -1
 	GameState.change(GameState.State.FIELD)
 
@@ -370,6 +352,13 @@ func _write_back_state() -> void:
 	for p in _party:
 		state.append({ "current_hp": p["current_hp"] })
 	party_manager.update_from_battle(state)
+
+func _free_enemies() -> void:
+	for node in _enemy_nodes:
+		if is_instance_valid(node):
+			node.queue_free()
+	_enemy_nodes.clear()
+	_enemies.clear()
 
 func set_in_submenu(value: bool) -> void:
 	_in_submenu = value

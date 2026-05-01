@@ -4,6 +4,8 @@ enum MenuState { HIDDEN, COMMAND, ITEM_LIST, TARGET_ENEMY, TARGET_ALLY }
 
 @export var battle_manager_path: NodePath
 
+@onready var _bm: Node = get_node(battle_manager_path)
+
 var _menu_state: MenuState = MenuState.HIDDEN
 var _active_member_index := -1
 var _command_cursor := 0
@@ -29,21 +31,20 @@ func _ready() -> void:
 	_build_ui()
 	_root.visible = false
 
-	var bm := get_node(battle_manager_path)
-	bm.battle_started.connect(_on_battle_started)
-	bm.battle_ended.connect(_on_battle_ended)
-	bm.atb_updated.connect(_on_atb_updated)
-	bm.command_ready_changed.connect(_on_command_ready_changed)
-	bm.party_hp_changed.connect(_on_party_hp_changed)
-	bm.enemy_hp_changed.connect(_on_enemy_hp_changed)
-	bm.damage_dealt.connect(_on_damage_dealt)
-	bm.heal_applied.connect(_on_heal_applied)
-	bm.victory_achieved.connect(_on_victory_achieved)
-	bm.player_defeated.connect(_on_player_defeated)
-	bm.enemy_died.connect(_on_enemy_died)
-	bm.combatant_ko.connect(_on_combatant_ko)
-	bm.active_member_changed.connect(_on_active_member_changed)
-	bm.escaped.connect(_on_escaped)
+	_bm.battle_started.connect(_on_battle_started)
+	_bm.battle_ended.connect(_on_battle_ended)
+	_bm.atb_updated.connect(_on_atb_updated)
+	_bm.command_ready_changed.connect(_on_command_ready_changed)
+	_bm.party_hp_changed.connect(_on_party_hp_changed)
+	_bm.enemy_hp_changed.connect(_on_enemy_hp_changed)
+	_bm.damage_dealt.connect(_on_damage_dealt)
+	_bm.heal_applied.connect(_on_heal_applied)
+	_bm.victory_achieved.connect(_on_victory_achieved)
+	_bm.player_defeated.connect(_on_player_defeated)
+	_bm.enemy_died.connect(_on_enemy_died)
+	_bm.combatant_ko.connect(_on_combatant_ko)
+	_bm.active_member_changed.connect(_on_active_member_changed)
+	_bm.escaped.connect(_on_escaped)
 
 func _build_ui() -> void:
 	_root = Control.new()
@@ -256,9 +257,14 @@ func _process(_delta: float) -> void:
 		elif Input.is_action_just_pressed("cancel"):
 			_enter_item_list()
 
+func _reset_menu() -> void:
+	_menu_state = MenuState.HIDDEN
+	_command_menu.visible = false
+	_target_label.visible = false
+	_clear_row_cursors()
+
 func _enter_target_enemy() -> void:
-	var bm := get_node(battle_manager_path)
-	_living_enemies = bm.get_living_enemies()
+	_living_enemies = _bm.get_living_enemies()
 	if _living_enemies.is_empty():
 		return
 	if _living_enemies.size() == 1:
@@ -270,10 +276,9 @@ func _enter_target_enemy() -> void:
 	_command_menu.visible = false
 	_target_label.visible = true
 	_update_enemy_target_display()
-	bm.set_in_submenu(true)
+	_bm.set_in_submenu(true)
 
 func _enter_item_list() -> void:
-	var bm := get_node(battle_manager_path)
 	var inventory := get_tree().get_first_node_in_group(Groups.INVENTORY)
 	if inventory == null:
 		return
@@ -283,11 +288,10 @@ func _enter_item_list() -> void:
 	_item_cursor = 0
 	_menu_state = MenuState.ITEM_LIST
 	_update_item_display()
-	bm.set_in_submenu(true)
+	_bm.set_in_submenu(true)
 
 func _enter_target_ally() -> void:
-	var bm := get_node(battle_manager_path)
-	_living_party = bm.get_living_party()
+	_living_party = _bm.get_living_party()
 	if _living_party.is_empty():
 		return
 	_target_cursor = 0
@@ -296,8 +300,7 @@ func _enter_target_ally() -> void:
 	_update_ally_target_display()
 
 func _return_to_command() -> void:
-	var bm := get_node(battle_manager_path)
-	bm.set_in_submenu(false)
+	_bm.set_in_submenu(false)
 	_menu_state = MenuState.COMMAND
 	_command_menu.visible = true
 	_target_label.visible = false
@@ -306,26 +309,20 @@ func _return_to_command() -> void:
 	_clear_row_cursors()
 
 func _confirm_attack() -> void:
-	var bm := get_node(battle_manager_path)
-	if bm._animating:
+	if _bm._animating:
 		return
-	bm.set_in_submenu(false)
-	_menu_state = MenuState.HIDDEN
-	_command_menu.visible = false
-	_target_label.visible = false
+	_bm.set_in_submenu(false)
+	_reset_menu()
 	var enemy_idx: int = _living_enemies[_target_cursor]
-	bm._on_attack_selected(enemy_idx)
+	_bm._on_attack_selected(enemy_idx)
 
 func _confirm_item() -> void:
-	var bm := get_node(battle_manager_path)
-	if bm._animating:
+	if _bm._animating:
 		return
-	bm.set_in_submenu(false)
-	_menu_state = MenuState.HIDDEN
-	_command_menu.visible = false
-	_clear_row_cursors()
+	_bm.set_in_submenu(false)
+	_reset_menu()
 	var party_idx: int = _living_party[_target_cursor]
-	bm._on_item_used(_selected_item, party_idx)
+	_bm._on_item_used(_selected_item, party_idx)
 
 func _cycle_enemy_target(dir: int) -> void:
 	_target_cursor = (_target_cursor + dir) % _living_enemies.size()
@@ -345,9 +342,8 @@ func _update_command_cursor() -> void:
 		_command_labels[i].text = ("> " if i == _command_cursor else "  ") + ["Attack", "Item"][i]
 
 func _update_enemy_target_display() -> void:
-	var bm := get_node(battle_manager_path)
 	var enemy_idx: int = _living_enemies[_target_cursor]
-	var node: Node2D = bm.get_enemy_node(enemy_idx)
+	var node: Node2D = _bm.get_enemy_node(enemy_idx)
 	if node:
 		_target_label.text = "▼ " + str(node.data.get("enemy_name"))
 		var screen_pos := get_viewport().get_canvas_transform() * node.global_position
@@ -377,13 +373,14 @@ func _clear_row_cursors() -> void:
 		if row["marker"].text == ">":
 			row["marker"].text = " "
 
+func _hp_percent(current: int, max_val: int) -> float:
+	return (float(maxi(current, 0)) / float(max_val)) * 100.0
+
 func _on_battle_started(party_data: Array, enemy_data: Array) -> void:
 	_root.visible = true
 	_results_label.visible = false
 	_game_over_label.visible = false
-	_command_menu.visible = false
-	_target_label.visible = false
-	_menu_state = MenuState.HIDDEN
+	_reset_menu()
 
 	for i in _party_rows.size():
 		if i < party_data.size():
@@ -391,7 +388,7 @@ func _on_battle_started(party_data: Array, enemy_data: Array) -> void:
 			_party_rows[i]["container"].visible = true
 			_party_rows[i]["name"].text = str(p["name"])
 			_party_rows[i]["hp_label"].text = "HP: %d/%d" % [p["hp"], p["max_hp"]]
-			_party_rows[i]["hp_bar"].value = (float(int(p["hp"])) / float(int(p["max_hp"]))) * 100.0
+			_party_rows[i]["hp_bar"].value = _hp_percent(int(p["hp"]), int(p["max_hp"]))
 			_party_rows[i]["atb_bar"].value = 0
 			_party_rows[i]["marker"].text = " "
 		else:
@@ -409,9 +406,7 @@ func _on_battle_started(party_data: Array, enemy_data: Array) -> void:
 func _on_battle_ended() -> void:
 	_results_label.visible = false
 	_root.visible = false
-	_menu_state = MenuState.HIDDEN
-	_command_menu.visible = false
-	_target_label.visible = false
+	_reset_menu()
 	_active_member_index = -1
 
 func _on_atb_updated(combatant_index: int, is_player: bool, value: float) -> void:
@@ -427,9 +422,7 @@ func _on_command_ready_changed(combatant_index: int, is_ready: bool) -> void:
 
 	if not is_ready and _menu_state != MenuState.HIDDEN:
 		if combatant_index == _active_member_index or combatant_index == -1:
-			_menu_state = MenuState.HIDDEN
-			_command_menu.visible = false
-			_target_label.visible = false
+			_reset_menu()
 
 func _on_active_member_changed(combatant_index: int) -> void:
 	_active_member_index = combatant_index
@@ -439,11 +432,11 @@ func _on_active_member_changed(combatant_index: int) -> void:
 func _on_party_hp_changed(combatant_index: int, current_hp: int, max_hp: int) -> void:
 	if combatant_index < _party_rows.size():
 		_party_rows[combatant_index]["hp_label"].text = "HP: %d/%d" % [max(current_hp, 0), max_hp]
-		_party_rows[combatant_index]["hp_bar"].value = (float(max(current_hp, 0)) / float(max_hp)) * 100.0
+		_party_rows[combatant_index]["hp_bar"].value = _hp_percent(current_hp, max_hp)
 
 func _on_enemy_hp_changed(enemy_index: int, _enemy_name: String, current_hp: int, max_hp: int) -> void:
 	if enemy_index < _enemy_bars.size():
-		_enemy_bars[enemy_index]["hp_bar"].value = (float(max(current_hp, 0)) / float(max_hp)) * 100.0
+		_enemy_bars[enemy_index]["hp_bar"].value = _hp_percent(current_hp, max_hp)
 
 func _on_damage_dealt(world_position: Vector2, amount: int, is_critical: bool) -> void:
 	_spawn_floating_number(world_position, str(amount), Color(1.0, 0.86, 0.25) if is_critical else Color.WHITE, 28 if is_critical else 22)
@@ -467,14 +460,12 @@ func _spawn_floating_number(world_position: Vector2, text: String, color: Color,
 	tween.finished.connect(label.queue_free)
 
 func _on_victory_achieved(total_exp: int, total_gold: int, total_tp: int) -> void:
-	_menu_state = MenuState.HIDDEN
-	_command_menu.visible = false
+	_reset_menu()
 	_results_label.text = "EXP +%d   G +%d   TP +%d" % [total_exp, total_gold, total_tp]
 	_results_label.visible = true
 
 func _on_player_defeated() -> void:
-	_menu_state = MenuState.HIDDEN
-	_command_menu.visible = false
+	_reset_menu()
 	_game_over_label.visible = true
 
 func _on_enemy_died(enemy_index: int) -> void:
