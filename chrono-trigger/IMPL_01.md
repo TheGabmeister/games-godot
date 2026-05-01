@@ -176,6 +176,40 @@ Both Player and NPC use `AnimatedSprite2D` with a `SpriteFrames` resource built 
 - 4 idle animations: `idle_down`, `idle_up`, `idle_left`, `idle_right` — 2 frames each, looping at ~3 FPS.
 - Defaults to `idle_down`. No walk animations needed for Phase 1.
 
+## Test checklist
+
+### Movement
+- [x] WASD moves Crono in 8 directions
+- [x] Arrow keys also work
+- [x] Gamepad left stick and D-pad also work
+- [x] Diagonal movement is normalized (not faster than cardinal)
+- [x] Walk animation plays while moving, matches facing direction
+- [x] Idle animation plays when stopped, matches last facing direction
+- [x] Crono stops at all 4 walls and cannot pass through them
+- [x] Crono cannot walk through the NPC
+
+### Interaction
+- [x] Facing the NPC and pressing Z/Enter/gamepad A triggers dialogue
+- [x] Facing away from the NPC and pressing interact does nothing
+- [x] Being too far from the NPC and pressing interact does nothing
+
+### Dialogue
+- [x] Dialogue box appears at the bottom of the screen
+- [x] Speaker name ("Old Man") is displayed in blue
+- [x] Text typewriters character by character
+- [x] Pressing interact mid-typewrite instantly completes the line
+- [x] Pressing interact after a line is complete advances to the next line
+- [x] After the last line, pressing interact closes the dialogue box
+- [x] Player cannot move while dialogue is open
+- [x] Player can move again after dialogue closes
+
+### Camera
+- [x] Camera follows the player smoothly
+- [x] Camera starts centered on the room
+
+### NPC
+- [x] NPC plays idle animation (subtle bob) while standing
+
 ## What we skip
 
 - Party followers — just one character.
