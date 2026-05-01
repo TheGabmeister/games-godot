@@ -292,11 +292,14 @@ func _process_escape(delta: float) -> void:
 		if _escape_gauge >= 1.0:
 			_battle_finished = true
 			_write_back_state()
-			for e in _enemy_nodes:
-				e.reset_for_encounter()
 			MusicManager.stop_music()
 			escaped.emit()
 			battle_ended.emit()
+			for node in _enemy_nodes:
+				if is_instance_valid(node):
+					node.queue_free()
+			_enemy_nodes.clear()
+			_enemies.clear()
 			_active_member_index = -1
 			GameState.change(GameState.State.FIELD)
 	else:

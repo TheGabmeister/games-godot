@@ -579,18 +579,18 @@ No changes from Phase 2. The formula is the same, just applied with per-characte
 - [x] Selecting Item opens item submenu
 
 ### Item usage
-- [ ] Item submenu shows Tonic with count
-- [ ] Selecting Tonic opens ally target selection
-- [ ] Using Tonic heals target by 50 HP (capped at max)
-- [ ] Tonic count decreases after use
-- [ ] Tonic disappears from list when count reaches 0
-- [ ] Cancel returns to previous menu at each step
+- [x] Item submenu shows Tonic with count
+- [x] Selecting Tonic opens ally target selection
+- [x] Using Tonic heals target by 50 HP (capped at max)
+- [x] Tonic count decreases after use
+- [x] Tonic disappears from list when count reaches 0
+- [x] Cancel returns to previous menu at each step
 
 ### Target selection
-- [ ] Enemy target cursor is visible and cycles correctly
-- [ ] Ally target cursor is visible and cycles correctly
-- [ ] Cancel from target selection returns to command menu
-- [ ] Single remaining enemy auto-targets (skip selection)
+- [x] Enemy target cursor is visible and cycles correctly
+- [x] Ally target cursor is visible and cycles correctly
+- [x] Cancel from target selection returns to command menu
+- [x] Single remaining enemy auto-targets (skip selection)
 
 ### Escape
 - [ ] Holding escape_left + escape_right fills escape gauge

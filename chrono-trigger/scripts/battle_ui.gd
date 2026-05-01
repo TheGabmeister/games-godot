@@ -302,6 +302,8 @@ func _return_to_command() -> void:
 
 func _confirm_attack() -> void:
 	var bm := get_node(battle_manager_path)
+	if bm._animating:
+		return
 	bm.set_in_submenu(false)
 	_menu_state = MenuState.HIDDEN
 	_command_menu.visible = false
@@ -311,6 +313,8 @@ func _confirm_attack() -> void:
 
 func _confirm_item() -> void:
 	var bm := get_node(battle_manager_path)
+	if bm._animating:
+		return
 	bm.set_in_submenu(false)
 	_menu_state = MenuState.HIDDEN
 	_command_menu.visible = false
