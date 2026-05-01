@@ -1,9 +1,9 @@
-[gd_resource type="Resource" load_steps=4 format=3]
+[gd_resource type="Resource" format=3 uid="uid://bgur65a4s4btg"]
 
-[ext_resource type="Script" path="res://scripts/config/game_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bhhaygshewnfv" path="res://scripts/config/game_config.gd" id="1_script"]
 [ext_resource type="Resource" path="res://resources/config/level_1_1.tres" id="2_level_1_1"]
 [ext_resource type="Resource" path="res://resources/config/level_1_2.tres" id="3_level_1_2"]
 
 [resource]
 script = ExtResource("1_script")
-levels = [ExtResource("2_level_1_1"), ExtResource("3_level_1_2")]
+levels = Array[Resource]([ExtResource("2_level_1_1"), ExtResource("3_level_1_2")])
