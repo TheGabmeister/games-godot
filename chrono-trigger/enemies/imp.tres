@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+enemy_name = "Imp"
+max_hp = 32
+power = 4
+speed = 8
+stamina = 4
+exp_reward = 10
+gold_reward = 5
+tp_reward = 1

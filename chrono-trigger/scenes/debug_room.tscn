@@ -3,10 +3,14 @@
 [ext_resource type="Script" uid="uid://c6qky6uwaet2r" path="res://scripts/player.gd" id="1"]
 [ext_resource type="Script" uid="uid://bqxuy0knyb63v" path="res://scripts/npc.gd" id="2"]
 [ext_resource type="Script" uid="uid://bicfj7tonwv8o" path="res://scripts/dialogue_box.gd" id="3"]
-[ext_resource type="SpriteFrames" uid="uid://4vhx557xdt0m" path="res://player/crono_frames.tres" id="4"]
-[ext_resource type="SpriteFrames" uid="uid://cgyk8y2jnc5pf" path="res://npc/npc_frames.tres" id="5"]
+[ext_resource type="SpriteFrames" path="res://player/crono_frames.tres" id="4"]
+[ext_resource type="SpriteFrames" path="res://npc/npc_frames.tres" id="5"]
 [ext_resource type="Resource" path="res://dialogue/npc_greeting.tres" id="6"]
-[ext_resource type="Script" uid="uid://dlk883m0vxoad" path="res://scripts/camera.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/camera.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/enemy.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/battle_manager.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/battle_ui.gd" id="10"]
+[ext_resource type="Resource" path="res://enemies/imp.tres" id="12"]
 
 [sub_resource type="RectangleShape2D" id="wall_top_shape"]
 size = Vector2(640, 32)
@@ -24,6 +28,9 @@ size = Vector2(32, 480)
 
 [sub_resource type="RectangleShape2D" id="npc_shape"]
 size = Vector2(24, 24)
+
+[sub_resource type="CircleShape2D" id="enemy_trigger_shape"]
+radius = 48.0
 
 [node name="DebugRoom" type="Node2D" unique_id=239341746]
 
@@ -112,6 +119,26 @@ autoplay = "idle_down"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NPC" unique_id=117416348]
 shape = SubResource("npc_shape")
 
+[node name="Enemy" type="Area2D" parent="." unique_id=768228829]
+position = Vector2(505, 330)
+script = ExtResource("8")
+data = ExtResource("12")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Enemy" unique_id=1819690556]
+autoplay = "idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy" unique_id=1371698068]
+shape = SubResource("enemy_trigger_shape")
+
+[node name="BattleManager" type="Node" parent="." unique_id=1840860702]
+script = ExtResource("9")
+player_path = NodePath("../Player")
+battle_ui_path = NodePath("../BattleUI")
+music_player_path = NodePath("../BattleMusic")
+
+[node name="BattleMusic" type="AudioStreamPlayer" parent="." unique_id=522984708]
+volume_db = -12.0
+
 [node name="Camera" type="Camera2D" parent="." unique_id=731743553]
 position = Vector2(320, 240)
 position_smoothing_enabled = true
@@ -151,3 +178,122 @@ theme_override_font_sizes/font_size = 18
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 2
+
+[node name="BattleUI" type="CanvasLayer" parent="." unique_id=1160812227]
+layer = 20
+script = ExtResource("10")
+
+[node name="Root" type="Control" parent="BattleUI" unique_id=1740130647]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BattlePanel" type="PanelContainer" parent="BattleUI/Root" unique_id=2143794074]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -126.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="BattleUI/Root/BattlePanel" unique_id=1915210054]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="BattleUI/Root/BattlePanel/MarginContainer" unique_id=1368400529]
+layout_mode = 2
+
+[node name="TopRow" type="HBoxContainer" parent="BattleUI/Root/BattlePanel/MarginContainer/VBoxContainer" unique_id=1793889745]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="EnemyLabel" type="Label" parent="BattleUI/Root/BattlePanel/MarginContainer/VBoxContainer/TopRow" unique_id=738628354]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Imp"
+
+[node name="EnemyHPBar" type="ProgressBar" parent="BattleUI/Root/BattlePanel/MarginContainer/VBoxContainer/TopRow" unique_id=907759886]
+custom_minimum_size = Vector2(260, 24)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="ATBBar" type="ProgressBar" parent="BattleUI/Root/BattlePanel/MarginContainer/VBoxContainer/TopRow" unique_id=1810944198]
+custom_minimum_size = Vector2(220, 24)
+layout_mode = 2
+value = 0.0
+show_percentage = false
+
+[node name="PlayerHPLabel" type="Label" parent="BattleUI/Root/BattlePanel/MarginContainer/VBoxContainer" unique_id=193003952]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Crono HP: 70 / 70"
+
+[node name="CommandMenu" type="PanelContainer" parent="BattleUI/Root" unique_id=1573842237]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -180.0
+offset_top = -236.0
+offset_right = -24.0
+offset_bottom = -150.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="BattleUI/Root/CommandMenu" unique_id=1099162468]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 12
+
+[node name="AttackLabel" type="Label" parent="BattleUI/Root/CommandMenu/MarginContainer" unique_id=1670936746]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "> Attack"
+
+[node name="ResultsLabel" type="Label" parent="BattleUI/Root" unique_id=1689964621]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -30.0
+offset_right = 150.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+text = "EXP +10   G +5   TP +1"
+
+[node name="GameOverLabel" type="Label" parent="BattleUI/Root" unique_id=1329750309]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -30.0
+offset_right = 120.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+text = "Game Over"

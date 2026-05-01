@@ -1,6 +1,6 @@
 extends Node
 
-enum State { FIELD, DIALOGUE }
+enum State { FIELD, DIALOGUE, BATTLE }
 
 signal state_changed(new_state: State)
 

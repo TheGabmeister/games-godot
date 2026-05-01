@@ -34,8 +34,56 @@ region = Rect2(448, 0, 64, 64)
 atlas = ExtResource("1")
 region = Rect2(192, 0, 64, 64)
 
+[sub_resource type="AtlasTexture" id="atk_down"]
+atlas = ExtResource("1")
+region = Rect2(512, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="atk_up"]
+atlas = ExtResource("1")
+region = Rect2(576, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="atk_left"]
+atlas = ExtResource("1")
+region = Rect2(640, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="atk_right"]
+atlas = ExtResource("1")
+region = Rect2(704, 0, 64, 64)
+
 [resource]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("atk_down")
+}],
+"loop": false,
+"name": &"attack_down",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("atk_left")
+}],
+"loop": false,
+"name": &"attack_left",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("atk_right")
+}],
+"loop": false,
+"name": &"attack_right",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("atk_up")
+}],
+"loop": false,
+"name": &"attack_up",
+"speed": 1.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("down0")
