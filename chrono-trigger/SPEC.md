@@ -694,7 +694,249 @@ A best-of gauntlet drawing from every era plus unique enemies (Mega Mutant, Giga
 
 ---
 
-## 10. Open Questions / To Verify
+## 10. Engine & Presentation Systems
+
+### 10.1 Dialogue & NPC Interaction
+
+**Text box display.** Dialogue appears in a rectangular window positioned at the **top or bottom** of the screen (set per textbox instance). The speaker is identified by a **name label** in that character's color. No character portraits in the SNES original. Text typewriters character-by-character; player presses a button to advance. Window skin is player-customizable (8 presets via Config menu).
+
+**Crono is silent.** He never has dialogue lines. Other characters speak; Crono's responses are implied or chosen via player prompts.
+
+**Branching choices.** The game presents binary or multiple-choice prompts at specific points:
+- Millennial Fair behaviors (implicit — tracked as flags, evaluated at trial)
+- Trial testimony responses (lying adds guilty votes)
+- Prison break: wait 3 days or escape immediately
+- Character naming at recruitment
+- Spare or fight Magus (North Cape)
+- Revive Crono or not (optional)
+- Various yes/no NPC prompts
+
+**NPC dialogue is progression-aware.** Every NPC's text is gated by the story counter — as the main storyline flag advances, NPC dialogue updates to reflect current events. The player must press interact to trigger dialogue (not ambient auto-trigger).
+
+**Party-composition-aware dialogue.** Certain scenes branch based on which characters are in the active party. After Crono's death, the first party member becomes the field leader and speaks in scenes where the "leader" role matters.
+
+### 10.2 Event / Cutscene Scripting
+
+All cutscenes are **real-time in-engine** using sprites and screen effects — no FMV in the SNES original. During scripted sequences, player input is locked; characters move along scripted paths. There is **no letterbox**; cutscenes play in the same viewport as gameplay.
+
+**Event command types** (based on the ROM's event system and the Temporal Flux editor):
+
+| Category | Commands |
+|---|---|
+| Movement | set coordinates, walk to point, set speed, set facing direction, follow path |
+| Animation | play sprite animation, emote, attack pose, unique gesture |
+| Dialogue | textbox (top/bottom), decision prompt (yes/no/multi), shop menu, naming screen, party select |
+| Timing | wait N frames/seconds |
+| Screen | fade to/from black, flash white, screen shake, color overlay, darken/brighten |
+| Audio | change BGM, play SFX, stop/fade music |
+| Party | add/remove character, force composition, set leader |
+| Battle | force-start encounter with specific enemy group |
+| State | set/check story flags, give/remove items, check item possession |
+| Camera | scroll to coordinates, lock/unlock player-follow |
+| Visibility | show/hide sprites, change layer priority |
+| Flow | conditional branch (check flags, party composition, story counter), jump |
+| Map | warp to map/coordinates, trigger gate sequence |
+
+**Mode 7 sequences** (hardware rotation/scaling): Jet Bike Race (interactive), opening credits clock pendulum, Lavos crash animation, Magus's Castle gate vortex, Epoch ramming Lavos, ending fireworks, load/save clock display.
+
+### 10.3 Encounter Trigger System
+
+**Zero random encounters.** All enemies are visible on the field as sprites (or hidden in ambush positions).
+
+**Trigger types:**
+- **Contact** — player sprite touches enemy sprite. Most common.
+- **Proximity** — player enters a detection radius; enemy begins chasing.
+- **Ambush** — enemy is invisible or disguised (e.g., Cathedral nuns, ceiling drops, underground pops) until player steps on a trigger tile.
+- **Scripted** — story-forced battles triggered by entering an area or interacting with an object.
+
+**Enemy field behavior:**
+- **Stationary** — stands in place, fights only on contact.
+- **Patrol** — walks a set path; may accelerate toward player when in range. Chasers target the **last character in the party formation** (trailing follower).
+- **Ambush** — invisible until trigger, then instantly engages.
+
+**Field-to-battle transition (seamless):**
+1. Player movement locks.
+2. Party members spread into battle formation positions **on the same map**.
+3. ATB battle menu appears.
+4. Enemy sprites shift to battle positions/animations.
+5. Combat proceeds. On victory, results display briefly, menu disappears, player regains control.
+6. Area BGM restarts from the beginning (not resume — see §10.9).
+
+**Avoidance.** Most encounters are avoidable by maneuvering around enemy sprites. Some are unavoidable (narrow corridors, story fights, ambushes).
+
+**Respawn.** In most areas, enemies respawn when the player leaves and re-enters the room. Certain enemies (Rubble, bosses, story encounters) do not respawn.
+
+### 10.4 Inventory System
+
+**Shared pool.** One unified inventory across the entire party — not per-character. Equipment and consumables live in the same pool.
+
+**Stacking.** Consumables stack up to **99** per item type. Equipment does not stack (each piece is a separate entry).
+
+**Key items** are stored in a **separate list**, distinct from consumables/equipment. Cannot be used, sold, or discarded.
+
+**Equipment storage.** Unequipped items return to the shared pool. The equipment menu can access **benched characters** (not just the active 3) to manage their gear.
+
+**Character removal.** When a character is forcibly removed by the story, their equipped items leave with them and are temporarily inaccessible. Voluntary party swaps at the End of Time do not affect equipment — benched characters retain their gear and it's still manageable via menu.
+
+**No sort function** in the SNES original. Items appear in a fixed internal order by item ID.
+
+**Ioka Trading Hut** — barter system using Petals, Fangs, Horns, Feathers. Stock rotates at story milestones (3 phases). See [docs/bestiary.md](docs/bestiary.md) hunting section for material sources.
+
+| Phase | Trigger | Notable items | Cost pattern |
+|---|---|---|---|
+| 1 | initial visit | Ruby Gun, Sage Bow, Stone Arm, Flint Edge, Ruby Vest, Rock Helm | 3+3 of two material types |
+| 2 | after Magus defeated | Dreamstone Gun, Dreamstone Bow, Magma Hand, Aeon Blade | 3+3 (upgraded stock) |
+| 3 | late game | Ruby Armor | 10 each of all 4 types |
+
+Phase 1 items become unavailable once Phase 2 activates — missable.
+
+### 10.5 Menu System
+
+**Field menu** (press menu button):
+
+| Option | Function |
+|---|---|
+| Status/Equip | view stats + manage equipment (all characters, including benched) |
+| Item | use consumables on party members; scrollable list with quantities |
+| Tech | view-only: learned techs, TP to next, Dual/Triple tabs. Cannot reorder or disable. |
+| Config | battle mode, gauge speed, message speed, window color, controller, stereo/mono, cursor memory (menu/battle/skill-item), gauge display |
+| Party Order | rearrange walking order of active 3 (not swap members) |
+| Save | save to 1 of 3 slots (save points or world map only) |
+
+**Party swapping** is a **separate action** (Y button), only available after reaching the End of Time. Brings up a character selection screen.
+
+**Equipment menu flow:** select character → highlight slot (weapon/helm/armor/accessory) → browse compatible unequipped items → stat comparison preview shown → confirm swap.
+
+**Battle menu:**
+
+| Command | Notes |
+|---|---|
+| Attack | standard physical, non-elemental, single target |
+| Tech / Combo | Single Techs list; label changes to "Combo" when Dual/Triple available (requires multiple full ATB gauges). Greyed if MP insufficient. |
+| Item | battle consumables |
+
+**Run is NOT a menu command.** Fleeing = hold L+R simultaneously at any time. Cannot flee from bosses.
+
+**Wait mode detail:** ATB gauges pause **only inside submenus** (Tech list, Item list). Top-level command selection (Attack/Tech/Item) does NOT pause. Start button fully pauses in both modes.
+
+**Cursor memory** (config option): when enabled, remembers last-used command and last-selected tech/item per character between turns.
+
+### 10.6 Shop System
+
+Shops are triggered by talking to NPC shopkeepers → dialogue → shop menu overlay.
+
+**Shop types are not rigid** — most are mixed (equipment + consumables). Inns are a fixed-price full-heal service (not a shop menu).
+
+**Selling:** equipment and consumables can be sold at **50% of buy price**. **Accessories cannot be sold** — deliberate restriction.
+
+**Stat comparison** is shown when browsing equipment for purchase (attack/defense delta per character).
+
+**No "buy multiple"** in SNES — each purchase is confirmed individually.
+
+**Medina overpricing:** before Ozzie's Fort is cleared, Medina shops charge ~128× normal price (capped at 65,535G — 16-bit max). After Ozzie's Fort, prices drop to normal. Binary toggle, not gradual.
+
+### 10.7 Party Field Movement
+
+**Snake formation.** Leader walks in front (player-controlled); 2 followers trail behind, replaying the leader's position history with a delay.
+
+**Movement is free-form** (non-grid-based), smooth 8-directional with pixel-level precision.
+
+**Leader rules:**
+- **Crono is forced as leader** while alive and in the party.
+- After Crono's death, first character in party roster becomes leader.
+- On the **world map**, only the leader sprite is shown (followers hidden).
+- In field areas / dungeons, all 3 are visible.
+
+**Follower behavior:** followers stop in place during NPC interactions. During cutscenes, followers are scripted to specific positions via event commands.
+
+**Blackbird sequence** — unique: party is stripped of all equipment, items, and gold. Must navigate the dungeon to recover gear from separate storage rooms. Ayla is uniquely valuable (her fists can't be removed). Guards patrol; stealth-oriented navigation through air ducts.
+
+### 10.8 Camera
+
+**Field / dungeon:** 3/4 top-down oblique perspective (standard SNES RPG view). **Scrolls smoothly** to follow the player (not screen-by-screen). Small rooms fit entirely in the viewport (camera fixed). Scripted sequences can pan the camera independently of the player.
+
+**World map:** zoomed-out scrolling view following the player/Epoch sprite. Wraps horizontally. Character sprites are smaller than in field areas.
+
+**No real perspective changes** — the Jet Bike Race (Mode 7 pseudo-3D) is the only exception. All "angle" variation in other areas is achieved through art direction, not camera transformation.
+
+### 10.9 Music & Audio
+
+**Battle music transition.** When an encounter triggers, area BGM **hard-cuts** to battle theme (not crossfade). After battle, area BGM **restarts from the beginning** (does not resume).
+
+**No victory fanfare** after regular battles — unlike Final Fantasy. A brief results display appears, then area music restarts.
+
+**Battle themes by context:**
+
+| Theme | Used for |
+|---|---|
+| Battle 1 ("Critical Moment") | most regular encounters |
+| Battle 2 ("Burn! Bobonga!") | 65M BC encounters specifically |
+| Boss Battle 1 ("A Determination") | most bosses |
+| Boss Battle 2 ("The Fierce Battle") | intense late-game bosses (Giga Gaia, Golem Twins) |
+| Lavos's Theme | Lavos Shell encounters |
+| World Revolution | inside Lavos descent |
+| The Final Battle | Lavos Core fight |
+
+**Dramatic silence** used deliberately: after Crono's death, the "future refused to change" game-over, Lucca's flashback, Death Peak moments.
+
+**64 tracks** across the OST (Yasunori Mitsuda primary, Nobuo Uematsu and Noriko Matsueda contributing). Each major location has its own theme; some locations change music at different story points.
+
+### 10.10 Game State & Progression Flags
+
+**Primary storyline counter.** A single byte (address 7F0000) that increments at each major story event. This counter gates: area access, NPC dialogue, shop inventories, available events, world map locations.
+
+Known early values: 00 = Millennial Fair, 06 = Crono wakes, 0F = Marle vanishes into portal, 1C = Queen Leene rescued, 21 = Frog leaves throneroom, etc. — through the entire game.
+
+**Supplementary bit flags** for:
+- Treasure chest opened state (per chest, per era for sealed chests)
+- Sealed chest inspected-but-not-opened state (for the double-dip trick)
+- Trial court points (7 behavioral flags from the fair)
+- Character recruitment status
+- Key item possession
+- Specific event states (Magus recruited vs defeated, Crono alive vs dead, Mt. Woe destroyed, etc.)
+
+**Major state-change checkpoints** (world-altering):
+- Cathedral cleared → 600 AD opens up
+- Sent to 2300 AD → future era accessible
+- End of Time reached → hub unlocked, party management enabled
+- Magus defeated → 12,000 BC accessible
+- Ocean Palace / Crono's death → massive state change: Blackbird, North Cape, party leader system, Epoch gains flight, sidequests open
+- Ozzie's Fort cleared → Medina prices normalize
+
+**New Game+ flag handling:** story counter resets to 00. All progression flags reset. Character levels, techs, equipment, and consumables carry over. Gold resets to 200G. Key items removed and re-granted at their normal story points. Warp-to-Lavos option unlocked early (right Telepod at Fair, End of Time bucket).
+
+### 10.11 Scene Structure
+
+**5 explorable overworld maps** (65M BC, 12,000 BC, 600 AD, 1000 AD, 2300 AD), plus the End of Time hub (3–4 rooms) and 1999 AD (battle stage only).
+
+**Transition model:**
+1. **World map** — top-level scrolling overworld. Player sprite (smaller scale) walks between location markers.
+2. **Town / area** — entering a location marker triggers a screen fade to a full-scale map.
+3. **Interior / room** — entering buildings transitions to interior maps. Dungeons have multiple connected rooms.
+4. **Room-to-room** — within a dungeon/town, transitions are either seamless walk-throughs (doorways, stairs) or fade transitions.
+
+**Approximate room counts per era:**
+
+| Era | Rooms (est.) | Notes |
+|---|---:|---|
+| 65M BC | 15–20 | Ioka, Hunting Range, Forest Maze, Reptite Lair, Dactyl Nest, Tyranno Lair |
+| 12,000 BC | 25–30 | Zeal Palace, Kajar, Enhasa, Mt. Woe, Ocean Palace, Blackbird, Last Village, North Cape |
+| 600 AD | 40–50 | Guardia Castle, Cathedral, Zenan Bridge, Denadoro, Magus's Castle, Cursed Woods, Northern Ruins, Ozzie's Fort, Giant's Claw |
+| 1000 AD | 30–40 | Guardia Castle, Millennial Fair, Truce, Lucca's House, Heckran Cave, Medina, Porre, prison/courtroom |
+| 2300 AD | 30–40 | Domes (Bangor/Trann/Arris/Proto/Keeper's), Labs, Factory, Geno Dome, Sewers, Sun Palace, Death Peak |
+| End of Time | 3–4 | main hub, Spekkio's room, Epoch dock |
+| Black Omen | 15–20 | shared dungeon across 600/1000/2300 AD |
+| Lavos interior | 5–10 | battle stages |
+
+Total: ~500 indexed map entries in the ROM (some unused/duplicates).
+
+**Epoch flight + landing.** In flight, Epoch sprite flies freely over the world map. Can land on any traversable ground tile (not water/mountains/buildings). Time travel via Epoch: pressing Y opens a Time Gauge; player selects era with L/R; Epoch transitions to that era's overworld at the same relative position.
+
+**Time gates.** In field areas: shimmering blue portal sprites. On the world map: not directly visible — player enters the location containing the gate. At the End of Time: each discovered gate is a pillar of light (up to 9 pillars unlockable). Gate Key (Lucca's invention) required for natural gates; Epoch bypasses this.
+
+---
+
+## 11. Open Questions / To Verify
 
 Items still needing pinned numbers before we lock data tables:
 
@@ -714,9 +956,9 @@ These should be filled in as we build out per-system data tables. Resolved items
 
 ---
 
-## 11. References
+## 12. References
 
-Canonical sources used to compile and verify this spec. The body has been cross-checked against these for the items called out in §10's "resolved" list; entries still under §10 should be re-checked here before implementation.
+Canonical sources used to compile and verify this spec. The body has been cross-checked against these for the items called out in §11's "resolved" list; entries still under §11 should be re-checked here before implementation.
 
 ### Chrono Wiki (Fandom)
 - Game overview: https://chrono.fandom.com/wiki/Chrono_Trigger
