@@ -1,6 +1,7 @@
 extends "res://scripts/player/player_states/player_state.gd"
 
 const PowerUpEffectScene := preload("res://scenes/effects/power_up_effect.tscn")
+const PowerStates := preload("res://scripts/player/player_power_states.gd")
 
 var _timer: float = 0.0
 var _source_state_name: StringName = &""
@@ -37,10 +38,10 @@ func exit() -> void:
 func process_frame(delta: float) -> void:
 	_timer += delta
 
-	# Flicker between small and big drawing
+	# Flicker between the new powered form and small drawing.
 	var flicker_cycle: float = _timer * player.effects.grow_flicker_rate
 	var show_big := int(flicker_cycle) % 2 == 0
-	player.displayed_power_state = GameManager.current_power_state if show_big else GameManager.PowerState.SMALL
+	player.displayed_power_state = player.power_state if show_big else PowerStates.SMALL
 
 	if _timer >= player.effects.grow_shrink_duration:
 		var return_state: StringName = _source_state_name

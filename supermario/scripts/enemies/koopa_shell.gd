@@ -156,7 +156,7 @@ func _on_damage_area_entered(area: Area2D) -> void:
 		return
 	if area == _hitbox:
 		return
-	var enemy = area.get_parent()
+	var enemy: Node2D = area.get_parent() as Node2D
 	if not is_instance_valid(enemy) or enemy == self:
 		return
 	if enemy.has_method("is_dead") and enemy.is_dead():
