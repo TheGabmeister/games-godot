@@ -4,7 +4,6 @@ extends Node
 signal sfx_requested(sound: AudioStream)
 signal music_requested(music: AudioStream)
 signal music_stop_requested
-signal music_duck_requested(enabled: bool)
 
 # Player
 signal player_respawned

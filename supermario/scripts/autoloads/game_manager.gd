@@ -7,6 +7,7 @@ enum GameState { TITLE, PLAYING, PAUSED, GAME_OVER, LEVEL_COMPLETE, TRANSITIONIN
 # .gd autoloads can't use @export, so game-wide config lives in a .tres editable in the inspector.
 const _config := preload("res://resources/config/game_config.tres")
 const _player_scene := preload("res://scenes/player/player.tscn")
+const _pause_sound := preload("res://audio/sfx/warning.wav")
 const _stage_clear_sound := preload("res://audio/sfx/stage_clear.wav")
 
 const LEVEL_CLEAR_DELAY: float = 2.0
@@ -25,8 +26,19 @@ var _player: CharacterBody2D
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	EventBus.flagpole_reached.connect(_on_flagpole_reached)
 	EventBus.level_completed.connect(_on_level_completed)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"pause"):
+		if game_state == GameState.PAUSED:
+			_resume_game()
+			get_viewport().set_input_as_handled()
+		elif game_state == GameState.PLAYING and not get_tree().paused:
+			_pause_game()
+			get_viewport().set_input_as_handled()
 
 
 func _process(delta: float) -> void:
@@ -62,6 +74,7 @@ func respawn_current_level() -> void:
 
 
 func return_to_title() -> void:
+	get_tree().paused = false
 	_stop_level_timer()
 	_player = null
 	set_game_state(GameState.TITLE)
@@ -69,6 +82,7 @@ func return_to_title() -> void:
 
 
 func reset_for_title() -> void:
+	get_tree().paused = false
 	_reset_run_state()
 	_stop_level_timer()
 	game_state = GameState.TITLE
@@ -126,6 +140,18 @@ func _emit_time_tick() -> void:
 	var current_tick: int = ceili(time_remaining)
 	_last_time_tick = current_tick
 	EventBus.time_tick.emit(current_tick)
+
+
+func _pause_game() -> void:
+	EventBus.sfx_requested.emit(_pause_sound)
+	get_tree().paused = true
+	set_game_state(GameState.PAUSED)
+
+
+func _resume_game() -> void:
+	get_tree().paused = false
+	EventBus.sfx_requested.emit(_pause_sound)
+	set_game_state(GameState.PLAYING)
 
 
 func _reset_run_state() -> void:

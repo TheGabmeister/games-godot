@@ -12,7 +12,6 @@ func _ready() -> void:
 	_build_music_players()
 	EventBus.music_requested.connect(play_music)
 	EventBus.music_stop_requested.connect(stop_music)
-	EventBus.music_duck_requested.connect(set_music_ducked)
 
 
 func play_music(music: AudioStream) -> void:
@@ -43,12 +42,6 @@ func stop_music() -> void:
 	var tween := create_tween()
 	tween.tween_property(_active_music, "volume_db", -40.0, MUSIC_FADE_DURATION)
 	tween.tween_callback(_active_music.stop)
-
-
-func set_music_ducked(enabled: bool) -> void:
-	var target_db := -10.0 if enabled else 0.0
-	var tween := create_tween()
-	tween.tween_property(_active_music, "volume_db", target_db, 0.2)
 
 
 func _build_music_players() -> void:
