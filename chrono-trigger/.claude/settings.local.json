@@ -5,7 +5,16 @@
       "WebSearch",
       "WebFetch(domain:en.wikibooks.org)",
       "WebFetch(domain:almarsguides.com)",
-      "WebFetch(domain:www.arrpeegeez.com)"
+      "WebFetch(domain:www.arrpeegeez.com)",
+      "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/player/crono_sheet.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/player/crono_sheet.png -w 256 -h 32)",
+      "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/npc/npc_sheet.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/npc/npc_sheet.png -w 256 -h 32)",
+      "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/props/floor.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/props/floor.png -w 32 -h 32)",
+      "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/props/wall.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/props/wall.png -w 32 -h 32)",
+      "Bash(\"C:/Program Files/Godot/Godot_v4.6-beta1_win64.exe\" --headless --quit)",
+      "Bash(\"D:/Godot_v4.6.2-stable_win64.exe\" --headless --quit)",
+      "Bash(\"D:/Godot_v4.6.2-stable_win64.exe\" --import --headless)",
+      "Bash(\"D:/Godot_v4.6.2-stable_win64.exe\" --path .)",
+      "Bash(kill %1)"
     ]
   }
 }

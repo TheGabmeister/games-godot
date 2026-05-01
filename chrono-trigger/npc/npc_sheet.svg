@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 32">
+  <!-- Frame 0: down_0 (idle, facing camera) -->
+  <g transform="translate(0,0)">
+    <rect x="11" y="14" width="10" height="10" rx="1" fill="#2E7D32"/>
+    <circle cx="16" cy="9" r="5" fill="#F2C4A0"/>
+    <ellipse cx="16" cy="5" rx="5" ry="3" fill="#5D4037"/>
+    <rect x="14" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="17" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#795548"/>
+    <rect x="17" y="24" width="3" height="5" rx="1" fill="#795548"/>
+  </g>
+  <!-- Frame 1: down_1 (idle shift) -->
+  <g transform="translate(32,0)">
+    <rect x="11" y="15" width="10" height="10" rx="1" fill="#2E7D32"/>
+    <circle cx="16" cy="10" r="5" fill="#F2C4A0"/>
+    <ellipse cx="16" cy="6" rx="5" ry="3" fill="#5D4037"/>
+    <rect x="14" y="9" width="1.5" height="1.5" fill="#222"/>
+    <rect x="17" y="9" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="25" width="3" height="4" rx="1" fill="#795548"/>
+    <rect x="17" y="25" width="3" height="4" rx="1" fill="#795548"/>
+  </g>
+  <!-- Frame 2: up_0 (idle, facing away) -->
+  <g transform="translate(64,0)">
+    <rect x="11" y="14" width="10" height="10" rx="1" fill="#2E7D32"/>
+    <circle cx="16" cy="9" r="5" fill="#F2C4A0"/>
+    <ellipse cx="16" cy="6" rx="5.5" ry="4" fill="#5D4037"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#795548"/>
+    <rect x="17" y="24" width="3" height="5" rx="1" fill="#795548"/>
+  </g>
+  <!-- Frame 3: up_1 (idle shift, facing away) -->
+  <g transform="translate(96,0)">
+    <rect x="11" y="15" width="10" height="10" rx="1" fill="#2E7D32"/>
+    <circle cx="16" cy="10" r="5" fill="#F2C4A0"/>
+    <ellipse cx="16" cy="7" rx="5.5" ry="4" fill="#5D4037"/>
+    <rect x="12" y="25" width="3" height="4" rx="1" fill="#795548"/>
+    <rect x="17" y="25" width="3" height="4" rx="1" fill="#795548"/>
+  </g>
+  <!-- Frame 4: left_0 (idle, facing left) -->
+  <g transform="translate(128,0)">
+    <rect x="12" y="14" width="9" height="10" rx="1" fill="#2E7D32"/>
+    <circle cx="15" cy="9" r="5" fill="#F2C4A0"/>
+    <ellipse cx="14" cy="5" rx="5" ry="3" fill="#5D4037"/>
+    <rect x="12" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#795548"/>
+    <rect x="16" y="24" width="3" height="5" rx="1" fill="#795548"/>
+  </g>
+  <!-- Frame 5: left_1 (idle shift, facing left) -->
+  <g transform="translate(160,0)">
+    <rect x="12" y="15" width="9" height="10" rx="1" fill="#2E7D32"/>
+    <circle cx="15" cy="10" r="5" fill="#F2C4A0"/>
+    <ellipse cx="14" cy="6" rx="5" ry="3" fill="#5D4037"/>
+    <rect x="12" y="9" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="25" width="3" height="4" rx="1" fill="#795548"/>
+    <rect x="16" y="25" width="3" height="4" rx="1" fill="#795548"/>
+  </g>
+  <!-- Frame 6: right_0 (idle, facing right) -->
+  <g transform="translate(192,0)">
+    <rect x="11" y="14" width="9" height="10" rx="1" fill="#2E7D32"/>
+    <circle cx="17" cy="9" r="5" fill="#F2C4A0"/>
+    <ellipse cx="18" cy="5" rx="5" ry="3" fill="#5D4037"/>
+    <rect x="19" y="8" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="24" width="3" height="5" rx="1" fill="#795548"/>
+    <rect x="17" y="24" width="3" height="5" rx="1" fill="#795548"/>
+  </g>
+  <!-- Frame 7: right_1 (idle shift, facing right) -->
+  <g transform="translate(224,0)">
+    <rect x="11" y="15" width="9" height="10" rx="1" fill="#2E7D32"/>
+    <circle cx="17" cy="10" r="5" fill="#F2C4A0"/>
+    <ellipse cx="18" cy="6" rx="5" ry="3" fill="#5D4037"/>
+    <rect x="19" y="9" width="1.5" height="1.5" fill="#222"/>
+    <rect x="12" y="25" width="3" height="4" rx="1" fill="#795548"/>
+    <rect x="17" y="25" width="3" height="4" rx="1" fill="#795548"/>
+  </g>
+</svg>

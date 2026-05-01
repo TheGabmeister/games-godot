@@ -1,0 +1,82 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://cgyk8y2jnc5pf"]
+
+[ext_resource type="Texture2D" uid="uid://cvjdd6jqjg03n" path="res://npc/npc_sheet.png" id="1"]
+
+[sub_resource type="AtlasTexture" id="down0"]
+atlas = ExtResource("1")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="down1"]
+atlas = ExtResource("1")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="left0"]
+atlas = ExtResource("1")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="left1"]
+atlas = ExtResource("1")
+region = Rect2(160, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="right0"]
+atlas = ExtResource("1")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="right1"]
+atlas = ExtResource("1")
+region = Rect2(224, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="up0"]
+atlas = ExtResource("1")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="up1"]
+atlas = ExtResource("1")
+region = Rect2(96, 0, 32, 32)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("down0")
+}, {
+"duration": 1.0,
+"texture": SubResource("down1")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("left0")
+}, {
+"duration": 1.0,
+"texture": SubResource("left1")
+}],
+"loop": true,
+"name": &"idle_left",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("right0")
+}, {
+"duration": 1.0,
+"texture": SubResource("right1")
+}],
+"loop": true,
+"name": &"idle_right",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("up0")
+}, {
+"duration": 1.0,
+"texture": SubResource("up1")
+}],
+"loop": true,
+"name": &"idle_up",
+"speed": 3.0
+}]
