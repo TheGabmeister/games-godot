@@ -25,7 +25,7 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 
 	battle_started = true
-	monitoring = false
+	set_deferred("monitoring", false)
 	battle_manager.start_battle(self)
 
 func set_battle_collision_enabled(enabled: bool) -> void:
