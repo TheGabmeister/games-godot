@@ -7,17 +7,6 @@ const PLAYER_SPEED := 12
 const PLAYER_STAMINA := 5
 const PLAYER_STRIKE_PERCENT := 10.0
 const PLAYER_WEAPON_AP := 3
-const FLASH_SHADER_CODE := """
-shader_type canvas_item;
-
-uniform float flash_amount = 0.0;
-
-void fragment() {
-	vec4 tex = texture(TEXTURE, UV) * COLOR;
-	tex.rgb = mix(tex.rgb, vec3(1.0), flash_amount);
-	COLOR = tex;
-}
-"""
 
 @export var player_path: NodePath
 @export var battle_ui_path: NodePath
@@ -36,12 +25,9 @@ var _player_command_ready := false
 var _animating := false
 var _battle_finished := false
 var _rng := RandomNumberGenerator.new()
-var _flash_shader: Shader
 
 func _ready() -> void:
 	_rng.randomize()
-	_flash_shader = Shader.new()
-	_flash_shader.code = FLASH_SHADER_CODE
 	battle_ui.attack_selected.connect(_on_attack_selected)
 
 func _process(delta: float) -> void:
@@ -143,7 +129,9 @@ func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critic
 		_play_player_hit_animation(direction)
 	elif target.has_method("play_hit"):
 		target.play_hit()
-	_flash_target(target)
+	var flash_effect := target.get_node_or_null("FlashEffect")
+	if flash_effect:
+		flash_effect.flash()
 	battle_ui.spawn_damage_number(target.global_position, damage, critical)
 	await get_tree().create_timer(0.3).timeout
 
@@ -162,28 +150,6 @@ func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critic
 	_check_battle_end()
 	if not _battle_finished and _player_command_ready:
 		battle_ui.set_command_ready(true)
-
-func _flash_target(target: Node2D) -> void:
-	var tween := create_tween()
-	var flash_item := target.get_node_or_null("AnimatedSprite2D") as CanvasItem
-	if flash_item == null:
-		flash_item = target as CanvasItem
-	if flash_item == null:
-		return
-
-	var original_material := flash_item.material
-	var flash_material := ShaderMaterial.new()
-	flash_material.shader = _flash_shader
-	flash_material.set_shader_parameter("flash_amount", 0.0)
-	flash_item.material = flash_material
-
-	for i in 3:
-		tween.tween_property(flash_material, "shader_parameter/flash_amount", 1.0, 0.05)
-		tween.tween_property(flash_material, "shader_parameter/flash_amount", 0.0, 0.05)
-	tween.finished.connect(func() -> void:
-		if is_instance_valid(flash_item):
-			flash_item.material = original_material
-	)
 
 func _check_battle_end() -> void:
 	if _battle_finished:

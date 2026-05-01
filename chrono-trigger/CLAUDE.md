@@ -29,25 +29,53 @@ A Godot 4.6 project recreating Chrono Trigger's gameplay systems. The goal is sc
 
 ## Architecture
 
-### GameState autoload
+### Autoloads
 
-`GameState` (scripts/game_state.gd) is the central state machine. All input-handling scripts gate on `GameState.current` to determine whether they should respond.
+**GameState** (scripts/game_state.gd) — central state machine. All input-handling scripts gate on `GameState.current` to decide whether to respond.
 
 ```
-enum State { FIELD, DIALOGUE }  — expanded each phase (BATTLE, MENU, CUTSCENE...)
+enum State { FIELD, DIALOGUE, BATTLE }  — expanded each phase (MENU, CUTSCENE...)
 ```
 
 State transitions go through `GameState.change(new_state)` which emits `state_changed`.
 
+**MusicManager** (scripts/music_manager.gd) — owns an AudioStreamPlayer. `play_music(stream, volume_db)` and `stop_music()`. Loops by re-playing on `_on_player_finished()` signal (not the built-in loop flag).
+
+### Input map
+
+| Action       | Keys              | Gamepad           |
+|--------------|-------------------|-------------------|
+| `move_up`    | W / Up arrow      | D-pad up / stick  |
+| `move_down`  | S / Down arrow    | D-pad down / stick|
+| `move_left`  | A / Left arrow    | D-pad left / stick|
+| `move_right` | D / Right arrow   | D-pad right / stick|
+| `interact`   | Z / Enter         | A (bottom face)   |
+
 ### Interaction pattern
 
-Player has a RayCast2D (`InteractRay`) pointing in the facing direction. On interact press, if the ray hits a node in the `"interactable"` group, it calls `collider.interact()`. NPCs/objects add themselves to this group and implement `interact()`.
+Player has a RayCast2D (`InteractRay`, 20px) pointing in the facing direction. On interact press, if the ray hits a node in the `"interactable"` group, it calls `collider.interact()`. NPCs add themselves to this group in `_ready()` and implement `interact()`.
+
+### Battle system (Phase 2)
+
+Three scripts collaborate: `battle_manager.gd` (combat loop), `battle_ui.gd` (HUD + commands), `enemy.gd` (field trigger + animations).
+
+**Entry**: Enemy is an Area2D; when player's body enters, it calls `battle_manager.start_battle(self)` and sets `GameState.change(BATTLE)`.
+
+**ATB loop** (`_process` in battle_manager): each combatant's gauge fills at `speed * delta * ATB_SCALE` (0.02). When gauge ≥ 1.0, the combatant can act. An `_animating` flag pauses all gauges during attack sequences to prevent overlap.
+
+**Damage formula**: `raw = max(1, weapon_ap + power - target_stamina)`, randomized ×0.9–1.1, doubled on crit (checked against `strike_pct`).
+
+**Attack animation sequence**: pause gauges → lunge tween (0.15s) → apply damage + hit flash + floating damage number → retreat tween (0.15s) → resume gauges. Hit flash uses a shader with `flash_amount` parameter tweened 0→1→0.
+
+**End conditions**: enemy HP ≤ 0 → victory (fade enemy, show results 2s, return to FIELD); player HP ≤ 0 → game over (reload scene after 2s).
 
 ### Resources as data
 
 Game data is authored as Godot Resource `.tres` files:
 - `DialogueData` — speaker name + lines array (dialogue/)
-- `EnemyData` — enemy stats, rewards (enemies/, Phase 2)
+- `EnemyData` — enemy stats and rewards (enemies/)
+
+Pattern: entity nodes hold `@export var data: ResourceClass`. Runtime state (e.g., `_enemy_hp`) is copied from the resource at battle start, keeping the resource immutable.
 
 ### Folder structure
 
@@ -65,6 +93,18 @@ res://
 ```
 
 Sprites and audio live alongside their entity (player/, npc/, enemies/). Scripts and scenes are centralized in their own folders.
+
+## Implementation Status
+
+Phases 1–2 are complete. Phases 3–10 are spec-only (see IMPL_XX.md files).
+
+- **Phase 1**: Player movement, NPC interaction, dialogue typewriter, camera follow
+- **Phase 2**: 1v1 ATB battle, damage formula, battle animations, battle music, victory/game over
+
+### Known shortcuts to revisit
+
+- Player stats (Crono) are hard-coded in `battle_manager.gd`; will move to a resource + equipment system in Phase 5
+- `npc.gd` retrieves DialogueBox via hard-coded path (`/root/DebugRoom/DialogueBox`); needs generalization when scenes multiply in Phase 6
 
 ## Spec Documentation
 

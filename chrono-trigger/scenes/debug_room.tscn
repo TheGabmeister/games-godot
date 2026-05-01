@@ -1,18 +1,15 @@
 [gd_scene format=3 uid="uid://b00p8kn1u7ror"]
 
-[ext_resource type="Script" path="res://scripts/player.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/npc.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/dialogue_box.gd" id="3"]
-[ext_resource type="SpriteFrames" path="res://player/crono_frames.tres" id="4"]
-[ext_resource type="SpriteFrames" path="res://npc/npc_frames.tres" id="5"]
 [ext_resource type="Resource" path="res://dialogue/npc_greeting.tres" id="6"]
 [ext_resource type="Script" path="res://scripts/camera.gd" id="7"]
-[ext_resource type="Script" path="res://scripts/enemy.gd" id="8"]
 [ext_resource type="Script" path="res://scripts/battle_manager.gd" id="9"]
 [ext_resource type="Script" path="res://scripts/battle_ui.gd" id="10"]
-[ext_resource type="SpriteFrames" path="res://enemies/imp_frames.tres" id="11"]
 [ext_resource type="Resource" path="res://enemies/imp.tres" id="12"]
 [ext_resource type="AudioStream" path="res://music/battle.ogg" id="13"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/npc.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="17"]
 
 [sub_resource type="RectangleShape2D" id="wall_top_shape"]
 size = Vector2(640, 32)
@@ -25,14 +22,6 @@ size = Vector2(32, 480)
 
 [sub_resource type="RectangleShape2D" id="wall_right_shape"]
 size = Vector2(32, 480)
-
-[sub_resource type="RectangleShape2D" id="player_shape"]
-
-[sub_resource type="RectangleShape2D" id="npc_shape"]
-size = Vector2(24, 24)
-
-[sub_resource type="CircleShape2D" id="enemy_trigger_shape"]
-radius = 48.0
 
 [node name="DebugRoom" type="Node2D" unique_id=239341746]
 
@@ -93,46 +82,16 @@ color = Color(0.4, 0.4, 0.4, 1)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight" unique_id=1075608090]
 shape = SubResource("wall_right_shape")
 
-[node name="Player" type="CharacterBody2D" parent="." unique_id=69205871]
+[node name="Player" parent="." instance=ExtResource("15")]
 position = Vector2(200, 240)
-script = ExtResource("1")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player" unique_id=1463977960]
-sprite_frames = ExtResource("4")
-animation = &"idle_down"
-autoplay = "idle_down"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Player" unique_id=274207791]
-shape = SubResource("player_shape")
-
-[node name="InteractRay" type="RayCast2D" parent="Player" unique_id=1782357715]
-target_position = Vector2(0, 20)
-
-[node name="NPC" type="StaticBody2D" parent="." unique_id=1057005331]
+[node name="NPC" parent="." instance=ExtResource("16")]
 position = Vector2(400, 240)
-script = ExtResource("2")
 dialogue = ExtResource("6")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="NPC" unique_id=2138157740]
-sprite_frames = ExtResource("5")
-animation = &"idle_down"
-autoplay = "idle_down"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NPC" unique_id=117416348]
-shape = SubResource("npc_shape")
-
-[node name="Enemy" type="Area2D" parent="." unique_id=768228829]
+[node name="Enemy" parent="." instance=ExtResource("17")]
 position = Vector2(505, 330)
-script = ExtResource("8")
 data = ExtResource("12")
-
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Enemy" unique_id=1819690556]
-sprite_frames = ExtResource("11")
-animation = &"idle"
-autoplay = "idle"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy" unique_id=1371698068]
-shape = SubResource("enemy_trigger_shape")
 
 [node name="BattleManager" type="Node" parent="." unique_id=1840860702]
 script = ExtResource("9")
