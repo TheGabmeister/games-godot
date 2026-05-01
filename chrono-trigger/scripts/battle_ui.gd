@@ -340,13 +340,17 @@ func _update_enemy_target_display() -> void:
 	var node: Node2D = bm.get_enemy_node(enemy_idx)
 	if node:
 		_target_label.text = "▼ " + str(node.data.get("enemy_name"))
-		_target_label.global_position = Vector2(node.global_position.x - 40, node.global_position.y - 50)
+		var screen_pos := get_viewport().get_canvas_transform() * node.global_position
+		_target_label.position = screen_pos - Vector2(40, 50)
 
 func _update_item_display() -> void:
-	for i in _command_labels.size():
-		if i < _items.size():
-			var prefix := "> " if i == _item_cursor else "  "
-			_command_labels[i].text = prefix + _items[i]["item"].item_name + " " + str(_items[i]["count"])
+	var window_size := _command_labels.size()
+	var start := clampi(_item_cursor - window_size + 1, 0, maxi(0, _items.size() - window_size))
+	for i in window_size:
+		var item_idx := start + i
+		if item_idx < _items.size():
+			var prefix := "> " if item_idx == _item_cursor else "  "
+			_command_labels[i].text = prefix + _items[item_idx]["item"].item_name + " " + str(_items[item_idx]["count"])
 			_command_labels[i].visible = true
 		else:
 			_command_labels[i].text = ""
@@ -468,7 +472,6 @@ func _on_enemy_died(enemy_index: int) -> void:
 
 func _on_combatant_ko(combatant_index: int) -> void:
 	if combatant_index < _party_rows.size():
-		_party_rows[combatant_index]["hp_label"].text = "HP: 0/%d" % [0]
 		_party_rows[combatant_index]["atb_bar"].value = 0
 
 func _on_escaped() -> void:

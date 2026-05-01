@@ -11,6 +11,8 @@ var battle_started := false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	if encounter_group != "":
+		add_to_group("enemy_" + encounter_group)
 	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("idle"):
 		animated_sprite.play("idle")
 

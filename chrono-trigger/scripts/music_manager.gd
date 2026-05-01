@@ -1,6 +1,6 @@
 extends Node
 
-const DEFAULT_VOLUME_DB := -12.0
+const DEFAULT_VOLUME_DB := 0.0
 
 var _player: AudioStreamPlayer
 var _looping := false

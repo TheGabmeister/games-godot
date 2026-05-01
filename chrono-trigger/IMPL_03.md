@@ -547,17 +547,17 @@ No changes from Phase 2. The formula is the same, just applied with per-characte
 ## Test checklist
 
 ### Party field movement
-- [ ] Followers trail the player with visible spacing
-- [ ] Followers match the player's path (not a straight line to the player)
-- [ ] Followers play walk animation while moving, idle when stopped
-- [ ] Followers face the correct direction while following
-- [ ] Followers stop when the player stops (catch up naturally)
-- [ ] Followers freeze during BATTLE and DIALOGUE states
-- [ ] Follower 2 is further behind than follower 1
+- [x] Followers trail the player with visible spacing
+- [x] Followers match the player's path (not a straight line to the player)
+- [x] Followers play walk animation while moving, idle when stopped
+- [x] Followers face the correct direction while following
+- [x] Followers stop when the player stops (catch up naturally)
+- [x] Followers freeze during BATTLE and DIALOGUE states
+- [x] Follower 2 is further behind than follower 1
 
 ### Party in battle
-- [ ] All 3 party members have independent ATB gauges
-- [ ] ATB gauges fill at different rates based on Speed
+- [x] All 3 party members have independent ATB gauges
+- [x] ATB gauges fill at different rates based on Speed
 - [ ] Command menu appears for the correct party member when their ATB fills
 - [ ] Multiple party members can be ready simultaneously; they act in fill order
 - [ ] Acting party member's name is indicated in the UI

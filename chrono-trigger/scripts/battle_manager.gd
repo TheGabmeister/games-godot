@@ -143,7 +143,6 @@ func _add_enemy(node: Area2D) -> void:
 		"atb": 0.0,
 		"node": node,
 	})
-	node.add_to_group("enemy_" + node.encounter_group)
 
 func _on_attack_selected(target_index: int) -> void:
 	if _active_member_index == -1 or _animating or _battle_finished:
