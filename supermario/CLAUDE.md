@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code (claude.ai/code) when working in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 `README.md` is the developer-facing overview: project pillars, repository
 layout, autoloads, system summaries, tunables table, collision layers,
@@ -12,10 +12,10 @@ once you start editing code.
 ## Coding Principles
 
 - **Godot game programming best practices**
-- **KISS** — simplest thing that works. 
+- **KISS** — simplest thing that works.
 - **YAGNI** — don't build for hypothetical needs. No abstraction layers "for later."
 - **DRY** — remove real duplication, not shape-similar code. Wrong abstraction costs more than repetition.
-- **Locality of change** — adding a new entity, tile, or feature should require changes in as few files as possible. 
+- **Locality of change** — adding a new entity, tile, or feature should require changes in as few files as possible.
 
 When in doubt: for code one person owns and rarely changes, lean KISS. For interfaces many contributors touch, lean locality of change.
 
@@ -40,10 +40,12 @@ obvious from reading the code in isolation.
 
 ### GameManager
 
-- Run-state reset (score / coins / lives / world / level / power) is centralized in `_reset_run_state()`. Both `start_new_game()` and `reset_for_title()` call it — don't duplicate the reset logic.
-- Timer ticks (`EventBus.time_tick`) emit only when the displayed integer second changes, deduped via `_last_time_tick`. The cache resets in `start_level_timer()` so the first tick of every level always emits.
+- `.gd` autoloads can't use `@export`, so game-wide config lives in `resources/config/game_config.tres` (a `GameConfig` resource), loaded via `preload`. The config holds the ordered `levels` array of `LevelConfig` resources.
+- Run-state reset (score / coins / lives / power) is centralized in `_reset_run_state()`. Both `start_new_game()` and `reset_for_title()` call it — don't duplicate the reset logic.
+- Timer ticks (`EventBus.time_tick`) emit only when the displayed integer second changes, deduped via `_last_time_tick`. The cache resets in `_start_level()` so the first tick of every level always emits.
 - `_enter_level()` has exactly three callers: `start_new_game()`, `advance_to_next_level()`, `respawn_current_level()`. Do not add a fourth — extend one of these.
-- Public flow API (no underscore prefix): `start_level_timer`, `stop_level_timer`, `advance_to_next_level`, `respawn_current_level`, `return_to_title`.
+- Level navigation is index-based via `_level_index` into `_config.levels`. Each `LevelConfig` resource holds `display_name`, `scene`, `time_limit`, and `music`.
+- Music playback is triggered by GameManager in `_start_level()` from the level config — level scripts do not handle music.
 
 ### SfxManager and MusicManager
 
@@ -51,15 +53,12 @@ obvious from reading the code in isolation.
 - SFX uses `EventBus.sfx_requested(sound)`, handled by `SfxManager`'s pooled `AudioStreamPlayer`s.
 - Music uses `EventBus.music_requested(music)`, `music_stop_requested`, and `music_duck_requested(enabled)`, handled by `MusicManager`'s dual-player crossfade setup.
 
-### SceneManager
+### UIManager
 
-External callers must use the public API and never tween the internal
-`_fade_rect` directly:
-
-- `change_scene(path)` — fade out → swap → fade in
-- `change_scene_no_fade(path)` — swap only (use when running your own fade sequence; `GameManager._enter_level` does this)
-- `fade_out(duration)` / `fade_in(duration)` — standalone tweens. `duration < 0` uses the config default.
-- `show_level_intro(world, level, lives)`
+Autoload that instances `PauseMenu`, `GameOver`, and `LevelComplete` scenes
+once at startup. These UI overlays persist across scene changes — they are
+**not** placed in level scenes. Each is a `CanvasLayer` that connects to
+EventBus signals and manages its own visibility.
 
 ### Player System
 
@@ -71,8 +70,15 @@ External callers must use the public API and never tween the internal
 ### Camera Controller
 
 - Script lives on the `Camera2D` child of the player. Reads facing from the parent's `Visuals` child for look-ahead direction.
-- Self-registers with `CameraEffects` in `_ready()` and reads `get_shake_offset()` per frame, composing it with the look-ahead.
+- Auto-detects level bounds from the first `TileMapLayer` in the scene via `get_used_rect()`. No manual camera setup needed in level scripts.
 - Exposes `reset_no_backtrack()` for pipe warps to break the `limit_left` ratchet.
+
+### Level System
+
+- **`level_base.gd`** is the single level script used by all levels. It spawns the player at a `PlayerStart` (`Marker2D`) node and has an `@export var player_scene: PackedScene` wired in each level's inspector.
+- **Terrain is hand-painted** in the editor using `TileMapLayer` with a baked `TileSet` resource (`resources/tilesets/terrain_tileset.tres`). Tile data is stored in the `.tscn` files. See `tools/tileset_builder_reference.gd` for how the tileset was originally constructed.
+- Only static terrain uses `TileMapLayer`. Blocks, enemies, and items are individual scene instances under container `Node2D` nodes.
+- **`enemy_spawner.gd`** — activates enemies as the camera approaches `activation_distance`, cleans up enemies left far behind.
 
 ### Block Bump Detection
 
@@ -111,6 +117,18 @@ compose with it via `var _emerge := EmergeHelper.new()`. Note: `coin_pop.gd`
 uses an older inline `_initialized` flag (it captures `spawn_y` rather than
 tweening over a fixed distance, so the helper doesn't quite apply).
 
+### Pickup System
+
+Pickups use composition over inheritance. Each pickup keeps its natural node
+type (`Area2D` for static pickups like coins/fire flowers, `CharacterBody2D`
+for moving pickups like mushrooms/starman/1-up) and shares collection logic
+via `PickupHelper` (`scripts/pickups/pickup_helper.gd`), a `RefCounted` that
+handles the collected guard, optional sound, and `queue_free()`.
+
+Usage: `var _pickup := PickupHelper.new()`, then call
+`_pickup.try_collect(self, sound)` in the body-entered callback. Returns
+`false` if already collected.
+
 ### Enemy System
 
 - Stomp vs damage: both `StompDetector` (feet, masks layer 5) and `Hurtbox` (body, on layer 4 masks layer 5) may fire for the same enemy in one frame. The hurtbox handler skips damage when the player is above and the enemy is stompable. Enemies returning `is_stompable() -> false` (e.g., piranha plants) bypass this guard and always damage on contact.
@@ -146,21 +164,13 @@ On exit, the tree is unpaused and the player returns to its previous state
 resized once at the end, not during the flicker.
 
 Any node that must keep running during grow/shrink needs `PROCESS_MODE_ALWAYS`
-(e.g., the power-up ring effect). The `SceneManager` overlay uses a high
-`CanvasLayer` and is unaffected.
-
-### Parallax
-
-`parallax_controller.gd` looks up the player camera lazily in `_process` (not
-`_ready`) because the parallax node is earlier in the scene tree than the
-player. It reads `camera.get_screen_center_position()` (not `global_position`)
-so smoothing and offset are honored.
+(e.g., the power-up ring effect).
 
 ### UI Behavior
 
-- **Title screen** resets `GameManager` on load and has a 0.3s input delay to prevent stale presses carrying over from the previous run.
+- **Title screen** resets `GameManager` on load and has a 0.3s input delay to prevent stale presses carrying over from the previous run. Accepts `start`, `jump`, or `pause` actions.
 - **Pause menu** (`PROCESS_MODE_WHEN_PAUSED`) ducks music while paused.
-- **Level complete** calls `GameManager.advance_to_next_level()`, which handles both the "next level" and "no more levels → title" cases.
+- **Level complete** calls `GameManager.advance_to_next_level()`, which handles both the "next level" and "no more levels -> title" cases.
 
 ### Shared Helpers
 
@@ -168,7 +178,7 @@ Reach for these instead of re-pasting boilerplate:
 
 - `scripts/objects/block_base.gd` — bump animation state for all interactable blocks (extends `StaticBody2D`).
 - `scripts/objects/emerge_helper.gd` — lazy-init + vertical tween for items that emerge from question blocks.
-- `scripts/level/tileset_builder.gd` — `create_tileset()` builds a `TileSet` from `sprites/terrain_sheet.png` (4 tiles: overworld top/fill, underground top/fill) with full-tile collision polygons. Used by both `level_base.gd` (overworld picks tile 0/1) and `level_1_2.gd` (underground picks tile 2/3).
+- `scripts/pickups/pickup_helper.gd` — collected guard + sound + queue_free for all pickups.
 - `enemy_base._disable_all_collision()` — used in death-animation paths.
 
 ## Gotchas
@@ -210,6 +220,14 @@ needs a one-shot guard to prevent firing every frame. `DeathState` uses
 `_life_lost`; `FlagpoleState` advances to `_phase = 3` before emitting
 `level_completed`.
 
+### GDScript Typed Array Invariance
+
+GDScript typed arrays are invariant: `Array[SubType]` does not assign to
+`Array[ParentType]`. When a config resource types an array as
+`Array[LevelConfig]`, a consumer script that preloads the `.tres` may see it
+as `Array[Resource]`. Use `Resource` in function signatures when accepting
+elements from cross-script typed arrays.
+
 ## Working Agreement
 
 - Small, focused edits — keep scripts beginner-readable.
@@ -221,7 +239,7 @@ needs a one-shot guard to prevent firing every frame. `DeathState` uses
 
 ## Asset Pipeline
 
-- **Sprites**: each entity/item gets its own SVG and PNG file, exported via Inkscape. 
+- **Sprites**: each entity/item gets its own SVG and PNG file, exported via Inkscape.
   - Inkscape path: `"/c/Program Files/Inkscape/bin/inkscape.exe"`. Export: `inkscape input.svg --export-type=png --export-filename=output.png -w 64 -h 64`.
 - **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`).
-- **Music**: Python scripts in `tools/music/` use `midiutil` to generate MIDI -> FluidSynth renders with a soundfont to WAV -> ffmpeg converts to OGG. Tool paths: `D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe`, `D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe`, soundfont `D:/GeneralUser-GS/GeneralUser-GS.sf2`.  
+- **Music**: Python scripts in `tools/music/` use `midiutil` to generate MIDI -> FluidSynth renders with a soundfont to WAV -> ffmpeg converts to OGG. Tool paths: `D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe`, `D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe`, soundfont `D:/GeneralUser-GS/GeneralUser-GS.sf2`.
