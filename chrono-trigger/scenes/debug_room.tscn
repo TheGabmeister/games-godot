@@ -10,6 +10,8 @@
 [ext_resource type="Resource" path="res://party/crono.tres" id="21"]
 [ext_resource type="Resource" path="res://party/marle.tres" id="22"]
 [ext_resource type="Resource" path="res://party/lucca.tres" id="23"]
+[ext_resource type="SpriteFrames" path="res://party/marle_frames.tres" id="19"]
+[ext_resource type="SpriteFrames" path="res://party/lucca_frames.tres" id="20"]
 
 [sub_resource type="RectangleShape2D" id="wall_top_shape"]
 size = Vector2(640, 32)
@@ -98,11 +100,21 @@ position = Vector2(170, 270)
 leader_path = NodePath("../Player")
 data = ExtResource("22")
 
+[node name="AnimatedSprite2D" parent="Marle" index="0"]
+sprite_frames = ExtResource("19")
+animation = &"idle_down"
+autoplay = "idle_down"
+
 [node name="Lucca" parent="." unique_id=1157695866 instance=ExtResource("18")]
 position = Vector2(170, 210)
 leader_path = NodePath("../Player")
 follow_delay = 40
 data = ExtResource("23")
+
+[node name="AnimatedSprite2D" parent="Lucca" index="0"]
+sprite_frames = ExtResource("20")
+animation = &"idle_down"
+autoplay = "idle_down"
 
 [node name="NPC" parent="." unique_id=1384677867 instance=ExtResource("16")]
 position = Vector2(400, 240)
