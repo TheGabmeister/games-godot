@@ -239,7 +239,6 @@ func _calculate_damage(power: int, weapon_ap: int, stamina: int, strike_percent:
 
 func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critical: bool) -> void:
 	_animating = true
-	command_ready_changed.emit(_active_member_index if _active_member_index >= 0 else 0, false)
 
 	attacker.play_attack()
 

@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 enemy_name = "Imp"
-max_hp = 32
+max_hp = 6
 power = 4
 speed = 8
 stamina = 4

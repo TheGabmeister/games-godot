@@ -558,18 +558,18 @@ No changes from Phase 2. The formula is the same, just applied with per-characte
 ### Party in battle
 - [x] All 3 party members have independent ATB gauges
 - [x] ATB gauges fill at different rates based on Speed
-- [ ] Command menu appears for the correct party member when their ATB fills
-- [ ] Multiple party members can be ready simultaneously; they act in fill order
-- [ ] Acting party member's name is indicated in the UI
-- [ ] Each party member's HP is displayed and updates independently
+- [x] Command menu appears for the correct party member when their ATB fills
+- [x] Multiple party members can be ready simultaneously; they act in fill order
+- [x] Acting party member's name is indicated in the UI
+- [x] Each party member's HP is displayed and updates independently
 
 ### Multi-enemy
-- [ ] Walking into one enemy triggers battle with all enemies in the same encounter group
-- [ ] Each enemy has its own ATB gauge and acts independently
-- [ ] Target selection cursor cycles through living enemies
-- [ ] Dead enemies are removed from target selection
-- [ ] Battle ends only when all enemies are dead
-- [ ] Results show combined EXP, G, TP from all enemies
+- [x] Walking into one enemy triggers battle with all enemies in the same encounter group
+- [x] Each enemy has its own ATB gauge and acts independently
+- [x] Target selection cursor cycles through living enemies
+- [x] Dead enemies are removed from target selection
+- [x] Battle ends only when all enemies are dead
+- [x] Results show combined EXP, G, TP from all enemies
 
 ### Command menu
 - [ ] Menu shows Attack and Item options
