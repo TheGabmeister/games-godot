@@ -37,7 +37,7 @@ func _process(delta: float) -> void:
 		return
 
 	if _tallying:
-		# Visual time bonus payout already handled by GameManager._on_level_completed
+		# Visual time bonus payout already handled by GameplayManager.
 		_timer += delta
 		if _timer >= 1.5:
 			_tallying = false

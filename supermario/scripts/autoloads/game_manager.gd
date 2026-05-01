@@ -10,11 +10,8 @@ const _config := preload("res://resources/config/game_config.tres")
 var score: int = 0
 var coins: int = 0
 var lives: int = 3
-var time_remaining: float = 400.0
 var current_power_state: PowerState = PowerState.SMALL
 var game_state: GameState = GameState.TITLE
-
-var timer_active: bool = false
 
 var _level_index: int = 0
 
@@ -47,7 +44,6 @@ func return_to_title() -> void:
 
 func reset_for_title() -> void:
 	_reset_run_state()
-	timer_active = false
 	game_state = GameState.TITLE
 
 
@@ -55,17 +51,28 @@ func _enter_level(index: int) -> void:
 	_level_index = index
 	var config := _config.levels[index]
 	set_game_state(GameState.TRANSITIONING)
-	get_tree().change_scene_to_packed(config.scene)
+	_change_to_level_scene(config)
 	set_game_state(GameState.PLAYING)
 	_start_level(config)
 
 
 func _start_level(config: Resource) -> void:
-	time_remaining = config.time_limit
-	timer_active = true
 	if config.music:
 		EventBus.music_requested.emit(config.music)
 	EventBus.level_started.emit(config.display_name)
+
+
+func _change_to_level_scene(config: Resource) -> void:
+	var next_scene: Node = config.scene.instantiate()
+	next_scene.set("level_config", config)
+
+	var tree := get_tree()
+	var old_scene := tree.current_scene
+	if old_scene:
+		old_scene.queue_free()
+
+	tree.root.add_child(next_scene)
+	tree.current_scene = next_scene
 
 
 func _reset_run_state() -> void:
@@ -121,12 +128,6 @@ func set_game_state(state: GameState) -> void:
 			EventBus.game_paused.emit()
 		GameState.PLAYING:
 			EventBus.game_resumed.emit()
-		GameState.GAME_OVER:
-			timer_active = false
-
-
-func stop_level_timer() -> void:
-	timer_active = false
 
 
 func get_current_level() -> Resource:
@@ -142,10 +143,7 @@ func earn_one_up() -> void:
 
 
 func _on_level_completed() -> void:
-	timer_active = false
 	EventBus.music_stop_requested.emit()
-	var time_bonus := ceili(time_remaining) * 50
-	add_score(time_bonus)
 	set_game_state(GameState.LEVEL_COMPLETE)
 
 

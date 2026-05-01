@@ -4,7 +4,7 @@ extends CanvasLayer
 const SCORE_FORMAT: String = "%06d"
 # Coin counter is "x" followed by a zero-padded 2-digit number.
 const COIN_FORMAT: String = "x%02d"
-# When time_remaining drops at or below this threshold, the timer label
+# When the level timer drops at or below this threshold, the timer label
 # turns red to warn the player. Matches classic SMB "HURRY UP" cue.
 const LOW_TIME_WARNING: int = 100
 
@@ -26,7 +26,6 @@ func _ready() -> void:
 	_on_coins_changed(GameManager.coins)
 	var config := GameManager.get_current_level()
 	_on_level_started(config.display_name if config else "")
-	_on_time_tick(ceili(GameManager.time_remaining))
 
 
 func _on_score_changed(new_score: int) -> void:

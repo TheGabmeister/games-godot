@@ -27,9 +27,6 @@ func enter() -> void:
 
 	_target_x = _flagpole.global_position.x + CASTLE_OFFSET
 
-	# Stop the timer
-	GameManager.stop_level_timer()
-
 
 func exit() -> void:
 	player.set_physics_process(true)
