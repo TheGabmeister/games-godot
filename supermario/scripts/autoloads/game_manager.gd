@@ -7,6 +7,9 @@ enum GameState { TITLE, PLAYING, PAUSED, GAME_OVER, LEVEL_COMPLETE, TRANSITIONIN
 # .gd autoloads can't use @export, so game-wide config lives in a .tres editable in the inspector.
 const _config := preload("res://resources/config/game_config.tres")
 const _player_scene := preload("res://scenes/player/player.tscn")
+const _stage_clear_sound := preload("res://audio/sfx/stage_clear.wav")
+
+const LEVEL_CLEAR_DELAY: float = 2.0
 
 var score: int = 0
 var coins: int = 0
@@ -208,11 +211,21 @@ func _on_flagpole_reached(_height_ratio: float) -> void:
 
 
 func _on_level_completed() -> void:
+	if game_state == GameState.LEVEL_COMPLETE:
+		return
 	_stop_level_timer()
 	EventBus.music_stop_requested.emit()
+	EventBus.sfx_requested.emit(_stage_clear_sound)
 	var time_bonus := ceili(time_remaining) * 50
 	add_score(time_bonus)
 	set_game_state(GameState.LEVEL_COMPLETE)
+	_advance_after_level_clear()
+
+
+func _advance_after_level_clear() -> void:
+	await get_tree().create_timer(LEVEL_CLEAR_DELAY).timeout
+	if game_state == GameState.LEVEL_COMPLETE:
+		advance_to_next_level()
 
 
 func _power_state_name(state: PowerState) -> StringName:
