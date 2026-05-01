@@ -1,5 +1,15 @@
 extends Node
 
+signal battle_started(player_hp: int, player_max_hp: int, enemy_name: String, enemy_hp: int, enemy_max_hp: int)
+signal battle_ended
+signal atb_updated(value: float)
+signal command_ready_changed(is_ready: bool)
+signal player_hp_changed(current_hp: int, max_hp: int)
+signal enemy_hp_changed(enemy_name: String, current_hp: int, max_hp: int)
+signal damage_dealt(world_position: Vector2, amount: int, is_critical: bool)
+signal victory_achieved(exp_reward: int, gold_reward: int, tp_reward: int)
+signal player_defeated
+
 const ATB_SCALE := 0.02
 const PLAYER_MAX_HP := 70
 const PLAYER_POWER := 5
@@ -9,11 +19,9 @@ const PLAYER_STRIKE_PERCENT := 10.0
 const PLAYER_WEAPON_AP := 3
 
 @export var player_path: NodePath
-@export var battle_ui_path: NodePath
 @export var battle_music: AudioStream
 
 @onready var player: CharacterBody2D = get_node(player_path)
-@onready var battle_ui: CanvasLayer = get_node(battle_ui_path)
 
 var _enemy: Area2D
 var _enemy_data: Resource
@@ -28,7 +36,6 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
-	battle_ui.attack_selected.connect(_on_attack_selected)
 
 func _process(delta: float) -> void:
 	if GameState.current != GameState.State.BATTLE:
@@ -40,10 +47,10 @@ func _process(delta: float) -> void:
 
 	if not _player_command_ready:
 		_player_atb = minf(1.0, _player_atb + PLAYER_SPEED * delta * ATB_SCALE)
-		battle_ui.update_atb(_player_atb)
+		atb_updated.emit(_player_atb)
 		if _player_atb >= 1.0:
 			_player_command_ready = true
-			battle_ui.set_command_ready(true)
+			command_ready_changed.emit(true)
 
 	_enemy_atb = minf(1.0, _enemy_atb + _enemy_stat("speed") * delta * ATB_SCALE)
 	if _enemy_atb >= 1.0:
@@ -66,7 +73,7 @@ func start_battle(enemy: Area2D) -> void:
 
 	_enemy.set_battle_collision_enabled(false)
 	GameState.change(GameState.State.BATTLE)
-	battle_ui.start_battle(_player_hp, PLAYER_MAX_HP, _enemy_name(), _enemy_hp, _enemy_stat("max_hp"))
+	battle_started.emit(_player_hp, PLAYER_MAX_HP, _enemy_name(), _enemy_hp, _enemy_stat("max_hp"))
 	MusicManager.play_music(battle_music)
 
 func _on_attack_selected() -> void:
@@ -77,7 +84,7 @@ func _on_attack_selected() -> void:
 
 	_player_command_ready = false
 	_player_atb = 0.0
-	battle_ui.update_atb(_player_atb)
+	atb_updated.emit(_player_atb)
 	_player_attack()
 
 func _player_attack() -> void:
@@ -101,7 +108,7 @@ func _calculate_damage(power: int, weapon_ap: int, stamina: int, strike_percent:
 
 func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critical: bool, player_is_attacker: bool) -> void:
 	_animating = true
-	battle_ui.set_command_ready(false)
+	command_ready_changed.emit(false)
 
 	attacker.play_attack()
 
@@ -117,16 +124,16 @@ func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critic
 
 	if player_is_attacker:
 		_enemy_hp = max(0, _enemy_hp - damage)
-		battle_ui.update_enemy_hp(_enemy_name(), _enemy_hp, _enemy_stat("max_hp"))
+		enemy_hp_changed.emit(_enemy_name(), _enemy_hp, _enemy_stat("max_hp"))
 	else:
 		_player_hp = max(0, _player_hp - damage)
-		battle_ui.update_player_hp(_player_hp, PLAYER_MAX_HP)
+		player_hp_changed.emit(_player_hp, PLAYER_MAX_HP)
 
 	target.play_hit(direction)
 	var flash_effect := target.get_node_or_null("FlashEffect")
 	if flash_effect:
 		flash_effect.flash()
-	battle_ui.spawn_damage_number(target.global_position, damage, critical)
+	damage_dealt.emit(target.global_position, damage, critical)
 	await get_tree().create_timer(0.3).timeout
 
 	var retreat := create_tween()
@@ -141,7 +148,7 @@ func _play_attack_sequence(attacker: Node2D, target: Node2D, damage: int, critic
 	_animating = false
 	_check_battle_end()
 	if not _battle_finished and _player_command_ready:
-		battle_ui.set_command_ready(true)
+		command_ready_changed.emit(true)
 
 func _check_battle_end() -> void:
 	if _battle_finished:
@@ -154,14 +161,13 @@ func _check_battle_end() -> void:
 
 func _victory() -> void:
 	_battle_finished = true
-	battle_ui.set_command_ready(false)
+	command_ready_changed.emit(false)
 	MusicManager.stop_music()
 	if is_instance_valid(_enemy):
 		await _enemy.play_death()
-	battle_ui.show_results(_enemy_stat("exp_reward"), _enemy_stat("gold_reward"), _enemy_stat("tp_reward"))
+	victory_achieved.emit(_enemy_stat("exp_reward"), _enemy_stat("gold_reward"), _enemy_stat("tp_reward"))
 	await get_tree().create_timer(2.0).timeout
-	battle_ui.hide_results()
-	battle_ui.end_battle()
+	battle_ended.emit()
 	if is_instance_valid(_enemy):
 		_enemy.queue_free()
 	_enemy = null
@@ -170,7 +176,7 @@ func _victory() -> void:
 
 func _game_over() -> void:
 	_battle_finished = true
-	battle_ui.show_game_over()
+	player_defeated.emit()
 	MusicManager.stop_music()
 	await get_tree().create_timer(2.0).timeout
 	get_tree().reload_current_scene()

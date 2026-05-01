@@ -136,12 +136,12 @@ autowrap_mode = 2
 [node name="BattleManager" type="Node" parent="." unique_id=1840860702]
 script = ExtResource("9")
 player_path = NodePath("../Player")
-battle_ui_path = NodePath("../BattleUI")
 battle_music = ExtResource("13")
 
 [node name="BattleUI" type="CanvasLayer" parent="." unique_id=1160812227]
 layer = 20
 script = ExtResource("10")
+battle_manager_path = NodePath("../BattleManager")
 
 [node name="Root" type="Control" parent="BattleUI" unique_id=1740130647]
 layout_mode = 3
