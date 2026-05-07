@@ -1,11 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:chrono.fandom.com)",
+      "Bash(rm -rf *)",
+      "mcp__blender__get_scene_info",
+      "mcp__blender__execute_python",
       "WebSearch",
-      "WebFetch(domain:en.wikibooks.org)",
-      "WebFetch(domain:almarsguides.com)",
-      "WebFetch(domain:www.arrpeegeez.com)",
+      "WebFetch",
       "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/player/crono_sheet.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/player/crono_sheet.png -w 256 -h 32)",
       "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/npc/npc_sheet.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/npc/npc_sheet.png -w 256 -h 32)",
       "Bash(\"/c/Program Files/Inkscape/bin/inkscape.exe\" c:/dev/games-godot/chrono-trigger/props/floor.svg --export-type=png --export-filename=c:/dev/games-godot/chrono-trigger/props/floor.png -w 32 -h 32)",
