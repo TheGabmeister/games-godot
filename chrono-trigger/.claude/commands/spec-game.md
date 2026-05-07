@@ -1,6 +1,6 @@
 # Game Spec Research & Writing
 
-Research a game's gameplay mechanics and write a comprehensive systems-level spec document. The spec describes the game's design surface — features, systems, characters, items, enemies, story structure — without any code, engine specifics, or implementation details.
+Research a game's gameplay mechanics and write a comprehensive systems-level spec document — no code, no engine specifics, no implementation details.
 
 ## Input
 
@@ -8,21 +8,35 @@ $ARGUMENTS
 
 If no game is specified, ask the user which game to research.
 
-## Process
+## Research Sources
 
-1. **Research the game thoroughly** using web search. Focus on:
-   - Official wikis (Fandom, dedicated wikis)
-   - Strategy wikis (StrategyWiki, etc.)
-   - Community FAQs (GameFAQs)
-   - Mechanics guides and formula breakdowns
-   - Speedrun/datamining communities for verified numbers
-   - Public GitHub/GitLab repositories — search for decompilations, reverse-engineered source code, or fan recreations that expose internal mechanics
+Search thoroughly across these sources before writing:
+- Official wikis (Fandom, dedicated wikis)
+- Strategy wikis (StrategyWiki, etc.)
+- Community FAQs (GameFAQs)
+- Mechanics guides and formula breakdowns
+- Speedrun/datamining communities for verified numbers
+- Public GitHub/GitLab repositories — decompilations, reverse-engineered source code, or fan recreations that expose internal mechanics
 
-2. **Write the spec** as a single markdown file at the project root named `SPEC_<GAME_NAME>.md` (e.g., `SPEC_FINAL_FANTASY_6.md`). Use snake_case, uppercase, with spaces replaced by underscores.
+## Writing Rules
 
-## Spec Structure
+- **Systems-level only.** Describe WHAT the game does, not HOW to build it. No code, no engine details, no node trees, no implementation choices.
+- **Be specific with numbers.** Include stat values, damage formulas, level caps, item counts, frame data — whatever the community has verified.
+- **Use the game's own terminology.** Character names, ability names, status effect names — use the canonical names from the game.
+- **Platform matters.** Note which version you're speccing (SNES, PS1, remaster, etc.) and call out version differences that affect mechanics.
+- **Tables for structured data.** Weapon lists, character stats, enemy tables — use markdown tables.
+- **Cross-reference within the doc.** Use `§N` notation to reference other sections.
+- **Note uncertainty.** If sources conflict or numbers aren't verified, flag it in the Open Questions section.
+- **Separate companion docs for large data sets.** If a section would exceed ~200 lines of tables (e.g., full bestiary, full equipment list), put it in a companion file like `docs/<game>/bestiary.md`.
+- **Aim for completeness on the game's core identity.** A Final Fantasy spec needs exhaustive job/ability coverage. A Metroidvania spec needs exhaustive ability-gate coverage. A roguelike spec needs exhaustive item/synergy coverage. Identify what makes the game tick and go deep there.
 
-Follow this section outline (adapt subsections to fit the game — not every game has every system):
+## Output
+
+Single markdown file at the project root: `SPEC.md`.
+
+## Spec Template
+
+Use this outline. Include only sections that apply to the game. Pick relevant genre-specific sections and weave them into the numbered structure where they fit naturally (don't dump them at the end as a separate block).
 
 ```
 # <Game Title> — Gameplay Systems Spec
@@ -102,7 +116,19 @@ Follow this section outline (adapt subsections to fit the game — not every gam
 - Shared vs. separate progression
 - Matchmaking/lobby systems
 
-## Genre-Specific Sections (include whichever apply)
+## 12. Open Questions / Unverified
+- Mechanics where community sources conflict
+- Exact formulas or numbers not yet pinned down
+- Areas needing ROM/datamine verification
+
+## 13. References
+- Links to wikis, FAQs, and guides used
+- Organized by source type
+```
+
+## Genre-Specific Sections
+
+When the game fits one of these genres, integrate these topics into the numbered sections above (typically into §1 Core Gameplay Systems or as their own numbered section if large enough).
 
 ### FPS / Third-Person Shooter
 - Weapon handling: recoil patterns, spread, damage falloff, fire rate, reload times
@@ -194,25 +220,3 @@ Follow this section outline (adapt subsections to fit the game — not every gam
 - Transfer/draft/trade mechanics
 - Training and player development
 - Physics or simulation fidelity model
-
-## 12. Open Questions / Unverified
-- Mechanics where community sources conflict
-- Exact formulas or numbers not yet pinned down
-- Areas needing ROM/datamine verification
-
-## 13. References
-- Links to wikis, FAQs, and guides used
-- Organized by source type
-```
-
-## Writing Guidelines
-
-- **Systems-level only.** Describe WHAT the game does, not HOW to build it. No code, no engine details, no node trees, no implementation choices.
-- **Be specific with numbers.** Include stat values, damage formulas, level caps, item counts, frame data — whatever the community has verified. Use tables for structured data.
-- **Note uncertainty.** If sources conflict or numbers aren't verified, say so in §13.
-- **Use the game's own terminology.** Character names, ability names, status effect names — use the canonical names from the game.
-- **Platform matters.** Note which version you're speccing (SNES, PS1, remaster, etc.) and call out version differences that affect mechanics.
-- **Tables for structured data.** Weapon lists, character stats, enemy tables — use markdown tables.
-- **Cross-reference within the doc.** Use `§N` notation to reference other sections.
-- **Separate companion docs for large data sets.** If a section would exceed ~200 lines of tables (e.g., full bestiary, full equipment list, full tech list), note that it belongs in a companion file like `docs/<game>/bestiary.md` and create that file too.
-- **Aim for completeness on the game's core identity.** A Final Fantasy spec needs exhaustive job/ability coverage. A Metroidvania spec needs exhaustive ability-gate coverage. A roguelike spec needs exhaustive item/synergy coverage. Identify what makes the game tick and go deep there.
