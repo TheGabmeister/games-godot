@@ -27,7 +27,7 @@ Search thoroughly across these sources before writing:
 - **Tables for structured data.** Weapon lists, character stats, enemy tables — use markdown tables.
 - **Cross-reference within the doc.** Use `§N` notation to reference other sections.
 - **Note uncertainty.** If sources conflict or numbers aren't verified, flag it in the Open Questions section.
-- **Separate companion docs for large data sets.** If a section would exceed ~200 lines of tables (e.g., full bestiary, full equipment list), put it in a companion file like `docs/<game>/bestiary.md`.
+- **Separate companion docs for large data sets.** If a section would exceed ~200 lines of tables, split it into a companion file like `docs/<game>/weapons.md`. Link to companion files from the main spec section that references them, and list them in the References section.
 - **Aim for completeness on the game's core identity.** A Final Fantasy spec needs exhaustive job/ability coverage. A Metroidvania spec needs exhaustive ability-gate coverage. A roguelike spec needs exhaustive item/synergy coverage. Identify what makes the game tick and go deep there.
 
 ## Output
@@ -36,7 +36,7 @@ Single markdown file at the project root: `SPEC.md`.
 
 ## Spec Template
 
-Use this outline. Include only sections that apply to the game. Pick relevant genre-specific sections and weave them into the numbered structure where they fit naturally (don't dump them at the end as a separate block).
+Use this outline. **Skip sections that don't apply** — not every game has enemies, an economy, or multiplayer. Pick relevant genre-specific sections and weave them into the numbered structure where they fit naturally (don't dump them at the end as a separate block).
 
 ```
 # <Game Title> — Gameplay Systems Spec
@@ -47,50 +47,46 @@ Use this outline. Include only sections that apply to the game. Pick relevant ge
 
 ## 1. Core Gameplay Systems
 - Primary gameplay loop (combat, exploration, building, etc.)
-- Battle/combat system (if applicable): turn structure, action economy, targeting, party size
+- Combat system (if applicable): turn structure, action economy, targeting
 - Movement/traversal mechanics
-- Progression systems: leveling, skill trees, upgrades
+- Progression systems: leveling, upgrades, unlocks
 - Resource management (HP, MP, stamina, ammo, etc.)
 
-## 2. World Structure
+## 2. Controls & Input
+- Full input map / control scheme (per platform if multi-platform)
+- Context-sensitive inputs (aiming modes, vehicle controls, menu navigation)
+- Accessibility options or remapping
+
+## 3. World Structure
 - World layout (overworld, zones, procedural, etc.)
 - Area types and how they connect
 - Travel/fast-travel mechanics
 - Time/day-night/weather systems if present
 - Locked progression and gating mechanics
 
-## 3. Playable Characters / Classes
+## 4. Playable Characters / Classes
 - Full roster with roles, stats, unique mechanics
-- Character-specific abilities or skill sets
-- Recruitment/unlock conditions
-- Party composition rules and constraints
+- Character-specific abilities or move sets
+- Unlock conditions
 
-## 4. Story & Progression
+## 5. Story & Progression
 - Main story structure (acts, chapters, beats)
 - Key branching points or player choices
 - Side quests and optional content
 - Multiple endings (if applicable)
 - New Game+ or post-game content
 
-## 5. Items & Equipment
+## 6. Items & Equipment
 - Equipment slots and categories
 - Weapon/armor stat schemas
 - Consumables and key items
 - Crafting or upgrade systems
 - Unique/legendary items and how to obtain them
 
-## 6. Abilities / Skills / Magic
-- Skill/magic system structure
-- Learning/unlocking mechanics
-- Combo or synergy systems
-- Resource costs (MP, cooldowns, charges)
-- Elemental or type systems
-
-## 7. Enemies & Bosses
-- Enemy categorization (by area, type, tier)
-- Common enemy behaviors and mechanics
-- Boss design patterns (phases, gimmicks, counters)
-- Bestiary structure
+## 7. Enemies & Opponents
+- Enemy types and behavioral patterns
+- Boss design (phases, gimmicks, counters, weak points)
+- Difficulty scaling across encounters
 
 ## 8. Economy
 - Currencies
@@ -105,9 +101,9 @@ Use this outline. Include only sections that apply to the game. Pick relevant ge
 
 ## 10. UI & HUD
 - HUD layout: what's on screen during gameplay and where (health, ammo, minimap, compass, meters, status icons)
-- HUD states: how the HUD changes based on game state (combat, stealth, menus, cutscenes, alert phases)
-- In-game indicators: damage numbers, enemy awareness markers, interaction prompts, waypoints
-- Menu screens: pause menu, inventory, map, settings, skill trees — structure and navigation
+- HUD states: how the HUD changes based on game state (combat, stealth, menus, cutscenes)
+- In-game indicators: damage numbers, awareness markers, interaction prompts, waypoints
+- Menu screens: pause menu, inventory, map, settings — structure and navigation
 - Boss/enemy health bars: when visible, how they display phases or armor
 - Contextual UI: button prompts, QTE indicators, tutorial overlays, notification popups
 
@@ -118,24 +114,29 @@ Use this outline. Include only sections that apply to the game. Pick relevant ge
 - Camera behavior
 - Audio/music system behavior (not the music itself, but how it functions)
 
-## 12. Multiplayer (if applicable)
-- Co-op/competitive structure
-- Shared vs. separate progression
-- Matchmaking/lobby systems
-
-## 13. Open Questions / Unverified
+## 12. Open Questions / Unverified
 - Mechanics where community sources conflict
 - Exact formulas or numbers not yet pinned down
 - Areas needing ROM/datamine verification
 
-## 14. References
+## 13. References
 - Links to wikis, FAQs, and guides used
+- Links to companion doc files created for this spec
 - Organized by source type
 ```
 
 ## Genre-Specific Sections
 
-When the game fits one of these genres, integrate these topics into the numbered sections above (typically into §1 Core Gameplay Systems or as their own numbered section if large enough).
+When the game fits one or more of these genres, integrate the relevant topics into the numbered sections above — either as subsections within an existing section or as their own numbered section if large enough.
+
+### RPG / Action-RPG
+- Party system: recruitment conditions, party size, composition rules, swap mechanics
+- Stat system: per-character stats, growth tables, level cap, stat-boost consumables
+- Elemental or type system: elements, resistances, absorption, weakness multipliers
+- Ability/magic system: skill trees, spell lists, learning mechanics (TP, level, quest), MP/resource costs
+- Combo/synergy abilities: dual techs, combo spells, prerequisites
+- Bestiary: enemy catalog organized by area/era, stat tables (HP, EXP, drops, weaknesses, charm/steal)
+- Status effects: buffs and debuffs, durations, immunities, cure methods
 
 ### FPS / Third-Person Shooter
 - Weapon handling: recoil patterns, spread, damage falloff, fire rate, reload times
@@ -227,3 +228,8 @@ When the game fits one of these genres, integrate these topics into the numbered
 - Transfer/draft/trade mechanics
 - Training and player development
 - Physics or simulation fidelity model
+
+### Multiplayer (if applicable)
+- Co-op/competitive structure
+- Shared vs. separate progression
+- Matchmaking/lobby systems
