@@ -103,25 +103,32 @@ Use this outline. Include only sections that apply to the game. Pick relevant ge
 - Rewards that feed back into main systems
 - Collection/completion systems
 
-## 10. Engine & Presentation Systems
+## 10. UI & HUD
+- HUD layout: what's on screen during gameplay and where (health, ammo, minimap, compass, meters, status icons)
+- HUD states: how the HUD changes based on game state (combat, stealth, menus, cutscenes, alert phases)
+- In-game indicators: damage numbers, enemy awareness markers, interaction prompts, waypoints
+- Menu screens: pause menu, inventory, map, settings, skill trees — structure and navigation
+- Boss/enemy health bars: when visible, how they display phases or armor
+- Contextual UI: button prompts, QTE indicators, tutorial overlays, notification popups
+
+## 11. Engine & Presentation Systems
 - Dialogue/conversation system
 - Save system
 - Difficulty settings
-- UI/menu structure
 - Camera behavior
 - Audio/music system behavior (not the music itself, but how it functions)
 
-## 11. Multiplayer (if applicable)
+## 12. Multiplayer (if applicable)
 - Co-op/competitive structure
 - Shared vs. separate progression
 - Matchmaking/lobby systems
 
-## 12. Open Questions / Unverified
+## 13. Open Questions / Unverified
 - Mechanics where community sources conflict
 - Exact formulas or numbers not yet pinned down
 - Areas needing ROM/datamine verification
 
-## 13. References
+## 14. References
 - Links to wikis, FAQs, and guides used
 - Organized by source type
 ```
