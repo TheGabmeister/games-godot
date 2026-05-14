@@ -1,17 +1,12 @@
 extends PlayerState
 
-const SpinJumpScript: GDScript = preload("res://scripts/player/states/spin_jump_state.gd")
-
 
 func enter() -> void:
-	player.set_collision_shape("standing")
+	player.set_collision_shape(PlayerConsts.SHAPE_STANDING)
 	player.set_sprite_mode(false)
-	player.player_sprite.play("spin_jump")
+	player.player_sprite.play(PlayerConsts.ANIM_SPIN_JUMP)
 
-	var wall_dir := Vector2.ZERO
-	var spin_state: PlayerState = state_machine.states.get("spinjump")
-	if spin_state is SpinJumpScript:
-		wall_dir = spin_state.wall_normal
+	var wall_dir := player.last_wall_normal
 
 	player.velocity.y = player.wall_jump_velocity.y
 	if wall_dir != Vector2.ZERO:
@@ -20,7 +15,7 @@ func enter() -> void:
 	else:
 		player.velocity.x = player.facing_direction * player.wall_jump_velocity.x
 
-	state_machine.transition_to("spinjump")
+	state_machine.transition_to(PlayerConsts.STATE_SPIN_JUMP)
 
 
 func update(_delta: float) -> void:

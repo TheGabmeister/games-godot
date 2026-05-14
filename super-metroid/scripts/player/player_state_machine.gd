@@ -14,7 +14,7 @@ func init(p: Player) -> void:
 			states[state.name.to_lower()] = state
 			state.player = player
 			state.state_machine = self
-	transition_to("idle")
+	transition_to(PlayerConsts.STATE_IDLE)
 
 
 func handle_input(event: InputEvent) -> void:

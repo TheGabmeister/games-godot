@@ -61,11 +61,11 @@ func set_collision_shape(shape_name: String) -> void:
 	crouching_shape.disabled = true
 	morph_ball_shape.disabled = true
 	match shape_name:
-		"standing":
+		PlayerConsts.SHAPE_STANDING:
 			standing_shape.disabled = false
-		"crouching":
+		PlayerConsts.SHAPE_CROUCHING:
 			crouching_shape.disabled = false
-		"morph_ball":
+		PlayerConsts.SHAPE_MORPH_BALL:
 			morph_ball_shape.disabled = false
 
 
@@ -73,7 +73,7 @@ func set_sprite_mode(is_morph_ball: bool) -> void:
 	player_sprite.visible = not is_morph_ball
 	morph_ball_sprite.visible = is_morph_ball
 	if is_morph_ball:
-		morph_ball_sprite.play("roll")
+		morph_ball_sprite.play(PlayerConsts.ANIM_ROLL)
 	else:
 		player_sprite.stop()
 
