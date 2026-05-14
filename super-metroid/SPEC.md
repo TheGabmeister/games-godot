@@ -25,44 +25,25 @@ Combat is real-time, integrated into exploration. Samus can fire her arm cannon 
 
 **Aiming directions:** Left, Right, Up, Diagonal-Up-Left, Diagonal-Up-Right, Diagonal-Down-Left, Diagonal-Down-Right, Down (air only).
 
-**Weapon types:**
-- **Beams** — infinite ammo, can be charged. Multiple beam types stack (§6.1)
-- **Missiles** — limited ammo, high single-target damage
-- **Super Missiles** — limited ammo, very high damage, opens green doors
-- **Power Bombs** — limited ammo, screen-clearing explosions, opens yellow doors
-- **Bombs** — infinite use in Morph Ball form, small blast radius
+**Weapon categories:** Beams (infinite ammo, chargeable, stackable — §6.1), Missiles and Super Missiles (limited ammo projectiles — §6.6), Bombs and Power Bombs (Morph Ball explosives — §6.6), and utility items like the Grapple Beam and X-Ray Scope (§6.5).
 
-**Damage to Samus:** Contact with enemies and environmental hazards depletes energy. Suit upgrades provide damage reduction (§6.3). When energy reaches zero, Reserve Tanks activate (if set to Auto) or the game ends.
+**Damage to Samus:** Contact with enemies and environmental hazards depletes energy. Suit upgrades provide damage reduction (§6.3). When energy reaches zero, Reserve Tanks activate (if set to Auto — §6.7) or the game ends.
 
 ### 1.3 Resource Management
 
-| Resource | Starting | Maximum | Refill Method |
+| Resource | Starting | Maximum | Refill Sources |
 |---|---|---|---|
-| Energy | 99 | 1,499 (99 base + 14 × 100) | Enemy drops, Recharge Stations, Gunship |
-| Reserve Energy | 0 | 400 (4 × 100) | Energy pickups when main tanks are full |
-| Missiles | 0 | 230 (46 × 5) | Enemy drops, Gunship |
-| Super Missiles | 0 | 50 (10 × 5) | Enemy drops, Gunship |
-| Power Bombs | 0 | 50 (10 × 5) | Enemy drops, Gunship |
+| Energy | 99 | 1,499 | Enemy drops, Recharge Stations, Gunship |
+| Reserve Energy | 0 | 400 | Energy pickups (only when main energy is full) |
+| Missiles | 0 | 230 | Enemy drops, Missile Recharge, Gunship |
+| Super Missiles | 0 | 50 | Enemy drops, Missile Recharge, Gunship |
+| Power Bombs | 0 | 50 | Enemy drops, Missile Recharge, Gunship |
 
-**Enemy drops:** Destroyed enemies randomly drop small energy (5), large energy (20), Missiles (2), Super Missiles (1), or Power Bombs (1). Drop tables vary by enemy type.
-
-**Item pickups:** Scattered throughout the world as permanent collectibles in Chozo Statue pedestals or freestanding orbs.
+See §6.7 for expansion pickup counts and §7.3 for enemy drop tables.
 
 ### 1.4 Progression
 
-Progression is gated by equipment (§3.3). Defeating the four main bosses — Kraid, Phantoon, Draygon, and Ridley — unlocks the path to the final area, Tourian. The game tracks item collection percentage on the file select screen.
-
-**100% completion** requires collecting all 100 items:
-
-| Category | Count |
-|---|---|
-| Missile Expansions | 46 |
-| Super Missile Expansions | 10 |
-| Power Bomb Expansions | 10 |
-| Energy Tanks | 14 |
-| Reserve Tanks | 4 |
-| Unique Equipment | 16 |
-| **Total** | **100** |
+Progression is gated by equipment (§3.3). Defeating the four main bosses — Kraid, Phantoon, Draygon, and Ridley — unlocks the path to the final area, Tourian. The game tracks item collection percentage on the file select screen. 100% completion requires collecting all 100 items (§6.7).
 
 ---
 
@@ -131,6 +112,7 @@ Progression is gated by abilities that open new traversal options and door/barri
 | Green | 1 Super Missile | Permanently becomes blue after opening |
 | Yellow | 1 Power Bomb | Permanently becomes blue after opening |
 | Gray | N/A | Locked until a room condition is met (e.g., all enemies killed) |
+| Eye | Shoot the eye with Missiles/Supers | Organic barrier in Tourian. Opens when hit, closes permanently behind Samus |
 | Metal | Indestructible | Permanent wall; cannot be opened |
 
 **Gate Switches:**
@@ -219,7 +201,11 @@ Wall jumps can be chained between two walls or repeated on a single wall (with p
 
 **Aerial Shinespark:** While spin-jumping with a stored charge, release Jump, press Up, then hold Jump + direction to launch from mid-air.
 
-### 4.6 Underwater Movement
+### 4.6 Mockball
+
+The Mockball is an advanced technique that preserves running speed through a Morph Ball transition. Normally, entering Morph Ball kills horizontal momentum. By pressing Down to morph during the landing frames of a jump while at dash speed, Samus rolls at full running speed. This allows passing through Morph Ball tunnels at Speed Booster velocity and is a key tool for early sequence breaks — notably reaching the early Super Missiles in Brinstar without defeating Spore Spawn.
+
+### 4.7 Underwater Movement
 
 Without the Gravity Suit, water drastically reduces movement speed and jump height. Samus cannot Space Jump or Speed Boost underwater without the Gravity Suit. The Gravity Suit removes all water physics penalties.
 
@@ -232,7 +218,7 @@ Without the Gravity Suit, water drastically reduces movement speed and jump heig
 The game is divided into three acts with no explicit chapter markers — progression is continuous and player-driven.
 
 **Prologue — Space Colony Ceres:**
-Samus arrives at Ceres Station to find the researchers dead and the baby Metroid (the last Metroid, entrusted to Samus in Metroid II) stolen by Ridley. A brief encounter with Ridley triggers a self-destruct sequence. Samus escapes to her ship.
+Samus arrives at Ceres Station to find the researchers dead and the baby Metroid (the last Metroid, entrusted to Samus in Metroid II) stolen by Ridley. A brief encounter with Ridley triggers a 1-minute self-destruct countdown. Samus escapes to her ship. The Ceres Ridley fight is designed to be unwinnable — the station explodes before enough damage can be dealt under normal play.
 
 **Main Game — Planet Zebes:**
 Samus descends to Zebes to recover the baby Metroid and eliminate the Space Pirate threat. The four main bosses guard the path to Tourian:
@@ -244,11 +230,23 @@ Samus descends to Zebes to recover the baby Metroid and eliminate the Space Pira
 All four must be defeated to unlock Tourian's entrance.
 
 **Finale — Tourian:**
-A linear gauntlet of Metroids leads to Mother Brain. The fight has three phases (§7.2). After Mother Brain is defeated, a 3-minute countdown begins. Samus must escape to her Gunship on the surface before Zebes is destroyed. During the escape, Samus can optionally rescue the Etecoons and Dachoras.
+A linear gauntlet of Metroids leads to Mother Brain through rooms sealed by Eye Doors (organic barriers that open when shot in the eye, then permanently close behind Samus). The Mother Brain fight has three phases (§7.2). After Mother Brain is defeated, a 3-minute countdown begins. Samus must escape from Tourian upward through Crateria to the Gunship. During the escape:
+- Previously locked gray doors are open
+- The screen shakes periodically
+- A hidden path leads to the Etecoons and Dachoras — rescuing them is optional but acknowledged in the ending (they are seen flying away from Zebes)
+- If the timer expires, Samus dies and the game returns to the title screen
 
 ### 5.2 Endings
 
-The ending varies based on completion time and item percentage. Faster completion times and higher item percentages reveal more of Samus without her suit in the ending screen. There are no branching story paths or alternate narrative endings.
+The ending image varies based on completion time. All endings show the same narrative — there are no branching story paths. Faster times reveal more of Samus without her Power Suit:
+
+| Completion Time | Ending |
+|---|---|
+| ≥10 hours | Samus in full suit, helmet on |
+| 3–10 hours | Samus removes helmet |
+| <3 hours | Samus in civilian clothes |
+
+Item collection percentage is displayed on the ending screen but does not affect the ending image.
 
 ### 5.3 Environmental Storytelling
 
@@ -310,6 +308,17 @@ Only one non-Charge beam may be active for the combo to trigger.
 
 Gravity Suit's damage reduction does **not** stack with Varia — Gravity alone provides ×0.25. Two exceptions: the Super Metroid's energy drain and Mother Brain's rainbow beam only receive the Varia Suit reduction, not Gravity.
 
+**Environmental damage (per 4 frames):**
+
+| Hazard | Power Suit | Varia | Gravity | Notes |
+|---|---|---|---|---|
+| Heated rooms | 1 | 0 | 0 | Norfair only. No suit reduction — Varia/Gravity grant full immunity |
+| Lava (upper) | 2 | 1 | 0 | Upper Norfair. Gravity Suit grants immunity |
+| Lava (lower) | 8 | 4 | 2 | Lower Norfair. Always damages, even with Gravity |
+| Acid | 4 | 2 | 1 | Rare. Standard suit reduction applies |
+| Spikes (weak) | 16 | 8 | 4 | Per contact |
+| Spikes (strong) | 60 | 30 | 15 | Per contact |
+
 ### 6.4 Movement Upgrades
 
 | Upgrade | Location | Effect |
@@ -329,17 +338,7 @@ Gravity Suit's damage reduction does **not** stack with Varia — Gravity alone 
 | Grapple Beam | Norfair | Fires an electric tether to Grapple points. Samus swings from the point. Deals 20 damage to enemies. Can be used on Draygon's destroyed turrets for an instant kill |
 | X-Ray Scope | Brinstar | Reveals hidden passages, breakable blocks, and items within line of sight. Samus is stationary while scanning |
 
-### 6.6 Ammo & Energy Expansions
-
-| Expansion | Per Pickup | Total Pickups | Maximum |
-|---|---|---|---|
-| Missile Expansion | +5 Missiles | 46 | 230 |
-| Super Missile Expansion | +5 Super Missiles | 10 | 50 |
-| Power Bomb Expansion | +5 Power Bombs | 10 | 50 |
-| Energy Tank | +100 Energy | 14 | 1,499 (99 base + 1,400) |
-| Reserve Tank | +100 Reserve Energy | 4 | 400 |
-
-### 6.7 Sub-Weapons
+### 6.6 Sub-Weapons
 
 | Weapon | Damage | Notes |
 |---|---|---|
@@ -348,7 +347,21 @@ Gravity Suit's damage reduction does **not** stack with Varia — Gravity alone 
 | Bombs | 30 | Morph Ball only. 3-second fuse. Max 3 active. Propels Samus upward on detonation |
 | Power Bombs | 200 | Morph Ball only. Screen-wide explosion. Opens yellow doors. Can hit twice on large enemies. Reveals hidden passages |
 
-### 6.8 Crystal Flash
+### 6.7 Expansions & Totals
+
+| Expansion | Per Pickup | Count | Maximum |
+|---|---|---|---|
+| Missile Expansion | +5 | 46 | 230 |
+| Super Missile Expansion | +5 | 10 | 50 |
+| Power Bomb Expansion | +5 | 10 | 50 |
+| Energy Tank | +100 Energy | 14 | 1,499 (99 base + 1,400) |
+| Reserve Tank | +100 Reserve | 4 | 400 |
+| Unique Equipment | — | 16 | — |
+| **Total Items** | | **100** | |
+
+**Reserve Tank modes:** Reserve Tanks can be set to Auto or Manual via the pause screen. In **Auto** mode, all reserve energy is dumped into main energy when it hits zero, preventing death. In **Manual** mode, the player activates reserves from the pause screen and can partially drain them by pressing Up during the refill. Reserve Tanks only charge from energy pickups when all main Energy Tanks are full.
+
+### 6.8 Crystal Flash (Secret Technique)
 
 A secret emergency healing technique:
 
@@ -364,7 +377,7 @@ A secret emergency healing technique:
 
 ### 7.1 Regular Enemies
 
-Enemies populate every area of Zebes. They respawn when Samus re-enters a room. All damage values below are for Power Suit (no suit upgrades); Varia Suit halves these values, Gravity Suit quarters them.
+Enemies populate every area of Zebes. They respawn when Samus re-enters a room. All damage values below are for Power Suit; see §6.3 for suit damage reduction.
 
 **Representative enemies by area:**
 
@@ -434,13 +447,7 @@ Drop probabilities vary by enemy. Some enemies have modified tables (e.g., enemi
 
 ---
 
-## 8. Economy
-
-Super Metroid has no currency, shops, or trading system. All upgrades are found in the world as permanent pickups. Resource management is limited to ammo conservation and energy management through enemy farming and station use.
-
----
-
-## 9. Stations & World Services
+## 8. Stations & World Services
 
 | Station Type | Function | Map Symbol |
 |---|---|---|
@@ -452,9 +459,9 @@ Super Metroid has no currency, shops, or trading system. All upgrades are found 
 
 ---
 
-## 10. UI & HUD
+## 9. UI & HUD
 
-### 10.1 HUD Layout
+### 9.1 HUD Layout
 
 The HUD occupies a horizontal bar across the top of the screen (the gameplay area is below, with a thin black border at the top).
 
@@ -469,14 +476,14 @@ The HUD occupies a horizontal bar across the top of the screen (the gameplay are
 **Right section:**
 - Mini-map showing Samus's position within the current area grid
 
-### 10.2 HUD States
+### 9.2 HUD States
 
 - **Normal gameplay:** Full HUD visible
 - **Low energy alarm:** When energy ≤29, a rapid beeping alarm sounds and the energy counter flashes. This alarm is a key narrative trigger (the baby Metroid recognizes Samus by this sound)
 - **Pause screen (Start):** Full area map with collected items marked, room layouts, and station locations
 - **Item screen:** Toggle to equipment sub-screen from pause to enable/disable beams, suits, and movement upgrades individually
 
-### 10.3 Map System
+### 9.3 Map System
 
 Each area has its own map grid. Rooms are color-coded:
 - **Pink:** Explored rooms
@@ -487,24 +494,21 @@ Item dots appear on the map for rooms containing uncollected items (visible only
 
 ---
 
-## 11. Engine & Presentation Systems
+## 10. Engine & Presentation Systems
 
-### 11.1 Save System
+### 10.1 Save System
 
-- Game progress is saved exclusively at Save Stations or the Gunship
-- Three save file slots
-- Save data records: Samus's position, all collected items, defeated bosses, opened doors, and play time
-- No auto-save or checkpoint system — death returns to last save with all progress since that save lost
+Three save file slots. Progress is saved at Save Stations or the Gunship (§8). Save data records Samus's position, all collected items, defeated bosses, opened doors, and play time. No auto-save or checkpoint system — death returns to last save with all progress since lost.
 
-### 11.2 Difficulty
+### 10.2 Difficulty
 
 There is no difficulty selection. The game has a single fixed difficulty. Challenge scales through world design — later areas have more dangerous enemies and more complex navigation.
 
-### 11.3 Camera
+### 10.3 Camera
 
 The camera follows Samus with smooth scrolling. In large rooms, the camera pans to keep Samus roughly centered. In small rooms (1 screen), the camera is fixed. Doors trigger a screen-transition scroll to the adjacent room. The camera does not reveal rooms ahead of Samus — exploration is blind until a room is entered.
 
-### 11.4 Music System
+### 10.4 Music System
 
 Each area has a distinct music theme that plays on a loop. Music changes are triggered by:
 - Entering a new area (via elevator or transition)
@@ -514,28 +518,19 @@ Each area has a distinct music theme that plays on a loop. Music changes are tri
 
 The low-energy alarm overlays on top of the current music track.
 
-### 11.5 Escape Sequence
-
-After defeating Mother Brain Phase 3, a 3-minute countdown begins. The escape route runs from Tourian upward through Crateria to the Gunship. During the escape:
-- The screen shakes periodically
-- Previously locked gray doors are now open
-- A hidden path leads to the Etecoons and Dachoras room — rescuing them is optional but acknowledged in the ending (they are seen flying away from Zebes)
-- If the timer expires, Samus dies and the game returns to the title screen
-
 ---
 
-## 12. Open Questions / Unverified
+## 11. Open Questions / Unverified
 
 - **Exact enemy drop tables:** Individual enemy drop probabilities exist in the ROM but full verified tables for all ~80 enemy types are only partially documented in public sources. The speedrun wiki covers key enemies.
 - **Damage rounding:** The game rounds down fractional damage. Edge cases where Gravity Suit reduces damage to 0 have been observed but the full list of such interactions is not exhaustively documented.
 - **Crocomire HP:** Crocomire is defeated by knockback into lava, not by depleting an HP pool. Some sources list a large HP value but the fight mechanic is purely positional — the HP value (if any) doesn't affect gameplay.
 - **Phantoon HP:** Community sources report values between 2,500 and 3,000. The 2,500 figure is more commonly cited in speedrun contexts.
-- **Ridley (Ceres) HP:** The Ceres Ridley encounter has 18,000 HP but is designed to be unwinnable under normal conditions (the station self-destructs before the player can deal enough damage). Defeating Ceres Ridley via tool-assisted means skips the Zebes Ridley fight.
 - **Golden Torizo HP:** Reported as 13,500 in some sources and 2,700 in others; the discrepancy likely stems from different damage scaling interpretations. The speedrun community uses the larger figure.
 
 ---
 
-## 13. References
+## 12. References
 
 ### Speedrun & Datamined Sources
 - [Super Metroid Speedrunning Wiki — Damage](https://wiki.supermetroid.run/Damage)
