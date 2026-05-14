@@ -64,8 +64,7 @@ func _on_weapon_switched(weapon: StringName) -> void:
 
 func _update_tanks(current: int, maximum: int) -> void:
 	var base_energy := 99
-	@warning_ignore("integer_division")
-	var tank_count := (maximum - base_energy) / 100
+	var tank_count: int = floori(float(maximum - base_energy) / 100.0)
 	for child: Node in tank_container.get_children():
 		child.queue_free()
 	var energy_in_tanks := current - base_energy
