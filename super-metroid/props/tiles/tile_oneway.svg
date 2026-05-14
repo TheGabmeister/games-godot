@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Platform surface (top third only) -->
+  <rect x="0" y="0" width="32" height="10" fill="#5878A0"/>
+  <!-- Top edge highlight -->
+  <rect x="0" y="0" width="32" height="2" fill="#7898C0"/>
+  <!-- Left highlight -->
+  <rect x="0" y="0" width="2" height="10" fill="#6888B0"/>
+  <!-- Right shadow -->
+  <rect x="30" y="0" width="2" height="10" fill="#486890"/>
+  <!-- Bottom of platform shadow -->
+  <rect x="0" y="8" width="32" height="2" fill="#405878"/>
+  <!-- Rivet details -->
+  <rect x="4" y="4" width="2" height="2" fill="#7898C0"/>
+  <rect x="14" y="4" width="2" height="2" fill="#7898C0"/>
+  <rect x="26" y="4" width="2" height="2" fill="#7898C0"/>
+  <!-- Arrow indicators (upward = passable from below) -->
+  <rect x="9" y="14" width="2" height="6" fill="#5878A0"/>
+  <rect x="7" y="16" width="6" height="2" fill="#5878A0"/>
+  <rect x="21" y="14" width="2" height="6" fill="#5878A0"/>
+  <rect x="19" y="16" width="6" height="2" fill="#5878A0"/>
+</svg>

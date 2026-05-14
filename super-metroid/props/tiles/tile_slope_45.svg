@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Slope triangle (ascending left to right) -->
+  <polygon points="0,32 32,0 32,32" fill="#585858"/>
+  <!-- Slope surface highlight -->
+  <line x1="0" y1="32" x2="32" y2="0" stroke="#787878" stroke-width="2"/>
+  <!-- Right edge shadow -->
+  <rect x="30" y="0" width="2" height="32" fill="#404040"/>
+  <!-- Bottom edge shadow -->
+  <rect x="0" y="30" width="32" height="2" fill="#383838"/>
+  <!-- Interior detail -->
+  <rect x="18" y="18" width="2" height="2" fill="#505050"/>
+  <rect x="24" y="24" width="3" height="1" fill="#636363"/>
+  <rect x="10" y="26" width="2" height="2" fill="#505050"/>
+  <rect x="26" y="10" width="2" height="1" fill="#636363"/>
+</svg>
