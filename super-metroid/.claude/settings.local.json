@@ -8,6 +8,7 @@
       "Bash(blender --background *)",
       "Bash(\"D:\\fluidsynth-v2.5.4-win10-x64-cpp11\\bin\\fluidsynth.exe\" *)",
       "Bash(\"D:\\ffmpeg-8.1-essentials_build\\bin\\ffmpeg.exe\" *)",
+      "Bash(D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe *)",
       "Bash(\"C:\\Program Files\\Inkscape\\bin\\inkscape.exe\" *)",
       "Bash('C:/Program Files/Inkscape/bin/inkscape.exe' *)",
       "mcp__blender__get_scene_info",
