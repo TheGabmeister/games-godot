@@ -25,13 +25,19 @@ Super Metroid recreation in Godot 4.6 (GDScript). 2D Metroidvania platformer. Ph
 |---|---|---|
 | Inkscape | `inkscape` | SVG → PNG export |
 | ffmpeg | `ffmpeg` | Audio synthesis and conversion |
-| fluidsynth | `fluidsynth` | MIDI synthesis with `D:\GeneralUser-GS\GeneralUser-GS.sf2` |
-| Godot | `Godot_v4.6.2-stable_win64.exe` | At `D:\Godot\` |
+| fluidsynth | `fluidsynth` | MIDI synthesis (soundfonts in `D:\Tools\`) |
+| Godot | `Godot_v4.6.2-stable_win64.exe` | Use bare name, not full path |
+| Blender | `blender` | 3D model generation via Python scripts |
 
 ## Validation
 
 ```powershell
-& "Godot_v4.6.2-stable_win64.exe" --path . --headless --quit
+Godot_v4.6.2-stable_win64.exe --path . --headless --quit
+```
+
+After adding a new script with `class_name`, run the editor once to register it in the class cache:
+```powershell
+Godot_v4.6.2-stable_win64.exe --path . --headless --editor --quit
 ```
 
 ## Project Structure
@@ -46,7 +52,7 @@ scripts/              # All GDScript files, organized by system
   pickups/            # Pickup drop script
   hud/                # HUD controller
   camera/             # Camera controller
-  autoloads/          # SfxManager, MusicManager singletons
+  autoloads/          # SfxManager, MusicManager, GameManager singletons
 player/               # Player assets
   sprites/            # SVG sources + exported PNGs + generation scripts
   audio/              # .ogg sound effects (footsteps, jump, morph, damage, alarm)
@@ -61,7 +67,8 @@ pickups/              # Pickup assets
 hud/                  # HUD assets
   sprites/            # Icons, tank pips
 props/                # Environment assets
-  sprites/            # Tile SVGs + PNGs
+  tiles/              # Tile SVGs + PNGs
+  doors/              # Door sprites (blue, red, gray) + audio
 scenes/               # Playable .tscn scenes
   projectiles/        # Projectile scenes (power_beam, charge_beam, missile, bomb)
   enemies/            # Enemy scenes (waver, zeela, sidehopper)
@@ -107,22 +114,29 @@ Player (CharacterBody2D)
   WeaponSystem                           # firing, charge, beam limit, weapon cycling
 ```
 
+## Architecture: GameManager Autoload
+
+`GameManager` (autoload) spawns the player and HUD into any stage scene. Stages don't need scripts — just place a `Marker2D` in the `player_start` group (use `GameConsts.GROUP_PLAYER_START`) at the desired spawn position.
+
+- `_ready()` uses `call_deferred` to find the marker after the main scene loads (autoloads initialize before the main scene)
+- Spawns `Player` at the marker's position, then spawns the HUD and wires signals via `connect_to_player()`
+- `GameManager.player` provides the player reference to any system that needs it
+
 ## Architecture: Combat & Enemies
 
-- **Firing is an overlay, not a state.** `WeaponSystem` (child node of Player) handles fire input in `process_fire()` called every frame. Movement states are unaware of firing.
+- **Firing is an overlay, not a state.** `WeaponSystem` (child node of Player) runs its own `_physics_process()` and gets its player reference via `get_parent()` in `_ready()`. No `class_name` — avoids circular dependency with Player. Movement states are unaware of firing.
 - **Charge Beam:** Timer on WeaponSystem. Hold fire 2s → charged shot. Resets on weapon switch.
 - **Beam limit:** Max 3 Power Beam projectiles on screen. WeaponSystem tracks `active_beams` via `tree_exited` signals.
-- **Enemy base class:** `enemy.gd` (CharacterBody2D) with HP, contact damage, drop table. Specific enemies override `_physics_process` for AI.
+- **Enemy base class:** `enemy.gd` (CharacterBody2D) with HP, contact damage, `@export var drop_table: Array[DropEntry]`. `DropEntry` is a custom Resource with typed `DropType` enum, weight, and optional scene. Specific enemies override `_physics_process` for AI. SFX and drop scenes are all `@export` vars set in each enemy's `.tscn`.
 - **Enemy contact damage:** Each enemy creates an Area2D child in `_ready()` with mask=2 (Player). The `body_entered` signal calls `player.take_damage()`.
 - **Damage during physics callbacks:** State transitions from `body_entered` signals must use `call_deferred()` to avoid modifying collision shapes mid-query.
 - **DamageFlasher:** Reusable node (`scripts/combat/damage_flasher.gd`) that flashes any CanvasItem. Attach to any scene that needs hit-flash.
-- **Circular dependency:** `player.gd` references WeaponSystem as `Node` (not typed) to avoid circular class_name deps. Uses `@warning_ignore("unsafe_method_access")` at call sites.
 
 ## Conventions
 
-- **No magic strings.** Use `PlayerConsts` for state names, animation names, and shape names.
+- **No magic strings.** Use `PlayerConsts` for player-specific constants, `GameConsts` for game-wide constants (group names, etc.).
 - **Static typing enforced.** All variables must have explicit types or use `:=` inference. Capture return values from `connect()` and `erase()` to avoid `RETURN_VALUE_DISCARDED` warnings.
-- **`@export` for tunable values.** Physics parameters (gravity, speeds, jump velocity) are exported on the Player node.
+- **`@export` for tunable values.** Physics parameters, SFX, scenes, and textures are exported — no `preload()` paths in scripts. Set assets in `.tscn` scene files instead, where Godot tracks them by `uid://` and survives file moves.
 - **Asset pipeline:** SVG source → PNG export via Inkscape CLI. Keep both files paired. Audio generated with ffmpeg, stored as `.ogg`. Run ffmpeg as standalone commands, not chained with `&&` (permission rules match command prefix only).
 - **Input actions:** `move_left`, `move_right`, `move_up`, `move_down`, `jump`, `dash`, `fire`, `select_weapon`, `cancel_weapon`, `aim_up`, `aim_down` (defined in project.godot with keyboard + gamepad bindings).
 - **Collision layers:** 1=Terrain, 2=Player, 3=Enemy, 4=PlayerProjectile, 5=EnemyProjectile, 6=Pickup. Player mask=1 (terrain). Enemies mask=1 (terrain) with Area2D child mask=2 (player) for contact damage.
@@ -131,6 +145,6 @@ Player (CharacterBody2D)
 
 **Phase 1 implemented:** Walking, running, variable-height jumping, spin jumps, crouching, morph ball (double-tap down), wall jumping (strict sequence with buffer), gravity, slopes, one-way platforms, smooth camera with limits.
 
-**Phase 2 implemented:** Power Beam (8-directional, 3-beam limit), Charge Beam (2s charge, 3x damage), Missiles (ammo-limited), Morph Ball Bombs (3s fuse, max 3, bomb jump impulse), weapon cycling (Select/X), HUD (energy counter, tank pips, weapon icon, ammo, low energy alarm at ≤29), enemy framework (HP, contact damage, drops), three enemies (Waver, Zeela, Sidehopper), damage/knockback system (Hurt state + i-frames + DamageFlasher), SfxManager/MusicManager autoloads.
+**Phase 2 implemented:** Power Beam (8-directional, 3-beam limit), Charge Beam (2s charge, 3x damage), Missiles (ammo-limited), Morph Ball Bombs (3s fuse, max 3, bomb jump impulse), weapon cycling (Select/X), HUD (energy counter, tank pips, weapon icon, ammo, low energy alarm at ≤29), enemy framework (HP, contact damage, DropEntry resources), three enemies (Waver, Zeela, Sidehopper), damage/knockback system (Hurt state + i-frames + DamageFlasher), SfxManager/MusicManager/GameManager autoloads.
 
-**Next:** Phase 3 — Crateria, world structure & first boss.
+**Next:** Phase 3.1 — Room transitions & doors.
