@@ -15,7 +15,9 @@
       "WebFetch",
       "Read(//c/Users/Admin/.claude/**)",
       "Bash(curl -s *)",
-      "Bash(curl -sL *)"
+      "Bash(curl -sL *)",
+      "Skill(spec-game)",
+      "Skill(spec-game:*)"
     ]
   }
 }
