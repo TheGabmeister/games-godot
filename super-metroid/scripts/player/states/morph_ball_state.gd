@@ -6,13 +6,15 @@ func enter() -> void:
 	player.set_sprite_mode(true)
 
 
-func update(delta: float) -> void:
-	player.apply_gravity(delta)
-
-	if Input.is_action_just_pressed("move_up"):
+func handle_input(event: InputEvent) -> void:
+	if event.is_action_pressed("move_up"):
 		if player.can_stand_up():
 			state_machine.transition_to(PlayerConsts.STATE_IDLE)
-			return
+		return
+
+
+func update(delta: float) -> void:
+	player.apply_gravity(delta)
 
 	var direction := player.get_horizontal_input()
 	if player.is_on_floor():

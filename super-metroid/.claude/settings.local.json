@@ -17,13 +17,7 @@
       "Bash(inkscape *)",
       "Bash(ffmpeg *)",
       "Bash(fluidsynth *)",
-      "Bash(blender *)",
-      "Bash(ls -la \"C:/Users/Admin/AppData/Local/Godot/godot.exe\")",
-      "Bash(which godot *)",
-      "Bash(ls \"C:/Program Files/Godot\"*)",
-      "Bash(\"D:/Godot/Godot_v4.6.2-stable_win64.exe\" --headless --path \"c:/dev/games-godot/super-metroid\" --script-lint)",
-      "Bash(\"D:/Godot/Godot_v4.6.2-stable_win64.exe\" --headless --path \"c:/dev/games-godot/super-metroid\" --check-only)",
-      "Bash(timeout 15 \"D:/Godot/Godot_v4.6.2-stable_win64.exe\" --headless --path \"c:/dev/games-godot/super-metroid\")"
+      "Bash(blender *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Admin\\.claude"

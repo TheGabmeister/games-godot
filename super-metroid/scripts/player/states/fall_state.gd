@@ -17,6 +17,7 @@ func handle_input(event: InputEvent) -> void:
 			player.register_down_press()
 		elif down_press_count >= 2 and player.is_double_tap_down():
 			state_machine.transition_to(PlayerConsts.STATE_MORPH_BALL)
+		return
 
 
 func update(delta: float) -> void:
@@ -32,6 +33,7 @@ func update(delta: float) -> void:
 		else:
 			state_machine.transition_to(PlayerConsts.STATE_IDLE)
 		return
+
 	player.update_facing(direction)
 	if player.is_dashing() and direction != 0.0:
 		player.velocity.x = direction * player.run_speed

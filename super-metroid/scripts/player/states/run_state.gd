@@ -7,6 +7,17 @@ func enter() -> void:
 	player.player_sprite.play(PlayerConsts.ANIM_RUN)
 
 
+func handle_input(event: InputEvent) -> void:
+	if event.is_action_pressed("jump"):
+		state_machine.transition_to(PlayerConsts.STATE_SPIN_JUMP)
+		return
+
+	if event.is_action_pressed("move_down"):
+		player.register_down_press()
+		state_machine.transition_to(PlayerConsts.STATE_CROUCH)
+		return
+
+
 func update(delta: float) -> void:
 	player.apply_gravity(delta)
 
@@ -22,15 +33,6 @@ func update(delta: float) -> void:
 
 	if not player.is_dashing():
 		state_machine.transition_to(PlayerConsts.STATE_WALK)
-		return
-
-	if Input.is_action_just_pressed("jump"):
-		state_machine.transition_to(PlayerConsts.STATE_SPIN_JUMP)
-		return
-
-	if Input.is_action_just_pressed("move_down"):
-		player.register_down_press()
-		state_machine.transition_to(PlayerConsts.STATE_CROUCH)
 		return
 
 	player.update_facing(direction)

@@ -17,6 +17,7 @@ func enter() -> void:
 func handle_input(event: InputEvent) -> void:
 	if event.is_action_released("jump") and player.velocity.y < 0.0:
 		player.velocity.y *= player.jump_cut_multiplier
+		return
 
 	if event.is_action_pressed("move_down"):
 		down_press_count += 1
@@ -24,9 +25,11 @@ func handle_input(event: InputEvent) -> void:
 			player.register_down_press()
 		elif down_press_count >= 2 and player.is_double_tap_down():
 			state_machine.transition_to(PlayerConsts.STATE_MORPH_BALL)
+		return
 
 	if event.is_action_pressed("jump") and wall_away_timer > 0:
 		state_machine.transition_to(PlayerConsts.STATE_WALL_JUMP)
+		return
 
 
 func update(delta: float) -> void:
@@ -54,6 +57,7 @@ func update(delta: float) -> void:
 		wall_away_timer = maxi(wall_away_timer - 1, 0)
 		if not player.is_on_wall():
 			player.last_wall_normal = Vector2.ZERO
+
 	player.update_facing(direction)
 	if player.is_dashing() and direction != 0.0:
 		player.velocity.x = direction * player.run_speed
