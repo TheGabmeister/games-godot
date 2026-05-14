@@ -31,7 +31,7 @@ Super Metroid recreation in Godot 4.6 (GDScript). 2D Metroidvania platformer. Ph
 ## Validation
 
 ```powershell
-& "D:/Godot/Godot_v4.6.2-stable_win64.exe" --path . --headless --quit
+& "Godot_v4.6.2-stable_win64.exe" --path . --headless --quit
 ```
 
 ## Project Structure
@@ -107,12 +107,23 @@ Player (CharacterBody2D)
   WeaponSystem                           # firing, charge, beam limit, weapon cycling
 ```
 
+## Architecture: Combat & Enemies
+
+- **Firing is an overlay, not a state.** `WeaponSystem` (child node of Player) handles fire input in `process_fire()` called every frame. Movement states are unaware of firing.
+- **Charge Beam:** Timer on WeaponSystem. Hold fire 2s → charged shot. Resets on weapon switch.
+- **Beam limit:** Max 3 Power Beam projectiles on screen. WeaponSystem tracks `active_beams` via `tree_exited` signals.
+- **Enemy base class:** `enemy.gd` (CharacterBody2D) with HP, contact damage, drop table. Specific enemies override `_physics_process` for AI.
+- **Enemy contact damage:** Each enemy creates an Area2D child in `_ready()` with mask=2 (Player). The `body_entered` signal calls `player.take_damage()`.
+- **Damage during physics callbacks:** State transitions from `body_entered` signals must use `call_deferred()` to avoid modifying collision shapes mid-query.
+- **DamageFlasher:** Reusable node (`scripts/combat/damage_flasher.gd`) that flashes any CanvasItem. Attach to any scene that needs hit-flash.
+- **Circular dependency:** `player.gd` references WeaponSystem as `Node` (not typed) to avoid circular class_name deps. Uses `@warning_ignore("unsafe_method_access")` at call sites.
+
 ## Conventions
 
 - **No magic strings.** Use `PlayerConsts` for state names, animation names, and shape names.
-- **Static typing enforced.** All variables must have explicit types or use `:=` inference.
+- **Static typing enforced.** All variables must have explicit types or use `:=` inference. Capture return values from `connect()` and `erase()` to avoid `RETURN_VALUE_DISCARDED` warnings.
 - **`@export` for tunable values.** Physics parameters (gravity, speeds, jump velocity) are exported on the Player node.
-- **Asset pipeline:** SVG source → PNG export via Inkscape CLI. Keep both files paired. Audio generated with ffmpeg, stored as `.ogg`.
+- **Asset pipeline:** SVG source → PNG export via Inkscape CLI. Keep both files paired. Audio generated with ffmpeg, stored as `.ogg`. Run ffmpeg as standalone commands, not chained with `&&` (permission rules match command prefix only).
 - **Input actions:** `move_left`, `move_right`, `move_up`, `move_down`, `jump`, `dash`, `fire`, `select_weapon`, `cancel_weapon`, `aim_up`, `aim_down` (defined in project.godot with keyboard + gamepad bindings).
 - **Collision layers:** 1=Terrain, 2=Player, 3=Enemy, 4=PlayerProjectile, 5=EnemyProjectile, 6=Pickup. Player mask=1 (terrain). Enemies mask=1 (terrain) with Area2D child mask=2 (player) for contact damage.
 
