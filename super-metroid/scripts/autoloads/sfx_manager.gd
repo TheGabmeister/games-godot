@@ -38,7 +38,7 @@ func stop_loop(id: StringName) -> void:
 		var asp: AudioStreamPlayer = _loops[id]
 		asp.stop()
 		asp.queue_free()
-		_loops.erase(id)
+		var _erased := _loops.erase(id)
 
 
 func is_loop_playing(id: StringName) -> bool:

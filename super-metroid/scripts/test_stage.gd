@@ -5,4 +5,5 @@ extends Node2D
 
 
 func _ready() -> void:
+	@warning_ignore("unsafe_method_access")
 	hud.connect_to_player(player)

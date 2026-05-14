@@ -46,6 +46,7 @@ var _invincibility_timer: float = 0.0
 
 func _ready() -> void:
 	state_machine.init(self)
+	@warning_ignore("unsafe_method_access")
 	weapon_system.init(self)
 	energy_changed.emit(energy, max_energy)
 	weapon_switched.emit(selected_weapon)
@@ -69,6 +70,7 @@ func _physics_process(delta: float) -> void:
 			invincible = false
 			damage_flasher.stop()
 	state_machine.update(delta)
+	@warning_ignore("unsafe_method_access")
 	weapon_system.process_fire(delta)
 	var _on_floor := move_and_slide()
 
@@ -174,7 +176,7 @@ func take_damage(amount: int, source_position: Vector2 = Vector2.ZERO) -> void:
 		var dir := signf(global_position.x - source_position.x)
 		if dir != 0.0:
 			facing_direction = -dir
-	state_machine.transition_to(PlayerConsts.STATE_HURT)
+	state_machine.call_deferred("transition_to", PlayerConsts.STATE_HURT)
 	if energy <= 0:
 		_die()
 

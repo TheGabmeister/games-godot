@@ -87,7 +87,7 @@ func _fire_beam() -> void:
 	proj.rotation = _player.aim_direction.angle()
 	_player.get_parent().add_child(proj)
 	active_beams += 1
-	proj.tree_exited.connect(_on_beam_exited)
+	var _err := proj.tree_exited.connect(_on_beam_exited)
 	SfxManager.play(preload("res://combat/audio/beam_fire.ogg"))
 
 
@@ -129,7 +129,7 @@ func _handle_morph_ball_fire(just_pressed: bool) -> void:
 	b.global_position = _player.global_position
 	_player.get_parent().add_child(b)
 	active_bombs += 1
-	b.tree_exited.connect(_on_bomb_exited)
+	var _err := b.tree_exited.connect(_on_bomb_exited)
 	SfxManager.play(preload("res://combat/audio/bomb_place.ogg"))
 
 

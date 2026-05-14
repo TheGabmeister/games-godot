@@ -28,9 +28,9 @@ func _process(delta: float) -> void:
 
 
 func connect_to_player(player: Player) -> void:
-	player.energy_changed.connect(_on_energy_changed)
-	player.ammo_changed.connect(_on_ammo_changed)
-	player.weapon_switched.connect(_on_weapon_switched)
+	var _e1 := player.energy_changed.connect(_on_energy_changed)
+	var _e2 := player.ammo_changed.connect(_on_ammo_changed)
+	var _e3 := player.weapon_switched.connect(_on_weapon_switched)
 
 
 func _on_energy_changed(current: int, maximum: int) -> void:
@@ -64,6 +64,7 @@ func _on_weapon_switched(weapon: StringName) -> void:
 
 func _update_tanks(current: int, maximum: int) -> void:
 	var base_energy := 99
+	@warning_ignore("integer_division")
 	var tank_count := (maximum - base_energy) / 100
 	for child: Node in tank_container.get_children():
 		child.queue_free()

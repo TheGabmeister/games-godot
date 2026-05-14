@@ -7,7 +7,7 @@ var _current_track: StringName = &""
 func _ready() -> void:
 	_player = AudioStreamPlayer.new()
 	add_child(_player)
-	_player.finished.connect(_on_finished)
+	var _err := _player.finished.connect(_on_finished)
 
 
 func play(id: StringName, stream: AudioStream, volume_db: float = 0.0) -> void:

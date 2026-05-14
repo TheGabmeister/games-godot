@@ -10,7 +10,7 @@ enum PickupType { SMALL_ENERGY, LARGE_ENERGY, MISSILE }
 func _ready() -> void:
 	collision_layer = 32
 	collision_mask = 2
-	body_entered.connect(_on_body_entered)
+	var _err := body_entered.connect(_on_body_entered)
 
 
 func _on_body_entered(body: Node2D) -> void:

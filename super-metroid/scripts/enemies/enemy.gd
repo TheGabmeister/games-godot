@@ -27,7 +27,7 @@ func _ready() -> void:
 	shape.shape = _get_hitbox_shape()
 	area.add_child(shape)
 	add_child(area)
-	area.body_entered.connect(_on_body_entered)
+	var _err := area.body_entered.connect(_on_body_entered)
 
 
 func _get_hitbox_shape() -> Shape2D:
@@ -58,7 +58,8 @@ func _spawn_drop() -> void:
 	var roll := randf() * 100.0
 	var cumulative := 0.0
 	for entry: Dictionary in drop_table:
-		cumulative += entry["weight"] as float
+		var weight: int = entry["weight"]
+		cumulative += float(weight)
 		if roll <= cumulative:
 			var drop_type: String = entry["type"]
 			if drop_type == "nothing":

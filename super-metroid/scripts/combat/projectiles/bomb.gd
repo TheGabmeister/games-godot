@@ -10,7 +10,6 @@ var _timer: float = 0.0
 var _exploded: bool = false
 
 @onready var _sprite: Sprite2D = $Sprite2D
-@onready var _collision: CollisionShape2D = $CollisionShape2D
 
 
 func _physics_process(delta: float) -> void:
@@ -32,8 +31,8 @@ func _explode() -> void:
 	var results := space_state.intersect_shape(query)
 	for result: Dictionary in results:
 		var collider: Object = result["collider"]
-		if collider.has_method("take_damage"):
-			collider.take_damage(BOMB_DAMAGE, global_position)
 		if collider is Player:
 			(collider as Player).velocity.y = BOMB_IMPULSE
+		elif collider.has_method(&"take_damage"):
+			collider.call(&"take_damage", BOMB_DAMAGE, global_position)
 	queue_free()
