@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="96" viewBox="0 0 64 96" shape-rendering="crispEdges">
+  <!-- Helmet -->
+  <rect x="22" y="3" width="20" height="4" fill="#D04040"/>
+  <rect x="20" y="7" width="24" height="12" fill="#C83838"/>
+  <rect x="22" y="5" width="20" height="2" fill="#C83838"/>
+  <rect x="23" y="4" width="18" height="1" fill="#C83838"/>
+  <!-- Helmet highlight -->
+  <rect x="24" y="5" width="14" height="2" fill="#E05858"/>
+  <!-- Visor -->
+  <rect x="34" y="10" width="8" height="4" fill="#20D820"/>
+  <rect x="35" y="9" width="6" height="1" fill="#30E830"/>
+  <rect x="35" y="14" width="6" height="1" fill="#18B018"/>
+  <!-- Visor shine -->
+  <rect x="35" y="10" width="2" height="2" fill="#60FF60"/>
+  <!-- Chin/jaw -->
+  <rect x="22" y="19" width="20" height="3" fill="#B03030"/>
+
+  <!-- Neck -->
+  <rect x="26" y="22" width="12" height="3" fill="#D8A820"/>
+
+  <!-- Shoulder pads (left) -->
+  <rect x="6" y="24" width="16" height="6" fill="#D8A820"/>
+  <rect x="4" y="25" width="4" height="4" fill="#C89818"/>
+  <rect x="8" y="23" width="12" height="2" fill="#E8B828"/>
+  <rect x="6" y="30" width="14" height="2" fill="#C89818"/>
+  <!-- Shoulder pad detail left -->
+  <rect x="8" y="26" width="12" height="1" fill="#E8C030"/>
+
+  <!-- Shoulder pads (right) -->
+  <rect x="42" y="24" width="16" height="6" fill="#D8A820"/>
+  <rect x="56" y="25" width="4" height="4" fill="#C89818"/>
+  <rect x="44" y="23" width="12" height="2" fill="#E8B828"/>
+  <rect x="44" y="30" width="14" height="2" fill="#C89818"/>
+  <!-- Shoulder pad detail right -->
+  <rect x="44" y="26" width="12" height="1" fill="#E8C030"/>
+
+  <!-- Upper torso -->
+  <rect x="20" y="25" width="24" height="14" fill="#D8A820"/>
+  <!-- Chest plate -->
+  <rect x="24" y="27" width="16" height="8" fill="#E8C030"/>
+  <rect x="26" y="29" width="12" height="4" fill="#F0D040"/>
+  <!-- Chest vent lines -->
+  <rect x="27" y="30" width="10" height="1" fill="#D8A820"/>
+  <rect x="27" y="32" width="10" height="1" fill="#D8A820"/>
+
+  <!-- Arm cannon (right side) -->
+  <rect x="52" y="28" width="4" height="10" fill="#28A070"/>
+  <rect x="56" y="26" width="6" height="14" fill="#209060"/>
+  <rect x="54" y="30" width="2" height="6" fill="#38B880"/>
+  <!-- Cannon barrel -->
+  <rect x="58" y="25" width="4" height="4" fill="#186848"/>
+  <rect x="58" y="39" width="4" height="2" fill="#186848"/>
+  <!-- Cannon muzzle -->
+  <rect x="60" y="26" width="3" height="12" fill="#187050"/>
+  <!-- Cannon highlight -->
+  <rect x="57" y="28" width="1" height="8" fill="#40C888"/>
+
+  <!-- Left arm -->
+  <rect x="8" y="30" width="10" height="8" fill="#D8A820"/>
+  <rect x="6" y="34" width="8" height="6" fill="#D8A820"/>
+  <!-- Left hand -->
+  <rect x="6" y="38" width="6" height="4" fill="#C89818"/>
+  <!-- Left arm highlight -->
+  <rect x="10" y="31" width="4" height="4" fill="#E8C030"/>
+
+  <!-- Lower torso -->
+  <rect x="22" y="39" width="20" height="4" fill="#D0A020"/>
+
+  <!-- Waist / belt -->
+  <rect x="21" y="43" width="22" height="4" fill="#C83838"/>
+  <rect x="28" y="43" width="8" height="4" fill="#D84848"/>
+  <!-- Belt buckle -->
+  <rect x="30" y="44" width="4" height="2" fill="#E86060"/>
+
+  <!-- Left thigh -->
+  <rect x="21" y="47" width="10" height="10" fill="#D8A820"/>
+  <rect x="22" y="48" width="8" height="8" fill="#D0A020"/>
+  <!-- Left thigh highlight -->
+  <rect x="23" y="49" width="4" height="4" fill="#E0B828"/>
+
+  <!-- Right thigh -->
+  <rect x="33" y="47" width="10" height="10" fill="#D8A820"/>
+  <rect x="34" y="48" width="8" height="8" fill="#D0A020"/>
+  <!-- Right thigh highlight -->
+  <rect x="35" y="49" width="4" height="4" fill="#E0B828"/>
+
+  <!-- Left knee -->
+  <rect x="21" y="57" width="10" height="4" fill="#C83838"/>
+  <rect x="22" y="58" width="8" height="2" fill="#D84848"/>
+
+  <!-- Right knee -->
+  <rect x="33" y="57" width="10" height="4" fill="#C83838"/>
+  <rect x="34" y="58" width="8" height="2" fill="#D84848"/>
+
+  <!-- Left shin -->
+  <rect x="21" y="61" width="10" height="12" fill="#D8A820"/>
+  <rect x="22" y="62" width="8" height="10" fill="#D0A020"/>
+  <!-- Left shin highlight -->
+  <rect x="23" y="63" width="3" height="6" fill="#E0B828"/>
+
+  <!-- Right shin -->
+  <rect x="33" y="61" width="10" height="12" fill="#D8A820"/>
+  <rect x="34" y="62" width="8" height="10" fill="#D0A020"/>
+  <!-- Right shin highlight -->
+  <rect x="35" y="63" width="3" height="6" fill="#E0B828"/>
+
+  <!-- Left boot -->
+  <rect x="18" y="73" width="14" height="8" fill="#C83838"/>
+  <rect x="17" y="75" width="15" height="6" fill="#B03030"/>
+  <rect x="19" y="74" width="10" height="4" fill="#D84848"/>
+  <!-- Left boot sole -->
+  <rect x="16" y="81" width="16" height="4" fill="#903030"/>
+  <rect x="17" y="85" width="14" height="3" fill="#782828"/>
+  <!-- Left boot toe -->
+  <rect x="16" y="79" width="3" height="2" fill="#B03030"/>
+
+  <!-- Right boot -->
+  <rect x="32" y="73" width="14" height="8" fill="#C83838"/>
+  <rect x="32" y="75" width="15" height="6" fill="#B03030"/>
+  <rect x="35" y="74" width="10" height="4" fill="#D84848"/>
+  <!-- Right boot sole -->
+  <rect x="32" y="81" width="16" height="4" fill="#903030"/>
+  <rect x="33" y="85" width="14" height="3" fill="#782828"/>
+  <!-- Right boot toe -->
+  <rect x="45" y="79" width="3" height="2" fill="#B03030"/>
+</svg>
