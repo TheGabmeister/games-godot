@@ -7,7 +7,7 @@ func enter() -> void:
 	player.set_collision_shape("standing")
 	player.set_sprite_mode(false)
 	player.velocity.y = player.jump_velocity
-	player.samus_sprite.play("fall")
+	player.player_sprite.play("fall")
 	down_press_count = 0
 
 

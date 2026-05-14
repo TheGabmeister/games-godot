@@ -6,7 +6,7 @@ var down_press_count: int = 0
 func enter() -> void:
 	player.set_collision_shape("standing")
 	player.set_sprite_mode(false)
-	player.samus_sprite.play("fall")
+	player.player_sprite.play("fall")
 	down_press_count = 0
 
 

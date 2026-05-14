@@ -4,7 +4,7 @@ extends PlayerState
 func enter() -> void:
 	player.set_collision_shape("standing")
 	player.set_sprite_mode(false)
-	player.samus_sprite.play("walk")
+	player.player_sprite.play("walk")
 
 
 func update(delta: float) -> void:

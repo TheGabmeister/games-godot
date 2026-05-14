@@ -1,14 +1,16 @@
 extends PlayerState
 
+const SpinJumpScript: GDScript = preload("res://scripts/player/states/spin_jump_state.gd")
+
 
 func enter() -> void:
 	player.set_collision_shape("standing")
 	player.set_sprite_mode(false)
-	player.samus_sprite.play("spin_jump")
+	player.player_sprite.play("spin_jump")
 
-	var spin_state: PlayerState = state_machine.states.get("spinjump")
 	var wall_dir := Vector2.ZERO
-	if spin_state:
+	var spin_state: PlayerState = state_machine.states.get("spinjump")
+	if spin_state is SpinJumpScript:
 		wall_dir = spin_state.wall_normal
 
 	player.velocity.y = player.wall_jump_velocity.y

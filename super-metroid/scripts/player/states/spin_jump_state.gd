@@ -1,7 +1,6 @@
 extends PlayerState
 
 var wall_away_timer: int = 0
-var wall_normal: Vector2 = Vector2.ZERO
 var down_press_count: int = 0
 
 
@@ -9,9 +8,9 @@ func enter() -> void:
 	player.set_collision_shape("standing")
 	player.set_sprite_mode(false)
 	player.velocity.y = player.jump_velocity
-	player.samus_sprite.play("spin_jump")
+	player.player_sprite.play("spin_jump")
 	wall_away_timer = 0
-	wall_normal = Vector2.ZERO
+	player.last_wall_normal = Vector2.ZERO
 	down_press_count = 0
 
 
@@ -43,10 +42,10 @@ func update(delta: float) -> void:
 
 	# Wall jump detection
 	if player.is_on_wall():
-		wall_normal = player.get_wall_normal()
+		player.last_wall_normal = player.get_wall_normal()
 
-	if wall_normal != Vector2.ZERO:
-		var away_direction := wall_normal.x
+	if player.last_wall_normal != Vector2.ZERO:
+		var away_direction := player.last_wall_normal.x
 		var input_direction := player.get_horizontal_input()
 		if signf(input_direction) == signf(away_direction) and input_direction != 0.0:
 			wall_away_timer = player.wall_jump_away_window
@@ -55,7 +54,7 @@ func update(delta: float) -> void:
 	else:
 		wall_away_timer = maxi(wall_away_timer - 1, 0)
 		if not player.is_on_wall():
-			wall_normal = Vector2.ZERO
+			player.last_wall_normal = Vector2.ZERO
 
 	var direction := player.get_horizontal_input()
 	player.update_facing(direction)

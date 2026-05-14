@@ -5,7 +5,7 @@ func enter() -> void:
 	player.velocity.x = 0.0
 	player.set_collision_shape("standing")
 	player.set_sprite_mode(false)
-	player.samus_sprite.play("idle")
+	player.player_sprite.play("idle")
 
 
 func update(delta: float) -> void:

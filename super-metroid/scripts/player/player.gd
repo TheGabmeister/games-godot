@@ -11,15 +11,16 @@ extends CharacterBody2D
 @export var wall_jump_away_window: int = 8
 @export var morph_double_tap_window: float = 0.3
 
-@onready var samus_sprite: AnimatedSprite2D = $SamusSprite
+@onready var player_sprite: AnimatedSprite2D = $PlayerSprite
 @onready var morph_ball_sprite: AnimatedSprite2D = $MorphBallSprite
 @onready var standing_shape: CollisionShape2D = $StandingShape
 @onready var crouching_shape: CollisionShape2D = $CrouchingShape
 @onready var morph_ball_shape: CollisionShape2D = $MorphBallShape
-@onready var state_machine: Node = $StateMachine
+@onready var state_machine: PlayerStateMachine = $StateMachine
 
 var facing_direction: float = 1.0
 var last_down_press_time: float = -1.0
+var last_wall_normal: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
@@ -32,7 +33,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	state_machine.update(delta)
-	move_and_slide()
+	var _on_floor := move_and_slide()
 
 
 func apply_gravity(delta: float) -> void:
@@ -51,7 +52,7 @@ func is_dashing() -> bool:
 func update_facing(direction: float) -> void:
 	if direction != 0.0:
 		facing_direction = signf(direction)
-		samus_sprite.flip_h = facing_direction < 0.0
+		player_sprite.flip_h = facing_direction < 0.0
 		morph_ball_sprite.flip_h = facing_direction < 0.0
 
 
@@ -69,12 +70,12 @@ func set_collision_shape(shape_name: String) -> void:
 
 
 func set_sprite_mode(is_morph_ball: bool) -> void:
-	samus_sprite.visible = not is_morph_ball
+	player_sprite.visible = not is_morph_ball
 	morph_ball_sprite.visible = is_morph_ball
 	if is_morph_ball:
 		morph_ball_sprite.play("roll")
 	else:
-		samus_sprite.stop()
+		player_sprite.stop()
 
 
 func can_stand_up() -> bool:

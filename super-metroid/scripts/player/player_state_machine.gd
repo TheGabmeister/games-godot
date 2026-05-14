@@ -3,16 +3,17 @@ extends Node
 
 var current_state: PlayerState
 var player: Player
-var states: Dictionary = {}
+var states: Dictionary[String, PlayerState] = {}
 
 
 func init(p: Player) -> void:
 	player = p
-	for child in get_children():
-		if child is PlayerState:
-			states[child.name.to_lower()] = child
-			child.player = player
-			child.state_machine = self
+	for child: Node in get_children():
+		var state := child as PlayerState
+		if state:
+			states[state.name.to_lower()] = state
+			state.player = player
+			state.state_machine = self
 	transition_to("idle")
 
 
