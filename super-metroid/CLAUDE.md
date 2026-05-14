@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Super Metroid recreation in Godot 4.6 (GDScript). 2D Metroidvania platformer. Phase 1 (core movement & camera) is implemented. SPEC.md defines all gameplay systems, PHASES.md defines the 8-phase build order.
+Super Metroid recreation in Godot 4.6 (GDScript). 2D Metroidvania platformer. Phase 1 (core movement & camera) and Phase 2 (combat, enemies & HUD) are implemented. SPEC.md defines all gameplay systems, PHASES.md defines the 8-phase build order.
 
 ## Engine & Runtime
 
@@ -38,16 +38,34 @@ Super Metroid recreation in Godot 4.6 (GDScript). 2D Metroidvania platformer. Ph
 
 ```
 scripts/              # All GDScript files, organized by system
-  player/             # Player controller, state machine, constants
-    states/           # Individual state scripts (idle, walk, run, etc.)
+  player/             # Player controller, state machine, constants, weapon system
+    states/           # Individual state scripts (idle, walk, run, hurt, etc.)
+  combat/             # Projectile base class, damage flasher
+    projectiles/      # Projectile and bomb scripts
+  enemies/            # Enemy base class + specific enemies (waver, zeela, sidehopper)
+  pickups/            # Pickup drop script
+  hud/                # HUD controller
   camera/             # Camera controller
+  autoloads/          # SfxManager, MusicManager singletons
 player/               # Player assets
-  sprites/            # SVG sources + exported PNGs + generation script
-  audio/              # .ogg sound effects
+  sprites/            # SVG sources + exported PNGs + generation scripts
+  audio/              # .ogg sound effects (footsteps, jump, morph, damage, alarm)
+combat/               # Combat assets
+  sprites/            # Projectile, bomb, VFX sprites
+  audio/              # Beam fire, charge, missile, bomb SFX
+enemies/              # Enemy assets
+  sprites/            # Enemy sprite sheets
+  audio/              # Enemy hit/death SFX
+pickups/              # Pickup assets
+  sprites/            # Drop pickup sprites
+hud/                  # HUD assets
+  sprites/            # Icons, tank pips
 props/                # Environment assets
   sprites/            # Tile SVGs + PNGs
-scenes/               # Playable .tscn scenes (test_stage.tscn)
-autoloads/            # Reserved for singletons (empty)
+scenes/               # Playable .tscn scenes
+  projectiles/        # Projectile scenes (power_beam, charge_beam, missile, bomb)
+  enemies/            # Enemy scenes (waver, zeela, sidehopper)
+  pickups/            # Pickup drop scenes
 data/                 # Reserved for game data (empty)
 ```
 
@@ -84,7 +102,9 @@ Player (CharacterBody2D)
   MorphBallShape (CollisionShape2D)     # 16x16, disabled
   Camera2D
   StateMachine
-    Idle, Walk, Run, Crouch, Jump, SpinJump, Fall, WallJump, MorphBall
+    Idle, Walk, Run, Crouch, Jump, SpinJump, Fall, WallJump, MorphBall, Hurt
+  DamageFlasher                          # reusable sprite flash component
+  WeaponSystem                           # firing, charge, beam limit, weapon cycling
 ```
 
 ## Conventions
@@ -93,10 +113,13 @@ Player (CharacterBody2D)
 - **Static typing enforced.** All variables must have explicit types or use `:=` inference.
 - **`@export` for tunable values.** Physics parameters (gravity, speeds, jump velocity) are exported on the Player node.
 - **Asset pipeline:** SVG source → PNG export via Inkscape CLI. Keep both files paired. Audio generated with ffmpeg, stored as `.ogg`.
-- **Input actions:** `move_left`, `move_right`, `move_up`, `move_down`, `jump`, `dash` (defined in project.godot with keyboard + gamepad bindings).
+- **Input actions:** `move_left`, `move_right`, `move_up`, `move_down`, `jump`, `dash`, `fire`, `select_weapon`, `cancel_weapon`, `aim_up`, `aim_down` (defined in project.godot with keyboard + gamepad bindings).
+- **Collision layers:** 1=Terrain, 2=Player, 3=Enemy, 4=PlayerProjectile, 5=EnemyProjectile, 6=Pickup. Player mask=1 (terrain). Enemies mask=1 (terrain) with Area2D child mask=2 (player) for contact damage.
 
 ## Current State
 
-**Phase 1 implemented:** Walking, running, variable-height jumping, spin jumps, crouching, morph ball (double-tap down), wall jumping (strict sequence with buffer), gravity, slopes, one-way platforms, smooth camera with limits. Test stage with StaticBody2D blocks.
+**Phase 1 implemented:** Walking, running, variable-height jumping, spin jumps, crouching, morph ball (double-tap down), wall jumping (strict sequence with buffer), gravity, slopes, one-way platforms, smooth camera with limits.
 
-**Next:** Phase 2 — Combat, enemies & HUD.
+**Phase 2 implemented:** Power Beam (8-directional, 3-beam limit), Charge Beam (2s charge, 3x damage), Missiles (ammo-limited), Morph Ball Bombs (3s fuse, max 3, bomb jump impulse), weapon cycling (Select/X), HUD (energy counter, tank pips, weapon icon, ammo, low energy alarm at ≤29), enemy framework (HP, contact damage, drops), three enemies (Waver, Zeela, Sidehopper), damage/knockback system (Hurt state + i-frames + DamageFlasher), SfxManager/MusicManager autoloads.
+
+**Next:** Phase 3 — Crateria, world structure & first boss.

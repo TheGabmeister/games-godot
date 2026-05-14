@@ -1,0 +1,62 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/sidehopper.gd" id="1"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/sidehopper.png" id="2"]
+
+[sub_resource type="AtlasTexture" id="f0"]
+atlas = ExtResource("2")
+region = Rect2(0, 0, 32, 48)
+
+[sub_resource type="AtlasTexture" id="f1"]
+atlas = ExtResource("2")
+region = Rect2(32, 0, 32, 48)
+
+[sub_resource type="AtlasTexture" id="f2"]
+atlas = ExtResource("2")
+region = Rect2(64, 0, 32, 48)
+
+[sub_resource type="AtlasTexture" id="f3"]
+atlas = ExtResource("2")
+region = Rect2(96, 0, 32, 48)
+
+[sub_resource type="SpriteFrames" id="frames"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("f0")
+}, {
+"duration": 1.0,
+"texture": SubResource("f1")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("f2")
+}, {
+"duration": 1.0,
+"texture": SubResource("f3")
+}],
+"loop": true,
+"name": &"jump",
+"speed": 6.0
+}]
+
+[sub_resource type="RectangleShape2D" id="body_shape"]
+size = Vector2(24, 36)
+
+[node name="Sidehopper" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("frames")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
+shape = SubResource("body_shape")

@@ -1,6 +1,11 @@
 [gd_scene format=3 uid="uid://bteststage001"]
 
 [ext_resource type="PackedScene" uid="uid://drckdk0x8rfja" path="res://scenes/player.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/waver.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/zeela.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/sidehopper.tscn" id="5"]
+[ext_resource type="Script" path="res://scripts/test_stage.gd" id="6"]
 
 [sub_resource type="RectangleShape2D" id="floor_shape"]
 size = Vector2(960, 16)
@@ -21,6 +26,7 @@ points = PackedVector2Array(-48, 8, 48, 8, 48, -8)
 size = Vector2(16, 192)
 
 [node name="TestStage" type="Node2D" unique_id=1711660484]
+script = ExtResource("6")
 
 [node name="Player" parent="." unique_id=1561999323 instance=ExtResource("1")]
 position = Vector2(100, 430)
@@ -166,3 +172,14 @@ offset_top = -96.0
 offset_right = 8.0
 offset_bottom = 96.0
 color = Color(0.345, 0.345, 0.345, 1)
+
+[node name="HUD" parent="." instance=ExtResource("2")]
+
+[node name="Waver" parent="." instance=ExtResource("3")]
+position = Vector2(400, 300)
+
+[node name="Zeela" parent="." instance=ExtResource("4")]
+position = Vector2(300, 460)
+
+[node name="Sidehopper" parent="." instance=ExtResource("5")]
+position = Vector2(600, 430)

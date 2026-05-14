@@ -1,0 +1,60 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/hud/hud.gd" id="1"]
+[ext_resource type="Texture2D" path="res://hud/sprites/icon_beam.png" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="panel_style"]
+bg_color = Color(0.05, 0.05, 0.1, 0.9)
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1")
+
+[node name="HUDBar" type="PanelContainer" parent="."]
+offset_right = 640.0
+offset_bottom = 32.0
+theme_override_styles/panel = SubResource("panel_style")
+
+[node name="EnergySection" type="HBoxContainer" parent="HUDBar"]
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 200.0
+offset_bottom = 28.0
+
+[node name="EnergyTitle" type="Label" parent="HUDBar/EnergySection"]
+text = "EN"
+theme_override_colors/font_color = Color(0.6, 0.6, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="EnergyLabel" type="Label" parent="HUDBar/EnergySection"]
+text = "0099"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="TankContainer" type="HBoxContainer" parent="HUDBar/EnergySection"]
+theme_override_constants/separation = 2
+
+[node name="WeaponSection" type="HBoxContainer" parent="HUDBar"]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 4.0
+offset_right = 380.0
+offset_bottom = 28.0
+
+[node name="WeaponIcon" type="TextureRect" parent="HUDBar/WeaponSection"]
+custom_minimum_size = Vector2(16, 16)
+texture = ExtResource("2")
+stretch_mode = 3
+
+[node name="AmmoLabel" type="Label" parent="HUDBar/WeaponSection"]
+visible = false
+text = "000"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="MinimapPlaceholder" type="ColorRect" parent="HUDBar"]
+layout_mode = 0
+offset_left = 560.0
+offset_top = 4.0
+offset_right = 632.0
+offset_bottom = 28.0
+color = Color(0.15, 0.15, 0.2, 0.8)

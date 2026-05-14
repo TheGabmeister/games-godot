@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/pickups/pickup.gd" id="1"]
+[ext_resource type="Texture2D" path="res://pickups/sprites/pickup_large_energy.png" id="2"]
+
+[sub_resource type="RectangleShape2D" id="shape"]
+size = Vector2(12, 12)
+
+[node name="PickupLargeEnergy" type="Area2D"]
+collision_layer = 32
+collision_mask = 2
+script = ExtResource("1")
+pickup_type = 1
+recovery_amount = 20
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("shape")

@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/projectiles/projectile.gd" id="1"]
+[ext_resource type="Texture2D" path="res://combat/sprites/missile.png" id="2"]
+
+[sub_resource type="RectangleShape2D" id="shape"]
+size = Vector2(14, 6)
+
+[node name="Missile" type="Area2D"]
+collision_layer = 8
+collision_mask = 5
+script = ExtResource("1")
+speed = 350.0
+damage = 100
+max_lifetime = 1.5
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("shape")
