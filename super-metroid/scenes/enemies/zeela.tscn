@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" path="res://scripts/enemies/zeela.gd" id="1"]
 [ext_resource type="Texture2D" path="res://enemies/sprites/zeela.png" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/drop_entry.gd" id="drop_entry"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/pickup_small_energy.tscn" id="pickup_small_energy"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/pickup_large_energy.tscn" id="pickup_large_energy"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/pickup_missile.tscn" id="pickup_missile"]
 
 [sub_resource type="AtlasTexture" id="f0"]
 atlas = ExtResource("2")
@@ -42,10 +46,44 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="body_shape"]
 size = Vector2(20, 14)
 
+[sub_resource type="Resource" id="drop_nothing"]
+script = ExtResource("drop_entry")
+type = 0
+weight = 40
+
+[sub_resource type="Resource" id="drop_se"]
+script = ExtResource("drop_entry")
+type = 1
+weight = 15
+scene = ExtResource("pickup_small_energy")
+
+[sub_resource type="Resource" id="drop_le"]
+script = ExtResource("drop_entry")
+type = 2
+weight = 15
+scene = ExtResource("pickup_large_energy")
+
+[sub_resource type="Resource" id="drop_mi"]
+script = ExtResource("drop_entry")
+type = 3
+weight = 15
+scene = ExtResource("pickup_missile")
+
+[sub_resource type="Resource" id="drop_sm"]
+script = ExtResource("drop_entry")
+type = 4
+weight = 8
+
+[sub_resource type="Resource" id="drop_pb"]
+script = ExtResource("drop_entry")
+type = 5
+weight = 7
+
 [node name="Zeela" type="CharacterBody2D"]
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("1")
+drop_table = [SubResource("drop_nothing"), SubResource("drop_se"), SubResource("drop_le"), SubResource("drop_mi"), SubResource("drop_sm"), SubResource("drop_pb")]
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("frames")

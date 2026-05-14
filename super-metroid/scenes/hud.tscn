@@ -2,12 +2,21 @@
 
 [ext_resource type="Script" path="res://scripts/hud/hud.gd" id="1"]
 [ext_resource type="Texture2D" path="res://hud/sprites/icon_beam.png" id="2"]
+[ext_resource type="AudioStream" path="res://player/audio/alarm_beep.ogg" id="alarm_beep"]
+[ext_resource type="Texture2D" path="res://hud/sprites/icon_missile.png" id="icon_missile"]
+[ext_resource type="Texture2D" path="res://hud/sprites/tank_pip_full.png" id="pip_full"]
+[ext_resource type="Texture2D" path="res://hud/sprites/tank_pip_empty.png" id="pip_empty"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
 bg_color = Color(0.05, 0.05, 0.1, 0.9)
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1")
+alarm_beep = ExtResource("alarm_beep")
+icon_beam = ExtResource("2")
+icon_missile = ExtResource("icon_missile")
+pip_full = ExtResource("pip_full")
+pip_empty = ExtResource("pip_empty")
 
 [node name="HUDBar" type="PanelContainer" parent="."]
 offset_right = 640.0

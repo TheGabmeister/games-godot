@@ -29,6 +29,10 @@
 [ext_resource type="PackedScene" path="res://scenes/projectiles/charge_beam.tscn" id="27"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/missile.tscn" id="28"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/bomb.tscn" id="29"]
+[ext_resource type="AudioStream" path="res://combat/audio/beam_fire.ogg" id="sfx_beam"]
+[ext_resource type="AudioStream" path="res://combat/audio/charge_release.ogg" id="sfx_charge"]
+[ext_resource type="AudioStream" path="res://combat/audio/missile_launch.ogg" id="sfx_missile"]
+[ext_resource type="AudioStream" path="res://combat/audio/bomb_place.ogg" id="sfx_bomb"]
 
 [sub_resource type="AtlasTexture" id="run0"]
 atlas = ExtResource("14")
@@ -329,3 +333,7 @@ power_beam_scene = ExtResource("26")
 charge_beam_scene = ExtResource("27")
 missile_scene = ExtResource("28")
 bomb_scene = ExtResource("29")
+beam_fire_sfx = ExtResource("sfx_beam")
+charge_release_sfx = ExtResource("sfx_charge")
+missile_launch_sfx = ExtResource("sfx_missile")
+bomb_place_sfx = ExtResource("sfx_bomb")

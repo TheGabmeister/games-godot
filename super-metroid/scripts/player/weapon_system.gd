@@ -7,10 +7,17 @@ const CHARGE_DAMAGE: int = 60
 const MISSILE_DAMAGE: int = 100
 const MAX_BOMBS: int = 3
 
+@export_group("Scenes")
 @export var power_beam_scene: PackedScene
 @export var charge_beam_scene: PackedScene
 @export var missile_scene: PackedScene
 @export var bomb_scene: PackedScene
+
+@export_group("Audio")
+@export var beam_fire_sfx: AudioStream
+@export var charge_release_sfx: AudioStream
+@export var missile_launch_sfx: AudioStream
+@export var bomb_place_sfx: AudioStream
 
 var active_beams: int = 0
 var active_bombs: int = 0
@@ -91,7 +98,7 @@ func _fire_beam() -> void:
 	_player.get_parent().add_child(proj)
 	active_beams += 1
 	var _err := proj.tree_exited.connect(_on_beam_exited)
-	SfxManager.play(preload("res://combat/audio/beam_fire.ogg"))
+	SfxManager.play(beam_fire_sfx)
 
 
 func _fire_charge_beam() -> void:
@@ -103,7 +110,7 @@ func _fire_charge_beam() -> void:
 	proj.global_position = _get_muzzle_position()
 	proj.rotation = _player.aim_direction.angle()
 	_player.get_parent().add_child(proj)
-	SfxManager.play(preload("res://combat/audio/charge_release.ogg"))
+	SfxManager.play(charge_release_sfx)
 
 
 func _fire_missile() -> void:
@@ -118,7 +125,7 @@ func _fire_missile() -> void:
 	proj.global_position = _get_muzzle_position()
 	proj.rotation = _player.aim_direction.angle()
 	_player.get_parent().add_child(proj)
-	SfxManager.play(preload("res://combat/audio/missile_launch.ogg"))
+	SfxManager.play(missile_launch_sfx)
 
 
 func _handle_morph_ball_fire(just_pressed: bool) -> void:
@@ -133,7 +140,7 @@ func _handle_morph_ball_fire(just_pressed: bool) -> void:
 	_player.get_parent().add_child(b)
 	active_bombs += 1
 	var _err := b.tree_exited.connect(_on_bomb_exited)
-	SfxManager.play(preload("res://combat/audio/bomb_place.ogg"))
+	SfxManager.play(bomb_place_sfx)
 
 
 func _get_muzzle_position() -> Vector2:

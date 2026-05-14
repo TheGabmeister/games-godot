@@ -11,11 +11,14 @@ const ALARM_FLASH_INTERVAL: float = 0.15
 
 var _alarm_active: bool = false
 var _alarm_timer: float = 0.0
-var _alarm_beep: AudioStream = preload("res://player/audio/alarm_beep.ogg")
-var _icon_beam: Texture2D = preload("res://hud/sprites/icon_beam.png")
-var _icon_missile: Texture2D = preload("res://hud/sprites/icon_missile.png")
-var _pip_full: Texture2D = preload("res://hud/sprites/tank_pip_full.png")
-var _pip_empty: Texture2D = preload("res://hud/sprites/tank_pip_empty.png")
+@export_group("Audio")
+@export var alarm_beep: AudioStream
+
+@export_group("Icons")
+@export var icon_beam: Texture2D
+@export var icon_missile: Texture2D
+@export var pip_full: Texture2D
+@export var pip_empty: Texture2D
 
 
 func _process(delta: float) -> void:
@@ -40,7 +43,7 @@ func _on_energy_changed(current: int, maximum: int) -> void:
 		if not _alarm_active:
 			_alarm_active = true
 			_alarm_timer = 0.0
-			SfxManager.play_loop(&"low_energy", _alarm_beep)
+			SfxManager.play_loop(&"low_energy", alarm_beep)
 	else:
 		if _alarm_active:
 			_alarm_active = false
@@ -55,10 +58,10 @@ func _on_ammo_changed(_weapon: StringName, current: int, _maximum: int) -> void:
 func _on_weapon_switched(weapon: StringName) -> void:
 	match weapon:
 		PlayerConsts.WEAPON_BEAM:
-			weapon_icon.texture = _icon_beam
+			weapon_icon.texture = icon_beam
 			ammo_label.visible = false
 		PlayerConsts.WEAPON_MISSILE:
-			weapon_icon.texture = _icon_missile
+			weapon_icon.texture = icon_missile
 			ammo_label.visible = true
 
 
@@ -72,7 +75,7 @@ func _update_tanks(current: int, maximum: int) -> void:
 		var pip := TextureRect.new()
 		pip.stretch_mode = TextureRect.STRETCH_KEEP
 		if energy_in_tanks >= (i + 1) * 100:
-			pip.texture = _pip_full
+			pip.texture = pip_full
 		else:
-			pip.texture = _pip_empty
+			pip.texture = pip_empty
 		tank_container.add_child(pip)

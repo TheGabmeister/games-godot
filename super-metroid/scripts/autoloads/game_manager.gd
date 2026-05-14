@@ -13,7 +13,7 @@ func _ready() -> void:
 
 
 func _find_player_start() -> void:
-	var markers := get_tree().get_nodes_in_group(&"player_start")
+	var markers := get_tree().get_nodes_in_group(GameConsts.GROUP_PLAYER_START)
 	if markers.is_empty():
 		return
 	var marker: Marker2D = markers[0] as Marker2D

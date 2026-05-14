@@ -5,16 +5,14 @@ extends CharacterBody2D
 @export var contact_damage: int = 10
 @export var gravity: float = 900.0
 
-var _dead: bool = false
+@export_group("Audio")
+@export var hit_sfx: AudioStream = preload("res://enemies/audio/enemy_hit.ogg")
+@export var death_sfx: AudioStream = preload("res://enemies/audio/enemy_death.ogg")
 
-var drop_table: Array[Dictionary] = [
-	{"type": "nothing", "weight": 40},
-	{"type": "small_energy", "weight": 15},
-	{"type": "large_energy", "weight": 15},
-	{"type": "missile", "weight": 15},
-	{"type": "super_missile", "weight": 8},
-	{"type": "power_bomb", "weight": 7},
-]
+@export_group("Drops")
+@export var drop_table: Array[DropEntry] = []
+
+var _dead: bool = false
 
 
 func _ready() -> void:
@@ -40,7 +38,7 @@ func take_damage(amount: int, _source_position: Vector2 = Vector2.ZERO) -> void:
 	if _dead:
 		return
 	hp -= amount
-	SfxManager.play(preload("res://enemies/audio/enemy_hit.ogg"))
+	SfxManager.play(hit_sfx)
 	if hp <= 0:
 		die()
 
@@ -49,7 +47,7 @@ func die() -> void:
 	if _dead:
 		return
 	_dead = true
-	SfxManager.play(preload("res://enemies/audio/enemy_death.ogg"))
+	SfxManager.play(death_sfx)
 	_spawn_drop()
 	queue_free()
 
@@ -57,35 +55,15 @@ func die() -> void:
 func _spawn_drop() -> void:
 	var roll := randf() * 100.0
 	var cumulative := 0.0
-	for entry: Dictionary in drop_table:
-		var weight: int = entry["weight"]
-		cumulative += float(weight)
+	for entry: DropEntry in drop_table:
+		cumulative += float(entry.weight)
 		if roll <= cumulative:
-			var drop_type: String = entry["type"]
-			if drop_type == "nothing":
+			if entry.type == DropEntry.DropType.NOTHING or not entry.scene:
 				return
-			_create_drop(drop_type)
+			var drop: Node2D = entry.scene.instantiate()
+			drop.global_position = global_position
+			get_parent().call_deferred(&"add_child", drop)
 			return
-
-
-func _create_drop(drop_type: String) -> void:
-	var drop_scene: PackedScene = _get_drop_scene(drop_type)
-	if not drop_scene:
-		return
-	var drop: Node2D = drop_scene.instantiate()
-	drop.global_position = global_position
-	get_parent().call_deferred("add_child", drop)
-
-
-func _get_drop_scene(drop_type: String) -> PackedScene:
-	match drop_type:
-		"small_energy":
-			return preload("res://scenes/pickups/pickup_small_energy.tscn")
-		"large_energy":
-			return preload("res://scenes/pickups/pickup_large_energy.tscn")
-		"missile":
-			return preload("res://scenes/pickups/pickup_missile.tscn")
-	return null
 
 
 func _on_body_entered(body: Node2D) -> void:
