@@ -81,46 +81,94 @@ Real-time combat integrated into movement — beam firing in 8 directions, Missi
 
 ---
 
-## Phase 3 — Crateria, World Structure & First Boss
+## Phase 3.1 — Room Transitions & Doors
 
-The first complete area with room transitions, doors, item pickups, a Save Station, and the Bomb Torizo boss — closing the core Metroidvania loop of explore → acquire → return.
+The structural backbone of the Metroidvania world — rooms as self-contained areas connected by doors with scrolling transitions.
 
-- Room-based world system: each room is a self-contained area. Scrolling transitions between rooms via doors
+- Room-based world system: each room is a self-contained scene. Rooms define their own tile layout, collision, camera bounds, and enemy placements
+- GameManager tracks current room and handles room transitions
 - Door system:
+  - Door node placed at room edges with a target room + target door reference
+  - Samus enters door → brief entry animation → screen scrolls/fades → new room loads → Samus exits at target door
   - Blue doors: open with any weapon, always re-openable
   - Red doors: 5 Missiles or 1 Super Missile to open, permanently become blue
   - Gray doors: locked until a room condition is met (e.g., all enemies killed). Cannot be opened by weapons
+- Door state persistence: opened red doors stay blue across room transitions and save/load
+- Test with 3–4 connected rooms using placeholder tilesets to validate transitions in all directions
+
+### Assets
+
+**Sprites**
+- Samus: door entry/exit animation
+- Door sprites: blue, red, gray (closed and opened states)
+
+**VFX**
+- Door transition scroll effect
+
+**Audio**
+- Door open SFX, door close SFX
+
+---
+
+## Phase 3.2 — Blocks, Items & Stations
+
+Interactive world elements — destructible blocks, item pickups, and service stations that form the progression loop.
+
 - Block types:
   - Shot Block: cleared by any beam or missile
   - Bomb Block: cleared by Bombs or Power Bombs
   - Crumble Block: collapses shortly after Samus stands on it
 - Item acquisition system: Chozo Statue pedestals and freestanding item orbs. Pickup triggers a fanfare, brief animation, and item description overlay
 - Collectible items: Energy Tank (+100 energy), Missile Expansion (+5 missiles)
+- Item persistence: collected items stay collected across room transitions and save/load
 - Save Station: saves game progress (does not restore health or ammo). Map symbol: S. Save data records: Samus's position, all collected items, defeated bosses, opened doors, and play time. Three save file slots (file select screen deferred to Phase 8)
 - Energy Recharge Station: fully restores energy (not ammo). Blue-colored room with arm cannon sockets
-- Gunship at Landing Site: save + fully restore all energy and ammo
+- Test with existing test rooms — place blocks, items, and stations to validate all interactions
+
+### Assets
+
+**Sprites**
+- Samus: item acquisition pose
+- Chozo Statue (inactive, holding item)
+- Block sprites: Shot Block, Bomb Block, Crumble Block (intact, crumbling, gone)
+- Energy Tank orb, Missile Expansion orb
+- Save Station console, Energy Recharge sockets
+
+**VFX**
+- Item acquisition glow/fanfare overlay
+- Crumble Block disintegration particles
+
+**Audio**
+- Item acquisition fanfare
+- Save Station SFX
+- Energy Recharge SFX
+
+**UI**
+- Item acquisition overlay (item name, brief description)
+- Save confirmation prompt
+
+---
+
+## Phase 3.3 — Crateria & Elevators
+
+The first real level — Crateria area with room layouts, the Gunship, elevators, a new enemy, and area music.
+
 - Elevator transitions between areas (Crateria ↔ Brinstar)
+- Gunship at Landing Site: save + fully restore all energy and ammo
 - Crateria area:
   - Landing Site with Gunship (starting area, rain, rocky surface)
   - Descent through rocky caves
-  - Bomb Torizo arena (Chozo Statue comes to life when Bombs are grabbed)
   - Path to Brinstar elevator
   - Save Station, Energy Recharge Station
   - Missile Expansion and Energy Tank placements (subset)
 - Early Brinstar stub: Morph Ball acquisition room (Chozo Statue pedestal)
 - New Crateria enemy: Alcoon (200 HP, 50 dmg, slow, high-HP)
-- Bomb Torizo mini-boss: 800 HP. Attacks: arm slash, sonic beam, bomb-like projectiles. Weakness: Missiles to chest. Projectiles can be shot for item drops
 
 ### Assets
 
 **Sprites**
-- Samus: door entry/exit animation, elevator ride animation, item acquisition pose
-- Chozo Statue (inactive, holding item), Chozo Statue (Bomb Torizo — active, attack frames)
+- Samus: elevator ride animation
 - Alcoon — idle, movement, death animations
-- Door sprites: blue, red, gray (closed and opened states)
-- Block sprites: Shot Block, Bomb Block, Crumble Block (intact, crumbling, gone)
-- Energy Tank orb, Missile Expansion orb
-- Save Station console, Energy Recharge sockets
 - Gunship (exterior, Landing Site)
 - Elevator platform
 
@@ -129,25 +177,31 @@ The first complete area with room transitions, doors, item pickups, a Save Stati
 - Early Brinstar tileset: jungle overgrowth, organic cave walls (stub for Morph Ball room)
 
 **VFX**
-- Door transition scroll effect
-- Item acquisition glow/fanfare overlay
-- Crumble Block disintegration particles
 - Rain effect (Crateria surface)
 - Elevator movement
 
 **Audio**
 - Crateria music theme (surface), Crateria music theme (caves)
-- Bomb Torizo boss theme
-- Door open SFX, door close SFX
-- Item acquisition fanfare
-- Save Station SFX
-- Energy Recharge SFX
 - Elevator SFX
-- Chozo Statue activation SFX
 
-**UI**
-- Item acquisition overlay (item name, brief description)
-- Save confirmation prompt
+---
+
+## Phase 3.4 — Bomb Torizo Boss
+
+The first boss fight — a Chozo Statue that comes to life, gating progression with a gray door lock.
+
+- Bomb Torizo arena room in Crateria (Chozo Statue comes to life when Bombs are grabbed)
+- Bomb Torizo mini-boss: 800 HP. Attacks: arm slash, sonic beam, bomb-like projectiles. Weakness: Missiles to chest. Projectiles can be shot for item drops
+- Gray door lock on arena: doors seal when fight begins, unlock on defeat
+
+### Assets
+
+**Sprites**
+- Chozo Statue (Bomb Torizo — active, attack frames)
+
+**Audio**
+- Bomb Torizo boss theme
+- Chozo Statue activation SFX
 
 ---
 
