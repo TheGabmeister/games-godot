@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="64" viewBox="0 0 32 64" shape-rendering="crispEdges">
+  <!-- Door frame only, panels retracted -->
+  <rect x="0" y="0" width="32" height="64" fill="#181818"/>
+  <rect x="0" y="0" width="32" height="2" fill="#484848"/>
+  <rect x="0" y="62" width="32" height="2" fill="#1C1C1C"/>
+  <rect x="0" y="0" width="2" height="64" fill="#404040"/>
+  <rect x="30" y="0" width="2" height="64" fill="#1C1C1C"/>
+  <!-- Recessed interior -->
+  <rect x="4" y="4" width="24" height="56" fill="#0C0C0C"/>
+  <!-- Top retracted panel sliver -->
+  <rect x="4" y="4" width="24" height="4" fill="#801818"/>
+  <rect x="4" y="4" width="24" height="1" fill="#C02020"/>
+  <!-- Bottom retracted panel sliver -->
+  <rect x="4" y="56" width="24" height="4" fill="#801818"/>
+  <rect x="4" y="59" width="24" height="1" fill="#501010"/>
+  <!-- Frame inner edges -->
+  <rect x="2" y="2" width="2" height="60" fill="#282828"/>
+  <rect x="28" y="2" width="2" height="60" fill="#101010"/>
+</svg>

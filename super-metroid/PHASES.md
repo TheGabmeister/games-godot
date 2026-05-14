@@ -99,7 +99,6 @@ The structural backbone of the Metroidvania world — rooms as self-contained ar
 ### Assets
 
 **Sprites**
-- Samus: door entry/exit animation
 - Door sprites: blue, red, gray (closed and opened states)
 
 **VFX**

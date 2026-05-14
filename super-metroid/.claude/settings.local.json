@@ -17,7 +17,20 @@
       "Bash(ls *)",
       "Bash(Godot_v4.6.2-stable_win64.exe *)",
       "Bash(kill *)",
-      "Bash(wait)"
+      "Bash(wait)",
+      "Bash(where blender *)",
+      "Bash(where ffmpeg *)",
+      "Bash(where fluidsynth *)",
+      "Bash(where inkscape *)",
+      "Bash(where python *)",
+      "Bash(ls \"D:\\\\Tools\\\\ffmpeg-8.1-essentials_build\\\\bin\\\\ffmpeg.exe\")",
+      "Read(//d/Tools/ffmpeg-8.1-essentials_build/bin/**)",
+      "Bash(ls \"D:\\\\Tools\\\\fluidsynth-v2.5.4-win10-x64-cpp11\\\\bin\\\\fluidsynth.exe\")",
+      "Read(//d/Tools/fluidsynth-v2.5.4-win10-x64-cpp11/bin/**)",
+      "Bash(\"D:\\\\Tools\\\\ffmpeg-8.1-essentials_build\\\\bin\\\\ffmpeg.exe\" -y -f lavfi -i \"aevalsrc='0.4*sin\\(2*PI*\\(300+800*t/0.3\\)*t\\)*exp\\(-3*t\\)+0.15*random\\(0\\)*exp\\(-5*t\\)':s=44100\" -t 0.3 \"c:/dev/games-godot/super-metroid/props/doors/audio/door_open.wav\")",
+      "Bash(\"D:\\\\Tools\\\\ffmpeg-8.1-essentials_build\\\\bin\\\\ffmpeg.exe\" -y -i \"c:/dev/games-godot/super-metroid/props/doors/audio/door_open.wav\" -c:a libvorbis -q:a 4 \"c:/dev/games-godot/super-metroid/props/doors/audio/door_open.ogg\")",
+      "Bash(\"D:\\\\Tools\\\\ffmpeg-8.1-essentials_build\\\\bin\\\\ffmpeg.exe\" -y -f lavfi -i \"aevalsrc='0.4*sin\\(2*PI*\\(800-600*t/0.25\\)*t\\)*exp\\(-4*t\\)+0.3*sin\\(2*PI*80*t\\)*exp\\(-8*t\\)+0.1*random\\(0\\)*exp\\(-6*t\\)':s=44100\" -t 0.25 \"c:/dev/games-godot/super-metroid/props/doors/audio/door_close.wav\")",
+      "Bash(export PATH=\"$PATH:/d/Tools/ffmpeg-8.1-essentials_build/bin:/d/Tools/fluidsynth-v2.5.4-win10-x64-cpp11/bin\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\Admin\\.claude"
