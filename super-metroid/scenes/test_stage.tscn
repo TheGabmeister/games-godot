@@ -1,0 +1,168 @@
+[gd_scene format=3 uid="uid://bteststage001"]
+
+[ext_resource type="PackedScene" path="res://player/player.tscn" id="1"]
+
+[sub_resource type="RectangleShape2D" id="floor_shape"]
+size = Vector2(960, 16)
+
+[sub_resource type="RectangleShape2D" id="tall_wall_shape"]
+size = Vector2(16, 480)
+
+[sub_resource type="RectangleShape2D" id="platform_shape"]
+size = Vector2(128, 16)
+
+[sub_resource type="RectangleShape2D" id="small_platform_shape"]
+size = Vector2(64, 16)
+
+[sub_resource type="ConvexPolygonShape2D" id="slope_shape"]
+points = PackedVector2Array(-48, 8, 48, 8, 48, -8)
+
+[sub_resource type="RectangleShape2D" id="short_wall_shape"]
+size = Vector2(16, 192)
+
+[node name="TestStage" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1")]
+position = Vector2(100, 430)
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(480, 472)
+
+[node name="FloorCollision" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("floor_shape")
+
+[node name="FloorSprite" type="ColorRect" parent="Floor"]
+offset_left = -480.0
+offset_top = -8.0
+offset_right = 480.0
+offset_bottom = 8.0
+color = Color(0.345, 0.345, 0.345, 1)
+
+[node name="LeftWall" type="StaticBody2D" parent="."]
+position = Vector2(8, 240)
+
+[node name="LeftWallCollision" type="CollisionShape2D" parent="LeftWall"]
+shape = SubResource("tall_wall_shape")
+
+[node name="LeftWallSprite" type="ColorRect" parent="LeftWall"]
+offset_left = -8.0
+offset_top = -240.0
+offset_right = 8.0
+offset_bottom = 240.0
+color = Color(0.345, 0.345, 0.345, 1)
+
+[node name="RightWall" type="StaticBody2D" parent="."]
+position = Vector2(952, 240)
+
+[node name="RightWallCollision" type="CollisionShape2D" parent="RightWall"]
+shape = SubResource("tall_wall_shape")
+
+[node name="RightWallSprite" type="ColorRect" parent="RightWall"]
+offset_left = -8.0
+offset_top = -240.0
+offset_right = 8.0
+offset_bottom = 240.0
+color = Color(0.345, 0.345, 0.345, 1)
+
+[node name="PlatformLow" type="StaticBody2D" parent="."]
+position = Vector2(250, 400)
+
+[node name="PlatformLowCollision" type="CollisionShape2D" parent="PlatformLow"]
+shape = SubResource("platform_shape")
+
+[node name="PlatformLowSprite" type="ColorRect" parent="PlatformLow"]
+offset_left = -64.0
+offset_top = -8.0
+offset_right = 64.0
+offset_bottom = 8.0
+color = Color(0.376, 0.376, 0.376, 1)
+
+[node name="PlatformMid" type="StaticBody2D" parent="."]
+position = Vector2(450, 340)
+
+[node name="PlatformMidCollision" type="CollisionShape2D" parent="PlatformMid"]
+shape = SubResource("platform_shape")
+
+[node name="PlatformMidSprite" type="ColorRect" parent="PlatformMid"]
+offset_left = -64.0
+offset_top = -8.0
+offset_right = 64.0
+offset_bottom = 8.0
+color = Color(0.376, 0.376, 0.376, 1)
+
+[node name="PlatformHigh" type="StaticBody2D" parent="."]
+position = Vector2(650, 260)
+
+[node name="PlatformHighCollision" type="CollisionShape2D" parent="PlatformHigh"]
+shape = SubResource("small_platform_shape")
+
+[node name="PlatformHighSprite" type="ColorRect" parent="PlatformHigh"]
+offset_left = -32.0
+offset_top = -8.0
+offset_right = 32.0
+offset_bottom = 8.0
+color = Color(0.376, 0.376, 0.376, 1)
+
+[node name="Slope" type="StaticBody2D" parent="."]
+position = Vector2(560, 456)
+
+[node name="SlopeCollision" type="CollisionShape2D" parent="Slope"]
+shape = SubResource("slope_shape")
+
+[node name="SlopeSprite" type="Polygon2D" parent="Slope"]
+polygon = PackedVector2Array(-48, 8, 48, 8, 48, -8)
+color = Color(0.4, 0.4, 0.4, 1)
+
+[node name="OneWayPlatform1" type="StaticBody2D" parent="."]
+position = Vector2(150, 360)
+
+[node name="OneWayCollision1" type="CollisionShape2D" parent="OneWayPlatform1"]
+shape = SubResource("small_platform_shape")
+one_way_collision = true
+
+[node name="OneWaySprite1" type="ColorRect" parent="OneWayPlatform1"]
+offset_left = -32.0
+offset_top = -8.0
+offset_right = 32.0
+offset_bottom = 8.0
+color = Color(0.345, 0.47, 0.627, 1)
+
+[node name="OneWayPlatform2" type="StaticBody2D" parent="."]
+position = Vector2(350, 280)
+
+[node name="OneWayCollision2" type="CollisionShape2D" parent="OneWayPlatform2"]
+shape = SubResource("small_platform_shape")
+one_way_collision = true
+
+[node name="OneWaySprite2" type="ColorRect" parent="OneWayPlatform2"]
+offset_left = -32.0
+offset_top = -8.0
+offset_right = 32.0
+offset_bottom = 8.0
+color = Color(0.345, 0.47, 0.627, 1)
+
+[node name="WallJumpLeft" type="StaticBody2D" parent="."]
+position = Vector2(820, 368)
+
+[node name="WallJumpLeftCollision" type="CollisionShape2D" parent="WallJumpLeft"]
+shape = SubResource("short_wall_shape")
+
+[node name="WallJumpLeftSprite" type="ColorRect" parent="WallJumpLeft"]
+offset_left = -8.0
+offset_top = -96.0
+offset_right = 8.0
+offset_bottom = 96.0
+color = Color(0.345, 0.345, 0.345, 1)
+
+[node name="WallJumpRight" type="StaticBody2D" parent="."]
+position = Vector2(900, 368)
+
+[node name="WallJumpRightCollision" type="CollisionShape2D" parent="WallJumpRight"]
+shape = SubResource("short_wall_shape")
+
+[node name="WallJumpRightSprite" type="ColorRect" parent="WallJumpRight"]
+offset_left = -8.0
+offset_top = -96.0
+offset_right = 8.0
+offset_bottom = 96.0
+color = Color(0.345, 0.345, 0.345, 1)

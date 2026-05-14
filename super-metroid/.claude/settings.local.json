@@ -18,7 +18,8 @@
       "Read(//c/Users/Admin/.claude/**)",
       "Bash(curl -s *)",
       "Bash(curl -sL *)",
-      "Bash(python generate_sprites.py)"
+      "Bash(python generate_sprites.py)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-godot/super-metroid/player/sprites/samus_fall.svg\" --export-type=png --export-filename=\"c:/dev/games-godot/super-metroid/player/sprites/samus_fall.png\" -w 64 -h 96)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Admin\\.claude"
