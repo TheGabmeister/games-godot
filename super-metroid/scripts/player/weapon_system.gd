@@ -45,28 +45,19 @@ func _process_fire(delta: float) -> void:
 	var in_spin_jump := current_state_name == PlayerConsts.STATE_SPIN_JUMP
 	var in_hurt := current_state_name == PlayerConsts.STATE_HURT
 
-	if in_hurt:
-		charge_timer = 0.0
-		is_charging = false
+	if in_hurt or in_spin_jump:
+		_reset_charge()
 		return
 
 	if in_morph_ball:
 		_handle_morph_ball_fire(fire_just_pressed)
-		charge_timer = 0.0
-		is_charging = false
+		_reset_charge()
 		return
 
-	var weapon := _player.selected_weapon
-	if weapon == PlayerConsts.WEAPON_MISSILE:
+	if _player.selected_weapon == PlayerConsts.WEAPON_MISSILE:
 		if fire_just_pressed:
 			_fire_missile()
-		charge_timer = 0.0
-		is_charging = false
-		return
-
-	if in_spin_jump:
-		charge_timer = 0.0
-		is_charging = false
+		_reset_charge()
 		return
 
 	if fire_held:
@@ -78,54 +69,46 @@ func _process_fire(delta: float) -> void:
 			_fire_charge_beam()
 		else:
 			_fire_beam()
-		charge_timer = 0.0
-		is_charging = false
+		_reset_charge()
 	else:
-		charge_timer = 0.0
-		is_charging = false
+		_reset_charge()
 
 
-func _fire_beam() -> void:
-	if active_beams >= MAX_BEAMS:
-		return
-	if not power_beam_scene:
-		return
-	var proj: Projectile = power_beam_scene.instantiate()
+func _reset_charge() -> void:
+	charge_timer = 0.0
+	is_charging = false
+
+
+func _spawn_projectile(scene: PackedScene, damage: int, sfx: AudioStream) -> Projectile:
+	var proj: Projectile = scene.instantiate()
 	proj.direction = _player.aim_direction
-	proj.damage = BEAM_DAMAGE
+	proj.damage = damage
 	proj.global_position = _get_muzzle_position()
 	proj.rotation = _player.aim_direction.angle()
 	_player.get_parent().add_child(proj)
+	SfxManager.play(sfx)
+	return proj
+
+
+func _fire_beam() -> void:
+	if active_beams >= MAX_BEAMS or not power_beam_scene:
+		return
+	var proj := _spawn_projectile(power_beam_scene, BEAM_DAMAGE, beam_fire_sfx)
 	active_beams += 1
 	var _err := proj.tree_exited.connect(_on_beam_exited)
-	SfxManager.play(beam_fire_sfx)
 
 
 func _fire_charge_beam() -> void:
 	if not charge_beam_scene:
 		return
-	var proj: Projectile = charge_beam_scene.instantiate()
-	proj.direction = _player.aim_direction
-	proj.damage = CHARGE_DAMAGE
-	proj.global_position = _get_muzzle_position()
-	proj.rotation = _player.aim_direction.angle()
-	_player.get_parent().add_child(proj)
-	SfxManager.play(charge_release_sfx)
+	var _proj := _spawn_projectile(charge_beam_scene, CHARGE_DAMAGE, charge_release_sfx)
 
 
 func _fire_missile() -> void:
-	if _player.missiles <= 0:
-		return
-	if not missile_scene:
+	if _player.missiles <= 0 or not missile_scene:
 		return
 	_player.set_missiles(_player.missiles - 1)
-	var proj: Projectile = missile_scene.instantiate()
-	proj.direction = _player.aim_direction
-	proj.damage = MISSILE_DAMAGE
-	proj.global_position = _get_muzzle_position()
-	proj.rotation = _player.aim_direction.angle()
-	_player.get_parent().add_child(proj)
-	SfxManager.play(missile_launch_sfx)
+	var _proj := _spawn_projectile(missile_scene, MISSILE_DAMAGE, missile_launch_sfx)
 
 
 func _handle_morph_ball_fire(just_pressed: bool) -> void:
