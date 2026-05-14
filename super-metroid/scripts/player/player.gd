@@ -29,7 +29,6 @@ signal player_damaged(amount: int)
 @onready var morph_ball_shape: CollisionShape2D = $MorphBallShape
 @onready var state_machine: PlayerStateMachine = $StateMachine
 @onready var damage_flasher: DamageFlasher = $DamageFlasher
-@onready var weapon_system := $WeaponSystem
 
 var facing_direction: float = 1.0
 var last_down_press_time: float = -1.0
@@ -46,8 +45,6 @@ var _invincibility_timer: float = 0.0
 
 func _ready() -> void:
 	state_machine.init(self)
-	@warning_ignore("unsafe_method_access")
-	weapon_system.init(self)
 	energy_changed.emit(energy, max_energy)
 	weapon_switched.emit(selected_weapon)
 
@@ -70,8 +67,6 @@ func _physics_process(delta: float) -> void:
 			invincible = false
 			damage_flasher.stop()
 	state_machine.update(delta)
-	@warning_ignore("unsafe_method_access")
-	weapon_system.process_fire(delta)
 	var _on_floor := move_and_slide()
 
 

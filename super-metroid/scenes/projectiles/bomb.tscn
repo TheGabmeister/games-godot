@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/combat/projectiles/bomb.gd" id="1"]
-[ext_resource type="Texture2D" path="res://combat/sprites/bomb.png" id="2"]
+[ext_resource type="Script" uid="uid://1wq57otl1uk0" path="res://scripts/projectiles/bomb.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://ocekhnuy042r" path="res://combat/sprites/bomb.png" id="2"]
 
 [sub_resource type="RectangleShape2D" id="shape"]
 size = Vector2(14, 14)

@@ -1,4 +1,3 @@
-class_name WeaponSystem
 extends Node
 
 const MAX_BEAMS: int = 3
@@ -21,11 +20,15 @@ var is_charging: bool = false
 var _player: Player
 
 
-func init(p: Player) -> void:
-	_player = p
+func _ready() -> void:
+	_player = get_parent() as Player
 
 
-func process_fire(delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	_process_fire(delta)
+
+
+func _process_fire(delta: float) -> void:
 	var fire_held := Input.is_action_pressed("fire")
 	var fire_just_pressed := Input.is_action_just_pressed("fire")
 	var fire_just_released := Input.is_action_just_released("fire")

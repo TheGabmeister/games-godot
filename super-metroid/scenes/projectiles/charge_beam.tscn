@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/combat/projectiles/projectile.gd" id="1"]
-[ext_resource type="Texture2D" path="res://combat/sprites/charge_beam.png" id="2"]
+[ext_resource type="Script" uid="uid://bw2tcv8ciue1a" path="res://scripts/projectiles/projectile.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://bupkj8vhd8u46" path="res://combat/sprites/charge_beam.png" id="2"]
 
 [sub_resource type="RectangleShape2D" id="shape"]
 size = Vector2(20, 12)
