@@ -1,16 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl *http://localhost:3000/*)",
-      "Bash(\"C:\\Program Files\\Blender Foundation\\Blender 5.1\\blender.exe\" *)",
-      "Bash(\"C:/Program Files/Blender Foundation/Blender 5.1/blender.exe\" *)",
-      "Bash('C:\\\\Program Files\\\\Blender Foundation\\\\Blender 5.1\\\\blender.exe' *)",
-      "Bash(blender --background *)",
       "mcp__blender__get_scene_info",
       "mcp__blender__execute_python",
       "WebSearch",
       "WebFetch",
-      "Read(//c/Users/Admin/.claude/**)",
       "Bash(curl -s *)",
       "Bash(curl -sL *)",
       "Bash(python generate_sprites.py)",
@@ -18,25 +12,10 @@
       "Bash(ffmpeg *)",
       "Bash(fluidsynth *)",
       "Bash(blender *)",
-      "Bash(dir /s /b)",
-      "Bash(\"D:/Godot/Godot_v4.6.2-stable_win64.exe\" --path . --headless --quit)",
-      "Bash(D:/Godot/Godot_v4.6.2-stable_win64.exe --path \"c:\\\\dev\\\\games-godot\\\\super-metroid\" --headless --quit)",
-      "Bash(python player/sprites/generate_combat_sprites.py)",
-      "Bash(python combat/sprites/generate_sprites.py)",
-      "Bash(python enemies/sprites/generate_sprites.py)",
-      "Bash(python pickups/sprites/generate_sprites.py)",
-      "Bash(python hud/sprites/generate_sprites.py)",
-      "Bash(ffmpeg -y -f lavfi -i \"sine=frequency=1200:duration=0.08\" -af \"afade=t=out:st=0.04:d=0.04,volume=0.6\" -c:a libvorbis -q:a 3 combat/audio/beam_fire.ogg)",
-      "Bash(ffmpeg -y -f lavfi -i \"sine=frequency=400:duration=1.5\" -af \"afade=t=in:d=0.5,afade=t=out:st=1.0:d=0.5,afreqshift=shift=800,volume=0.4\" -c:a libvorbis -q:a 3 combat/audio/charge_up.ogg)",
-      "Bash(ffmpeg -y -f lavfi -i \"sine=frequency=800:duration=0.15\" -af \"afade=t=out:st=0.05:d=0.1,volume=0.8\" -c:a libvorbis -q:a 3 combat/audio/charge_release.ogg)",
-      "Bash(ffmpeg -y -f lavfi -i \"anoisesrc=color=pink:duration=0.2\" -af \"afade=t=out:st=0.08:d=0.12,highpass=f=2000,volume=0.5\" -c:a libvorbis -q:a 3 combat/audio/missile_launch.ogg)",
-      "Bash(ffmpeg -y -f lavfi -i \"sine=frequency=600:duration=0.06\" -af \"afade=t=out:d=0.06,volume=0.4\" -c:a libvorbis -q:a 3 combat/audio/bomb_place.ogg)",
-      "Bash(ffmpeg -y -f lavfi -i \"anoisesrc=color=pink:duration=0.1\" -af \"afade=t=out:st=0.03:d=0.07,lowpass=f=3000,volume=0.5\" -c:a libvorbis -q:a 3 enemies/audio/enemy_hit.ogg)",
-      "Bash(ffmpeg -y -f lavfi -i \"anoisesrc=color=brown:duration=0.25\" -af \"afade=t=out:st=0.05:d=0.2,lowpass=f=2000,volume=0.6\" -c:a libvorbis -q:a 3 enemies/audio/enemy_death.ogg)",
-      "Bash(ffmpeg -y -f lavfi -i \"sine=frequency=200:duration=0.2\" -af \"afade=t=out:st=0.05:d=0.15,tremolo=f=20:d=0.8,volume=0.6\" -c:a libvorbis -q:a 3 player/audio/damage.ogg)",
-      "Bash(ffmpeg -y -f lavfi -i \"sine=frequency=1800:duration=0.12\" -af \"afade=t=in:d=0.01,afade=t=out:st=0.06:d=0.06,volume=0.5\" -c:a libvorbis -q:a 3 player/audio/alarm_beep.ogg)",
-      "Bash(ffmpeg -y -f lavfi -i \"sine=frequency=900:duration=0.05\" -af \"afade=t=out:d=0.05,volume=0.3\" -c:a libvorbis -q:a 3 combat/audio/weapon_cycle.ogg)",
-      "Bash(D:/Godot/Godot_v4.6.2-stable_win64.exe --path \"c:\\\\dev\\\\games-godot\\\\super-metroid\" --headless --import)"
+      "Bash(dir *)",
+      "Bash(mkdir *)",
+      "Bash(ls *)",
+      "Bash(Godot_v4.6.2-stable_win64.exe *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Admin\\.claude"
