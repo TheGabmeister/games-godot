@@ -4,7 +4,7 @@ var player: Player
 var camera: Node2D
 var current_room: Node2D
 var transitioning: bool = false
-var door_states: Dictionary = {}
+var door_states: Dictionary[String, int] = {}
 
 var _player_scene: PackedScene = preload("res://scenes/player.tscn")
 var _hud_scene: PackedScene = preload("res://scenes/hud.tscn")
@@ -98,11 +98,15 @@ func _perform_transition(target_path: String, target_door_id: StringName, source
 
 	# Scroll camera from old room to new room
 	camera.set(&"following", false)
+	var cam2d := camera as Camera2D
+	var screen_pos: Vector2 = cam2d.get_screen_center_position()
+	cam2d.position_smoothing_enabled = false
 	camera.call(&"clear_limits")
+	camera.global_position = screen_pos
 	var scroll_tween := create_tween()
 	var _tw3 := scroll_tween.set_trans(Tween.TRANS_SINE)
 	var _tw4 := scroll_tween.set_ease(Tween.EASE_IN_OUT)
-	var _tw5 := scroll_tween.tween_property(camera, "global_position", camera.global_position + offset, SCROLL_DURATION)
+	var _tw5 := scroll_tween.tween_property(camera, "global_position", screen_pos + offset, SCROLL_DURATION)
 	await scroll_tween.finished
 
 	# Swap rooms: free old, reposition new to origin
@@ -124,6 +128,8 @@ func _perform_transition(target_path: String, target_door_id: StringName, source
 	if new_bounds is Rect2:
 		camera.call(&"set_room_limits", new_bounds)
 	camera.global_position = player.global_position
+	(camera as Camera2D).position_smoothing_enabled = true
+	(camera as Camera2D).reset_smoothing()
 	camera.set(&"following", true)
 
 	# Reveal player and fade new room in

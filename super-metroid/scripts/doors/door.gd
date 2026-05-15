@@ -58,9 +58,7 @@ func _ready() -> void:
 func _resolve_type() -> DoorType:
 	var key := _persistence_key()
 	if GameManager.door_states.has(key):
-		@warning_ignore("unsafe_cast")
-		var stored: DoorType = GameManager.door_states[key] as DoorType
-		return stored
+		return GameManager.door_states[key] as DoorType
 	return door_type
 
 
