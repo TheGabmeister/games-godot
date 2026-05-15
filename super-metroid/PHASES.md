@@ -94,7 +94,7 @@ The structural backbone of the Metroidvania world — rooms as self-contained ar
   - Red doors: 5 Missiles or 1 Super Missile to open, permanently become blue
   - Gray doors: locked until a room condition is met (e.g., all enemies killed). Cannot be opened by weapons
 - Door state persistence: opened red doors stay blue across room transitions
-- Test with 3–4 connected rooms using placeholder tilesets to validate transitions in all directions
+- Test with 3-4 connected rooms using placeholder tilesets to validate transitions in all directions
 
 ### Assets
 
@@ -109,393 +109,382 @@ The structural backbone of the Metroidvania world — rooms as self-contained ar
 
 ---
 
-## Phase 3.2 — Blocks, Items & Stations
+## Phase 3.2 — World Infrastructure
 
-Interactive world elements — destructible blocks, item pickups, and service stations that form the progression loop.
+All interactive world elements beyond doors — destructible blocks, the item acquisition system, service stations, and elevators. Tested in debug rooms.
 
 - Block types:
   - Shot Block: cleared by any beam or missile
   - Bomb Block: cleared by Bombs or Power Bombs
   - Crumble Block: collapses shortly after Samus stands on it
+  - Missile Block: cleared by Missiles or Super Missiles
 - Item acquisition system: Chozo Statue pedestals and freestanding item orbs. Pickup triggers a fanfare, brief animation, and item description overlay
 - Collectible items: Energy Tank (+100 energy), Missile Expansion (+5 missiles)
 - Item persistence: collected items stay collected across room transitions
+- Elevator transitions between areas
+- Gate switches: blue (any beam shot toggles)
 - Energy Recharge Station: fully restores energy (not ammo). Blue-colored room with arm cannon sockets
-- Test with existing test rooms — place blocks, items, and stations to validate all interactions
+- Test all blocks, items, stations, and elevators in debug rooms
 
 ### Assets
 
 **Sprites**
-- Samus: item acquisition pose
+- Samus: item acquisition pose, elevator ride animation
 - Chozo Statue (inactive, holding item)
-- Block sprites: Shot Block, Bomb Block, Crumble Block (intact, crumbling, gone)
+- Block sprites: Shot Block, Bomb Block, Crumble Block (intact, crumbling, gone), Missile Block
 - Energy Tank orb, Missile Expansion orb
 - Energy Recharge sockets
+- Gate switches: blue (inactive/active)
+- Elevator platform
 
 **VFX**
 - Item acquisition glow/fanfare overlay
 - Crumble Block disintegration particles
+- Elevator movement
 
 **Audio**
 - Item acquisition fanfare
 - Energy Recharge SFX
+- Elevator SFX
+- Gate switch activation SFX
 
 **UI**
 - Item acquisition overlay (item name, brief description)
 
 ---
 
-## Phase 3.3 — Crateria & Elevators
+## Phase 4 — Weapons, Suits & Equipment
 
-The first real level — Crateria area with room layouts, the Gunship, elevators, a new enemy, and area music.
+The full beam upgrade system, heavy ordnance, suit upgrades, and charge combos — everything that expands Samus's combat arsenal. Tested in debug rooms with target enemies.
 
-- Elevator transitions between areas (Crateria ↔ Brinstar)
-- Gunship at Landing Site: fully restore all energy and ammo (save functionality added in Phase 8)
-- Crateria area:
-  - Landing Site with Gunship (starting area, rain, rocky surface)
-  - Descent through rocky caves
-  - Path to Brinstar elevator
-  - Energy Recharge Station
-  - Missile Expansion and Energy Tank placements (subset)
-- Early Brinstar stub: Morph Ball acquisition room (Chozo Statue pedestal)
-- New Crateria enemy: Alcoon (200 HP, 50 dmg, slow, high-HP)
-
-### Assets
-
-**Sprites**
-- Samus: elevator ride animation
-- Alcoon — idle, movement, death animations
-- Gunship (exterior, Landing Site)
-- Elevator platform
-
-**Tilemaps**
-- Crateria tileset: surface terrain (rain-weathered rock, cave walls, metal platforms), interior caves
-- Early Brinstar tileset: jungle overgrowth, organic cave walls (stub for Morph Ball room)
-
-**VFX**
-- Rain effect (Crateria surface)
-- Elevator movement
-
-**Audio**
-- Crateria music theme (surface), Crateria music theme (caves)
-- Elevator SFX
-
----
-
-## Phase 3.4 — Bomb Torizo Boss
-
-The first boss fight — a Chozo Statue that comes to life, gating progression with a gray door lock.
-
-- Bomb Torizo arena room in Crateria (Chozo Statue comes to life when Bombs are grabbed)
-- Bomb Torizo mini-boss: 800 HP. Attacks: arm slash, sonic beam, bomb-like projectiles. Weakness: Missiles to chest. Projectiles can be shot for item drops
-- Gray door lock on arena: doors seal when fight begins, unlock on defeat
-
-### Assets
-
-**Sprites**
-- Chozo Statue (Bomb Torizo — active, attack frames)
-
-**Audio**
-- Bomb Torizo boss theme
-- Chozo Statue activation SFX
-
----
-
-**Vertical slice checkpoint — Samus explores Crateria and reaches early Brinstar, acquires Morph Ball and Bombs, defeats Bomb Torizo, collects Energy Tanks and Missile Expansions, and navigates blue and red doors. The full explore → acquire → return → progress loop is playable.**
-
----
-
-## Phase 4 — Brinstar: Beam System, Major Bosses & Inventory
-
-Full Brinstar with all sub-regions, the beam stacking system, Super Missiles, Power Bombs, the first suit upgrade, two bosses, and the pause/map/equipment screens.
-
-- Full Brinstar area: Blue, Green, Pink, Red sub-regions with distinct tilesets
-- Beam upgrade system: multiple beams equipped simultaneously, effects and damage stack per the beam combination table. Spazer and Plasma Beam are mutually exclusive (Plasma deferred to Phase 7)
+- Beam upgrade system: multiple beams equipped simultaneously, effects and damage stack per the beam combination table. Spazer and Plasma Beam are mutually exclusive
   - Ice Beam: 30 damage, freezes enemies into temporary platforms
   - Wave Beam: 50 damage, projectiles pass through walls and solid terrain. Activates blue gate switches from either side
   - Spazer: 40 damage, fires three parallel beams in a spread pattern
-  - Charge Beam pickup (system built in Phase 2, item placed in Brinstar)
-- Super Missiles: 300 damage, slower projectile with small blast, slight recoil knockback on Samus. Opens green doors (1 hit → permanent blue)
-- Power Bombs: 200 damage, Morph Ball only, screen-wide explosion. Opens yellow doors (1 hit → permanent blue). Can hit twice on large enemies. Reveals hidden passages
-- Green doors, yellow doors
-- Gate switches: blue (any beam shot), green (1 Super Missile, from switch side only)
-- Block types: Missile Block (Missiles/Supers), Super Missile Block (Super Missiles only), Power Bomb Block (Power Bombs only)
+  - Plasma Beam: 150 damage uncharged, 450 charged. Projectiles pierce through enemies, hitting multiple targets in a line. Completes the full beam combination damage table (Ice + Wave + Plasma = 300 uncharged, 900 charged)
+  - Charge Beam pickup (system built in Phase 2, item placed now)
+- Charge Beam Combos (special attacks): with Charge Beam + one other beam + Power Bombs selected, charge for 120 frames (~2 seconds). Consumes 1 Power Bomb. Only one non-Charge beam may be active:
+  - Ice Shield: 4 ice crystals orbit Samus, freeze on contact (90 dmg per particle)
+  - Wave Shield (X-Factor): 4 purple spheres in X-pattern stationary, wave orbit when moving (300 dmg per particle)
+  - Spazer Shield: 2 three-pronged projectiles rain downward (300 dmg per particle)
+  - Plasma Shield: 4 large green rings orbit Samus, pierce through enemies (300 dmg per particle)
+- Super Missiles: 300 damage, slower projectile with small blast, slight recoil knockback on Samus
+- Power Bombs: 200 damage, Morph Ball only, screen-wide explosion. Can hit twice on large enemies. Reveals hidden passages
+- Green doors: 1 Super Missile to open, permanently become blue
+- Yellow doors: 1 Power Bomb to open, permanently become blue
+- Green gate switches: 1 Super Missile, from switch side only
+- Super Missile Block: cleared only by Super Missiles
+- Power Bomb Block: cleared only by Power Bombs
 - Varia Suit: damage halved (×0.5), immunity to heated rooms, armor color changes to orange
+- Gravity Suit: damage quartered (×0.25). Free movement underwater and in lava. Protects against upper Norfair lava damage. Armor color changes to purple. Does not stack with Varia — Gravity alone provides ×0.25. Exceptions: Super Metroid energy drain and Mother Brain rainbow beam only receive Varia reduction
+- X-Ray Scope: reveals hidden passages, breakable blocks, and items within line of sight. Samus stationary while scanning
+- Crystal Flash: secret emergency heal. Requirements: ≤50 energy, empty Reserve Tanks, ≥10 Missiles, ≥10 Super Missiles, ≥11 Power Bombs. Activation: Morph Ball, Power Bombs selected, hold L + R + Down + Fire at detonation position with zero vertical speed. Consumes 10M + 10SM + 10PB. Fully restores Energy Tanks, fills Reserve to 230. Samus is not invincible during animation
 - Super Missile Expansion (+5), Power Bomb Expansion (+5) collectibles
 - Reserve Tank collectible (+100 reserve energy). Reserve Tank modes on equipment screen: Auto (dumps all reserve into main energy when main hits 0) and Manual (player activates from pause screen, press Up to stop partial drain). Reserves only charge from energy pickups when all main tanks are full
 - Missile Recharge Station: fully restores Missiles, Super Missiles, and Power Bombs
-- Map Station: reveals map for current area (unexplored rooms shown as blue outlines). Map symbol: M
-- X-Ray Scope: reveals hidden passages, breakable blocks, and items within line of sight. Samus stationary while scanning
-- Spore Spawn mini-boss: 960 HP. Swings in figure-8 pattern, spawns ceiling spores (4 damage Power Suit). Core opens periodically — vulnerable to Missiles/Supers. Takes double damage from charged shots. Speeds up as HP drops below thresholds
-- Kraid boss: 1,000 HP. Thorn projectiles from belly, fingernail boomerangs. Vulnerability: Missiles or Super Missiles into open mouth. Three Super Missiles to the mouth ends fight quickly. Multi-screen-tall arena
-- New enemies: Boyon (1,000 HP, 10 dmg, bouncing blob)
-- Pause screen (Start):
-  - Full area map: room grid color-coded (pink = explored, blue outline = revealed by Map Station, blinking dot = Samus position). Item dots for rooms with uncollected items (visible after room entered)
-  - Equipment sub-screen: toggle individual beams, suits, and movement upgrades on/off. Reserve Tank auto/manual toggle
-- Etecoon creatures in Brinstar: in-game Wall Jump tutorial (mechanic available since Phase 1, Etecoons demonstrate the technique to the player)
+- Test all weapons, suits, and equipment in debug rooms against target enemies
 
 ### Assets
 
 **Sprites**
 - Samus (Varia Suit): full sprite set (recolor to orange with bulky shoulders)
-- Ice Beam projectile (with freeze impact), Wave Beam projectile (wavy, phase-through), Spazer projectile (triple spread)
+- Samus (Gravity Suit): full sprite set (recolor to purple)
+- Ice Beam projectile (with freeze impact), Wave Beam projectile (wavy, phase-through), Spazer projectile (triple spread), Plasma Beam projectile (piercing, green)
+- Charge Beam Combo particles: Ice Shield crystals, Wave Shield spheres, Spazer Shield pronged projectiles, Plasma Shield rings
 - Super Missile projectile (larger, blast effect)
 - Power Bomb explosion (screen-wide, expanding ring)
-- Spore Spawn (body, swinging vine, core open/closed, ceiling spore pods, mini spores)
-- Kraid (multi-screen body, mouth open/closed, belly, fingernail projectiles, thorn projectiles)
-- Chozo Statues for beam/suit/item pickups in Brinstar
+- Crystal Flash animation (Samus rising in light sphere, suitless silhouette)
 - Door sprites: green, yellow (closed and opened states)
-- Gate switches: blue (inactive/active), green (inactive/active)
-- Block sprites: Missile Block, Super Missile Block, Power Bomb Block
+- Gate switches: green (inactive/active)
+- Block sprites: Super Missile Block, Power Bomb Block
 - Reserve Tank orb, Super Missile Expansion orb, Power Bomb Expansion orb
-- Map Station console, Missile Recharge Station
+- Missile Recharge Station
 - X-Ray Scope sweep overlay
-- Etecoon creatures (Wall Jump tutorial animation)
-- Boyon — idle, movement, death animations
-
-**Tilemaps**
-- Brinstar Blue tileset (metallic corridors, blue tones)
-- Brinstar Green tileset (dense jungle overgrowth, organic)
-- Brinstar Pink tileset (organic caves, pink rock)
-- Brinstar Red tileset (red rocky caverns, Kraid's lair)
+- Chozo Statues for beam/suit/item pickups
 
 **VFX**
 - Ice Beam freeze effect on enemy (ice encasement, shatter on thaw)
 - Wave Beam wall-phase shimmer
+- Plasma Beam pierce-through trail
 - Power Bomb expanding ring explosion
+- Charge Beam Combo orbital particle effects (per combo type)
+- Crystal Flash light sphere, energy restoration cascade
 - X-Ray Scope scanning cone/sweep
-- Spore Spawn core glow when vulnerable
-- Kraid arena screen shake
 
 **Audio**
-- Brinstar music theme (Green/jungle), Brinstar music theme (Red/Kraid area)
-- Spore Spawn boss theme, Kraid boss theme
 - Ice Beam fire SFX, freeze SFX, thaw/shatter SFX
 - Wave Beam fire SFX (phasing sound)
 - Spazer fire SFX
+- Plasma Beam fire SFX
+- Charge Beam Combo activation SFX (per combo type)
 - Super Missile launch SFX, Super Missile impact SFX
 - Power Bomb place SFX, Power Bomb explosion SFX
+- Crystal Flash activation SFX, energy restore SFX
 - Gate switch activation SFX
-- Map Station reveal SFX
 - X-Ray Scope hum SFX
-- Etecoon chirp SFX
 
 **UI**
-- Pause screen: area map grid, room color coding, station symbols (S, M), item dots, Samus position marker
-- Equipment sub-screen: beam toggles, suit toggles, upgrade toggles, Reserve Tank mode selector
 - Super Missile icon, Power Bomb icon, X-Ray Scope icon for HUD weapon slots
 
 ---
 
-## Phase 5 — Norfair: Environmental Hazards & Advanced Movement
+## Phase 5 — Movement & Environment
 
-Upper Norfair introduces environmental damage tiers, the Speed Booster/Shinespark system, the Grapple Beam, and the Crocomire boss — a pushback-only fight with no HP depletion.
+All movement upgrades from Hi-Jump Boots through Space Jump, plus environmental hazard systems — heat, lava, acid, water physics, and quicksand. Tested in purpose-built debug rooms.
 
-- Upper Norfair area (east and west sections, Crocomire section)
-- Environmental damage system (damage per 4 frames):
-  - Heated rooms: 1 (Power Suit), 0 (Varia), 0 (Gravity). Norfair only — Varia/Gravity grant full immunity
-  - Lava (upper): 2 / 1 / 0. Gravity Suit grants immunity
-  - Acid: 4 / 2 / 1. Standard suit reduction
-  - Spikes (weak): 16 / 8 / 4 per contact
-  - Spikes (strong): 60 / 30 / 15 per contact
 - Hi-Jump Boots: increases jump height by ~65%
 - Speed Booster: after dashing on flat ground for ~36 tiles, Samus enters blue/flashing speed state. Destroys Speed Booster blocks and most enemies on contact
 - Speed Booster Block type
-- Shinespark: while in Speed Booster state, press Down to store charge. Charge lasts 180 frames (~3 seconds). Press Jump while stationary, then input direction within 28-frame window (frames 2–30):
+- Shinespark: while in Speed Booster state, press Down to store charge. Charge lasts 180 frames (~3 seconds). Press Jump while stationary, then input direction within 28-frame window (frames 2-30):
   - No input / Up: vertical launch
   - Forward: horizontal launch (facing direction)
   - Diagonal (hold Aim-Up before Jump): diagonal launch
   - No downward Shinespark
   - Energy cost: 1 per frame during flight. Minimum 30 energy to activate. 70-frame crash animation on collision
   - Aerial Shinespark: while spin-jumping with stored charge, release Jump → press Up → hold Jump + direction
-- Mockball technique: press Down to morph during landing frames of a jump at dash speed. Preserves running speed in Morph Ball form. Enables early sequence breaks (e.g., early Super Missiles in Brinstar without defeating Spore Spawn)
-- Grapple Beam: fires electric tether to designated Grapple points. Samus swings from the attachment point. Deals 20 damage to enemies on contact. Grapple Block type
-- Crocomire mini-boss: cannot be killed by depleting HP. Push backward by shooting its open mouth with beams/missiles until it falls into lava behind it. Attacks: charge, plasma fireballs
-- New enemies: Holtz (900 HP, 120 dmg, diving fire enemy), Kihunter red variant (1,800 HP, 200 dmg, strongest standard enemy)
-- Dachora creatures in Norfair teach Shinespark technique (in-game tutorial)
-
-### Assets
-
-**Sprites**
-- Samus: Speed Booster run (blue flash overlay), Shinespark launch poses (vertical, horizontal, diagonal), Shinespark crash, Grapple Beam swing animation
-- Speed Booster speed-line overlay
-- Grapple Beam tether (extending, attached, retracting)
-- Grapple point (ceiling anchor)
-- Speed Booster Block, Grapple Block
-- Crocomire (body, open mouth, recoil frames, lava death sequence, skeletal remains)
-- Holtz, Kihunter (red) — idle, attack, movement, death animations
-- Dachora creatures (Shinespark tutorial animation)
-- Hi-Jump Boots, Speed Booster, Grapple Beam pickup orbs
-- Grapple Beam icon for HUD weapon slot
-
-**Tilemaps**
-- Norfair Upper tileset: volcanic rock, magma channels, metal grating over lava, heat distortion areas
-- Crocomire section tileset: lava pit arena, bridge
-
-**VFX**
-- Heat shimmer/distortion in heated rooms
-- Lava surface bubbling, lava splash on contact
-- Speed Booster afterimage trail
-- Shinespark launch flash, flight trail, collision impact burst
-- Grapple Beam electricity arc on tether
-- Crocomire lava death: skeleton dissolving, dramatic reveal
-- Environmental damage flash on Samus (heat/lava/acid tint)
-
-**Audio**
-- Upper Norfair music theme
-- Crocomire boss theme
-- Speed Booster activation SFX (building whoosh), sustained speed SFX
-- Shinespark charge store SFX, Shinespark launch SFX, Shinespark collision SFX
-- Grapple Beam fire SFX, attach SFX, swing SFX, release SFX
-- Lava sizzle SFX, heat damage tick SFX
-- Dachora cry SFX
-
----
-
-## Phase 6 — Wrecked Ship & Maridia: Water, Flight & Two Bosses
-
-The Wrecked Ship's power-state mechanic, Maridia's water physics, Space Jump and Screw Attack for unlimited aerial mobility, Spring Ball, and the Phantoon, Botwoon, and Draygon boss fights.
-
-- Wrecked Ship area: all rooms dark and systems inert (enemies frozen, doors non-functional) until Phantoon is defeated. After Phantoon's death, power is restored — lights on, new enemies active, stations functional
-- Phantoon boss: 2,500 HP. Semi-transparent most of fight, phases in briefly. Blue flame projectiles, figure-eight flame patterns. Only vulnerable when eye opens. Hitting Phantoon with a Super Missile triggers an aggressive multi-flame attack phase
-- Gravity Suit: damage quartered (×0.25). Free movement underwater and in lava. Protects against upper Norfair lava damage. Armor color changes to purple. Does not stack with Varia — Gravity alone provides ×0.25. Exceptions: Super Metroid energy drain and Mother Brain rainbow beam only receive Varia reduction
-- Water physics: without Gravity Suit, drastically reduced movement speed and jump height. Cannot Space Jump or Speed Boost underwater. Gravity Suit removes all water penalties
-- Maridia area: underwater caves, sand, quicksand pits (Samus sinks, must morph and bomb-jump or use specific exits)
+- Mockball technique: press Down to morph during landing frames of a jump at dash speed. Preserves running speed in Morph Ball form. Enables early sequence breaks
+- Grapple Beam: fires electric tether to designated Grapple points. Samus swings from the attachment point. Deals 20 damage to enemies on contact
+- Grapple Block type
 - Space Jump: chain spin jumps indefinitely by pressing Jump at the apex of each spin. Unlimited vertical and horizontal flight
 - Screw Attack: spin jumps deal 2,000 damage per frame and destroy Screw Attack blocks. Combined with Space Jump, Samus becomes a flying weapon that destroys most enemies on contact
 - Screw Attack Block type
 - Spring Ball: jump while in Morph Ball form. Jump height matches bipedal jump (affected by Hi-Jump Boots)
-- Botwoon mini-boss: 3,000 HP. Moves in serpentine patterns through wall holes. Charge attack, green fireballs. Target the head for damage
-- Draygon boss: 6,000 HP. Wall turret shots, grab attack (pins Samus), goop projectiles. Vulnerability: Super Missiles to orange belly. Alternate strategy: destroy wall turrets, let Draygon grab Samus, then fire Grapple Beam at sparking turret wreckage to electrocute Draygon (instant kill)
-- New enemies: Atomic (250 HP, 40 dmg, ghostly orb), Covern (300 HP, 60 dmg, respawns after destruction), Evir (300 HP, 100 dmg, projectile-firing), Mochtroid (100 HP, 90 dmg, weak Metroid clone, freezable with Ice Beam)
-- Reserve Tank placements in Wrecked Ship and Maridia
+- Environmental damage system (damage per 4 frames):
+  - Heated rooms: 1 (Power Suit), 0 (Varia), 0 (Gravity). Norfair only — Varia/Gravity grant full immunity
+  - Lava (upper): 2 / 1 / 0. Gravity Suit grants immunity
+  - Lava (lower Norfair extreme): 8 / 4 / 2. Always damages even with Gravity Suit
+  - Acid: 4 / 2 / 1. Standard suit reduction
+  - Spikes (weak): 16 / 8 / 4 per contact
+  - Spikes (strong): 60 / 30 / 15 per contact
+- Water physics: without Gravity Suit, drastically reduced movement speed and jump height. Cannot Space Jump or Speed Boost underwater. Gravity Suit removes all water penalties
+- Quicksand: Samus sinks, must morph and bomb-jump or use specific exits
+- Test all movement upgrades and environmental systems in debug rooms
 
 ### Assets
 
 **Sprites**
-- Samus (Gravity Suit): full sprite set (recolor to purple)
+- Samus: Speed Booster run (blue flash overlay), Shinespark launch poses (vertical, horizontal, diagonal), Shinespark crash
+- Samus: Grapple Beam swing animation
 - Samus: Space Jump chain animation, Screw Attack spin (energy crackling overlay), Spring Ball jump
 - Samus: underwater movement variants (sluggish without Gravity Suit, normal with)
-- Phantoon (body, eye open/closed, phase-in/out transparency, flame projectiles)
-- Botwoon (serpentine body segments, head, green fireballs)
-- Draygon (body, orange belly, grab animation, goop projectiles, wall turrets, sparking turret wreckage)
-- Atomic, Covern, Evir, Mochtroid — idle, movement, attack, death animations
-- Screw Attack Block
-- Space Jump, Screw Attack, Spring Ball, Gravity Suit pickup orbs
-
-**Tilemaps**
-- Wrecked Ship tileset: derelict metal corridors, broken consoles (unpowered variant: dark, inert; powered variant: lit, active displays)
-- Maridia tileset: underwater rock, coral, sand floors, quicksand pits, glass tube corridors
+- Speed Booster speed-line overlay
+- Grapple Beam tether (extending, attached, retracting)
+- Grapple point (ceiling anchor)
+- Speed Booster Block, Grapple Block, Screw Attack Block
+- Hi-Jump Boots, Speed Booster, Grapple Beam, Space Jump, Screw Attack, Spring Ball pickup orbs
+- Grapple Beam icon for HUD weapon slot
 
 **VFX**
-- Wrecked Ship power-on transition: lights flickering on, consoles activating
-- Water surface refraction, underwater ambient particles
-- Quicksand sinking effect
+- Speed Booster afterimage trail
+- Shinespark launch flash, flight trail, collision impact burst
+- Grapple Beam electricity arc on tether
 - Space Jump spin trail
 - Screw Attack electric crackling aura
-- Draygon electrocution via Grapple Beam (sparks, flash)
-- Phantoon phase-in/out transparency effect, flame trail patterns
+- Heat shimmer/distortion in heated rooms
+- Lava surface bubbling, lava splash on contact
+- Water surface refraction, underwater ambient particles
+- Quicksand sinking effect
+- Environmental damage flash on Samus (heat/lava/acid tint)
 
 **Audio**
-- Wrecked Ship music (unpowered — muted, eerie), Wrecked Ship music (powered — restored)
-- Maridia music theme
-- Phantoon boss theme, Botwoon boss theme (or shared mini-boss theme), Draygon boss theme
+- Speed Booster activation SFX (building whoosh), sustained speed SFX
+- Shinespark charge store SFX, Shinespark launch SFX, Shinespark collision SFX
+- Grapple Beam fire SFX, attach SFX, swing SFX, release SFX
 - Space Jump chain SFX
 - Screw Attack buzz/crackle SFX
 - Spring Ball bounce SFX
+- Lava sizzle SFX, heat damage tick SFX
 - Water entry SFX, water exit SFX, underwater ambient loop
 - Quicksand sinking SFX
-- Phantoon eye-open SFX, Phantoon flame burst SFX
-- Draygon grab SFX, Draygon electrocution SFX
-- Mochtroid latch SFX
 
 ---
 
-## Phase 7 — Lower Norfair & Tourian: Endgame
+## Phase 6 — Enemies, Bosses & UI
 
-Plasma Beam completes the beam system, Ridley caps the four main bosses, the boss gate opens Tourian, and the Mother Brain three-phase finale plays out with the baby Metroid narrative climax.
+All remaining enemies and boss fights built in test arenas, plus the pause/map/equipment screens, the boss gate system, and the Mother Brain finale sequence.
 
-- Lower Norfair area: extreme heat and lava (8 / 4 / 2 damage per 4 frames for Power/Varia/Gravity — always damages even with Gravity Suit)
-- Plasma Beam: 150 damage uncharged, 450 charged. Projectiles pierce through enemies, hitting multiple targets in a line. Mutually exclusive with Spazer — only one can be active. Completes the full beam combination damage table (Ice + Wave + Plasma = 300 uncharged, 900 charged)
-- Charge Beam Combos (special attacks): with Charge Beam + one other beam + Power Bombs selected, charge for 120 frames (~2 seconds). Consumes 1 Power Bomb. Only one non-Charge beam may be active:
-  - Ice Shield: 4 ice crystals orbit Samus, freeze on contact (90 dmg per particle)
-  - Wave Shield (X-Factor): 4 purple spheres in X-pattern stationary, wave orbit when moving (300 dmg per particle)
-  - Spazer Shield: 2 three-pronged projectiles rain downward (300 dmg per particle)
-  - Plasma Shield: 4 large green rings orbit Samus, pierce through enemies (300 dmg per particle)
-- Crystal Flash: secret emergency heal. Requirements: ≤50 energy, empty Reserve Tanks, ≥10 Missiles, ≥10 Super Missiles, ≥11 Power Bombs. Activation: Morph Ball, Power Bombs selected, hold L + R + Down + Fire at detonation position with zero vertical speed. Consumes 10M + 10SM + 10PB. Fully restores Energy Tanks, fills Reserve to 230. Samus is not invincible during animation
+- All remaining enemies: Alcoon (200 HP, 50 dmg, slow, high-HP), Boyon (1,000 HP, 10 dmg, bouncing blob), Holtz (900 HP, 120 dmg, diving fire enemy), Kihunter red variant (1,800 HP, 200 dmg, strongest standard enemy), Atomic (250 HP, 40 dmg, ghostly orb), Covern (300 HP, 60 dmg, respawns after destruction), Evir (300 HP, 100 dmg, projectile-firing), Mochtroid (100 HP, 90 dmg, weak Metroid clone, freezable with Ice Beam), Metroid (500 HP, 12 dmg per frame, latches and drains — freeze with Ice Beam then 5 Missiles or 1 Super Missile to kill, escape grab with 3 Power Bombs), Tourian Space Pirate (500 HP, 15 dmg), Fireflea (ambient), Beetom (damages every 64 frames), Cacatac (stationary, projectile), Mini-Kraid (400 HP), Shaktool (300 HP, digging)
+- Bomb Torizo mini-boss: 800 HP. Arm slash, sonic beam, bomb-like projectiles. Weakness: Missiles to chest. Projectiles can be shot for item drops. Gray door lock on arena: doors seal when fight begins, unlock on defeat
+- Spore Spawn mini-boss: 960 HP. Swings in figure-8 pattern, spawns ceiling spores (4 damage Power Suit). Core opens periodically — vulnerable to Missiles/Supers. Takes double damage from charged shots. Speeds up as HP drops below thresholds
+- Kraid boss: 1,000 HP. Thorn projectiles from belly, fingernail boomerangs. Vulnerability: Missiles or Super Missiles into open mouth. Three Super Missiles to the mouth ends fight quickly. Multi-screen-tall arena
+- Crocomire mini-boss: cannot be killed by depleting HP. Push backward by shooting its open mouth with beams/missiles until it falls into lava behind it. Attacks: charge, plasma fireballs
+- Phantoon boss: 2,500 HP. Semi-transparent most of fight, phases in briefly. Blue flame projectiles, figure-eight flame patterns. Only vulnerable when eye opens. Hitting Phantoon with a Super Missile triggers an aggressive multi-flame attack phase
+- Botwoon mini-boss: 3,000 HP. Moves in serpentine patterns through wall holes. Charge attack, green fireballs. Target the head for damage
+- Draygon boss: 6,000 HP. Wall turret shots, grab attack (pins Samus), goop projectiles. Vulnerability: Super Missiles to orange belly. Alternate strategy: destroy wall turrets, let Draygon grab Samus, then fire Grapple Beam at sparking turret wreckage to electrocute Draygon (instant kill)
 - Golden Torizo mini-boss: 13,500 HP. Arm slash, sonic beam, bomb projectiles. Catches thrown missiles and throws them back. Super Missiles to chest
 - Ridley boss: 18,000 HP. Fireballs, tail stab, claw grab (drains energy rapidly), swooping charges. Missiles/Supers/Charged Plasma to body. Most damaging prolonged fight in the game
-- Boss gate system: 4 Chozo statues in Crateria. Defeating Kraid, Phantoon, Draygon, and Ridley activates each statue. All four statues active opens the path to Tourian
-- Tourian area: linear gauntlet through Space Pirate command center
-- Eye Doors: organic barriers in Tourian. Shoot eye with Missiles/Supers to open. Close permanently behind Samus (one-way progression)
-- Metroid enemy: 500 HP, 12 damage per frame (latches onto Samus, drains energy continuously). Freeze with Ice Beam, then 5 Missiles or 1 Super Missile to kill. Escape grab with 3 Power Bombs
-- Tourian Space Pirate: 500 HP, 15 contact damage
 - Mother Brain Phase 1 (Brain in Tank): 3,000 HP. Rinkas (energy rings), wall turrets. Destroy glass tank first, then damage exposed brain
 - Mother Brain Phase 2 (Mechanical Body): 18,000 HP. Eye laser (120 dmg), energy rings (80 dmg), bombs (160 dmg), red beam (400 dmg), rainbow beam (600 dmg). Rainbow beam ignores Gravity Suit — only Varia Suit halves it to 300. After HP depleted, Mother Brain fires rainbow beam
 - Baby Metroid scripted sequence: baby Metroid intervenes, drains Mother Brain, transfers energy and the Hyper Beam to Samus, then is killed by Mother Brain
 - Mother Brain Phase 3 (Weakened): 36,000 HP. Same attacks as MB2 but can be stunlocked with continuous fire
 - Hyper Beam: 1,000 damage per shot, 36 hits to destroy MB3. Cannot be toggled or unequipped. Available only during MB3 fight and escape sequence
-- Tourian skeletal remains and environmental storytelling details
+- Boss gate system: 4 Chozo statues track defeat of Kraid, Phantoon, Draygon, and Ridley. All four defeated opens the path to Tourian
+- Eye Doors: organic barriers, shoot eye with Missiles/Supers to open. Close permanently behind Samus (one-way progression)
+- Wrecked Ship power-state mechanic: rooms have unpowered (dark, inert) and powered (lit, active) variants. Defeating Phantoon restores power
+- Pause screen (Start):
+  - Full area map: room grid color-coded (pink = explored, blue outline = revealed by Map Station, blinking dot = Samus position). Item dots for rooms with uncollected items (visible after room entered). Station symbols (S, M)
+  - Equipment sub-screen: toggle individual beams, suits, and movement upgrades on/off. Reserve Tank auto/manual toggle
+- Map Station: reveals map for current area (unexplored rooms shown as blue outlines). Map symbol: M
+- Test all enemies and bosses in purpose-built debug arenas
 
 ### Assets
 
 **Sprites**
-- Plasma Beam projectile (piercing, green)
-- Charge Beam Combo particles: Ice Shield crystals, Wave Shield spheres, Spazer Shield pronged projectiles, Plasma Shield rings
-- Crystal Flash animation (Samus rising in light sphere, suitless silhouette)
+- All enemies: Alcoon, Boyon, Holtz, Kihunter (red), Atomic, Covern, Evir, Mochtroid, Metroid, Tourian Space Pirate, Fireflea, Beetom, Cacatac, Mini-Kraid, Shaktool — idle, movement, attack, death animations
+- Chozo Statue (Bomb Torizo — active, attack frames)
+- Spore Spawn (body, swinging vine, core open/closed, ceiling spore pods, mini spores)
+- Kraid (multi-screen body, mouth open/closed, belly, fingernail projectiles, thorn projectiles)
+- Crocomire (body, open mouth, recoil frames, lava death sequence, skeletal remains)
+- Phantoon (body, eye open/closed, phase-in/out transparency, flame projectiles)
+- Botwoon (serpentine body segments, head, green fireballs)
+- Draygon (body, orange belly, grab animation, goop projectiles, wall turrets, sparking turret wreckage)
 - Golden Torizo (active, attack frames, missile-catch animation, color fade as HP drops)
 - Ridley (full body, fireballs, tail stab, claw grab, swooping flight, pogo tail)
-- 4 Chozo statues in Crateria (inactive, one-by-one activation glow)
-- Eye Door (closed with eye, eye hit reaction, open, sealing shut behind)
-- Metroid (floating, latching onto Samus, freeze state, death shatter)
-- Tourian Space Pirate (standing, attacking, death)
 - Mother Brain Phase 1: brain in glass tank, glass shattering stages, Rinkas, wall turrets
 - Mother Brain Phase 2: mechanical body (T-Rex form), eye laser, energy rings, bomb projectiles, red beam, rainbow beam
 - Mother Brain Phase 3: weakened body, Hyper Beam stun reaction
 - Baby Metroid (floating, latching onto MB, energy transfer to Samus, death)
+- Metroid (floating, latching onto Samus, freeze state, death shatter)
 - Hyper Beam projectile (massive, rainbow-colored)
-- Plasma Beam, Hyper Beam pickup effect (auto-acquired)
-
-**Tilemaps**
-- Lower Norfair tileset: extreme volcanic, intense lava pools, ancient Chozo architecture
-- Tourian tileset: Space Pirate command center, metal corridors, organic Metroid containment tubes, Mother Brain arena
+- Eye Door (closed with eye, eye hit reaction, open, sealing shut behind)
+- 4 Chozo statues (inactive, one-by-one activation glow)
+- Map Station console
 
 **VFX**
-- Plasma Beam pierce-through trail
-- Charge Beam Combo orbital particle effects (per combo type)
-- Crystal Flash light sphere, energy restoration cascade
+- Spore Spawn core glow when vulnerable
+- Kraid arena screen shake
+- Crocomire lava death: skeleton dissolving, dramatic reveal
+- Phantoon phase-in/out transparency effect, flame trail patterns
+- Draygon electrocution via Grapple Beam (sparks, flash)
 - Golden Torizo missile-catch flash
 - Ridley fire breath cone, tail grab energy drain sparks
-- Chozo statue activation glow (sequential)
 - Metroid latch energy drain visual (Samus flashing, energy stream)
 - Mother Brain glass tank shattering (progressive cracks)
 - Mother Brain rainbow beam (screen-filling, color-cycling)
 - Baby Metroid energy transfer beam (Metroid → Samus)
 - Hyper Beam impact (massive explosion, screen flash)
+- Wrecked Ship power-on transition: lights flickering on, consoles activating
+- Chozo statue activation glow (sequential)
 
 **Audio**
-- Lower Norfair music theme
-- Tourian music theme
-- Ridley boss theme, Mother Brain boss theme
-- Plasma Beam fire SFX
-- Charge Beam Combo activation SFX (per combo type)
-- Crystal Flash activation SFX, energy restore SFX
-- Ridley screech SFX, tail grab SFX, fireball SFX
-- Chozo statue activation rumble SFX
-- Metroid screech SFX, Metroid latch SFX, Metroid freeze-shatter SFX
-- Mother Brain glass shatter SFX, Rinka SFX
-- Mother Brain eye laser SFX, rainbow beam SFX, red beam SFX
+- Bomb Torizo boss theme, Chozo Statue activation SFX
+- Spore Spawn boss theme
+- Kraid boss theme
+- Crocomire boss theme
+- Phantoon boss theme, Phantoon eye-open SFX, Phantoon flame burst SFX
+- Botwoon boss theme (or shared mini-boss theme)
+- Draygon boss theme, Draygon grab SFX, Draygon electrocution SFX
+- Ridley boss theme, Ridley screech SFX, tail grab SFX, fireball SFX
+- Mother Brain boss theme, glass shatter SFX, Rinka SFX, eye laser SFX, rainbow beam SFX, red beam SFX
 - Baby Metroid cry SFX, energy transfer SFX, baby Metroid death SFX
 - Hyper Beam fire SFX, Hyper Beam impact SFX
+- Metroid screech SFX, Metroid latch SFX, Metroid freeze-shatter SFX
+- Mochtroid latch SFX
+- Chozo statue activation rumble SFX
+- Map Station reveal SFX
 
 **UI**
+- Pause screen: area map grid, room color coding, station symbols (S, M), item dots, Samus position marker
+- Equipment sub-screen: beam toggles, suit toggles, upgrade toggles, Reserve Tank mode selector
 - Mother Brain Phase 2/3 health bar or damage feedback indicator
 
 ---
 
-## Phase 8 — Ceres Prologue, Escape, Menus & Content Completion
+**Systems complete checkpoint — all of Samus's weapons, movement upgrades, suits, and equipment are functional. All enemies and bosses are battle-tested in debug arenas. The pause/map/equipment screens are operational. Ready to build the world.**
 
-The Ceres Station prologue, the Zebes escape sequence, time-based endings, all menus/screens, and full placement of all 100 items across the world.
+---
+
+## Phase 7 — World Construction
+
+All game areas built with real tilesets, room layouts, item placements, enemy placements, and area music. Boss arenas placed in their final locations. The Gunship, tutorial creatures, and narrative elements are integrated.
+
+- Crateria area:
+  - Landing Site with Gunship (starting area, rain, rocky surface). Gunship fully restores all energy and ammo (save functionality added in Phase 8)
+  - Descent through rocky caves
+  - Path to Brinstar elevator
+  - Bomb Torizo arena room (Chozo Statue comes to life when Bombs are grabbed)
+  - Boss gate: 4 Chozo statues, activated by defeating Kraid, Phantoon, Draygon, Ridley — opens path to Tourian
+  - Energy Recharge Station
+  - Missile Expansion and Energy Tank placements
+  - Alcoon enemy placement
+- Brinstar area: Blue, Green, Pink, Red sub-regions with distinct tilesets
+  - Morph Ball acquisition room (Chozo Statue pedestal)
+  - Chozo Statues for beam/suit/item pickups
+  - Spore Spawn arena, Kraid arena
+  - Etecoon creatures: in-game Wall Jump tutorial (mechanic available since Phase 1, Etecoons demonstrate the technique)
+  - Energy Recharge Station, Missile Recharge Station, Map Station
+  - Boyon, Beetom, Cacatac, Mini-Kraid enemy placements
+  - Item placements
+- Upper Norfair area (east and west sections):
+  - Heated rooms, lava pools
+  - Crocomire arena (lava pit, bridge)
+  - Dachora creatures: in-game Shinespark tutorial
+  - Holtz, Kihunter red, Fireflea enemy placements
+  - Station and item placements
+- Wrecked Ship area:
+  - Unpowered/powered room variants (all rooms have both states)
+  - Phantoon arena
+  - Atomic, Covern enemy placements (post-Phantoon)
+  - Reserve Tank, item placements
+- Maridia area:
+  - Underwater caves, sand, quicksand pits, glass tube corridors
+  - Botwoon arena, Draygon arena (with wall turrets)
+  - Evir, Mochtroid, Shaktool enemy placements
+  - Reserve Tank, item placements
+- Lower Norfair area:
+  - Extreme heat and lava zones, ancient Chozo architecture
+  - Golden Torizo arena, Ridley arena
+  - Reserve Tank, item placements
+- Tourian area:
+  - Linear gauntlet through Space Pirate command center
+  - Eye Doors placed for one-way progression
+  - Metroid and Tourian Space Pirate enemy placements
+  - Mother Brain arena
+  - Skeletal remains and environmental storytelling details
+  - Baby Metroid scripted sequence placed
+- All elevator connections between areas
+- Full area music coverage: all 6 main areas + Tourian with distinct themes and proper transition triggers (elevator, door, boss encounter, scripted event)
+- Music system: area themes loop, boss themes override, Wrecked Ship switches from unpowered to powered theme after Phantoon, low energy alarm overlays on current track
+
+### Assets
+
+**Sprites**
+- Gunship (exterior, Landing Site)
+- Etecoon creatures (Wall Jump tutorial animation)
+- Dachora creatures (Shinespark tutorial animation)
+- Tourian skeletal remains
+
+**Tilemaps**
+- Crateria tileset: surface terrain (rain-weathered rock, cave walls, metal platforms), interior caves
+- Brinstar Blue tileset (metallic corridors, blue tones)
+- Brinstar Green tileset (dense jungle overgrowth, organic)
+- Brinstar Pink tileset (organic caves, pink rock)
+- Brinstar Red tileset (red rocky caverns, Kraid's lair)
+- Norfair Upper tileset: volcanic rock, magma channels, metal grating over lava, heat distortion areas
+- Crocomire section tileset: lava pit arena, bridge
+- Wrecked Ship tileset: derelict metal corridors, broken consoles (unpowered variant: dark, inert; powered variant: lit, active displays)
+- Maridia tileset: underwater rock, coral, sand floors, quicksand pits, glass tube corridors
+- Lower Norfair tileset: extreme volcanic, intense lava pools, ancient Chozo architecture
+- Tourian tileset: Space Pirate command center, metal corridors, organic Metroid containment tubes, Mother Brain arena
+
+**VFX**
+- Rain effect (Crateria surface)
+
+**Audio**
+- Crateria music theme (surface), Crateria music theme (caves)
+- Brinstar music theme (Green/jungle), Brinstar music theme (Red/Kraid area)
+- Upper Norfair music theme
+- Lower Norfair music theme
+- Wrecked Ship music (unpowered — muted, eerie), Wrecked Ship music (powered — restored)
+- Maridia music theme
+- Tourian music theme
+- Etecoon chirp SFX, Dachora cry SFX
+
+---
+
+## Phase 8 — Bookends & Completion
+
+The Ceres Station prologue, the Zebes escape sequence, time-based endings, all menus/screens, the save system, and full item audit.
 
 - Space Colony Ceres prologue area: dead researchers, baby Metroid container room, atmospheric derelict corridors
 - Opening narration text (story setup: last Metroid, Ceres research, Ridley's attack)
@@ -509,11 +498,11 @@ The Ceres Station prologue, the Zebes escape sequence, time-based endings, all m
   - Timer expires: Samus dies, return to title screen
 - Ending system (time-based ending images):
   - ≥10 hours: Samus in full suit, helmet on
-  - 3–10 hours: Samus removes helmet
+  - 3-10 hours: Samus removes helmet
   - <3 hours: Samus in civilian clothes
   - Item collection percentage displayed on ending screen
 - Title screen
-- Save system: Save Station saves game progress (does not restore health or ammo). Map symbol: S. Save data records: Samus's position, all collected items, defeated bosses, opened doors, and play time. Gunship also saves (in addition to full restore). Save Stations placed in Crateria and all subsequent areas
+- Save system: Save Station saves game progress (does not restore health or ammo). Map symbol: S. Save data records: Samus's position, all collected items, defeated bosses, opened doors, and play time. Gunship also saves (in addition to full restore). Save Stations placed in all areas
 - File select screen: 3 save file slots, item percentage, play time per file
 - Controller remapping screen (Controller Setting Mode): all face/shoulder buttons remappable. D-Pad and Start fixed. Aim Diagonal Up/Down can only bind to L or R
 - Game Over screen
@@ -525,19 +514,14 @@ The Ceres Station prologue, the Zebes escape sequence, time-based endings, all m
   - 4 Reserve Tanks (400 max reserve): 1 each in Brinstar, Norfair, Wrecked Ship, Maridia
   - 16 unique equipment items placed per spec locations
 - Item percentage tracking on file select screen (X/100 items)
-- Wrecked Ship: full room-by-room power-on state transitions (Phase 6 introduced the mechanic, this phase ensures all rooms have proper unpowered/powered variants)
-- Remaining enemies not introduced in earlier phases: Fireflea (Norfair), Beetom (Brinstar, damages every 64 frames), Cacatac (Brinstar), Mini-Kraid (Brinstar, 400 HP), Shaktool (Maridia, 300 HP)
 - Sequence break validation: Wall Jump height accessibility, Mockball routes through Brinstar, Infinite Bomb Jump paths, early Super Missile routes
-- Full area music coverage: ensure all 6 main areas + Ceres + Tourian have distinct themes with proper transition triggers (elevator, door, boss encounter, scripted event)
-- Music system: area themes loop, boss themes override, Wrecked Ship switches from unpowered to powered theme after Phantoon, low energy alarm overlays on current track
 
 ### Assets
 
 **Sprites**
-- Ceres Station: dead researchers, baby Metroid in containment capsule, Ceres Ridley (reuse Ridley sprites from Phase 7)
+- Ceres Station: dead researchers, baby Metroid in containment capsule, Ceres Ridley (reuse Ridley sprites from Phase 6)
 - Samus: ending images (full suit, helmet removal, civilian clothes)
 - Etecoon and Dachora escape sprites (fleeing Zebes in ending)
-- Fireflea, Beetom, Cacatac, Mini-Kraid, Shaktool — idle, movement, attack, death animations
 - Title screen logo
 - Save Station console
 - File select screen elements (save slot frames, percentage display)

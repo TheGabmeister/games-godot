@@ -137,4 +137,4 @@ Player (CharacterBody2D)
 
 **Phase 3.1 implemented:** Room-based world system (each room a standalone scene), door system (blue/red/gray with StaticBody2D + Area2D hitbox/trigger), directional camera scroll transitions with fade-to-black overlay, door state persistence (red→blue), gray door enemy-group tracking, CameraController as own scene (separated from Player), GameManager owns Player/Camera/HUD at root level. 4 test rooms: A (hub), B (blue), C (blue), D (red door + gray door + enemies).
 
-**Next:** Phase 3.2 — Blocks, items & stations.
+**Next:** Phase 3.2 — World infrastructure (blocks, items, stations, elevators).
