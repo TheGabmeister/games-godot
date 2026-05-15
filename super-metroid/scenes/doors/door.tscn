@@ -5,6 +5,11 @@
 [ext_resource type="AudioStream" path="res://props/doors/audio/door_open.ogg" id="3"]
 [ext_resource type="AudioStream" path="res://props/doors/audio/door_close.ogg" id="4"]
 [ext_resource type="Script" path="res://scripts/doors/door_sprite_preview.gd" id="5"]
+[ext_resource type="Texture2D" path="res://props/doors/door_blue_open.png" id="6"]
+[ext_resource type="Texture2D" path="res://props/doors/door_red_closed.png" id="7"]
+[ext_resource type="Texture2D" path="res://props/doors/door_red_open.png" id="8"]
+[ext_resource type="Texture2D" path="res://props/doors/door_gray_closed.png" id="9"]
+[ext_resource type="Texture2D" path="res://props/doors/door_gray_open.png" id="10"]
 
 [sub_resource type="RectangleShape2D" id="block_shape"]
 size = Vector2(32, 64)
@@ -21,6 +26,12 @@ collision_mask = 0
 script = ExtResource("1")
 open_sfx = ExtResource("3")
 close_sfx = ExtResource("4")
+_blue_closed = ExtResource("2")
+_blue_open = ExtResource("6")
+_red_closed = ExtResource("7")
+_red_open = ExtResource("8")
+_gray_closed = ExtResource("9")
+_gray_open = ExtResource("10")
 
 [node name="DoorSprite" type="Sprite2D" parent="."]
 z_index = 100

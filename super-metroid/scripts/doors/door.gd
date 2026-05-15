@@ -24,12 +24,13 @@ var _missile_hits: int = 0
 const MISSILES_TO_OPEN_RED: int = 5
 const MISSILE_DAMAGE_MIN: int = 100
 
-var _blue_closed: Texture2D = preload("res://props/doors/door_blue_closed.png")
-var _blue_open: Texture2D = preload("res://props/doors/door_blue_open.png")
-var _red_closed: Texture2D = preload("res://props/doors/door_red_closed.png")
-var _red_open: Texture2D = preload("res://props/doors/door_red_open.png")
-var _gray_closed: Texture2D = preload("res://props/doors/door_gray_closed.png")
-var _gray_open: Texture2D = preload("res://props/doors/door_gray_open.png")
+@export_group("Textures")
+@export var _blue_closed: Texture2D
+@export var _blue_open: Texture2D
+@export var _red_closed: Texture2D
+@export var _red_open: Texture2D
+@export var _gray_closed: Texture2D
+@export var _gray_open: Texture2D
 
 @onready var _sprite: Sprite2D = $DoorSprite
 @onready var _block_shape: CollisionShape2D = $BlockCollision
