@@ -28,10 +28,10 @@
 [ext_resource type="PackedScene" path="res://scenes/projectiles/charge_beam.tscn" id="27"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/missile.tscn" id="28"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/bomb.tscn" id="29"]
-[ext_resource type="AudioStream" path="res://combat/audio/beam_fire.ogg" id="sfx_beam"]
-[ext_resource type="AudioStream" path="res://combat/audio/charge_release.ogg" id="sfx_charge"]
-[ext_resource type="AudioStream" path="res://combat/audio/missile_launch.ogg" id="sfx_missile"]
-[ext_resource type="AudioStream" path="res://combat/audio/bomb_place.ogg" id="sfx_bomb"]
+[ext_resource type="AudioStream" uid="uid://c82vw3xvdxn18" path="res://combat/audio/beam_fire.ogg" id="sfx_beam"]
+[ext_resource type="AudioStream" uid="uid://hp1vcy0nhaoe" path="res://combat/audio/bomb_place.ogg" id="sfx_bomb"]
+[ext_resource type="AudioStream" uid="uid://coq8y0s8n1640" path="res://combat/audio/charge_release.ogg" id="sfx_charge"]
+[ext_resource type="AudioStream" uid="uid://1xaaanakq7ic" path="res://combat/audio/missile_launch.ogg" id="sfx_missile"]
 
 [sub_resource type="AtlasTexture" id="run0"]
 atlas = ExtResource("14")

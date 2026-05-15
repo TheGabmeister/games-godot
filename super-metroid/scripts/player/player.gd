@@ -45,7 +45,11 @@ var _invincibility_timer: float = 0.0
 
 func _ready() -> void:
 	state_machine.init(self)
+	max_missiles = 10
+	missiles = 10
+	unlocked_weapons.append(PlayerConsts.WEAPON_MISSILE)
 	energy_changed.emit(energy, max_energy)
+	ammo_changed.emit(PlayerConsts.WEAPON_MISSILE, missiles, max_missiles)
 	weapon_switched.emit(selected_weapon)
 
 

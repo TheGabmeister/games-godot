@@ -27,4 +27,12 @@
   <rect x="2" y="16" width="28" height="2" fill="#282828"/>
   <rect x="2" y="30" width="28" height="2" fill="#282828"/>
   <rect x="2" y="44" width="28" height="2" fill="#282828"/>
+  <!-- Facing arrow (right) -->
+  <rect x="12" y="27" width="2" height="2" fill="#FFFFFF" opacity="0.35"/>
+  <rect x="12" y="29" width="4" height="2" fill="#FFFFFF" opacity="0.35"/>
+  <rect x="12" y="31" width="6" height="2" fill="#FFFFFF" opacity="0.35"/>
+  <rect x="12" y="33" width="8" height="2" fill="#FFFFFF" opacity="0.35"/>
+  <rect x="12" y="35" width="6" height="2" fill="#FFFFFF" opacity="0.35"/>
+  <rect x="12" y="37" width="4" height="2" fill="#FFFFFF" opacity="0.35"/>
+  <rect x="12" y="39" width="2" height="2" fill="#FFFFFF" opacity="0.35"/>
 </svg>
