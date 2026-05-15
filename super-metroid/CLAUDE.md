@@ -10,7 +10,7 @@ Super Metroid recreation in Godot 4.6 (GDScript). 2D Metroidvania platformer. Ph
 
 - **Godot 4.6**, Forward Plus renderer, D3D12 driver (Windows)
 - **Language:** GDScript (static typing enforced — Untyped Declaration set to Error)
-- **Viewport:** 640x480 internal, 1280x960 window (2x integer scaling, nearest-neighbor filtering)
+- **Viewport:** 960x720 internal, stretch mode "viewport" (nearest-neighbor filtering)
 - **Tile size:** 32x32, **Player sprite:** 64x96 standing, 32x32 morph ball
 
 ## Key Documents
@@ -42,44 +42,7 @@ Godot_v4.6.2-stable_win64.exe --path . --headless --editor --quit
 
 ## Project Structure
 
-```
-scripts/              # All GDScript files, organized by system
-  player/             # Player controller, state machine, constants, weapon system
-    states/           # Individual state scripts (idle, walk, run, hurt, etc.)
-  combat/             # Projectile base class, damage flasher
-    projectiles/      # Projectile and bomb scripts
-  doors/              # Door and Room scripts
-  enemies/            # Enemy base class + specific enemies (waver, zeela, sidehopper)
-  pickups/            # Pickup drop script
-  hud/                # HUD controller
-  camera/             # Camera controller (standalone scene, not child of Player)
-  autoloads/          # SfxManager, MusicManager, GameManager singletons
-player/               # Player assets
-  sprites/            # SVG sources + exported PNGs + generation scripts
-  audio/              # .ogg sound effects (footsteps, jump, morph, damage, alarm)
-combat/               # Combat assets
-  sprites/            # Projectile, bomb, VFX sprites
-  audio/              # Beam fire, charge, missile, bomb SFX
-enemies/              # Enemy assets
-  sprites/            # Enemy sprite sheets
-  audio/              # Enemy hit/death SFX
-pickups/              # Pickup assets
-  sprites/            # Drop pickup sprites
-hud/                  # HUD assets
-  sprites/            # Icons, tank pips
-props/                # Environment assets
-  tiles/              # Tile SVGs + PNGs
-  doors/              # Door sprites (blue, red, gray) + audio
-scenes/               # Playable .tscn scenes
-  rooms/              # Room scenes (room_a through room_d test rooms)
-  doors/              # Door base scene
-  projectiles/        # Projectile scenes (power_beam, charge_beam, missile, bomb)
-  enemies/            # Enemy scenes (waver, zeela, sidehopper)
-  pickups/            # Pickup drop scenes
-data/                 # Reserved for game data (empty)
-```
-
-Key rule: **all scripts go in `scripts/`** with subdirectories by system. Assets (sprites, audio, scenes) go in their module folder (player/, props/).
+**Key rule:** all scripts go in `scripts/` with subdirectories by system (player/, doors/, combat/, enemies/, hud/, camera/, autoloads/). Assets (sprites, audio) go in their module folder (player/, props/, combat/). Scenes go in `scenes/` with subdirectories (rooms/, doors/, projectiles/, enemies/, pickups/).
 
 ## Architecture: Player State Machine
 
@@ -164,6 +127,7 @@ Player (CharacterBody2D)
 - **Asset pipeline:** SVG source → PNG export via Inkscape CLI. Keep both files paired. Audio generated with ffmpeg, stored as `.ogg`. Run ffmpeg as standalone commands, not chained with `&&` (permission rules match command prefix only).
 - **Input actions:** `move_left`, `move_right`, `move_up`, `move_down`, `jump`, `dash`, `fire`, `select_weapon`, `cancel_weapon`, `aim_up`, `aim_down` (defined in project.godot with keyboard + gamepad bindings).
 - **Collision layers:** 1=Terrain, 2=Player, 3=Enemy, 4=PlayerProjectile, 5=EnemyProjectile, 6=Pickup. Player mask=1 (terrain). Enemies mask=1 (terrain) with Area2D child mask=2 (player) for contact damage.
+- **`@tool` isolation:** Don't put `@tool` on gameplay scripts. For editor previews, use a separate `@tool` script on a child node (e.g., `door_sprite_preview.gd` on the DoorSprite child reads parent exports and updates visuals in-editor only).
 
 ## Current State
 

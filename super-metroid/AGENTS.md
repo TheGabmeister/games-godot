@@ -4,7 +4,7 @@ Guidance for coding agents working in this repository.
 
 ## Project Snapshot
 
-This is a Godot 4.6 GDScript project recreating Super Metroid-style 2D platforming. The current main scene is `res://scenes/test_stage.tscn`, with the player implemented as a `CharacterBody2D` plus a state machine under `scripts/player/`.
+This is a Godot 4.6 GDScript project recreating Super Metroid-style 2D platforming. The main scene is `res://scenes/rooms/room_a.tscn`. GameManager (autoload) spawns Player, Camera, and HUD at the scene tree root — rooms are swappable underneath. The player is a `CharacterBody2D` with a state machine under `scripts/player/`.
 
 Consult `SPEC.md` before implementing gameplay behavior. Consult `PHASES.md` for the intended build order and dependency sequence.
 
