@@ -93,7 +93,7 @@ The structural backbone of the Metroidvania world — rooms as self-contained ar
   - Blue doors: open with any weapon, always re-openable
   - Red doors: 5 Missiles or 1 Super Missile to open, permanently become blue
   - Gray doors: locked until a room condition is met (e.g., all enemies killed). Cannot be opened by weapons
-- Door state persistence: opened red doors stay blue across room transitions and save/load
+- Door state persistence: opened red doors stay blue across room transitions
 - Test with 3–4 connected rooms using placeholder tilesets to validate transitions in all directions
 
 ### Assets
@@ -119,8 +119,7 @@ Interactive world elements — destructible blocks, item pickups, and service st
   - Crumble Block: collapses shortly after Samus stands on it
 - Item acquisition system: Chozo Statue pedestals and freestanding item orbs. Pickup triggers a fanfare, brief animation, and item description overlay
 - Collectible items: Energy Tank (+100 energy), Missile Expansion (+5 missiles)
-- Item persistence: collected items stay collected across room transitions and save/load
-- Save Station: saves game progress (does not restore health or ammo). Map symbol: S. Save data records: Samus's position, all collected items, defeated bosses, opened doors, and play time. Three save file slots (file select screen deferred to Phase 8)
+- Item persistence: collected items stay collected across room transitions
 - Energy Recharge Station: fully restores energy (not ammo). Blue-colored room with arm cannon sockets
 - Test with existing test rooms — place blocks, items, and stations to validate all interactions
 
@@ -131,7 +130,7 @@ Interactive world elements — destructible blocks, item pickups, and service st
 - Chozo Statue (inactive, holding item)
 - Block sprites: Shot Block, Bomb Block, Crumble Block (intact, crumbling, gone)
 - Energy Tank orb, Missile Expansion orb
-- Save Station console, Energy Recharge sockets
+- Energy Recharge sockets
 
 **VFX**
 - Item acquisition glow/fanfare overlay
@@ -139,12 +138,10 @@ Interactive world elements — destructible blocks, item pickups, and service st
 
 **Audio**
 - Item acquisition fanfare
-- Save Station SFX
 - Energy Recharge SFX
 
 **UI**
 - Item acquisition overlay (item name, brief description)
-- Save confirmation prompt
 
 ---
 
@@ -153,12 +150,12 @@ Interactive world elements — destructible blocks, item pickups, and service st
 The first real level — Crateria area with room layouts, the Gunship, elevators, a new enemy, and area music.
 
 - Elevator transitions between areas (Crateria ↔ Brinstar)
-- Gunship at Landing Site: save + fully restore all energy and ammo
+- Gunship at Landing Site: fully restore all energy and ammo (save functionality added in Phase 8)
 - Crateria area:
   - Landing Site with Gunship (starting area, rain, rocky surface)
   - Descent through rocky caves
   - Path to Brinstar elevator
-  - Save Station, Energy Recharge Station
+  - Energy Recharge Station
   - Missile Expansion and Energy Tank placements (subset)
 - Early Brinstar stub: Morph Ball acquisition room (Chozo Statue pedestal)
 - New Crateria enemy: Alcoon (200 HP, 50 dmg, slow, high-HP)
@@ -204,7 +201,7 @@ The first boss fight — a Chozo Statue that comes to life, gating progression w
 
 ---
 
-**Vertical slice checkpoint — Samus explores Crateria and reaches early Brinstar, acquires Morph Ball and Bombs, defeats Bomb Torizo, collects Energy Tanks and Missile Expansions, saves progress at Save Stations, and navigates blue and red doors. The full explore → acquire → return → progress loop is playable.**
+**Vertical slice checkpoint — Samus explores Crateria and reaches early Brinstar, acquires Morph Ball and Bombs, defeats Bomb Torizo, collects Energy Tanks and Missile Expansions, and navigates blue and red doors. The full explore → acquire → return → progress loop is playable.**
 
 ---
 
@@ -516,6 +513,7 @@ The Ceres Station prologue, the Zebes escape sequence, time-based endings, all m
   - <3 hours: Samus in civilian clothes
   - Item collection percentage displayed on ending screen
 - Title screen
+- Save system: Save Station saves game progress (does not restore health or ammo). Map symbol: S. Save data records: Samus's position, all collected items, defeated bosses, opened doors, and play time. Gunship also saves (in addition to full restore). Save Stations placed in Crateria and all subsequent areas
 - File select screen: 3 save file slots, item percentage, play time per file
 - Controller remapping screen (Controller Setting Mode): all face/shoulder buttons remappable. D-Pad and Start fixed. Aim Diagonal Up/Down can only bind to L or R
 - Game Over screen
@@ -541,6 +539,7 @@ The Ceres Station prologue, the Zebes escape sequence, time-based endings, all m
 - Etecoon and Dachora escape sprites (fleeing Zebes in ending)
 - Fireflea, Beetom, Cacatac, Mini-Kraid, Shaktool — idle, movement, attack, death animations
 - Title screen logo
+- Save Station console
 - File select screen elements (save slot frames, percentage display)
 - Game Over text/screen
 
@@ -561,5 +560,9 @@ The Ceres Station prologue, the Zebes escape sequence, time-based endings, all m
 - Title screen music
 - Countdown timer tick SFX
 - Explosion SFX (Ceres, Zebes destruction)
+- Save Station SFX
 - File select cursor SFX
 - Game Over SFX
+
+**UI**
+- Save confirmation prompt
