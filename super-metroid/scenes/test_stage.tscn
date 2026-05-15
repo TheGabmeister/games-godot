@@ -2,7 +2,6 @@
 
 [ext_resource type="PackedScene" path="res://scenes/enemies/waver.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/zeela.tscn" id="4"]
-[ext_resource type="PackedScene" path="res://scenes/doors/door.tscn" id="4_80utq"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/sidehopper.tscn" id="5"]
 
 [sub_resource type="RectangleShape2D" id="floor_shape"]
@@ -178,7 +177,3 @@ position = Vector2(300, 460)
 
 [node name="Sidehopper" parent="." unique_id=1624790101 instance=ExtResource("5")]
 position = Vector2(600, 430)
-
-[node name="Door" parent="." unique_id=739418424 instance=ExtResource("4_80utq")]
-position = Vector2(418, 427)
-door_type = 1

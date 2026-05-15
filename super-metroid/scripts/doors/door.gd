@@ -1,4 +1,3 @@
-@tool
 class_name Door
 extends StaticBody2D
 
@@ -6,16 +5,8 @@ enum DoorType { BLUE, RED, GRAY }
 enum Facing { LEFT, RIGHT, UP, DOWN }
 
 @export var door_id: StringName = &""
-@export var door_type: DoorType = DoorType.BLUE:
-	set(v):
-		door_type = v
-		if is_node_ready():
-			_update_sprite()
-@export var facing: Facing = Facing.RIGHT:
-	set(v):
-		facing = v
-		if is_node_ready():
-			_setup_orientation()
+@export var door_type: DoorType = DoorType.BLUE
+@export var facing: Facing = Facing.RIGHT
 @export_file("*.tscn") var target_scene_path: String = ""
 @export var target_door_id: StringName = &""
 
@@ -49,13 +40,6 @@ var _gray_open: Texture2D = preload("res://props/doors/door_gray_open.png")
 func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 0
-
-	if Engine.is_editor_hint():
-		effective_type = door_type
-		_setup_orientation()
-		_update_sprite()
-		return
-
 	effective_type = _resolve_type()
 	_setup_trigger_position()
 	_setup_orientation()
@@ -132,8 +116,7 @@ func close_door() -> void:
 
 
 func _update_sprite() -> void:
-	var display_type := effective_type if not Engine.is_editor_hint() else door_type
-	match display_type:
+	match effective_type:
 		DoorType.BLUE:
 			_sprite.texture = _blue_open if is_open else _blue_closed
 		DoorType.RED:
