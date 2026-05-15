@@ -18,7 +18,8 @@
       "Bash(Godot_v4.6.2-stable_win64.exe *)",
       "Bash(kill *)",
       "Bash(wait)",
-      "Bash(where *)"
+      "Bash(where *)",
+      "Bash(taskkill *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Admin\\.claude"

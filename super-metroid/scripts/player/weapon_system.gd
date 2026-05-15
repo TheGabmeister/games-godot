@@ -32,6 +32,9 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if GameManager.transitioning:
+		_reset_charge()
+		return
 	_process_fire(delta)
 
 
@@ -85,7 +88,7 @@ func _spawn_projectile(scene: PackedScene, damage: int, sfx: AudioStream) -> Pro
 	proj.damage = damage
 	proj.global_position = _get_muzzle_position()
 	proj.rotation = _player.aim_direction.angle()
-	_player.get_parent().add_child(proj)
+	GameManager.current_room.add_child(proj)
 	SfxManager.play(sfx)
 	return proj
 
@@ -120,7 +123,7 @@ func _handle_morph_ball_fire(just_pressed: bool) -> void:
 		return
 	var b: Bomb = bomb_scene.instantiate()
 	b.global_position = _player.global_position
-	_player.get_parent().add_child(b)
+	GameManager.current_room.add_child(b)
 	active_bombs += 1
 	var _err := b.tree_exited.connect(_on_bomb_exited)
 	SfxManager.play(bomb_place_sfx)

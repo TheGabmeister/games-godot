@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/doors/door.gd" id="1"]
+[ext_resource type="Texture2D" path="res://props/doors/door_blue_closed.png" id="2"]
+[ext_resource type="AudioStream" path="res://props/doors/audio/door_open.ogg" id="3"]
+[ext_resource type="AudioStream" path="res://props/doors/audio/door_close.ogg" id="4"]
+
+[sub_resource type="RectangleShape2D" id="block_shape"]
+size = Vector2(32, 64)
+
+[sub_resource type="RectangleShape2D" id="hitbox_shape"]
+size = Vector2(32, 64)
+
+[sub_resource type="RectangleShape2D" id="trigger_shape"]
+size = Vector2(16, 64)
+
+[node name="Door" type="StaticBody2D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("1")
+open_sfx = ExtResource("3")
+close_sfx = ExtResource("4")
+
+[node name="DoorSprite" type="Sprite2D" parent="."]
+z_index = 100
+texture = ExtResource("2")
+
+[node name="BlockCollision" type="CollisionShape2D" parent="."]
+shape = SubResource("block_shape")
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 8
+
+[node name="HitboxShape" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("hitbox_shape")
+
+[node name="Trigger" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="TriggerShape" type="CollisionShape2D" parent="Trigger"]
+shape = SubResource("trigger_shape")

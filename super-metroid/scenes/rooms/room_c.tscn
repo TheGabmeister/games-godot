@@ -1,0 +1,80 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/doors/room.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/doors/door.tscn" id="door"]
+
+[sub_resource type="RectangleShape2D" id="floor_shape"]
+size = Vector2(960, 16)
+
+[sub_resource type="RectangleShape2D" id="ceiling_shape"]
+size = Vector2(960, 32)
+
+[sub_resource type="RectangleShape2D" id="wall_full"]
+size = Vector2(32, 720)
+
+[sub_resource type="RectangleShape2D" id="wall_upper"]
+size = Vector2(32, 608)
+
+[node name="RoomC" type="Node2D"]
+script = ExtResource("1")
+camera_bounds = Rect2(0, 0, 960, 720)
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(480, 712)
+
+[node name="FloorCollision" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("floor_shape")
+
+[node name="FloorSprite" type="ColorRect" parent="Floor"]
+offset_left = -480.0
+offset_top = -8.0
+offset_right = 480.0
+offset_bottom = 8.0
+color = Color(0.25, 0.32, 0.28, 1)
+
+[node name="Ceiling" type="StaticBody2D" parent="."]
+position = Vector2(480, 16)
+
+[node name="CeilingCollision" type="CollisionShape2D" parent="Ceiling"]
+shape = SubResource("ceiling_shape")
+
+[node name="CeilingSprite" type="ColorRect" parent="Ceiling"]
+offset_left = -480.0
+offset_top = -16.0
+offset_right = 480.0
+offset_bottom = 16.0
+color = Color(0.25, 0.32, 0.28, 1)
+
+[node name="LeftWall" type="StaticBody2D" parent="."]
+position = Vector2(16, 360)
+
+[node name="LeftWallCollision" type="CollisionShape2D" parent="LeftWall"]
+shape = SubResource("wall_full")
+
+[node name="LeftWallSprite" type="ColorRect" parent="LeftWall"]
+offset_left = -16.0
+offset_top = -360.0
+offset_right = 16.0
+offset_bottom = 360.0
+color = Color(0.25, 0.32, 0.28, 1)
+
+[node name="RightWallUpper" type="StaticBody2D" parent="."]
+position = Vector2(944, 336)
+
+[node name="RightWallCollision" type="CollisionShape2D" parent="RightWallUpper"]
+shape = SubResource("wall_upper")
+
+[node name="RightWallSprite" type="ColorRect" parent="RightWallUpper"]
+offset_left = -16.0
+offset_top = -304.0
+offset_right = 16.0
+offset_bottom = 304.0
+color = Color(0.25, 0.32, 0.28, 1)
+
+[node name="RightDoor" parent="." instance=ExtResource("door")]
+position = Vector2(944, 672)
+door_id = &"right_1"
+door_type = 0
+facing = 1
+target_scene_path = "res://scenes/rooms/room_a.tscn"
+target_door_id = &"left_1"

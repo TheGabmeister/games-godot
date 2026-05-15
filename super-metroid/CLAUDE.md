@@ -48,10 +48,11 @@ scripts/              # All GDScript files, organized by system
     states/           # Individual state scripts (idle, walk, run, hurt, etc.)
   combat/             # Projectile base class, damage flasher
     projectiles/      # Projectile and bomb scripts
+  doors/              # Door and Room scripts
   enemies/            # Enemy base class + specific enemies (waver, zeela, sidehopper)
   pickups/            # Pickup drop script
   hud/                # HUD controller
-  camera/             # Camera controller
+  camera/             # Camera controller (standalone scene, not child of Player)
   autoloads/          # SfxManager, MusicManager, GameManager singletons
 player/               # Player assets
   sprites/            # SVG sources + exported PNGs + generation scripts
@@ -70,6 +71,8 @@ props/                # Environment assets
   tiles/              # Tile SVGs + PNGs
   doors/              # Door sprites (blue, red, gray) + audio
 scenes/               # Playable .tscn scenes
+  rooms/              # Room scenes (room_a through room_d test rooms)
+  doors/              # Door base scene
   projectiles/        # Projectile scenes (power_beam, charge_beam, missile, bomb)
   enemies/            # Enemy scenes (waver, zeela, sidehopper)
   pickups/            # Pickup drop scenes
@@ -107,7 +110,6 @@ Player (CharacterBody2D)
   StandingShape (CollisionShape2D)      # 24x44, enabled by default
   CrouchingShape (CollisionShape2D)     # 24x30, disabled
   MorphBallShape (CollisionShape2D)     # 16x16, disabled
-  Camera2D
   StateMachine
     Idle, Walk, Run, Crouch, Jump, SpinJump, Fall, WallJump, MorphBall, Hurt
   DamageFlasher                          # reusable sprite flash component
@@ -116,11 +118,33 @@ Player (CharacterBody2D)
 
 ## Architecture: GameManager Autoload
 
-`GameManager` (autoload) spawns the player and HUD into any stage scene. Stages don't need scripts — just place a `Marker2D` in the `player_start` group (use `GameConsts.GROUP_PLAYER_START`) at the desired spawn position.
+`GameManager` (autoload) owns Player, Camera, and HUD as **root-level siblings** of the current room scene. Rooms are swappable; persistent nodes stay at root.
 
-- `_ready()` uses `call_deferred` to find the marker after the main scene loads (autoloads initialize before the main scene)
-- Spawns `Player` at the marker's position, then spawns the HUD and wires signals via `connect_to_player()`
-- `GameManager.player` provides the player reference to any system that needs it
+- `_ready()` uses `call_deferred` to find the `player_start` marker after the main scene loads
+- Spawns Player, CameraController, and HUD as children of `get_tree().root` (not the room)
+- `GameManager.player` / `GameManager.camera` / `GameManager.current_room` provide references
+- `GameManager.door_states: Dictionary` tracks persistent door type changes (red → blue)
+- `GameManager.transitioning: bool` gates input, weapon firing, and door triggers during transitions
+
+### Room Transition Sequence
+
+1. Player enters open door trigger → `GameManager.start_transition()` called
+2. Input disabled, player auto-walks into doorway
+3. Black `ColorRect` overlay (z_index 50) fades in over the room — doors (z_index 100) and player (root-level) stay visible
+4. New room loaded and offset one viewport in the scroll direction
+5. Camera detaches from player, tweens across both rooms (0.75s sine ease)
+6. Old room freed, new room repositioned to origin, camera/player adjusted
+7. New room fades in, target door closes behind player
+8. Player walks into room, state reset to Idle, input restored
+
+## Architecture: Room & Door System
+
+- **Room:** `room.gd` (`class_name Room`, extends Node2D) — `@export var camera_bounds: Rect2` defines camera limits. Each room is a standalone `.tscn`.
+- **Camera:** `camera_controller.gd` (`class_name CameraController`, extends Camera2D) — own scene, follows `target` node, supports `set_room_limits()` / `clear_limits()` for transitions.
+- **Door:** `door.gd` (`class_name Door`, extends StaticBody2D) — blocks passage on terrain layer when closed. Child `Hitbox` Area2D (mask=PlayerProjectile) detects shots. Child `Trigger` Area2D (mask=Player) starts transitions. Exports: `door_id`, `door_type` (BLUE/RED/GRAY), `facing` (LEFT/RIGHT/UP/DOWN), `target_scene_path`, `target_door_id`.
+- **Door types:** Blue (any weapon opens), Red (5 missiles, persists as blue), Gray (locked until `enemy_group` is empty).
+- **Persistence:** Door computes key from `owner.scene_file_path + ":" + door_id`. Red doors that open are stored in `GameManager.door_states` as BLUE.
+- **Projectiles spawn into `GameManager.current_room`** (not player parent), so they're cleaned up on room swap.
 
 ## Architecture: Combat & Enemies
 
@@ -147,4 +171,6 @@ Player (CharacterBody2D)
 
 **Phase 2 implemented:** Power Beam (8-directional, 3-beam limit), Charge Beam (2s charge, 3x damage), Missiles (ammo-limited), Morph Ball Bombs (3s fuse, max 3, bomb jump impulse), weapon cycling (Select/X), HUD (energy counter, tank pips, weapon icon, ammo, low energy alarm at ≤29), enemy framework (HP, contact damage, DropEntry resources), three enemies (Waver, Zeela, Sidehopper), damage/knockback system (Hurt state + i-frames + DamageFlasher), SfxManager/MusicManager/GameManager autoloads.
 
-**Next:** Phase 3.1 — Room transitions & doors.
+**Phase 3.1 implemented:** Room-based world system (each room a standalone scene), door system (blue/red/gray with StaticBody2D + Area2D hitbox/trigger), directional camera scroll transitions with fade-to-black overlay, door state persistence (red→blue), gray door enemy-group tracking, CameraController as own scene (separated from Player), GameManager owns Player/Camera/HUD at root level. 4 test rooms: A (hub), B (blue), C (blue), D (red door + gray door + enemies).
+
+**Next:** Phase 3.2 — Blocks, items & stations.
