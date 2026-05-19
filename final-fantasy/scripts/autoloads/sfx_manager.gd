@@ -7,6 +7,7 @@ var _players: Array[AudioStreamPlayer] = []
 func _ready() -> void:
 	for i: int in POOL_SIZE:
 		var asp := AudioStreamPlayer.new()
+		asp.bus = &"SFX"
 		add_child(asp)
 		_players.append(asp)
 
