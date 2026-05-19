@@ -56,3 +56,5 @@ inkscape character.svg --export-type=png --export-filename=character.png -w 64 -
 ```
 
 Keep SVG sources alongside exported PNGs so sprites can be re-exported at different resolutions.
+
+Sprite assets live under `characters/<name>/` at the project root (e.g., `characters/warrior/`).
