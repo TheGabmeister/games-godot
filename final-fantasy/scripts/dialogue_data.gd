@@ -10,7 +10,10 @@ func load_file(path: String) -> Dictionary:
 		push_error("Failed to load dialogue file: %s" % path)
 		return {}
 	var json := JSON.new()
-	json.parse(file.get_as_text())
+	var err := json.parse(file.get_as_text())
+	if err != OK:
+		push_error("Failed to parse dialogue file: %s" % path)
+		return {}
 	var data: Dictionary = json.data
 	_cache[path] = data
 	return data

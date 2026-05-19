@@ -7,7 +7,7 @@ func _ready() -> void:
 	_player = AudioStreamPlayer.new()
 	_player.bus = &"Music"
 	add_child(_player)
-	_player.finished.connect(_on_finished)
+	var _err := _player.finished.connect(_on_finished)
 
 
 func play(stream: AudioStream) -> void:

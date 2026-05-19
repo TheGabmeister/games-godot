@@ -3,7 +3,7 @@ extends Node2D
 const TOWN_MUSIC := preload("res://music/town_theme.ogg")
 
 # Tile atlas coords: Vector2i(col, row)
-const T := {
+const T: Dictionary[String, Vector2i] = {
 	"grass":      Vector2i(0, 0),
 	"stone":      Vector2i(1, 0),
 	"wood":       Vector2i(2, 0),

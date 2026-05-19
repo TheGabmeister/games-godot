@@ -20,6 +20,6 @@ func _ready() -> void:
 
 func interact() -> void:
 	GameState.transition(GameState.State.DIALOGUE)
-	var dialogue_box: Node = get_tree().get_first_node_in_group(Groups.DIALOGUE_BOX)
-	if dialogue_box:
-		dialogue_box.start(npc_name, dialogue)
+	var node := get_tree().get_first_node_in_group(Groups.DIALOGUE_BOX)
+	if node is DialogueBox:
+		node.start(npc_name, dialogue)

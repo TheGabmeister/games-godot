@@ -1,3 +1,4 @@
+class_name DialogueBox
 extends CanvasLayer
 
 signal dialogue_finished
@@ -53,8 +54,8 @@ func _reveal_line() -> void:
 		_finish_reveal()
 		return
 	_reveal_tween = create_tween()
-	_reveal_tween.tween_property(text_label, "visible_ratio", 1.0, total_chars * CHAR_DELAY)
-	_reveal_tween.tween_callback(_on_reveal_tween_finished)
+	var _prop := _reveal_tween.tween_property(text_label, "visible_ratio", 1.0, total_chars * CHAR_DELAY)
+	var _cb := _reveal_tween.tween_callback(_on_reveal_tween_finished)
 
 func _on_reveal_tween_finished() -> void:
 	_reveal_tween = null

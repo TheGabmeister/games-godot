@@ -2,18 +2,25 @@ extends CharacterBody2D
 
 enum Dir { DOWN, UP, LEFT, RIGHT }
 
-const DIR_VECTORS := {
+const DIR_VECTORS: Dictionary[Dir, Vector2] = {
 	Dir.DOWN:  Vector2.DOWN,
 	Dir.UP:    Vector2.UP,
 	Dir.LEFT:  Vector2.LEFT,
 	Dir.RIGHT: Vector2.RIGHT,
 }
 
-const ANIM := {
-	Dir.DOWN:  { idle = &"idle_down",  walk = &"walk_down" },
-	Dir.UP:    { idle = &"idle_up",    walk = &"walk_up" },
-	Dir.LEFT:  { idle = &"idle_left",  walk = &"walk_left" },
-	Dir.RIGHT: { idle = &"idle_right", walk = &"walk_right" },
+const IDLE_ANIM: Dictionary[Dir, StringName] = {
+	Dir.DOWN:  &"idle_down",
+	Dir.UP:    &"idle_up",
+	Dir.LEFT:  &"idle_left",
+	Dir.RIGHT: &"idle_right",
+}
+
+const WALK_ANIM: Dictionary[Dir, StringName] = {
+	Dir.DOWN:  &"walk_down",
+	Dir.UP:    &"walk_up",
+	Dir.LEFT:  &"walk_left",
+	Dir.RIGHT: &"walk_right",
 }
 
 @export var speed: float = 200.0
@@ -25,7 +32,7 @@ var facing: Dir = Dir.DOWN
 func _physics_process(_delta: float) -> void:
 	if not GameState.is_state(GameState.State.FIELD):
 		velocity = Vector2.ZERO
-		move_and_slide()
+		var _c := move_and_slide()
 		return
 
 	var input := Vector2(
@@ -37,12 +44,12 @@ func _physics_process(_delta: float) -> void:
 		input = input.normalized()
 		velocity = input * speed
 		_update_facing(input)
-		sprite.play(ANIM[facing].walk)
+		sprite.play(WALK_ANIM[facing])
 	else:
 		velocity = Vector2.ZERO
-		sprite.play(ANIM[facing].idle)
+		sprite.play(IDLE_ANIM[facing])
 
-	move_and_slide()
+	var _collided := move_and_slide()
 
 func _input(event: InputEvent) -> void:
 	if not GameState.is_state(GameState.State.FIELD):
@@ -51,8 +58,8 @@ func _input(event: InputEvent) -> void:
 		var target := _get_facing_interactable()
 		if target:
 			velocity = Vector2.ZERO
-			sprite.play(ANIM[facing].idle)
-			target.interact()
+			sprite.play(IDLE_ANIM[facing])
+			target.call(&"interact")
 			get_viewport().set_input_as_handled()
 
 func _update_facing(dir: Vector2) -> void:
@@ -61,17 +68,19 @@ func _update_facing(dir: Vector2) -> void:
 	else:
 		facing = Dir.DOWN if dir.y > 0 else Dir.UP
 
-func _get_facing_interactable() -> Node:
+func _get_facing_interactable() -> Node2D:
 	var face_dir: Vector2 = DIR_VECTORS[facing]
-	var best_target: Node = null
+	var best_target: Node2D = null
 	var best_dot := -1.0
 	for area: Area2D in interact_area.get_overlapping_areas():
 		if not area.is_in_group(Groups.INTERACTABLE):
 			continue
-		var target: Node = area.get_parent()
-		var to_target: Vector2 = (target.global_position - global_position).normalized()
-		var dot: float = face_dir.dot(to_target)
-		if dot > best_dot:
-			best_dot = dot
-			best_target = target
+		var parent := area.get_parent()
+		if parent is Node2D:
+			var target: Node2D = parent
+			var to_target: Vector2 = (target.global_position - global_position).normalized()
+			var dot: float = face_dir.dot(to_target)
+			if dot > best_dot:
+				best_dot = dot
+				best_target = target
 	return best_target
