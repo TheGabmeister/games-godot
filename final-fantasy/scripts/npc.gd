@@ -17,3 +17,9 @@ func _ready() -> void:
 		npc_name = data.get("name", "???")
 		var lines: Array = data.get("lines", ["..."])
 		dialogue.assign(lines)
+
+func interact() -> void:
+	GameState.transition(GameState.State.DIALOGUE)
+	var dialogue_box: Node = get_tree().get_first_node_in_group(Groups.DIALOGUE_BOX)
+	if dialogue_box:
+		dialogue_box.start(npc_name, dialogue)
