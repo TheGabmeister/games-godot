@@ -16,7 +16,7 @@ var _active := false
 var _reveal_tween: Tween
 
 func _ready() -> void:
-	add_to_group("dialogue_box")
+	add_to_group(Groups.DIALOGUE_BOX)
 	panel.visible = false
 	advance_indicator.visible = false
 
@@ -78,6 +78,7 @@ func _close() -> void:
 	_kill_reveal_tween()
 	_active = false
 	panel.visible = false
+	GameState.transition(GameState.State.FIELD)
 	dialogue_finished.emit()
 
 func _kill_reveal_tween() -> void:

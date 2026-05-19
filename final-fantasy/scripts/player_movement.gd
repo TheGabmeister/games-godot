@@ -20,6 +20,7 @@ const ANIM := {
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var interact_area: Area2D = $InteractArea
+@onready var dialogue_box: Node = get_tree().get_first_node_in_group(Groups.DIALOGUE_BOX)
 
 var facing: Dir = Dir.DOWN
 
@@ -65,7 +66,7 @@ func _get_facing_npc() -> Node:
 	var best_npc: Node = null
 	var best_dot := -1.0
 	for area: Area2D in interact_area.get_overlapping_areas():
-		if not area.is_in_group("npc_interaction"):
+		if not area.is_in_group(Groups.NPC_INTERACTION):
 			continue
 		var npc: Node = area.get_parent()
 		var to_npc: Vector2 = (npc.global_position - global_position).normalized()
@@ -79,10 +80,5 @@ func _start_dialogue(npc: Node) -> void:
 	GameState.transition(GameState.State.DIALOGUE)
 	velocity = Vector2.ZERO
 	sprite.play(ANIM[facing].idle)
-	var dialogue_box: Node = get_tree().get_first_node_in_group("dialogue_box")
 	if dialogue_box:
 		dialogue_box.start(npc.npc_name, npc.dialogue)
-		dialogue_box.dialogue_finished.connect(_on_dialogue_finished, CONNECT_ONE_SHOT)
-
-func _on_dialogue_finished() -> void:
-	GameState.transition(GameState.State.FIELD)
