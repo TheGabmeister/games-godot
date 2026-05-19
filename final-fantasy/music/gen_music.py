@@ -1,7 +1,7 @@
 """Generate FF1-style 8-bit music tracks as MIDI files."""
 from midiutil import MIDIFile
 
-BPM_PRELUDE = 90
+BPM_PRELUDE = 60
 BPM_TOWN = 100
 BPM_CASTLE = 80
 
@@ -50,7 +50,7 @@ def create_title_theme():
             midi.addNote(track_melody, 0, note, t, note_dur * 0.9, 90)
             t += note_dur
 
-    with open("c:/dev/games-godot/final-fantasy/assets/music/title_theme.mid", "wb") as f:
+    with open("c:/dev/games-godot/final-fantasy/music/title_theme.mid", "wb") as f:
         midi.writeFile(f)
     print("Created title_theme.mid")
 
@@ -118,7 +118,7 @@ def create_town_theme():
             midi.addNote(track_bass, 2, note, t, dur * 0.9, 75)
         t += dur
 
-    with open("c:/dev/games-godot/final-fantasy/assets/music/town_theme.mid", "wb") as f:
+    with open("c:/dev/games-godot/final-fantasy/music/town_theme.mid", "wb") as f:
         midi.writeFile(f)
     print("Created town_theme.mid")
 
@@ -186,7 +186,7 @@ def create_castle_theme():
             midi.addNote(track_bass, 2, note, t, dur * 0.9, 80)
         t += dur
 
-    with open("c:/dev/games-godot/final-fantasy/assets/music/castle_theme.mid", "wb") as f:
+    with open("c:/dev/games-godot/final-fantasy/music/castle_theme.mid", "wb") as f:
         midi.writeFile(f)
     print("Created castle_theme.mid")
 
