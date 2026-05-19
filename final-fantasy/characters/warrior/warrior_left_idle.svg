@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" shape-rendering="crispEdges">
+  <!-- FF1 Warrior - Left Idle -->
+  <!-- Horned Helmet -->
+  <rect x="14" y="4" width="4" height="12" fill="#A0A0A0"/>
+  <rect x="18" y="8" width="24" height="12" fill="#A0A0A0"/>
+  <rect x="18" y="8" width="24" height="4" fill="#C0C0C0"/>
+  <!-- Face (side profile) -->
+  <rect x="16" y="20" width="16" height="12" fill="#F0C090"/>
+  <!-- Eye -->
+  <rect x="18" y="24" width="4" height="4" fill="#303030"/>
+  <!-- Nose -->
+  <rect x="12" y="26" width="4" height="4" fill="#E0B080"/>
+  <!-- Armor Body -->
+  <rect x="18" y="32" width="24" height="24" fill="#C02020"/>
+  <rect x="22" y="34" width="16" height="20" fill="#D03030"/>
+  <!-- Shoulder Plate (visible side) -->
+  <rect x="10" y="32" width="12" height="10" fill="#A0A0A0"/>
+  <!-- Belt -->
+  <rect x="18" y="52" width="24" height="4" fill="#806020"/>
+  <rect x="26" y="52" width="6" height="4" fill="#C0A030"/>
+  <!-- Arm (front) -->
+  <rect x="10" y="40" width="8" height="18" fill="#C02020"/>
+  <!-- Gauntlet -->
+  <rect x="10" y="54" width="8" height="8" fill="#A0A0A0"/>
+  <!-- Shield (left hand visible) -->
+  <rect x="4" y="36" width="10" height="20" fill="#3030A0"/>
+  <rect x="6" y="38" width="6" height="16" fill="#4040C0"/>
+  <!-- Sword (behind, partially visible) -->
+  <rect x="40" y="36" width="4" height="24" fill="#E0E0E0"/>
+  <rect x="38" y="56" width="8" height="4" fill="#806020"/>
+  <!-- Legs -->
+  <rect x="22" y="56" width="10" height="20" fill="#C02020"/>
+  <rect x="32" y="56" width="10" height="20" fill="#C02020"/>
+  <!-- Greaves -->
+  <rect x="22" y="68" width="10" height="8" fill="#A0A0A0"/>
+  <rect x="32" y="68" width="10" height="8" fill="#A0A0A0"/>
+  <!-- Boots -->
+  <rect x="18" y="76" width="14" height="8" fill="#604020"/>
+  <rect x="32" y="76" width="12" height="8" fill="#604020"/>
+</svg>
