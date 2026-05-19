@@ -84,6 +84,7 @@ const MAP := [
 @onready var tile_map: TileMapLayer = $TileMapLayer
 
 func _ready() -> void:
+	GameState.transition(GameState.State.FIELD)
 	MusicManager.play(TOWN_MUSIC)
 	_paint_map()
 

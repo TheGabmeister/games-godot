@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+GameState="*res://scripts/autoloads/game_state.gd"
 DialogueData="*res://scripts/dialogue_data.gd"
 MusicManager="*res://scripts/autoloads/music_manager.gd"
 SfxManager="*res://scripts/autoloads/sfx_manager.gd"

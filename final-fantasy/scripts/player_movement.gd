@@ -6,10 +6,9 @@ extends CharacterBody2D
 @onready var interact_area: Area2D = $InteractArea
 
 var facing := "down"
-var _in_dialogue := false
 
 func _physics_process(_delta: float) -> void:
-	if _in_dialogue:
+	if not GameState.is_state(GameState.State.FIELD):
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
@@ -31,7 +30,7 @@ func _physics_process(_delta: float) -> void:
 	move_and_slide()
 
 func _input(event: InputEvent) -> void:
-	if _in_dialogue:
+	if not GameState.is_state(GameState.State.FIELD):
 		return
 	if event.is_action_pressed("confirm"):
 		var npc := _get_facing_npc()
@@ -67,7 +66,7 @@ func _get_facing_npc() -> Node:
 	return best_npc
 
 func _start_dialogue(npc: Node) -> void:
-	_in_dialogue = true
+	GameState.transition(GameState.State.DIALOGUE)
 	velocity = Vector2.ZERO
 	sprite.play("idle_" + facing)
 	var dialogue_box: Node = get_tree().get_first_node_in_group("dialogue_box")
@@ -76,4 +75,4 @@ func _start_dialogue(npc: Node) -> void:
 		dialogue_box.dialogue_finished.connect(_on_dialogue_finished, CONNECT_ONE_SHOT)
 
 func _on_dialogue_finished() -> void:
-	_in_dialogue = false
+	GameState.transition(GameState.State.FIELD)
