@@ -3,6 +3,7 @@ extends RefCounted
 
 const SELF_ADDON_PATH := "res://addons/gdscript_dependency_graph/"
 const DEFAULT_SCAN_ROOT := "res://scripts"
+const PROJECT_SETTINGS_PATH := "res://project.godot"
 
 var _class_name_pattern := RegEx.new()
 var _path_dependency_pattern := RegEx.new()
@@ -26,13 +27,13 @@ func scan(root_path: String = DEFAULT_SCAN_ROOT) -> Dictionary:
 		comment_stripped[path] = _strip_line_comments(text)
 		fully_stripped[path] = _strip_comments_and_strings(text)
 
-	var class_to_path := _collect_class_names(scripts, fully_stripped)
+	var symbol_to_path := _collect_symbol_paths(scripts, fully_stripped, script_lookup)
 	var edges := []
 	var edge_keys := {}
 
 	for source_path in scripts:
 		_add_path_dependency_edges(source_path, comment_stripped[source_path], script_lookup, edges, edge_keys)
-		_add_symbol_dependency_edges(source_path, fully_stripped[source_path], class_to_path, edges, edge_keys)
+		_add_symbol_dependency_edges(source_path, fully_stripped[source_path], symbol_to_path, edges, edge_keys)
 
 	return {
 		"nodes": scripts,
@@ -87,6 +88,37 @@ func _collect_class_names(scripts: Array[String], stripped_texts: Dictionary) ->
 	return class_to_path
 
 
+func _collect_symbol_paths(scripts: Array[String], stripped_texts: Dictionary, script_lookup: Dictionary) -> Dictionary:
+	var symbol_to_path := _collect_class_names(scripts, stripped_texts)
+	var autoloads := _collect_autoload_paths(script_lookup)
+
+	for autoload_name in autoloads.keys():
+		symbol_to_path[autoload_name] = autoloads[autoload_name]
+
+	return symbol_to_path
+
+
+func _collect_autoload_paths(script_lookup: Dictionary) -> Dictionary:
+	var autoload_to_path := {}
+	var config := ConfigFile.new()
+	if config.load(PROJECT_SETTINGS_PATH) != OK or not config.has_section("autoload"):
+		return autoload_to_path
+
+	for autoload_name in config.get_section_keys("autoload"):
+		var script_path := _normalize_autoload_path(str(config.get_value("autoload", autoload_name, "")))
+		if script_lookup.has(script_path):
+			autoload_to_path[autoload_name] = script_path
+
+	return autoload_to_path
+
+
+func _normalize_autoload_path(path: String) -> String:
+	if path.begins_with("*"):
+		return path.substr(1)
+
+	return path
+
+
 func _add_path_dependency_edges(
 	source_path: String,
 	comment_stripped_text: String,
@@ -105,16 +137,16 @@ func _add_path_dependency_edges(
 func _add_symbol_dependency_edges(
 	source_path: String,
 	fully_stripped_text: String,
-	class_to_path: Dictionary,
+	symbol_to_path: Dictionary,
 	edges: Array,
 	edge_keys: Dictionary
 ) -> void:
 	for result in _word_pattern.search_all(fully_stripped_text):
 		var word := result.get_string()
-		if not class_to_path.has(word):
+		if not symbol_to_path.has(word):
 			continue
 
-		var target_path: String = class_to_path[word]
+		var target_path: String = symbol_to_path[word]
 		if target_path == source_path:
 			continue
 
