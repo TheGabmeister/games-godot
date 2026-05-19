@@ -2,6 +2,7 @@
 extends RefCounted
 
 const SELF_ADDON_PATH := "res://addons/gdscript_dependency_graph/"
+const DEFAULT_SCAN_ROOT := "res://scripts"
 
 var _class_name_pattern := RegEx.new()
 var _path_dependency_pattern := RegEx.new()
@@ -14,8 +15,8 @@ func _init() -> void:
 	_word_pattern.compile("\\b[A-Za-z_][A-Za-z0-9_]*\\b")
 
 
-func scan() -> Dictionary:
-	var scripts := _find_gd_scripts("res://")
+func scan(root_path: String = DEFAULT_SCAN_ROOT) -> Dictionary:
+	var scripts := _find_gd_scripts(root_path)
 	var script_lookup := {}
 	var comment_stripped := {}
 	var fully_stripped := {}

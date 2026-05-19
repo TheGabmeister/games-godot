@@ -4,8 +4,13 @@ extends VBoxContainer
 const DependencyGraphScanner := preload("res://addons/gdscript_dependency_graph/gdscript_dependency_graph_scanner.gd")
 const DependencyGraphCanvas := preload("res://addons/gdscript_dependency_graph/gdscript_dependency_graph_canvas.gd")
 
+const DEFAULT_SCAN_ROOT := "res://scripts"
+
 var _graph_canvas: Control
 var _status_label: Label
+var _scan_folder_label: Label
+var _folder_dialog: EditorFileDialog
+var _scan_root_path := DEFAULT_SCAN_ROOT
 
 
 func _ready() -> void:
@@ -31,6 +36,16 @@ func _build_ui() -> void:
 	reset_button.pressed.connect(_on_reset_view_pressed)
 	toolbar.add_child(reset_button)
 
+	var choose_folder_button := Button.new()
+	choose_folder_button.text = "Choose Folder"
+	choose_folder_button.pressed.connect(_on_choose_folder_pressed)
+	toolbar.add_child(choose_folder_button)
+
+	_scan_folder_label = Label.new()
+	_scan_folder_label.text = _scan_root_path
+	_scan_folder_label.tooltip_text = _scan_root_path
+	toolbar.add_child(_scan_folder_label)
+
 	_status_label = Label.new()
 	_status_label.text = "No graph generated. Drag nodes to move, Ctrl-click or box select, middle-drag to pan, wheel to zoom."
 	_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -49,28 +64,48 @@ func _build_ui() -> void:
 	_graph_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	graph_viewport.add_child(_graph_canvas)
 
+	_folder_dialog = EditorFileDialog.new()
+	_folder_dialog.title = "Choose Script Folder"
+	_folder_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_DIR
+	_folder_dialog.access = EditorFileDialog.ACCESS_RESOURCES
+	_folder_dialog.current_dir = _scan_root_path
+	_folder_dialog.dir_selected.connect(_on_folder_selected)
+	add_child(_folder_dialog)
+
 
 func _on_generate_graph_pressed() -> void:
 	_clear_graph()
 
 	var scanner := DependencyGraphScanner.new()
-	var graph_data := scanner.scan()
+	var graph_data := scanner.scan(_scan_root_path)
 	var nodes: Array = graph_data["nodes"]
 	var edges: Array = graph_data["edges"]
 
 	if nodes.is_empty():
-		_status_label.text = "No project .gd files found."
+		_status_label.text = "No .gd files found in %s." % _scan_root_path
 		return
 
 	var display_names := _build_display_names(nodes)
 	var depths := _compute_dependency_depths(nodes, edges)
 	_graph_canvas.set_graph(nodes, edges, display_names, depths)
 
-	_status_label.text = "%d scripts, %d dependencies" % [nodes.size(), edges.size()]
+	_status_label.text = "%d scripts, %d dependencies in %s" % [nodes.size(), edges.size(), _scan_root_path]
 
 
 func _on_reset_view_pressed() -> void:
 	_graph_canvas.reset_view()
+
+
+func _on_choose_folder_pressed() -> void:
+	_folder_dialog.current_dir = _scan_root_path
+	_folder_dialog.popup_centered_ratio(0.7)
+
+
+func _on_folder_selected(path: String) -> void:
+	_scan_root_path = path
+	_scan_folder_label.text = _scan_root_path
+	_scan_folder_label.tooltip_text = _scan_root_path
+	_status_label.text = "Scan folder set to %s." % _scan_root_path
 
 
 func _clear_graph() -> void:

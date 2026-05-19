@@ -13,7 +13,7 @@ func _ready() -> void:
 	if sprite_texture:
 		sprite.texture = sprite_texture
 	if dialogue_file and dialogue_id:
-		var data: Dictionary = get_node("/root/DialogueData").get_dialogue(dialogue_file, dialogue_id)
+		var data: Dictionary = DialogueData.get_dialogue(dialogue_file, dialogue_id)
 		npc_name = data.get("name", "???")
 		var lines: Array = data.get("lines", ["..."])
 		dialogue.assign(lines)
