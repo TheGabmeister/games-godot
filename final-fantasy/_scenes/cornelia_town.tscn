@@ -1,88 +1,112 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene format=4]
 
-[ext_resource type="Script" path="res://scripts/cornelia_town.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/level.gd" id="1"]
+[ext_resource type="AudioStream" path="res://music/town_theme.ogg" id="music"]
 [ext_resource type="TileSet" path="res://tilesets/cornelia_tileset.tres" id="2"]
 [ext_resource type="PackedScene" path="res://_scenes/warrior.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://_scenes/npc.tscn" id="4"]
+[ext_resource type="Script" path="res://scripts/player_movement.gd" id="4_gs0ar"]
 [ext_resource type="PackedScene" path="res://_scenes/dialogue_box.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://_scenes/door_trigger.tscn" id="6"]
+[ext_resource type="Script" path="res://scripts/npc.gd" id="6_hlpeb"]
+[ext_resource type="Script" path="res://scripts/door_trigger.gd" id="12_vw132"]
+[ext_resource type="Script" path="res://scripts/dialogue_box.gd" id="14_tdaxl"]
 [ext_resource type="Texture2D" path="res://characters/npcs/shopkeeper.png" id="shopkeeper"]
 [ext_resource type="Texture2D" path="res://characters/npcs/townsperson_a.png" id="townsperson_a"]
 [ext_resource type="Texture2D" path="res://characters/npcs/townsperson_b.png" id="townsperson_b"]
 [ext_resource type="Texture2D" path="res://characters/npcs/townsperson_c.png" id="townsperson_c"]
 
-[node name="CorneliaTown" type="Node2D"]
+[node name="CorneliaTown" type="Node2D" unique_id=2014238130]
 script = ExtResource("1")
+music = ExtResource("music")
 
-[node name="TileMapLayer" type="TileMapLayer" parent="."]
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=827438890]
+tile_map_data = PackedByteArray("AAAAAAAAAAAFAAIAAAABAAAAAAAAAAAAAAACAAAAAAAFAAIAAAADAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAGAAAAAAACAAEAAAAHAAAAAAACAAEAAAAIAAAAAAACAAEAAAAJAAAAAAACAAEAAAAKAAAAAAAAAAAAAAALAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAANAAAAAAAAAAAAAAAOAAAAAAACAAEAAAAPAAAAAAACAAEAAAAQAAAAAAACAAEAAAARAAAAAAACAAEAAAASAAAAAAAAAAAAAAATAAAAAAAFAAIAAAAAAAEAAAAAAAAAAAABAAEAAAAAAAAAAAACAAEAAAAAAAAAAAADAAEAAAAAAAAAAAAEAAEAAAAGAAAAAAAFAAEAAAAAAAAAAAAGAAEAAAABAAEAAAAHAAEAAAAAAAEAAAAIAAEAAAAAAAEAAAAJAAEAAAABAAEAAAAKAAEAAAAAAAAAAAALAAEAAAAAAAAAAAAMAAEAAAAAAAAAAAANAAEAAAAAAAAAAAAOAAEAAAABAAEAAAAPAAEAAAAAAAEAAAAQAAEAAAAAAAEAAAARAAEAAAABAAEAAAASAAEAAAAAAAAAAAATAAEAAAAAAAAAAAAAAAIAAAAAAAAAAAABAAIAAAABAAAAAAACAAIAAAAAAAAAAAADAAIAAAAAAAAAAAAEAAIAAAAAAAAAAAAFAAIAAAAAAAAAAAAGAAIAAAABAAEAAAAHAAIAAAAAAAEAAAAIAAIAAAAEAAAAAAAJAAIAAAABAAEAAAAKAAIAAAAAAAAAAAALAAIAAAAGAAAAAAAMAAIAAAAAAAAAAAANAAIAAAAAAAAAAAAOAAIAAAABAAEAAAAPAAIAAAAAAAEAAAAQAAIAAAAEAAAAAAARAAIAAAABAAEAAAASAAIAAAAAAAAAAAATAAIAAAAGAAAAAAAAAAMAAAAAAAAAAAABAAMAAAABAAAAAAACAAMAAAABAAAAAAADAAMAAAABAAAAAAAEAAMAAAAAAAAAAAAFAAMAAAAAAAAAAAAGAAMAAAAAAAAAAAAHAAMAAAAAAAAAAAAIAAMAAAAAAAAAAAAJAAMAAAAAAAAAAAAKAAMAAAAAAAAAAAALAAMAAAAAAAAAAAAMAAMAAAAAAAAAAAANAAMAAAAAAAAAAAAOAAMAAAAAAAAAAAAPAAMAAAAAAAAAAAAQAAMAAAAAAAAAAAARAAMAAAAAAAAAAAASAAMAAAABAAAAAAATAAMAAAABAAAAAAAAAAQAAAAAAAAAAAABAAQAAAABAAAAAAACAAQAAAAAAAAAAAADAAQAAAABAAAAAAAEAAQAAAAAAAAAAAAFAAQAAAAAAAAAAAAGAAQAAAACAAEAAAAHAAQAAAACAAEAAAAIAAQAAAACAAEAAAAJAAQAAAACAAEAAAAKAAQAAAAAAAAAAAALAAQAAAAAAAAAAAAMAAQAAAAAAAIAAAANAAQAAAAAAAAAAAAOAAQAAAAAAAAAAAAPAAQAAAAAAAAAAAAQAAQAAAABAAAAAAARAAQAAAAAAAAAAAASAAQAAAAAAAAAAAATAAQAAAABAAAAAAAAAAUAAAAAAAAAAAABAAUAAAABAAAAAAACAAUAAAAAAAAAAAADAAUAAAAAAAAAAAAEAAUAAAAAAAAAAAAFAAUAAAAAAAAAAAAGAAUAAAABAAEAAAAHAAUAAAAAAAEAAAAIAAUAAAAAAAEAAAAJAAUAAAABAAEAAAAKAAUAAAAAAAAAAAALAAUAAAAAAAAAAAAMAAUAAAAAAAAAAAANAAUAAAAAAAAAAAAOAAUAAAAAAAAAAAAPAAUAAAAAAAAAAAAQAAUAAAABAAAAAAARAAUAAAABAAAAAAASAAUAAAABAAAAAAATAAUAAAABAAAAAAAAAAYAAAAAAAAAAAABAAYAAAAAAAAAAAACAAYAAAAAAAAAAAADAAYAAAAAAAAAAAAEAAYAAAAAAAAAAAAFAAYAAAAAAAAAAAAGAAYAAAABAAEAAAAHAAYAAAAAAAEAAAAIAAYAAAAEAAAAAAAJAAYAAAABAAEAAAAKAAYAAAAAAAAAAAALAAYAAAAGAAAAAAAMAAYAAAAAAAAAAAANAAYAAAAAAAAAAAAOAAYAAAAAAAAAAAAPAAYAAAAAAAAAAAAQAAYAAAAAAAAAAAARAAYAAAAAAAAAAAASAAYAAAAAAAAAAAATAAYAAAAAAAAAAAAAAAcAAAAFAAIAAAABAAcAAAABAAAAAAACAAcAAAABAAAAAAADAAcAAAABAAAAAAAEAAcAAAAAAAAAAAAFAAcAAAAAAAAAAAAGAAcAAAAAAAAAAAAHAAcAAAAAAAAAAAAIAAcAAAAAAAAAAAAJAAcAAAAAAAAAAAAKAAcAAAAAAAAAAAALAAcAAAAAAAAAAAAMAAcAAAAAAAAAAAANAAcAAAABAAAAAAAOAAcAAAABAAAAAAAPAAcAAAABAAAAAAAQAAcAAAABAAAAAAARAAcAAAABAAAAAAASAAcAAAAAAAAAAAATAAcAAAAFAAIAAAAAAAgAAAAAAAAAAAABAAgAAAAAAAAAAAACAAgAAAABAAAAAAADAAgAAAAAAAAAAAAEAAgAAAAAAAAAAAAFAAgAAAAAAAAAAAAGAAgAAAACAAEAAAAHAAgAAAACAAEAAAAIAAgAAAACAAEAAAAJAAgAAAACAAEAAAAKAAgAAAAAAAAAAAALAAgAAAAAAAAAAAAMAAgAAAAAAAAAAAANAAgAAAABAAAAAAAOAAgAAAAAAAAAAAAPAAgAAAAAAAAAAAAQAAgAAAAAAAAAAAARAAgAAAABAAAAAAASAAgAAAAAAAAAAAATAAgAAAAAAAAAAAAAAAkAAAAAAAAAAAABAAkAAAAAAAAAAAACAAkAAAABAAAAAAADAAkAAAAAAAAAAAAEAAkAAAAGAAAAAAAFAAkAAAAAAAAAAAAGAAkAAAABAAEAAAAHAAkAAAAAAAEAAAAIAAkAAAAAAAEAAAAJAAkAAAABAAEAAAAKAAkAAAAAAAAAAAALAAkAAAAGAAAAAAAMAAkAAAAAAAAAAAANAAkAAAABAAAAAAAOAAkAAAAEAAAAAAAPAAkAAAAEAAAAAAAQAAkAAAABAAAAAAARAAkAAAAAAAAAAAASAAkAAAAGAAIAAAATAAkAAAAAAAAAAAAAAAoAAAAAAAAAAAABAAoAAAAAAAAAAAACAAoAAAABAAAAAAADAAoAAAAAAAAAAAAEAAoAAAAAAAAAAAAFAAoAAAAAAAAAAAAGAAoAAAABAAEAAAAHAAoAAAAAAAEAAAAIAAoAAAAEAAAAAAAJAAoAAAABAAEAAAAKAAoAAAAAAAAAAAALAAoAAAAAAAAAAAAMAAoAAAAAAAAAAAANAAoAAAABAAAAAAAOAAoAAAAAAAAAAAAPAAoAAAAAAAAAAAAQAAoAAAAAAAAAAAARAAoAAAABAAAAAAASAAoAAAAAAAAAAAATAAoAAAAAAAAAAAAAAAsAAAAAAAAAAAABAAsAAAAAAAAAAAACAAsAAAABAAAAAAADAAsAAAABAAAAAAAEAAsAAAABAAAAAAAFAAsAAAABAAAAAAAGAAsAAAABAAAAAAAHAAsAAAAAAAAAAAAIAAsAAAAAAAAAAAAJAAsAAAABAAAAAAAKAAsAAAABAAAAAAALAAsAAAABAAAAAAAMAAsAAAABAAAAAAANAAsAAAABAAAAAAAOAAsAAAABAAAAAAAPAAsAAAABAAAAAAAQAAsAAAABAAAAAAARAAsAAAABAAAAAAASAAsAAAAAAAAAAAATAAsAAAAAAAAAAAAAAAwAAAAFAAIAAAABAAwAAAAAAAAAAAACAAwAAAAAAAAAAAADAAwAAAAAAAAAAAAEAAwAAAAAAAAAAAAFAAwAAAAGAAAAAAAGAAwAAAAAAAAAAAAHAAwAAAAAAAAAAAAIAAwAAAAAAAAAAAAJAAwAAAAAAAAAAAAKAAwAAAAAAAAAAAALAAwAAAAAAAAAAAAMAAwAAAAAAAAAAAANAAwAAAAAAAAAAAAOAAwAAAAAAAAAAAAPAAwAAAAAAAAAAAAQAAwAAAAGAAAAAAARAAwAAAAAAAAAAAASAAwAAAAAAAAAAAATAAwAAAAFAAIAAAAAAA0AAAADAAIAAAABAA0AAAADAAIAAAACAA0AAAADAAIAAAADAA0AAAADAAIAAAAEAA0AAAADAAIAAAAFAA0AAAADAAIAAAAGAA0AAAADAAIAAAAHAA0AAAADAAIAAAAIAA0AAAADAAIAAAAJAA0AAAADAAIAAAAKAA0AAAADAAIAAAALAA0AAAADAAIAAAAMAA0AAAADAAIAAAANAA0AAAADAAIAAAAOAA0AAAADAAIAAAAPAA0AAAADAAIAAAAQAA0AAAADAAIAAAARAA0AAAADAAIAAAASAA0AAAADAAIAAAATAA0AAAADAAIAAAAAAA4AAAADAAEAAAABAA4AAAADAAEAAAACAA4AAAADAAEAAAADAA4AAAADAAEAAAAEAA4AAAADAAEAAAAFAA4AAAADAAEAAAAGAA4AAAADAAEAAAAHAA4AAAADAAEAAAAIAA4AAAADAAEAAAAJAA4AAAADAAEAAAAKAA4AAAADAAEAAAALAA4AAAADAAEAAAAMAA4AAAADAAEAAAANAA4AAAADAAEAAAAOAA4AAAADAAEAAAAPAA4AAAADAAEAAAAQAA4AAAADAAEAAAARAA4AAAADAAEAAAASAA4AAAADAAEAAAATAA4AAAADAAEAAAAUAA4AAAADAAEAAAA=")
 tile_set = ExtResource("2")
 
-[node name="Warrior" parent="." instance=ExtResource("3")]
+[node name="Warrior" type="CharacterBody2D" parent="." unique_id=502762392 instance=ExtResource("3")]
 position = Vector2(224, 224)
+collision_layer = 2
+script = ExtResource("4_gs0ar")
 
-[node name="Camera2D" type="Camera2D" parent="Warrior"]
+[node name="Camera2D" type="Camera2D" parent="Warrior" unique_id=1888675093]
 limit_left = 0
 limit_top = 0
 limit_right = 1344
 limit_bottom = 960
 
-[node name="Shopkeeper" parent="." instance=ExtResource("4")]
+[node name="Shopkeeper" type="StaticBody2D" parent="." unique_id=1517250886 instance=ExtResource("4")]
 position = Vector2(544, 416)
+script = ExtResource("6_hlpeb")
 sprite_texture = ExtResource("shopkeeper")
 dialogue_file = "res://data/dialogue/cornelia_shops.json"
 dialogue_id = "item_shop"
 
-[node name="TownspersonA" parent="." instance=ExtResource("4")]
+[node name="TownspersonA" type="StaticBody2D" parent="." unique_id=512765005 instance=ExtResource("4")]
 position = Vector2(352, 192)
+script = ExtResource("6_hlpeb")
 sprite_texture = ExtResource("townsperson_a")
 dialogue_file = "res://data/dialogue/cornelia_town.json"
 dialogue_id = "townsperson_a"
 
-[node name="TownspersonB" parent="." instance=ExtResource("4")]
+[node name="TownspersonB" type="StaticBody2D" parent="." unique_id=794704541 instance=ExtResource("4")]
 position = Vector2(736, 352)
+script = ExtResource("6_hlpeb")
 sprite_texture = ExtResource("townsperson_b")
 dialogue_file = "res://data/dialogue/cornelia_town.json"
 dialogue_id = "townsperson_b"
 
-[node name="TownspersonC" parent="." instance=ExtResource("4")]
+[node name="TownspersonC" type="StaticBody2D" parent="." unique_id=414619018 instance=ExtResource("4")]
 position = Vector2(160, 672)
+script = ExtResource("6_hlpeb")
 sprite_texture = ExtResource("townsperson_c")
 dialogue_file = "res://data/dialogue/cornelia_town.json"
 dialogue_id = "townsperson_c"
 
-[node name="WeaponShop" parent="." instance=ExtResource("4")]
+[node name="WeaponShop" type="StaticBody2D" parent="." unique_id=1865622675 instance=ExtResource("4")]
 position = Vector2(1056, 224)
+script = ExtResource("6_hlpeb")
 sprite_texture = ExtResource("shopkeeper")
 dialogue_file = "res://data/dialogue/cornelia_shops.json"
 dialogue_id = "weapon_shop"
 
-[node name="ArmorShop" parent="." instance=ExtResource("4")]
+[node name="ArmorShop" type="StaticBody2D" parent="." unique_id=250674683 instance=ExtResource("4")]
 position = Vector2(960, 224)
+script = ExtResource("6_hlpeb")
 sprite_texture = ExtResource("shopkeeper")
 dialogue_file = "res://data/dialogue/cornelia_shops.json"
 dialogue_id = "armor_shop"
 
-[node name="Inn" parent="." instance=ExtResource("4")]
+[node name="Inn" type="StaticBody2D" parent="." unique_id=385238336 instance=ExtResource("4")]
 position = Vector2(544, 704)
+script = ExtResource("6_hlpeb")
 sprite_texture = ExtResource("shopkeeper")
 dialogue_file = "res://data/dialogue/cornelia_shops.json"
 dialogue_id = "inn"
 
-[node name="WhiteMagicShop" parent="." instance=ExtResource("4")]
+[node name="WhiteMagicShop" type="StaticBody2D" parent="." unique_id=509948900 instance=ExtResource("4")]
 position = Vector2(864, 608)
+script = ExtResource("6_hlpeb")
 sprite_texture = ExtResource("shopkeeper")
 dialogue_file = "res://data/dialogue/cornelia_shops.json"
 dialogue_id = "white_magic_shop"
 
-[node name="BlackMagicShop" parent="." instance=ExtResource("4")]
+[node name="BlackMagicShop" type="StaticBody2D" parent="." unique_id=1904025895 instance=ExtResource("4")]
 position = Vector2(960, 608)
+script = ExtResource("6_hlpeb")
 sprite_texture = ExtResource("shopkeeper")
 dialogue_file = "res://data/dialogue/cornelia_shops.json"
 dialogue_id = "black_magic_shop"
 
-[node name="CastleDoor" parent="." instance=ExtResource("6")]
+[node name="CastleDoor" type="Area2D" parent="." unique_id=314375762 instance=ExtResource("6")]
 position = Vector2(544, 160)
+collision_layer = 8
+collision_mask = 2
+monitorable = false
+script = ExtResource("12_vw132")
 target_scene_path = "res://_scenes/cornelia_castle.tscn"
 spawn_position = Vector2(480, 608)
 
-[node name="DialogueBox" parent="." instance=ExtResource("5")]
+[node name="DialogueBox" type="CanvasLayer" parent="." unique_id=124518283 instance=ExtResource("5")]
+layer = 10
+script = ExtResource("14_tdaxl")

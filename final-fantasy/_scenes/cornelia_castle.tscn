@@ -1,44 +1,61 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene format=4]
 
-[ext_resource type="Script" path="res://scripts/cornelia_castle.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/level.gd" id="1"]
+[ext_resource type="AudioStream" path="res://music/castle_theme.ogg" id="music"]
 [ext_resource type="TileSet" path="res://tilesets/cornelia_tileset.tres" id="2"]
 [ext_resource type="PackedScene" path="res://_scenes/warrior.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://_scenes/npc.tscn" id="4"]
+[ext_resource type="Script" path="res://scripts/player_movement.gd" id="4_jfhta"]
 [ext_resource type="PackedScene" path="res://_scenes/dialogue_box.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://_scenes/door_trigger.tscn" id="6"]
+[ext_resource type="Script" path="res://scripts/npc.gd" id="6_b32c1"]
+[ext_resource type="Script" path="res://scripts/door_trigger.gd" id="10_7gnkd"]
+[ext_resource type="Script" path="res://scripts/dialogue_box.gd" id="12_hv5ck"]
 [ext_resource type="Texture2D" path="res://characters/npcs/king.png" id="king"]
 [ext_resource type="Texture2D" path="res://characters/npcs/princess.png" id="princess"]
 
-[node name="CorneliaCastle" type="Node2D"]
+[node name="CorneliaCastle" type="Node2D" unique_id=646642032]
 script = ExtResource("1")
+music = ExtResource("music")
 
-[node name="TileMapLayer" type="TileMapLayer" parent="."]
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1008303993]
+tile_map_data = PackedByteArray("AAAAAAAAAAAAAAEAAAABAAAAAAAAAAEAAAACAAAAAAAAAAEAAAADAAAAAAAAAAEAAAAEAAAAAAAAAAEAAAAFAAAAAAAAAAEAAAAGAAAAAAAAAAEAAAAHAAAAAAAAAAEAAAAIAAAAAAAAAAEAAAAJAAAAAAAAAAEAAAAKAAAAAAAAAAEAAAALAAAAAAAAAAEAAAAMAAAAAAAAAAEAAAANAAAAAAAAAAEAAAAOAAAAAAAAAAEAAAAAAAEAAAAAAAEAAAABAAEAAAAFAAAAAAACAAEAAAAFAAAAAAADAAEAAAAFAAAAAAAEAAEAAAAFAAAAAAAFAAEAAAAFAAAAAAAGAAEAAAAFAAAAAAAHAAEAAAAFAAAAAAAIAAEAAAAFAAAAAAAJAAEAAAAFAAAAAAAKAAEAAAAFAAAAAAALAAEAAAAFAAAAAAAMAAEAAAAFAAAAAAANAAEAAAAFAAAAAAAOAAEAAAAAAAEAAAAAAAIAAAAAAAEAAAABAAIAAAAFAAAAAAACAAIAAAACAAMAAAADAAIAAAAFAAAAAAAEAAIAAAAFAAAAAAAFAAIAAAAFAAAAAAAGAAIAAAAFAAAAAAAHAAIAAAAFAAAAAAAIAAIAAAAFAAAAAAAJAAIAAAAFAAAAAAAKAAIAAAAFAAAAAAALAAIAAAAFAAAAAAAMAAIAAAACAAMAAAANAAIAAAAFAAAAAAAOAAIAAAAAAAEAAAAAAAMAAAAAAAEAAAABAAMAAAAFAAAAAAACAAMAAAAFAAAAAAADAAMAAAAFAAAAAAAEAAMAAAAFAAAAAAAFAAMAAAAFAAAAAAAGAAMAAAAAAAMAAAAHAAMAAAAAAAMAAAAIAAMAAAAFAAAAAAAJAAMAAAAFAAAAAAAKAAMAAAAFAAAAAAALAAMAAAAFAAAAAAAMAAMAAAAFAAAAAAANAAMAAAAFAAAAAAAOAAMAAAAAAAEAAAAAAAQAAAAAAAEAAAABAAQAAAAFAAAAAAACAAQAAAAFAAAAAAADAAQAAAAFAAAAAAAEAAQAAAAFAAAAAAAFAAQAAAAFAAAAAAAGAAQAAAAAAAMAAAAHAAQAAAAAAAMAAAAIAAQAAAAFAAAAAAAJAAQAAAAFAAAAAAAKAAQAAAAFAAAAAAALAAQAAAAFAAAAAAAMAAQAAAAFAAAAAAANAAQAAAAFAAAAAAAOAAQAAAAAAAEAAAAAAAUAAAAAAAEAAAABAAUAAAAFAAAAAAACAAUAAAACAAMAAAADAAUAAAAFAAAAAAAEAAUAAAAFAAAAAAAFAAUAAAAFAAAAAAAGAAUAAAABAAMAAAAHAAUAAAAAAAMAAAAIAAUAAAAFAAAAAAAJAAUAAAAFAAAAAAAKAAUAAAAFAAAAAAALAAUAAAAFAAAAAAAMAAUAAAACAAMAAAANAAUAAAAFAAAAAAAOAAUAAAAAAAEAAAAAAAYAAAAAAAEAAAABAAYAAAAFAAAAAAACAAYAAAAFAAAAAAADAAYAAAAFAAAAAAAEAAYAAAAFAAAAAAAFAAYAAAAFAAAAAAAGAAYAAAAAAAMAAAAHAAYAAAAAAAMAAAAIAAYAAAAFAAAAAAAJAAYAAAAFAAAAAAAKAAYAAAAFAAAAAAALAAYAAAAFAAAAAAAMAAYAAAAFAAAAAAANAAYAAAAFAAAAAAAOAAYAAAAAAAEAAAAAAAcAAAAAAAEAAAABAAcAAAAFAAAAAAACAAcAAAAFAAAAAAADAAcAAAAFAAAAAAAEAAcAAAAFAAAAAAAFAAcAAAAFAAAAAAAGAAcAAAAAAAMAAAAHAAcAAAAAAAMAAAAIAAcAAAAFAAAAAAAJAAcAAAAFAAAAAAAKAAcAAAAFAAAAAAALAAcAAAAFAAAAAAAMAAcAAAAFAAAAAAANAAcAAAAFAAAAAAAOAAcAAAAAAAEAAAAAAAgAAAAAAAEAAAABAAgAAAAFAAAAAAACAAgAAAACAAMAAAADAAgAAAAFAAAAAAAEAAgAAAAFAAAAAAAFAAgAAAAFAAAAAAAGAAgAAAAAAAMAAAAHAAgAAAAAAAMAAAAIAAgAAAAFAAAAAAAJAAgAAAAFAAAAAAAKAAgAAAAFAAAAAAALAAgAAAAFAAAAAAAMAAgAAAACAAMAAAANAAgAAAAFAAAAAAAOAAgAAAAAAAEAAAAAAAkAAAAAAAEAAAABAAkAAAAFAAAAAAACAAkAAAAFAAAAAAADAAkAAAAFAAAAAAAEAAkAAAAFAAAAAAAFAAkAAAAFAAAAAAAGAAkAAAAAAAMAAAAHAAkAAAAAAAMAAAAIAAkAAAAFAAAAAAAJAAkAAAAFAAAAAAAKAAkAAAAFAAAAAAALAAkAAAAFAAAAAAAMAAkAAAAFAAAAAAANAAkAAAAFAAAAAAAOAAkAAAAAAAEAAAAAAAoAAAAAAAEAAAABAAoAAAAAAAEAAAACAAoAAAAAAAEAAAADAAoAAAAAAAEAAAAEAAoAAAAAAAEAAAAFAAoAAAAAAAEAAAAGAAoAAAAAAAEAAAAHAAoAAAAEAAAAAAAIAAoAAAAAAAEAAAAJAAoAAAAAAAEAAAAKAAoAAAAAAAEAAAALAAoAAAAAAAEAAAAMAAoAAAAAAAEAAAANAAoAAAAAAAEAAAAOAAoAAAAAAAEAAAA=")
 tile_set = ExtResource("2")
 
-[node name="Warrior" parent="." instance=ExtResource("3")]
+[node name="Warrior" type="CharacterBody2D" parent="." unique_id=406162212 instance=ExtResource("3")]
 position = Vector2(480, 608)
+collision_layer = 2
+script = ExtResource("4_jfhta")
 
-[node name="Camera2D" type="Camera2D" parent="Warrior"]
+[node name="Camera2D" type="Camera2D" parent="Warrior" unique_id=1453631438]
 limit_left = 0
 limit_top = 0
 limit_right = 960
 limit_bottom = 704
 
-[node name="King" parent="." instance=ExtResource("4")]
+[node name="King" type="StaticBody2D" parent="." unique_id=1712161765 instance=ExtResource("4")]
 position = Vector2(448, 352)
+script = ExtResource("6_b32c1")
 sprite_texture = ExtResource("king")
 dialogue_file = "res://data/dialogue/cornelia_castle.json"
 dialogue_id = "king"
 
-[node name="Princess" parent="." instance=ExtResource("4")]
+[node name="Princess" type="StaticBody2D" parent="." unique_id=1842022098 instance=ExtResource("4")]
 position = Vector2(576, 352)
+script = ExtResource("6_b32c1")
 sprite_texture = ExtResource("princess")
 dialogue_file = "res://data/dialogue/cornelia_castle.json"
 dialogue_id = "princess"
 
-[node name="ExitDoor" parent="." instance=ExtResource("6")]
+[node name="ExitDoor" type="Area2D" parent="." unique_id=843026291 instance=ExtResource("6")]
 position = Vector2(480, 672)
+collision_layer = 8
+collision_mask = 2
+monitorable = false
+script = ExtResource("10_7gnkd")
 target_scene_path = "res://_scenes/cornelia_town.tscn"
 spawn_position = Vector2(544, 224)
 
-[node name="DialogueBox" parent="." instance=ExtResource("5")]
+[node name="DialogueBox" type="CanvasLayer" parent="." unique_id=636380241 instance=ExtResource("5")]
+layer = 10
+script = ExtResource("12_hv5ck")

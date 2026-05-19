@@ -51,17 +51,19 @@ Godot_v4.6.2-stable_win64.exe --path . --headless --export-release "Windows Desk
 2. **DialogueData** (`scripts/dialogue_data.gd`) — Loads and caches JSON dialogue files from `data/dialogue/`. Called with `DialogueData.get_dialogue(path, id)`.
 3. **MusicManager** (`scripts/autoloads/music_manager.gd`) — Single-track music on "Music" audio bus. `play(stream)` prevents restarting same track. Auto-loops.
 4. **SfxManager** (`scripts/autoloads/sfx_manager.gd`) — Pool of 16 AudioStreamPlayers on "SFX" audio bus. `play(stream, volume_db)`.
+5. **PartyData** (`scripts/autoloads/party_data.gd`) — Holds party array of `CharacterData` objects with Level 1 stats. `enum Job { WARRIOR, MONK, WHITE_MAGE, BLACK_MAGE }`.
 
 ### Scene flow
 
-`title_screen.tscn` → (confirm) → `cornelia_town.tscn`
+`title_screen.tscn` → (confirm) → `cornelia_town.tscn` ↔ (door trigger) ↔ `cornelia_castle.tscn`
 
 ### Key scenes
 
-- **`_scenes/warrior.tscn`** — Player character (CharacterBody2D + AnimatedSprite2D + InteractArea). Script: `player_movement.gd`. Only processes in FIELD state.
-- **`_scenes/npc.tscn`** — Reusable NPC template (StaticBody2D). Exports: `sprite_texture`, `dialogue_file`, `dialogue_id`. Loads dialogue from JSON on `_ready()`.
-- **`_scenes/dialogue_box.tscn`** — CanvasLayer (layer 10) with character-by-character text reveal. Emits `dialogue_finished` signal. Finds itself via `"dialogue_box"` group.
-- **`_scenes/cornelia_town.tscn`** — Town map. Paints TileMapLayer procedurally from a string-array map in `cornelia_town.gd`.
+- **`_scenes/warrior.tscn`** — Player character (CharacterBody2D, collision layer 2 + AnimatedSprite2D + InteractArea). Script: `player_movement.gd`. Only processes in FIELD state.
+- **`_scenes/npc.tscn`** — Reusable NPC template (StaticBody2D). Exports: `sprite_texture`, `dialogue_file`, `dialogue_id`. Loads dialogue from JSON on `_ready()`. Has `interact()` method called via duck typing.
+- **`_scenes/dialogue_box.tscn`** — CanvasLayer (layer 10) with character-by-character text reveal + SFX. `class_name DialogueBox`. Emits `dialogue_finished` signal.
+- **`_scenes/door_trigger.tscn`** — Reusable Area2D (collision layer 4, mask 2). Exports: `target_scene_path`, `spawn_position`. Transitions scenes on player body enter, sets spawn override on GameState.
+- **Level scenes** (`cornelia_town.tscn`, `cornelia_castle.tscn`) — All use `scripts/level.gd` with `@export var music: AudioStream`. Tiles painted in editor (TileMapLayer `tile_map_data`). Level.gd handles FIELD state transition, music playback, and spawn position override.
 
 ### Input handling pattern
 
