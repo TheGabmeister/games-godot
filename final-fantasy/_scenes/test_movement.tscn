@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://_scenes/warrior.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://_scenes/npc.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://_scenes/dialogue_box.tscn" id="dialogue_box"]
 [ext_resource type="Texture2D" path="res://characters/npcs/king.png" id="king"]
 [ext_resource type="Texture2D" path="res://characters/npcs/princess.png" id="princess"]
 [ext_resource type="Texture2D" path="res://characters/npcs/shopkeeper.png" id="shopkeeper"]
@@ -45,3 +46,5 @@ position = Vector2(800, 450)
 sprite_texture = ExtResource("townsperson_b")
 npc_name = "Townsperson"
 dialogue = PackedStringArray("Cornelia used to be such a peaceful place...", "I hope the Warriors of Light can save us.")
+
+[node name="DialogueBox" parent="." instance=ExtResource("dialogue_box")]
