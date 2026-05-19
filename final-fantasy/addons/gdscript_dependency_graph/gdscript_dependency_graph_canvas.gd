@@ -38,12 +38,21 @@ func _ready() -> void:
 
 
 func set_graph(nodes: Array, edges: Array, display_names: Dictionary, depths: Dictionary) -> void:
-	_nodes = nodes.duplicate()
+	var previous_node_rects := _node_rects.duplicate()
+	var previous_node_order := _nodes.duplicate()
+	var should_reset_view := previous_node_rects.is_empty()
+
+	_nodes = _merge_node_order(previous_node_order, nodes)
 	_edges = edges.duplicate()
 	_display_names = display_names.duplicate()
 	_depths = depths.duplicate()
-	_rebuild_layout()
-	reset_view()
+
+	if should_reset_view:
+		_rebuild_layout()
+		reset_view()
+	else:
+		_rebuild_layout_preserving_existing_nodes(previous_node_rects)
+
 	queue_redraw()
 
 
@@ -131,6 +140,58 @@ func _rebuild_layout() -> void:
 			x += node_size.x + COLUMN_SPACING
 
 	_rebuild_graph_bounds()
+
+
+func _rebuild_layout_preserving_existing_nodes(previous_node_rects: Dictionary) -> void:
+	_rebuild_layout()
+
+	var automatic_node_rects := _node_rects.duplicate()
+	_node_rects.clear()
+
+	for path in _nodes:
+		if previous_node_rects.has(path):
+			var preserved_rect: Rect2 = previous_node_rects[path]
+			preserved_rect.size = _measure_node_size(path)
+			_node_rects[path] = preserved_rect
+		elif automatic_node_rects.has(path):
+			_node_rects[path] = automatic_node_rects[path]
+
+	_prune_interaction_state()
+	_rebuild_graph_bounds()
+
+
+func _merge_node_order(previous_node_order: Array, new_nodes: Array) -> Array:
+	var new_node_lookup := {}
+	for path in new_nodes:
+		new_node_lookup[path] = true
+
+	var merged_nodes := []
+	for path in previous_node_order:
+		if new_node_lookup.has(path):
+			merged_nodes.append(path)
+
+	for path in new_nodes:
+		if not merged_nodes.has(path):
+			merged_nodes.append(path)
+
+	return merged_nodes
+
+
+func _prune_interaction_state() -> void:
+	var node_lookup := {}
+	for path in _nodes:
+		node_lookup[path] = true
+
+	for path in _selected_node_paths.keys():
+		if not node_lookup.has(path):
+			_selected_node_paths.erase(path)
+
+	for path in _drag_start_node_positions.keys():
+		if not node_lookup.has(path):
+			_drag_start_node_positions.erase(path)
+
+	if _dragged_node_path != "" and not node_lookup.has(_dragged_node_path):
+		_dragged_node_path = ""
 
 
 func _reduce_crossings(paths_by_row: Dictionary, sorted_rows: Array) -> void:

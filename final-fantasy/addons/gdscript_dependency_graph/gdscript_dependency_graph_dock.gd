@@ -74,14 +74,13 @@ func _build_ui() -> void:
 
 
 func _on_generate_graph_pressed() -> void:
-	_clear_graph()
-
 	var scanner := DependencyGraphScanner.new()
 	var graph_data := scanner.scan(_scan_root_path)
 	var nodes: Array = graph_data["nodes"]
 	var edges: Array = graph_data["edges"]
 
 	if nodes.is_empty():
+		_clear_graph()
 		_status_label.text = "No .gd files found in %s." % _scan_root_path
 		return
 

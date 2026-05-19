@@ -23,13 +23,19 @@ const WALK_ANIM: Dictionary[Dir, StringName] = {
 	Dir.RIGHT: &"walk_right",
 }
 
+const FOOTSTEP_STONE := preload("res://ui/footstep_stone.ogg")
+const FOOTSTEP_GRASS := preload("res://ui/footstep_grass.ogg")
+const FOOTSTEP_INTERVAL := 0.35
+const FOOTSTEP_VOLUME := -6.0
+
 @export var speed: float = 200.0
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var interact_area: Area2D = $InteractArea
 var facing: Dir = Dir.DOWN
+var _footstep_timer := 0.0
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not GameState.is_state(GameState.State.FIELD):
 		velocity = Vector2.ZERO
 		var _c := move_and_slide()
@@ -45,9 +51,14 @@ func _physics_process(_delta: float) -> void:
 		velocity = input * speed
 		_update_facing(input)
 		sprite.play(WALK_ANIM[facing])
+		_footstep_timer -= delta
+		if _footstep_timer <= 0.0:
+			SfxManager.play(FOOTSTEP_STONE, FOOTSTEP_VOLUME)
+			_footstep_timer = FOOTSTEP_INTERVAL
 	else:
 		velocity = Vector2.ZERO
 		sprite.play(IDLE_ANIM[facing])
+		_footstep_timer = 0.0
 
 	var _collided := move_and_slide()
 

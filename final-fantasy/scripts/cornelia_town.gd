@@ -82,11 +82,15 @@ const MAP := [
 ]
 
 @onready var tile_map: TileMapLayer = $TileMapLayer
+@onready var warrior: CharacterBody2D = $Warrior
 
 func _ready() -> void:
 	GameState.transition(GameState.State.FIELD)
 	MusicManager.play(TOWN_MUSIC)
 	_paint_map()
+	if GameState.has_spawn_override:
+		warrior.position = GameState.spawn_position
+		GameState.has_spawn_override = false
 
 func _paint_map() -> void:
 	for y in range(MAP.size()):
