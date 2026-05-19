@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/title_screen.gd" id="1"]
 [ext_resource type="AudioStream" path="res://music/title_theme.ogg" id="title_music"]
-[ext_resource type="PackedScene" path="res://_scenes/test_movement.tscn" id="next_scene"]
+[ext_resource type="PackedScene" path="res://_scenes/cornelia_town.tscn" id="next_scene"]
 
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
