@@ -1,11 +1,27 @@
 extends CharacterBody2D
 
+enum Dir { DOWN, UP, LEFT, RIGHT }
+
+const DIR_VECTORS := {
+	Dir.DOWN:  Vector2.DOWN,
+	Dir.UP:    Vector2.UP,
+	Dir.LEFT:  Vector2.LEFT,
+	Dir.RIGHT: Vector2.RIGHT,
+}
+
+const ANIM := {
+	Dir.DOWN:  { idle = &"idle_down",  walk = &"walk_down" },
+	Dir.UP:    { idle = &"idle_up",    walk = &"walk_up" },
+	Dir.LEFT:  { idle = &"idle_left",  walk = &"walk_left" },
+	Dir.RIGHT: { idle = &"idle_right", walk = &"walk_right" },
+}
+
 @export var speed: float = 200.0
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var interact_area: Area2D = $InteractArea
 
-var facing := "down"
+var facing: Dir = Dir.DOWN
 
 func _physics_process(_delta: float) -> void:
 	if not GameState.is_state(GameState.State.FIELD):
@@ -22,10 +38,10 @@ func _physics_process(_delta: float) -> void:
 		input = input.normalized()
 		velocity = input * speed
 		_update_facing(input)
-		sprite.play("walk_" + facing)
+		sprite.play(ANIM[facing].walk)
 	else:
 		velocity = Vector2.ZERO
-		sprite.play("idle_" + facing)
+		sprite.play(ANIM[facing].idle)
 
 	move_and_slide()
 
@@ -40,18 +56,12 @@ func _input(event: InputEvent) -> void:
 
 func _update_facing(dir: Vector2) -> void:
 	if absf(dir.x) > absf(dir.y):
-		facing = "right" if dir.x > 0 else "left"
+		facing = Dir.RIGHT if dir.x > 0 else Dir.LEFT
 	else:
-		facing = "down" if dir.y > 0 else "up"
+		facing = Dir.DOWN if dir.y > 0 else Dir.UP
 
 func _get_facing_npc() -> Node:
-	var face_dir := Vector2.ZERO
-	match facing:
-		"up": face_dir = Vector2.UP
-		"down": face_dir = Vector2.DOWN
-		"left": face_dir = Vector2.LEFT
-		"right": face_dir = Vector2.RIGHT
-
+	var face_dir: Vector2 = DIR_VECTORS[facing]
 	var best_npc: Node = null
 	var best_dot := -1.0
 	for area: Area2D in interact_area.get_overlapping_areas():
@@ -68,7 +78,7 @@ func _get_facing_npc() -> Node:
 func _start_dialogue(npc: Node) -> void:
 	GameState.transition(GameState.State.DIALOGUE)
 	velocity = Vector2.ZERO
-	sprite.play("idle_" + facing)
+	sprite.play(ANIM[facing].idle)
 	var dialogue_box: Node = get_tree().get_first_node_in_group("dialogue_box")
 	if dialogue_box:
 		dialogue_box.start(npc.npc_name, npc.dialogue)
