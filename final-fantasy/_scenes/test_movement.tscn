@@ -20,31 +20,31 @@ position = Vector2(640, 360)
 [node name="King" parent="." instance=ExtResource("2")]
 position = Vector2(640, 160)
 sprite_texture = ExtResource("king")
-npc_name = "King of Cornelia"
-dialogue = PackedStringArray("Welcome, Warriors of Light.", "The kingdom is in peril.", "Please, rescue my daughter.")
+dialogue_file = "res://data/dialogue/cornelia_castle.json"
+dialogue_id = "king"
 
 [node name="Princess" parent="." instance=ExtResource("2")]
 position = Vector2(760, 160)
 sprite_texture = ExtResource("princess")
-npc_name = "Princess Sarah"
-dialogue = PackedStringArray("Thank you for coming.", "Please be careful out there.")
+dialogue_file = "res://data/dialogue/cornelia_castle.json"
+dialogue_id = "princess"
 
 [node name="Shopkeeper" parent="." instance=ExtResource("2")]
 position = Vector2(400, 300)
 sprite_texture = ExtResource("shopkeeper")
-npc_name = "Shopkeeper"
-dialogue = PackedStringArray("Welcome to my shop!", "Take a look around.")
+dialogue_file = "res://data/dialogue/cornelia_shops.json"
+dialogue_id = "item_shop"
 
 [node name="TownspersonA" parent="." instance=ExtResource("2")]
 position = Vector2(500, 500)
 sprite_texture = ExtResource("townsperson_a")
-npc_name = "Townsperson"
-dialogue = PackedStringArray("Have you heard? The bridge north of town is broken.")
+dialogue_file = "res://data/dialogue/cornelia_town.json"
+dialogue_id = "townsperson_a"
 
 [node name="TownspersonB" parent="." instance=ExtResource("2")]
 position = Vector2(800, 450)
 sprite_texture = ExtResource("townsperson_b")
-npc_name = "Townsperson"
-dialogue = PackedStringArray("Cornelia used to be such a peaceful place...", "I hope the Warriors of Light can save us.")
+dialogue_file = "res://data/dialogue/cornelia_town.json"
+dialogue_id = "townsperson_b"
 
 [node name="DialogueBox" parent="." instance=ExtResource("dialogue_box")]

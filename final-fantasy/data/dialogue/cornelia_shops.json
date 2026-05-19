@@ -1,0 +1,44 @@
+{
+  "weapon_shop": {
+    "name": "Weapon Shopkeeper",
+    "lines": [
+      "Welcome to the weapon shop!",
+      "We have the finest swords and axes in Cornelia."
+    ]
+  },
+  "armor_shop": {
+    "name": "Armor Shopkeeper",
+    "lines": [
+      "Need some protection?",
+      "Take a look at our armor and shields."
+    ]
+  },
+  "item_shop": {
+    "name": "Item Shopkeeper",
+    "lines": [
+      "Potions, antidotes, sleeping bags...",
+      "Stock up before you head out!"
+    ]
+  },
+  "white_magic_shop": {
+    "name": "White Magic Shopkeeper",
+    "lines": [
+      "We deal in holy magic here.",
+      "Cure, Protect, Blink... all essential for your journey."
+    ]
+  },
+  "black_magic_shop": {
+    "name": "Black Magic Shopkeeper",
+    "lines": [
+      "Interested in the destructive arts?",
+      "Fire, Thunder, Blizzard... take your pick."
+    ]
+  },
+  "inn": {
+    "name": "Innkeeper",
+    "lines": [
+      "Welcome to the Cornelia Inn.",
+      "Rest here and restore your strength."
+    ]
+  }
+}

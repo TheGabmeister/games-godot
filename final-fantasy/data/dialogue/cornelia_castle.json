@@ -1,0 +1,17 @@
+{
+  "king": {
+    "name": "King of Cornelia",
+    "lines": [
+      "Welcome, Warriors of Light.",
+      "The kingdom is in peril.",
+      "Please, rescue my daughter."
+    ]
+  },
+  "princess": {
+    "name": "Princess Sarah",
+    "lines": [
+      "Thank you for coming.",
+      "Please be careful out there."
+    ]
+  }
+}

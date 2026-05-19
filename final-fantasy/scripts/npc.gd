@@ -1,12 +1,19 @@
 extends StaticBody2D
 
 @export var sprite_texture: Texture2D
-@export var dialogue: Array[String] = ["..."]
-@export var npc_name: String = "NPC"
+@export_file("*.json") var dialogue_file: String
+@export var dialogue_id: String
 
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var interaction_area: Area2D = $InteractionArea
+
+var npc_name: String
+var dialogue: Array[String]
 
 func _ready() -> void:
 	if sprite_texture:
 		sprite.texture = sprite_texture
+	if dialogue_file and dialogue_id:
+		var data: Dictionary = get_node("/root/DialogueData").get_dialogue(dialogue_file, dialogue_id)
+		npc_name = data.get("name", "???")
+		var lines: Array = data.get("lines", ["..."])
+		dialogue.assign(lines)

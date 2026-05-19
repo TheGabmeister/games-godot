@@ -1,0 +1,22 @@
+{
+  "townsperson_a": {
+    "name": "Townsperson",
+    "lines": [
+      "Have you heard? The bridge north of town is broken."
+    ]
+  },
+  "townsperson_b": {
+    "name": "Townsperson",
+    "lines": [
+      "Cornelia used to be such a peaceful place...",
+      "I hope the Warriors of Light can save us."
+    ]
+  },
+  "townsperson_c": {
+    "name": "Old Man",
+    "lines": [
+      "I've lived in Cornelia for sixty years.",
+      "Never seen times as dark as these."
+    ]
+  }
+}
