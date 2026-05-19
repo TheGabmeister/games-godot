@@ -5,7 +5,7 @@ extends Control
 
 func _ready() -> void:
 	if music:
-		MusicManager.play(&"title", music)
+		MusicManager.play(music)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("confirm"):
