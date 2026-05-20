@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/party_menu.gd" id="1"]
 [ext_resource type="Theme" path="res://ui/menu_theme.tres" id="theme"]
@@ -7,6 +7,7 @@
 [ext_resource type="AudioStream" path="res://ui/confirm.ogg" id="confirm"]
 [ext_resource type="AudioStream" path="res://ui/cancel.ogg" id="cancel"]
 [ext_resource type="PackedScene" path="res://_scenes/character_row.tscn" id="char_row"]
+[ext_resource type="PackedScene" path="res://_scenes/game_button.tscn" id="game_btn"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
 bg_color = Color(0.05, 0.05, 0.2, 0.95)
@@ -86,35 +87,35 @@ theme_override_constants/separation = 4
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Items" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+[node name="Items" parent="Panel/HBox/LeftPanel/VBox/MenuEntries" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  Items"
+button_text = "Items"
 
-[node name="Magic" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+[node name="Magic" parent="Panel/HBox/LeftPanel/VBox/MenuEntries" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  Magic"
+button_text = "Magic"
 
-[node name="Equipment" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+[node name="Equipment" parent="Panel/HBox/LeftPanel/VBox/MenuEntries" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  Equipment"
+button_text = "Equipment"
 
-[node name="Status" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+[node name="Status" parent="Panel/HBox/LeftPanel/VBox/MenuEntries" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  Status"
+button_text = "Status"
 
-[node name="Formation" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+[node name="Formation" parent="Panel/HBox/LeftPanel/VBox/MenuEntries" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  Formation"
+button_text = "Formation"
 
-[node name="Config" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+[node name="Config" parent="Panel/HBox/LeftPanel/VBox/MenuEntries" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  Config"
+button_text = "Config"
 
 [node name="Spacer" type="Control" parent="Panel/HBox/LeftPanel/VBox"]
 layout_mode = 2
@@ -197,25 +198,25 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 4
 
-[node name="Target0" type="Label" parent="Panel/HBox/RightPanel/Screens/TargetSelect"]
+[node name="Target0" parent="Panel/HBox/RightPanel/Screens/TargetSelect" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  ---"
+button_text = "---"
 
-[node name="Target1" type="Label" parent="Panel/HBox/RightPanel/Screens/TargetSelect"]
+[node name="Target1" parent="Panel/HBox/RightPanel/Screens/TargetSelect" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  ---"
+button_text = "---"
 
-[node name="Target2" type="Label" parent="Panel/HBox/RightPanel/Screens/TargetSelect"]
+[node name="Target2" parent="Panel/HBox/RightPanel/Screens/TargetSelect" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  ---"
+button_text = "---"
 
-[node name="Target3" type="Label" parent="Panel/HBox/RightPanel/Screens/TargetSelect"]
+[node name="Target3" parent="Panel/HBox/RightPanel/Screens/TargetSelect" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  ---"
+button_text = "---"
 
 [node name="StatusSelect" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens"]
 unique_name_in_owner = true
@@ -228,25 +229,25 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 4
 
-[node name="StatusChar0" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusSelect"]
+[node name="StatusChar0" parent="Panel/HBox/RightPanel/Screens/StatusSelect" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  ---"
+button_text = "---"
 
-[node name="StatusChar1" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusSelect"]
+[node name="StatusChar1" parent="Panel/HBox/RightPanel/Screens/StatusSelect" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  ---"
+button_text = "---"
 
-[node name="StatusChar2" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusSelect"]
+[node name="StatusChar2" parent="Panel/HBox/RightPanel/Screens/StatusSelect" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  ---"
+button_text = "---"
 
-[node name="StatusChar3" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusSelect"]
+[node name="StatusChar3" parent="Panel/HBox/RightPanel/Screens/StatusSelect" instance=ExtResource("game_btn")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "  ---"
+button_text = "---"
 
 [node name="StatusDetail" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens"]
 unique_name_in_owner = true

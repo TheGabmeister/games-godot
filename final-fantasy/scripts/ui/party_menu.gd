@@ -8,8 +8,6 @@ signal closed
 @export var confirm_sfx: AudioStream
 @export var cancel_sfx: AudioStream
 
-const MENU_ENTRIES: Array[StringName] = [&"Items", &"Magic", &"Equipment", &"Status", &"Formation", &"Config"]
-
 enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }
 
 var _active := false
@@ -18,7 +16,7 @@ var _current_screen: Screen = Screen.MAIN
 var party_data: PartyData
 
 var _items: Array[ItemData] = []
-var _item_labels: Array[Label] = []
+var _item_labels: Array[GameButton] = []
 var _item_target_index := 0
 var _formation_selected_index := -1
 
@@ -26,7 +24,7 @@ var _formation_selected_index := -1
 @onready var _time_label: Label = %TimeLabel
 @onready var _gil_label: Label = %GilLabel
 
-@onready var _cursor_labels: Array[Label] = [%Items, %Magic, %Equipment, %Status, %Formation, %Config]
+@onready var _cursor_labels: Array[GameButton] = [%Items, %Magic, %Equipment, %Status, %Formation, %Config]
 
 @onready var _party_overview: VBoxContainer = %PartyOverview
 @onready var _items_list: VBoxContainer = %ItemsList
@@ -38,8 +36,8 @@ var _formation_selected_index := -1
 
 @onready var _char_rows: Array[CharacterRow] = [%CharRow0, %CharRow1, %CharRow2, %CharRow3]
 
-@onready var _target_labels: Array[Label] = [%Target0, %Target1, %Target2, %Target3]
-@onready var _status_labels: Array[Label] = [%StatusChar0, %StatusChar1, %StatusChar2, %StatusChar3]
+@onready var _target_labels: Array[GameButton] = [%Target0, %Target1, %Target2, %Target3]
+@onready var _status_labels: Array[GameButton] = [%StatusChar0, %StatusChar1, %StatusChar2, %StatusChar3]
 
 @onready var _detail_name: Label = %DetailName
 @onready var _detail_level_value: Label = %LevelValue
@@ -109,12 +107,12 @@ func _input(event: InputEvent) -> void:
 
 func _input_main(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
-		_cursor_index = (_cursor_index - 1 + MENU_ENTRIES.size()) % MENU_ENTRIES.size()
+		_cursor_index = (_cursor_index - 1 + _cursor_labels.size()) % _cursor_labels.size()
 		_update_main_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
-		_cursor_index = (_cursor_index + 1) % MENU_ENTRIES.size()
+		_cursor_index = (_cursor_index + 1) % _cursor_labels.size()
 		_update_main_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
@@ -128,7 +126,7 @@ func _input_main(event: InputEvent) -> void:
 
 func _update_main_cursor() -> void:
 	for i: int in _cursor_labels.size():
-		_cursor_labels[i].text = "> " + MENU_ENTRIES[i] if i == _cursor_index else "  " + MENU_ENTRIES[i]
+		_cursor_labels[i].set_selected(i == _cursor_index)
 	_time_label.text = "Time  " + party_data.get_play_time_string()
 	_gil_label.text = "Gil   " + str(party_data.gil)
 
@@ -228,10 +226,10 @@ func _refresh_item_list() -> void:
 	for i: int in _items.size():
 		var item: ItemData = _items[i]
 		var qty: int = party_data.inventory[item]
-		var label := Label.new()
-		label.text = "  %s          x%d" % [item.item_name, qty]
-		_items_list.add_child(label)
-		_item_labels.append(label)
+		var btn := GameButton.new()
+		btn.button_text = "%s          x%d" % [item.item_name, qty]
+		_items_list.add_child(btn)
+		_item_labels.append(btn)
 
 	if _cursor_index >= _items.size():
 		_cursor_index = maxi(_items.size() - 1, 0)
@@ -239,12 +237,7 @@ func _refresh_item_list() -> void:
 
 func _update_items_cursor() -> void:
 	for i: int in _item_labels.size():
-		var item: ItemData = _items[i]
-		var qty: int = party_data.inventory[item]
-		if i == _cursor_index:
-			_item_labels[i].text = "> %s          x%d" % [item.item_name, qty]
-		else:
-			_item_labels[i].text = "  %s          x%d" % [item.item_name, qty]
+		_item_labels[i].set_selected(i == _cursor_index)
 
 # --- Items target select ---
 
@@ -280,10 +273,8 @@ func _input_items_target(event: InputEvent) -> void:
 func _update_target_cursor() -> void:
 	for i: int in party_data.party.size():
 		var character: PartyData.CharacterData = party_data.party[i]
-		if i == _item_target_index:
-			_target_labels[i].text = "> %s    HP %d / %d" % [character.char_name, character.current_hp, character.max_hp]
-		else:
-			_target_labels[i].text = "  %s    HP %d / %d" % [character.char_name, character.current_hp, character.max_hp]
+		_target_labels[i].button_text = "%s    HP %d / %d" % [character.char_name, character.current_hp, character.max_hp]
+		_target_labels[i].set_selected(i == _item_target_index)
 
 # --- Status screen ---
 
@@ -315,10 +306,8 @@ func _input_status(event: InputEvent) -> void:
 func _update_status_cursor() -> void:
 	for i: int in party_data.party.size():
 		var character: PartyData.CharacterData = party_data.party[i]
-		if i == _cursor_index:
-			_status_labels[i].text = "> %s" % character.char_name
-		else:
-			_status_labels[i].text = "  %s" % character.char_name
+		_status_labels[i].button_text = character.char_name
+		_status_labels[i].set_selected(i == _cursor_index)
 
 func _input_status_detail(event: InputEvent) -> void:
 	if event.is_action_pressed("cancel"):
