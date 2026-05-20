@@ -3,10 +3,10 @@ extends CanvasLayer
 
 signal closed
 
-const CURSOR_MOVE := preload("res://ui/cursor_move.ogg")
-const MENU_OPEN := preload("res://ui/menu_open.ogg")
-const CONFIRM_SFX := preload("res://ui/confirm.ogg")
-const CANCEL_SFX := preload("res://ui/cancel.ogg")
+@export var cursor_move_sfx: AudioStream
+@export var menu_open_sfx: AudioStream
+@export var confirm_sfx: AudioStream
+@export var cancel_sfx: AudioStream
 
 const SPRITE_SHEETS: Dictionary[PartyData.Job, Texture2D] = {
 	PartyData.Job.WARRIOR:    preload("res://characters/warrior/warrior_sheet.png"),
@@ -49,7 +49,7 @@ func open() -> void:
 	_root.visible = true
 	_update_cursor()
 	_show_party_overview()
-	SfxManager.play(MENU_OPEN)
+	SfxManager.play(menu_open_sfx)
 
 func close() -> void:
 	_active = false
@@ -65,7 +65,7 @@ func _input(event: InputEvent) -> void:
 
 	if _current_screen in [Screen.MAGIC, Screen.EQUIPMENT, Screen.CONFIG]:
 		if event.is_action_pressed("cancel"):
-			SfxManager.play(CANCEL_SFX)
+			SfxManager.play(cancel_sfx)
 			return_to_main()
 			get_viewport().set_input_as_handled()
 		return
@@ -76,23 +76,23 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
 		_cursor_index = (_cursor_index - 1 + MENU_ENTRIES.size()) % MENU_ENTRIES.size()
 		_update_cursor()
-		SfxManager.play(CURSOR_MOVE)
+		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
 		_cursor_index = (_cursor_index + 1) % MENU_ENTRIES.size()
 		_update_cursor()
-		SfxManager.play(CURSOR_MOVE)
+		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
 		_open_submenu(_cursor_index)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("cancel") or event.is_action_pressed("menu"):
-		SfxManager.play(CANCEL_SFX)
+		SfxManager.play(cancel_sfx)
 		close()
 		get_viewport().set_input_as_handled()
 
 func _open_submenu(index: int) -> void:
-	SfxManager.play(CONFIRM_SFX)
+	SfxManager.play(confirm_sfx)
 	match index:
 		0:
 			_current_screen = Screen.ITEMS
@@ -298,32 +298,21 @@ func _build_ui() -> void:
 	_right_panel.add_theme_constant_override(&"separation", 2)
 	right_container.add_child(_right_panel)
 
-	_items_screen = _create_items_screen()
+	_items_screen = _create_screen(preload("res://scripts/ui/items_screen.gd"), "ItemsScreen")
 	add_child(_items_screen)
 
-	_status_screen = _create_status_screen()
+	_status_screen = _create_screen(preload("res://scripts/ui/status_screen.gd"), "StatusScreen")
 	add_child(_status_screen)
 
-	_formation_screen = _create_formation_screen()
+	_formation_screen = _create_screen(preload("res://scripts/ui/formation_screen.gd"), "FormationScreen")
 	add_child(_formation_screen)
 
-func _create_items_screen() -> Node:
-	var screen := preload("res://scripts/ui/items_screen.gd").new()
-	screen.name = "ItemsScreen"
-	screen.set_meta(&"menu", self)
-	screen.set(&"party_data", party_data)
-	return screen
-
-func _create_status_screen() -> Node:
-	var screen := preload("res://scripts/ui/status_screen.gd").new()
-	screen.name = "StatusScreen"
-	screen.set_meta(&"menu", self)
-	screen.set(&"party_data", party_data)
-	return screen
-
-func _create_formation_screen() -> Node:
-	var screen := preload("res://scripts/ui/formation_screen.gd").new()
-	screen.name = "FormationScreen"
-	screen.set_meta(&"menu", self)
-	screen.set(&"party_data", party_data)
+func _create_screen(script: GDScript, screen_name: String) -> MenuScreen:
+	var screen: MenuScreen = script.new()
+	screen.name = screen_name
+	screen.menu = self
+	screen.party_data = party_data
+	screen.cursor_move_sfx = cursor_move_sfx
+	screen.confirm_sfx = confirm_sfx
+	screen.cancel_sfx = cancel_sfx
 	return screen

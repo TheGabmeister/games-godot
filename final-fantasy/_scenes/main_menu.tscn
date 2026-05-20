@@ -1,7 +1,15 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1"]
+[ext_resource type="AudioStream" path="res://ui/cursor_move.ogg" id="cursor_move"]
+[ext_resource type="AudioStream" path="res://ui/menu_open.ogg" id="menu_open"]
+[ext_resource type="AudioStream" path="res://ui/confirm.ogg" id="confirm"]
+[ext_resource type="AudioStream" path="res://ui/cancel.ogg" id="cancel"]
 
 [node name="MainMenu" type="CanvasLayer"]
 layer = 10
 script = ExtResource("1")
+cursor_move_sfx = ExtResource("cursor_move")
+menu_open_sfx = ExtResource("menu_open")
+confirm_sfx = ExtResource("confirm")
+cancel_sfx = ExtResource("cancel")

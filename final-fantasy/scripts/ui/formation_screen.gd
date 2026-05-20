@@ -1,80 +1,37 @@
-extends Node
+extends MenuScreen
 
-const CURSOR_MOVE := preload("res://ui/cursor_move.ogg")
-const CONFIRM_SFX := preload("res://ui/confirm.ogg")
-const CANCEL_SFX := preload("res://ui/cancel.ogg")
-
-var party_data: PartyData
-
-var _active := false
-var _cursor_index := 0
 var _selected_index := -1
 var _formation_labels: Array[Label] = []
 
-func open() -> void:
-	_active = true
-	_cursor_index = 0
+func _on_open() -> void:
 	_selected_index = -1
 	_show_formation()
 
-func _input(event: InputEvent) -> void:
-	if not _active:
-		return
-	if not GameState.is_state(GameState.State.MENU):
-		return
+func _get_item_count() -> int:
+	return party_data.party.size()
 
-	if event.is_action_pressed("move_up"):
-		_cursor_index = (_cursor_index - 1 + party_data.party.size()) % party_data.party.size()
-		_update_cursor()
-		SfxManager.play(CURSOR_MOVE)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
-		_cursor_index = (_cursor_index + 1) % party_data.party.size()
-		_update_cursor()
-		SfxManager.play(CURSOR_MOVE)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("confirm"):
-		if _selected_index < 0:
-			_selected_index = _cursor_index
-			SfxManager.play(CONFIRM_SFX)
-			_update_cursor()
-		else:
-			var temp: PartyData.CharacterData = party_data.party[_selected_index]
-			party_data.party[_selected_index] = party_data.party[_cursor_index]
-			party_data.party[_cursor_index] = temp
-			_selected_index = -1
-			SfxManager.play(CONFIRM_SFX)
-			_show_formation()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("cancel"):
-		if _selected_index >= 0:
-			_selected_index = -1
-			SfxManager.play(CANCEL_SFX)
-			_update_cursor()
-		else:
-			SfxManager.play(CANCEL_SFX)
-			_close()
-		get_viewport().set_input_as_handled()
+func _on_confirm() -> void:
+	if _selected_index < 0:
+		_selected_index = _cursor_index
+		SfxManager.play(confirm_sfx)
+		_update_display()
+	else:
+		var temp: PartyData.CharacterData = party_data.party[_selected_index]
+		party_data.party[_selected_index] = party_data.party[_cursor_index]
+		party_data.party[_cursor_index] = temp
+		_selected_index = -1
+		SfxManager.play(confirm_sfx)
+		_show_formation()
 
-func _show_formation() -> void:
-	var menu: Node = get_meta(&"menu")
-	var panel: VBoxContainer = menu.call(&"get_right_panel")
-	for child: Node in panel.get_children():
-		child.queue_free()
+func _on_cancel() -> void:
+	if _selected_index >= 0:
+		_selected_index = -1
+		SfxManager.play(cancel_sfx)
+		_update_display()
+	else:
+		super()
 
-	_formation_labels.clear()
-	for i: int in party_data.party.size():
-		var character: PartyData.CharacterData = party_data.party[i]
-		var label := Label.new()
-		label.text = "  %d. %s" % [i + 1, character.char_name]
-		label.add_theme_font_size_override(&"font_size", 22)
-		label.add_theme_color_override(&"font_color", Color(1.0, 1.0, 1.0))
-		panel.add_child(label)
-		_formation_labels.append(label)
-
-	_update_cursor()
-
-func _update_cursor() -> void:
+func _update_display() -> void:
 	for i: int in _formation_labels.size():
 		var character: PartyData.CharacterData = party_data.party[i]
 		var prefix: String
@@ -90,7 +47,16 @@ func _update_cursor() -> void:
 		else:
 			_formation_labels[i].add_theme_color_override(&"font_color", Color(1.0, 1.0, 1.0))
 
-func _close() -> void:
-	_active = false
-	var menu: Node = get_meta(&"menu")
-	menu.call(&"return_to_main")
+func _show_formation() -> void:
+	_clear_panel()
+	_formation_labels.clear()
+	var panel := _get_panel()
+	for i: int in party_data.party.size():
+		var character: PartyData.CharacterData = party_data.party[i]
+		var label := Label.new()
+		label.text = "  %d. %s" % [i + 1, character.char_name]
+		label.add_theme_font_size_override(&"font_size", 22)
+		label.add_theme_color_override(&"font_color", Color(1.0, 1.0, 1.0))
+		panel.add_child(label)
+		_formation_labels.append(label)
+	_update_display()
