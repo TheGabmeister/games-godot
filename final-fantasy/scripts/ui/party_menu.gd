@@ -11,7 +11,10 @@ signal closed
 enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }
 
 var _active := false
-var _cursor_index := 0
+var _main_cursor := 0
+var _items_cursor := 0
+var _status_cursor := 0
+var _formation_cursor := 0
 var _current_screen: Screen = Screen.MAIN
 var party_data: PartyData
 
@@ -64,7 +67,7 @@ func _ready() -> void:
 func open() -> void:
 	_active = true
 	_current_screen = Screen.MAIN
-	_cursor_index = 0
+	_main_cursor = 0
 	_root.visible = true
 	_update_main_cursor()
 	_show_party_overview()
@@ -107,17 +110,17 @@ func _input(event: InputEvent) -> void:
 
 func _input_main(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
-		_cursor_index = (_cursor_index - 1 + _cursor_labels.size()) % _cursor_labels.size()
+		_main_cursor = (_main_cursor - 1 + _cursor_labels.size()) % _cursor_labels.size()
 		_update_main_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
-		_cursor_index = (_cursor_index + 1) % _cursor_labels.size()
+		_main_cursor = (_main_cursor + 1) % _cursor_labels.size()
 		_update_main_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
-		_open_submenu(_cursor_index)
+		_open_submenu(_main_cursor)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("cancel") or event.is_action_pressed("menu"):
 		SfxManager.play(cancel_sfx)
@@ -126,7 +129,7 @@ func _input_main(event: InputEvent) -> void:
 
 func _update_main_cursor() -> void:
 	for i: int in _cursor_labels.size():
-		_cursor_labels[i].set_selected(i == _cursor_index)
+		_cursor_labels[i].set_selected(i == _main_cursor)
 	_time_label.text = "Time  " + party_data.get_play_time_string()
 	_gil_label.text = "Gil   " + str(party_data.gil)
 
@@ -135,7 +138,7 @@ func _open_submenu(index: int) -> void:
 	match index:
 		0:
 			_current_screen = Screen.ITEMS
-			_cursor_index = 0
+			_items_cursor = 0
 			_open_items()
 		1:
 			_current_screen = Screen.MAGIC
@@ -145,11 +148,11 @@ func _open_submenu(index: int) -> void:
 			_show_stub("Equipment")
 		3:
 			_current_screen = Screen.STATUS
-			_cursor_index = 0
+			_status_cursor = 0
 			_open_status_select()
 		4:
 			_current_screen = Screen.FORMATION
-			_cursor_index = 0
+			_formation_cursor = 0
 			_formation_selected_index = -1
 			_open_formation()
 		5:
@@ -158,7 +161,6 @@ func _open_submenu(index: int) -> void:
 
 func _return_to_main() -> void:
 	_current_screen = Screen.MAIN
-	_cursor_index = 0
 	_update_main_cursor()
 	_show_party_overview()
 
@@ -180,19 +182,19 @@ func _open_items() -> void:
 func _input_items(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
 		if not _items.is_empty():
-			_cursor_index = (_cursor_index - 1 + _items.size()) % _items.size()
+			_items_cursor = (_items_cursor - 1 + _items.size()) % _items.size()
 			_update_items_cursor()
 			SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
 		if not _items.is_empty():
-			_cursor_index = (_cursor_index + 1) % _items.size()
+			_items_cursor = (_items_cursor + 1) % _items.size()
 			_update_items_cursor()
 			SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
 		if not _items.is_empty():
-			var item: ItemData = _items[_cursor_index]
+			var item: ItemData = _items[_items_cursor]
 			if item.effect_type == ItemData.EffectType.HEAL_HP:
 				SfxManager.play(confirm_sfx)
 				_current_screen = Screen.ITEMS_TARGET
@@ -231,13 +233,13 @@ func _refresh_item_list() -> void:
 		_items_list.add_child(btn)
 		_item_labels.append(btn)
 
-	if _cursor_index >= _items.size():
-		_cursor_index = maxi(_items.size() - 1, 0)
+	if _items_cursor >= _items.size():
+		_items_cursor = maxi(_items.size() - 1, 0)
 	_update_items_cursor()
 
 func _update_items_cursor() -> void:
 	for i: int in _item_labels.size():
-		_item_labels[i].set_selected(i == _cursor_index)
+		_item_labels[i].set_selected(i == _items_cursor)
 
 # --- Items target select ---
 
@@ -257,7 +259,7 @@ func _input_items_target(event: InputEvent) -> void:
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
-		var item: ItemData = _items[_cursor_index]
+		var item: ItemData = _items[_items_cursor]
 		var target: PartyData.CharacterData = party_data.party[_item_target_index]
 		if party_data.use_item(item, target):
 			SfxManager.play(confirm_sfx)
@@ -284,19 +286,19 @@ func _open_status_select() -> void:
 
 func _input_status(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
-		_cursor_index = (_cursor_index - 1 + party_data.party.size()) % party_data.party.size()
+		_status_cursor = (_status_cursor - 1 + party_data.party.size()) % party_data.party.size()
 		_update_status_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
-		_cursor_index = (_cursor_index + 1) % party_data.party.size()
+		_status_cursor = (_status_cursor + 1) % party_data.party.size()
 		_update_status_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
 		SfxManager.play(confirm_sfx)
 		_current_screen = Screen.STATUS_DETAIL
-		_show_status_detail(party_data.party[_cursor_index])
+		_show_status_detail(party_data.party[_status_cursor])
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("cancel"):
 		SfxManager.play(cancel_sfx)
@@ -307,7 +309,7 @@ func _update_status_cursor() -> void:
 	for i: int in party_data.party.size():
 		var character: PartyData.CharacterData = party_data.party[i]
 		_status_labels[i].button_text = character.char_name
-		_status_labels[i].set_selected(i == _cursor_index)
+		_status_labels[i].set_selected(i == _status_cursor)
 
 func _input_status_detail(event: InputEvent) -> void:
 	if event.is_action_pressed("cancel"):
@@ -335,24 +337,24 @@ func _open_formation() -> void:
 
 func _input_formation(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
-		_cursor_index = (_cursor_index - 1 + party_data.party.size()) % party_data.party.size()
+		_formation_cursor = (_formation_cursor - 1 + party_data.party.size()) % party_data.party.size()
 		_update_formation_display()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
-		_cursor_index = (_cursor_index + 1) % party_data.party.size()
+		_formation_cursor = (_formation_cursor + 1) % party_data.party.size()
 		_update_formation_display()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
 		if _formation_selected_index < 0:
-			_formation_selected_index = _cursor_index
+			_formation_selected_index = _formation_cursor
 			SfxManager.play(confirm_sfx)
 			_update_formation_display()
 		else:
 			var temp: PartyData.CharacterData = party_data.party[_formation_selected_index]
-			party_data.party[_formation_selected_index] = party_data.party[_cursor_index]
-			party_data.party[_cursor_index] = temp
+			party_data.party[_formation_selected_index] = party_data.party[_formation_cursor]
+			party_data.party[_formation_cursor] = temp
 			_formation_selected_index = -1
 			SfxManager.play(confirm_sfx)
 			_update_formation_display()
@@ -371,7 +373,7 @@ func _update_formation_display() -> void:
 	for i: int in party_data.party.size():
 		var character: PartyData.CharacterData = party_data.party[i]
 		var prefix: String
-		if i == _cursor_index:
+		if i == _formation_cursor:
 			prefix = "> "
 		elif i == _formation_selected_index:
 			prefix = "* "
