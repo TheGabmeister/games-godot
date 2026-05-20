@@ -102,9 +102,13 @@ WorldSession._ready() → PartyData.new() → party_menu.party_data = party_data
 
 **PartyMenu** (`scripts/ui/party_menu.gd`, `_scenes/party_menu.tscn`) — single CanvasLayer containing all menu UI. Listens to `GameState.state_changed` — opens when state enters MENU, closes when state leaves MENU. All subscreen layouts (party overview, items, target select, status select/detail, formation, stub) are built into the scene as sibling VBoxContainers under `Screens`; the script toggles visibility via `_switch_panel()`.
 
+**GameButton** (`scripts/ui/game_button.gd`, `_scenes/game_button.tscn`) — reusable Label subclass for selectable menu entries. Manages cursor prefix (`"> "` selected, `"* "` marked, `"  "` default) and gold color override for marked state. Set text via `button_text` property, toggle state via `set_selected(bool)` and `set_marked(bool)`. Used for all selectable items: main menu entries, item list, target/status select, formation list. Dynamic items (e.g., inventory) create instances via `GameButton.new()`.
+
+**CharacterRow** (`scripts/ui/character_row.gd`, `_scenes/character_row.tscn`) — self-contained HBoxContainer for party overview rows. Owns portrait, name, HP, MP, level, and next-level labels. Call `populate(character: PartyData.CharacterData)` to fill all fields. Four instances in the party overview panel.
+
 **Theme** (`ui/menu_theme.tres`) — shared theme resource set on the root Panel. Defines default Label style and type variations: `TitleLabel` (gold, 24px), `ValueLabel` (white, 20px), `AccentLabel` (gold, 20px), `HintLabel` (light blue, 20px), `SmallLabel` (light blue, 18px), `MutedLabel` (muted, 22px). Designers edit the theme in Godot's visual editor to change all menu styling.
 
-**Screen state** uses `enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }`. Input is dispatched via `match _current_screen` in `_input()`. Dynamic content (item lists) creates Labels in code that inherit the theme; fixed content (party rows, formation, targets) uses pre-built scene nodes populated with data.
+**Screen state** uses `enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }`. Each screen owns its own cursor variable (`_main_cursor`, `_items_cursor`, `_status_cursor`, `_formation_cursor`) so backing out of a submenu preserves the parent screen's position. Input is dispatched via `match _current_screen` in `_input()`. Cursor movement is handled by a shared `_move_cursor(event, current, size) -> int` helper.
 
 ### Interactable system
 
@@ -131,9 +135,11 @@ Scripts check `GameState.is_state()` at the top of `_physics_process` and `_inpu
 
 ### Sprites
 
-Character sprite sheets: 192x384 PNG (3 columns × 4 rows: idle/walk1/walk2 × down/left/right/up). Generator: `scripts/gen_sprites.py`. SVG sources kept alongside PNGs in `characters/<name>/`. SpriteFrames `.tres` files use AtlasTexture regions from the sheet.
+Character sprite sheets: 192x384 PNG (3 columns × 4 rows: idle/walk1/walk2 × down/left/right/up). Generator: `scripts/gen_sprites.py`. SVG sources kept alongside PNGs in `characters/<name>/`. SpriteFrames `.tres` files use AtlasTexture regions from the sheet. Battle stance sprites: single 64x96 PNGs (`*_battle.svg` → `*_battle.png`) in the same character folders.
 
 NPC sprites: single 64x96 PNGs in `characters/npcs/`.
+
+Enemy sprites: SVG → PNG in `enemies/`. Sizes vary per enemy (64x64 to 96x96).
 
 ### Tiles
 
@@ -141,11 +147,11 @@ Tileset atlas: 512x256 PNG (8×4 grid of 64x64 tiles). Generator: `tilesets/gen_
 
 ### Music
 
-Python script `music/gen_music.py` generates MIDI via `midiutil`. Render pipeline: Python → MIDI → fluidsynth (with 8bitsf.SF2) → WAV → ffmpeg → OGG. Only the `.py` and `.ogg` files are kept; `.mid` and `.wav` are intermediates.
+Python scripts generate MIDI via `midiutil`: `music/gen_music.py` (title/town/castle themes), `music/gen_battle_music.py` (battle/victory/game over). Render pipeline: Python → MIDI → fluidsynth (with 8bitsf.SF2) → WAV → ffmpeg (with trailing silence trim) → OGG. Only the `.py` and `.ogg` files are kept; `.mid` and `.wav` are intermediates.
 
 ### SFX
 
-Generated via ffmpeg synthesis filters (`sine`, `lavfi`). Output as OGG in `ui/`. No generator script — created via one-off commands.
+Generated via ffmpeg synthesis filters (`sine`, `anoisesrc`, `aevalsrc`). Menu SFX in `ui/`, battle SFX in `sfx/`. No generator script — created via one-off commands.
 
 ### Dialogue
 
