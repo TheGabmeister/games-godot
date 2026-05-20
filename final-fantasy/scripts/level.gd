@@ -2,6 +2,7 @@ extends Node2D
 
 const WARRIOR_SCENE := preload("res://_scenes/warrior.tscn")
 const DIALOGUE_BOX_SCENE := preload("res://_scenes/dialogue_box.tscn")
+const MAIN_MENU_SCENE := preload("res://_scenes/main_menu.tscn")
 
 @export var music: AudioStream
 @export var default_spawn := Vector2(224, 224)
@@ -32,3 +33,6 @@ func _ready() -> void:
 
 	var dialogue_box: DialogueBox = DIALOGUE_BOX_SCENE.instantiate()
 	add_child(dialogue_box)
+
+	var main_menu: MainMenu = MAIN_MENU_SCENE.instantiate()
+	add_child(main_menu)

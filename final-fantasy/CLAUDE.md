@@ -65,6 +65,14 @@ Godot_v4.6.2-stable_win64.exe --path . --headless --export-release "Windows Desk
 - **`_scenes/door_trigger.tscn`** — Reusable Area2D (collision layer 4, mask 2). Exports: `target_scene_path`, `spawn_position`. Transitions scenes on player body enter, sets spawn override on GameState.
 - **Level scenes** (`cornelia_town.tscn`, `cornelia_castle.tscn`) — All use `scripts/level.gd` with `@export var music: AudioStream`. Tiles painted in editor (TileMapLayer `tile_map_data`). Level.gd handles FIELD state transition, music playback, and spawn position override.
 
+### Gameplay node instantiation
+
+`level.gd` auto-creates three nodes on `_ready()`: Warrior (from `warrior.tscn`), Camera2D (limits derived from TileMapLayer used rect), and DialogueBox (from `dialogue_box.tscn`). Level scenes should NOT contain these nodes — only TileMapLayer, NPCs, and door triggers.
+
+### Interactable system
+
+NPCs (and future interactables) use duck typing via `Groups.INTERACTABLE` (`scripts/groups.gd`). The NPC's `InteractionArea` (Area2D child) is in the `"interactable"` group. The player finds the nearest interactable facing them and calls `target.call(&"interact")`. Each interactable implements its own `interact()` method — NPCs open dialogue, future objects (chests, signs) do their own thing.
+
 ### Input handling pattern
 
 Scripts check `GameState.is_state()` at the top of `_physics_process` and `_input`. The player transitions FIELD → DIALOGUE when talking to NPCs, and back to FIELD when dialogue finishes. Discrete actions use `_input()`, continuous movement uses `_physics_process()`. Consume events with `get_viewport().set_input_as_handled()`.
@@ -110,8 +118,9 @@ JSON files in `data/dialogue/` (one per area). Structure: `{ "id": { "name": "NP
 
 - Scenes in `_scenes/` (underscore prefix for editor sorting)
 - Autoloads in `scripts/autoloads/`
-- Direction handling uses `enum Dir { DOWN, UP, LEFT, RIGHT }` with `ANIM` and `DIR_VECTORS` constant dictionaries — no string concatenation for animation names
+- Direction handling uses `enum Dir { DOWN, UP, LEFT, RIGHT }` with typed `Dictionary[Dir, StringName]` constants (`IDLE_ANIM`, `WALK_ANIM`) and `Dictionary[Dir, Vector2]` for `DIR_VECTORS`
 - Animation names as `&"StringName"` literals for compile-time validation
-- Tilemap layouts defined as string arrays with single-char legend dictionaries
-- Scene exports (`@export var next_scene: PackedScene`, `@export var music: AudioStream`) over hardcoded paths
+- Group constants in `scripts/groups.gd` (`class_name Groups`) — use `Groups.INTERACTABLE`, `Groups.DIALOGUE_BOX` instead of string literals
+- Scene exports (`@export var music: AudioStream`, `@export var default_spawn: Vector2`) over hardcoded paths
 - Autoloads accessed by global name directly (`GameState`, `MusicManager`, etc.)
+- No `@warning_ignore` — use typed dictionaries, `is` type guards, explicit variable typing, and `call()` for duck-typed methods
