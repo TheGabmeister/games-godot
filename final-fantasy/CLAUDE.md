@@ -63,10 +63,11 @@ Godot_v4.6.2-stable_win64.exe --path . --headless --export-release "Windows Desk
 ```
 WorldSession (Node)
 ├── PartyData (instantiated via PartyData.new(), not autoload)
-├── Warrior (CharacterBody2D from warrior.tscn)
+├── Warrior (PlayerMovement from warrior.tscn)
 │   └── Camera2D (limits updated per level)
-├── DialogueBox (CanvasLayer from dialogue_box.tscn)
-├── PartyMenu (CanvasLayer from party_menu.tscn)
+├── DialogueBox (CanvasLayer 10 from dialogue_box.tscn)
+├── PartyMenu (CanvasLayer 10 from party_menu.tscn)
+├── BattleScene (CanvasLayer 20 from battle_scene.tscn)
 └── [Current Level] (swapped on door transitions)
     ├── TileMapLayer
     ├── NPCs
@@ -79,16 +80,19 @@ WorldSession (Node)
 
 ### Scene flow
 
-`title_screen.tscn` → (confirm) → `world_session.tscn` → loads `cornelia_town.tscn` ↔ (door trigger) ↔ `cornelia_castle.tscn`
+`title_screen.tscn` → (confirm) → `world_session.tscn` → loads `cornelia_town.tscn` ↔ (door trigger) ↔ `cornelia_castle.tscn` / `cornelia_outskirts.tscn`
+
+Battle flow: field movement → step counter triggers encounter → `GameState.transition(BATTLE)` → BattleScene overlay → victory/game over → `GameState.transition(FIELD)` (field music resumes via `_on_battle_ended`). Game Over is the one case that uses `change_scene_to_file` to tear down WorldSession and return to title.
 
 ### Key scenes
 
-- **`_scenes/warrior.tscn`** — Player character (CharacterBody2D, collision layer 2 + AnimatedSprite2D + InteractArea). Script: `player_movement.gd`. Only processes in FIELD state.
+- **`_scenes/warrior.tscn`** — Player character (`class_name PlayerMovement`, CharacterBody2D, collision layer 2 + AnimatedSprite2D + InteractArea). Script: `player_movement.gd`. Only processes in FIELD state. Owns the encounter step counter — emits `encounter_triggered(formation)` when steps exceed threshold. WorldSession sets `encounter_table` per level.
 - **`_scenes/npc.tscn`** — Reusable NPC template (StaticBody2D). Exports: `sprite_texture`, `dialogue_file`, `dialogue_id`. Has `interact()` method called via duck typing.
 - **`_scenes/dialogue_box.tscn`** — CanvasLayer (layer 10) with character-by-character text reveal + SFX. `class_name DialogueBox`. Emits `dialogue_finished` signal.
 - **`_scenes/door_trigger.tscn`** — Reusable Area2D (collision layer 4, mask 2). Exports: `target_scene_path`, `spawn_position`. Calls `WorldSession.transition_to_level()` on player body enter.
 - **`_scenes/party_menu.tscn`** — CanvasLayer (layer 10) with left panel (menu entries, time, gil) and right panel (subscreen panels toggled by visibility). All layout in scene, all styling via `ui/menu_theme.tres` theme resource. Node references use `%` unique names. Single script (`party_menu.gd`) handles all subscreen logic.
-- **Level scenes** (`cornelia_town.tscn`, `cornelia_castle.tscn`) — Use `LevelData` script with `@export var music` and `@export var default_spawn`. Contain only TileMapLayer, NPCs, and door triggers — no player, camera, or UI.
+- **`_scenes/battle_scene.tscn`** — CanvasLayer (layer 20) overlay for turn-based combat. `class_name BattleScene`. Three-panel bottom HUD (command menu, enemy list, party HP) matching FF1 Pixel Remaster layout (see `docs/ff1/battle_menu.png`). Enum state machine (`BattlePhase`) drives input dispatch via `match _battle_phase` in `_input()`. WorldSession instantiates it and passes `party_data`. Uses `BattleFormulas` for damage/hit/crit calculations and `Battler` inner class as a unified wrapper for both party members and enemies during combat.
+- **Level scenes** (`cornelia_town.tscn`, `cornelia_castle.tscn`, `cornelia_outskirts.tscn`) — Use `LevelData` script with `@export var music`, `@export var default_spawn`, and `@export var encounter_table: EncounterTable` (null for towns = no random encounters). Contain only TileMapLayer, NPCs, and door triggers — no player, camera, or UI.
 
 ### PartyData access pattern
 
@@ -96,6 +100,7 @@ WorldSession (Node)
 
 ```
 WorldSession._ready() → PartyData.new() → party_menu.party_data = party_data
+                                         → battle_scene.party_data = party_data
 ```
 
 ### Menu system
@@ -109,6 +114,28 @@ WorldSession._ready() → PartyData.new() → party_menu.party_data = party_data
 **Theme** (`ui/menu_theme.tres`) — shared theme resource set on the root Panel. Defines default Label style and type variations: `TitleLabel` (gold, 24px), `ValueLabel` (white, 20px), `AccentLabel` (gold, 20px), `HintLabel` (light blue, 20px), `SmallLabel` (light blue, 18px), `MutedLabel` (muted, 22px). Designers edit the theme in Godot's visual editor to change all menu styling.
 
 **Screen state** uses `enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }`. Each screen owns its own cursor variable (`_main_cursor`, `_items_cursor`, `_status_cursor`, `_formation_cursor`) so backing out of a submenu preserves the parent screen's position. Input is dispatched via `match _current_screen` in `_input()`. Cursor movement is handled by a shared `_move_cursor(event, current, size) -> int` helper.
+
+### Battle system
+
+**BattleScene** (`scripts/battle/battle_scene.gd`, `_scenes/battle_scene.tscn`) — CanvasLayer overlay that runs turn-based combat. Internal enum `BattlePhase { INACTIVE, INTRO, COMMAND_SELECT, TARGETING, ITEM_SELECT, ITEM_TARGET, RESOLVING, ANIMATING, VICTORY, GAME_OVER }`. Input dispatch uses `match _battle_phase` in `_input()`, gated by `GameState.is_state(BATTLE)`.
+
+**Battler** (inner class in `battle_scene.gd`) — unified wrapper for party members and enemies during combat. Party Battlers hold a reference to `CharacterData` (HP changes sync back). Enemy Battlers are ephemeral, created from `EnemyData`. Turn order sorts a single `Array[Battler]` by agility.
+
+**BattleFormulas** (`scripts/battle/battle_formulas.gd`) — static functions for damage calculation, hit/crit checks, run chance, formation targeting weights, EXP distribution. All formulas from SPEC.md §1.3.
+
+**Encounter flow:** PlayerMovement counts tile-steps, picks a weighted-random formation from the level's `EncounterTable`, emits `encounter_triggered`. WorldSession receives the signal and calls `BattleScene.start_battle()`. After battle, WorldSession restores field music via `battle_ended` signal.
+
+**Command input:** Index-driven loop (`_command_index` 0-3). Each character picks Attack/Item/Run, then selects a target. After all 4, round resolves. Enemy commands use formation-weighted targeting (50/25/12.5/12.5% by party position).
+
+### Data resources
+
+- **EquipmentData** (`scripts_consts/equipment_data.gd`) — `Slot { WEAPON, SHIELD, BODY, HEAD, ARMS }`, attack_power, absorb, evade_penalty, hit_percent, weapon_index. `.tres` files in `data/equipment/`.
+- **EnemyData** (`scripts_consts/enemy_data.gd`) — enemy stats + sprite texture. `.tres` files in `data/enemies/`.
+- **EncounterTable** (`scripts_consts/encounter_data.gd`) — battle_background, formations array, can_flee, steps_min/max. Assigned to LevelData via `@export var encounter_table`.
+- **EncounterFormation** (`scripts_consts/encounter_formation.gd`) — array of `EnemyEntry` + weight for weighted random selection.
+- **EnemyEntry** (`scripts_consts/enemy_entry.gd`) — enemy reference + count.
+
+CharacterData (in `party_data.gd`) has 5 equipment slots, computed combat properties (`get_attack_power()`, `get_absorb()`, `get_evade()`, `get_hit_percent()`, `get_max_hits()`, `get_crit_rate()`), EXP tracking, and deterministic level-up via stat growth tables.
 
 ### Interactable system
 
@@ -162,11 +189,13 @@ JSON files in `data/dialogue/` (one per area). Structure: `{ "id": { "name": "NP
 - Scenes in `_scenes/` (underscore prefix for editor sorting)
 - Autoloads in `scripts/autoloads/`
 - UI scripts in `scripts/ui/`
-- Stateless constants and resource classes in `scripts_consts/` (`Groups`, `ItemData`, `LevelData`)
+- Battle scripts in `scripts/battle/`
+- Stateless constants and resource classes in `scripts_consts/` (`Groups`, `ItemData`, `LevelData`, `EnemyData`, `EquipmentData`, `EncounterTable`, etc.)
+- Data resources (`.tres`) in `data/` subdirectories (`items/`, `equipment/`, `enemies/`, `encounters/`)
 - Direction handling uses `enum Dir { DOWN, UP, LEFT, RIGHT }` with typed `Dictionary[Dir, StringName]` constants (`IDLE_ANIM`, `WALK_ANIM`) and `Dictionary[Dir, Vector2]` for `DIR_VECTORS`
 - Animation names as `&"StringName"` literals for compile-time validation
 - Group constants in `scripts_consts/groups.gd` (`class_name Groups`) — use `Groups.INTERACTABLE`, `Groups.PARTY_MENU`, etc. instead of string literals
 - Scene exports (`@export var music: AudioStream`, `@export var default_spawn: Vector2`) over hardcoded paths
 - Autoloads accessed by global name directly (`GameState`, `MusicManager`, etc.)
-- No `@warning_ignore` — use typed dictionaries, `is` type guards, explicit variable typing, and `call()` for duck-typed methods
+- No `@warning_ignore` — use typed dictionaries, `is` type guards, explicit variable typing, and `call()` for duck-typed methods. Capture discarded return values with `var _x :=` (tween chains, `connect()`, `resize()`, etc.)
 - UI scenes use `%` unique names (`unique_name_in_owner = true`) for all script-referenced nodes — reference via `%NodeName` in GDScript, not `$Path/To/Node`. Duplicated structures (e.g., 4 character rows) use indexed unique names (`CharName0`, `CharName1`, etc.)
