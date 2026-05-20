@@ -51,7 +51,7 @@ var _formation_selected_index := -1
 @onready var _stat_int: Label = %INTValue
 @onready var _stat_lck: Label = %LCKValue
 
-@onready var _formation_labels: Array[Label] = [%Formation0, %Formation1, %Formation2, %Formation3]
+@onready var _formation_labels: Array[GameButton] = [%Formation0, %Formation1, %Formation2, %Formation3]
 @onready var _stub_label: Label = %StubLabel
 
 @onready var _screen_panels: Array[Control] = [
@@ -350,18 +350,9 @@ func _input_formation(event: InputEvent) -> void:
 func _update_formation_display() -> void:
 	for i: int in party_data.party.size():
 		var character: PartyData.CharacterData = party_data.party[i]
-		var prefix: String
-		if i == _formation_cursor:
-			prefix = "> "
-		elif i == _formation_selected_index:
-			prefix = "* "
-		else:
-			prefix = "  "
-		_formation_labels[i].text = "%s%d. %s" % [prefix, i + 1, character.char_name]
-		if i == _formation_selected_index:
-			_formation_labels[i].add_theme_color_override(&"font_color", Color(1.0, 0.85, 0.4))
-		else:
-			_formation_labels[i].remove_theme_color_override(&"font_color")
+		_formation_labels[i].button_text = "%d. %s" % [i + 1, character.char_name]
+		_formation_labels[i].set_selected(i == _formation_cursor)
+		_formation_labels[i].set_marked(i == _formation_selected_index)
 
 # --- Stub screens ---
 
