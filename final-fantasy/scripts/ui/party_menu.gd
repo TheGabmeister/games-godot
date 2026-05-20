@@ -109,13 +109,9 @@ func _input(event: InputEvent) -> void:
 # --- Main screen ---
 
 func _input_main(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up"):
-		_main_cursor = (_main_cursor - 1 + _cursor_labels.size()) % _cursor_labels.size()
-		_update_main_cursor()
-		SfxManager.play(cursor_move_sfx)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
-		_main_cursor = (_main_cursor + 1) % _cursor_labels.size()
+	var prev := _main_cursor
+	_main_cursor = _move_cursor(event, _main_cursor, _cursor_labels.size())
+	if _main_cursor != prev:
 		_update_main_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
@@ -180,17 +176,11 @@ func _open_items() -> void:
 	_refresh_item_list()
 
 func _input_items(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up"):
-		if not _items.is_empty():
-			_items_cursor = (_items_cursor - 1 + _items.size()) % _items.size()
-			_update_items_cursor()
-			SfxManager.play(cursor_move_sfx)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
-		if not _items.is_empty():
-			_items_cursor = (_items_cursor + 1) % _items.size()
-			_update_items_cursor()
-			SfxManager.play(cursor_move_sfx)
+	var prev := _items_cursor
+	_items_cursor = _move_cursor(event, _items_cursor, _items.size())
+	if _items_cursor != prev:
+		_update_items_cursor()
+		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
 		if not _items.is_empty():
@@ -248,13 +238,9 @@ func _show_target_select() -> void:
 	_update_target_cursor()
 
 func _input_items_target(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up"):
-		_item_target_index = (_item_target_index - 1 + party_data.party.size()) % party_data.party.size()
-		_update_target_cursor()
-		SfxManager.play(cursor_move_sfx)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
-		_item_target_index = (_item_target_index + 1) % party_data.party.size()
+	var prev := _item_target_index
+	_item_target_index = _move_cursor(event, _item_target_index, party_data.party.size())
+	if _item_target_index != prev:
 		_update_target_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
@@ -285,13 +271,9 @@ func _open_status_select() -> void:
 	_update_status_cursor()
 
 func _input_status(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up"):
-		_status_cursor = (_status_cursor - 1 + party_data.party.size()) % party_data.party.size()
-		_update_status_cursor()
-		SfxManager.play(cursor_move_sfx)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
-		_status_cursor = (_status_cursor + 1) % party_data.party.size()
+	var prev := _status_cursor
+	_status_cursor = _move_cursor(event, _status_cursor, party_data.party.size())
+	if _status_cursor != prev:
 		_update_status_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
@@ -336,13 +318,9 @@ func _open_formation() -> void:
 	_update_formation_display()
 
 func _input_formation(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up"):
-		_formation_cursor = (_formation_cursor - 1 + party_data.party.size()) % party_data.party.size()
-		_update_formation_display()
-		SfxManager.play(cursor_move_sfx)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
-		_formation_cursor = (_formation_cursor + 1) % party_data.party.size()
+	var prev := _formation_cursor
+	_formation_cursor = _move_cursor(event, _formation_cursor, party_data.party.size())
+	if _formation_cursor != prev:
 		_update_formation_display()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
@@ -397,7 +375,16 @@ func _input_stub(event: InputEvent) -> void:
 		_return_to_main()
 		get_viewport().set_input_as_handled()
 
-# --- Panel switching ---
+# --- Helpers ---
+
+func _move_cursor(event: InputEvent, current: int, size: int) -> int:
+	if size == 0:
+		return current
+	if event.is_action_pressed("move_up"):
+		return (current - 1 + size) % size
+	if event.is_action_pressed("move_down"):
+		return (current + 1) % size
+	return current
 
 func _switch_panel(panel: Control) -> void:
 	for p: Control in _screen_panels:
