@@ -139,21 +139,20 @@ Adds the full battle engine with physical attacks, the damage formula, multi-hit
 
 ---
 
-## Phase 4 — Spell Charge System & Elemental Damage
+## Phase 4a — Spell Charge System & Elemental Damage
 
-Adds the Vancian spell charge engine, the Magic battle command, spell learning from shops, elemental weakness/resistance, and the first 16 spells — establishing magic as a combat pillar.
+Adds the Vancian spell charge engine, the Magic battle command, elemental weakness/resistance, and the first 16 spells — establishing magic as a combat pillar. Party members start with Lv 1 spells for testing; shop-based learning is Phase 4b.
 
 - Magic command in battle: select spell level → select spell → select target
 - Spell charge system: 8 levels, separate charge pool per level, starting ~2–3 charges, max 9
 - Charges increase at fixed level thresholds per class
-- Spell learning: purchase from magic shops; 3 spells per level per class (4 available, must skip one)
+- Spell learning: party starts with Lv 1 spells hardcoded for testing; shop purchasing in Phase 4b
 - Magic menu screen (main menu): view learned spells and remaining charges per level
 - Magic damage formula: `Damage = random(SpellPower .. SpellPower×2)`; miss = halved damage
 - Spell hit chance: `SpellAccuracy − target's MagicDefense`
 - Elemental system: 8 elements (Fire, Ice, Lightning, Earth, Poison, Time, Death, Status)
 - Elemental weakness: +50% damage, +20% hit chance
 - Elemental resistance: damage halved
-- Basic shop buy screen: introduced here for magic shops; reused by item shops in Phase 5 and extended with sell/equipment in Phase 7
 - Charge restoration: Ether restores charges (consumable); inn HP/charge restoration deferred to Phase 7
 - All Lv 1–2 spells (16 spells):
   - White Lv 1: Cure (16–32 HP), Protect (+8 DEF), Dia (20–80 undead), Blink (+80 Evade)
@@ -163,7 +162,6 @@ Adds the Vancian spell charge engine, the Magic battle command, spell learning f
 - Stat-modifying buffs functional: Protect, Blink, Invis, Temper apply their stat changes immediately
 - Debuffs functional: Slow reduces enemy hit count, Focus lowers Evasion by 20
 - Basic status effects from Lv 1–2 spells: Sleep (cannot act; broken by hit), Darkness (−40 hit rate), Silence (blocks magic) — these three are functional; remaining statuses deferred to Phase 5
-- Cornelia magic shops stocked with Lv 1 spells (50 Gil each)
 - Enemies with elemental weaknesses (2 new): Skeleton (10 HP, weak Fire/Holy, undead), Green Slime (24 HP, DEF 255, weak Fire/Ice, elemental)
 
 ### Assets
@@ -192,15 +190,32 @@ Adds the Vancian spell charge engine, the Magic battle command, spell learning f
 - Buff cast SFX (Protect, Temper, Blink, Invis)
 - Debuff cast SFX (Slow, Dark, Focus)
 - Status inflict SFX (Sleep, Silence)
-- Shop buy SFX
-- Shop theme
 
 **UI**
 - Magic command submenu: spell level tabs → spell list → target select
 - Magic screen (main menu): learned spells and charge counts per level
-- Basic shop buy screen: item list with prices, Gil counter, purchase confirmation
 - Status effect icons (Sleep, Darkness, Silence)
 - Elemental weakness/resistance popup text
+
+---
+
+## Phase 4b — Shop System
+
+Introduces the shop buy screen and magic shops in Cornelia, enabling spell purchasing. The buy screen is reused by item shops in Phase 5 and extended with sell/equipment in Phase 7.
+
+- Basic shop buy screen: item list with prices, Gil counter, purchase confirmation
+- Shop interaction: NPC triggers shop via dialogue system
+- Spell learning: purchase from magic shops; 3 spells per level per class (4 available, must skip one)
+- Cornelia magic shops stocked with Lv 1 spells (50 Gil each)
+
+### Assets
+
+**Audio**
+- Shop buy SFX
+- Shop theme
+
+**UI**
+- Shop buy screen: item list with prices, Gil counter, purchase confirmation
 
 ---
 
@@ -220,7 +235,7 @@ Adds the remaining 5 status effects (Poison, Stone, Paralysis, Confusion, KO rev
 - All consumable items from SPEC §6.4 functional: Potion (30 HP), Hi-Potion (150 HP), Ether, Phoenix Down (revive 1 HP), Antidote, Eye Drops, Echo Grass, Gold Needle, Remedy (all status), Sleeping Bag, Tent, Cottage
 - Tent: partial HP + some charges (world map only)
 - Cottage: full HP + all charges (world map only)
-- Cornelia item shop functional (reuses buy screen from Phase 4); stocked with all 12 consumable types
+- Cornelia item shop functional (reuses buy screen from Phase 4b); stocked with all 12 consumable types
 - All Lv 3–4 spells (16 spells):
   - White Lv 3: Cura (33–66 HP), NulBlaze (halves Fire), Diara (40–160 undead), Heal (12–24 HP all)
   - White Lv 4: Poisona (cures Poison), NulFrost (halves Ice), Fear (force enemies flee), Vox (cures Silence)
@@ -252,7 +267,7 @@ Adds the remaining 5 status effects (Poison, Stone, Paralysis, Confusion, KO rev
 - Fira/Thundara/Blizzara SFX (deeper variants of Lv 1 spells)
 
 **UI**
-- Status effect icons (Poison, Stone, Paralysis, Confusion, KO) — adds to 3 from Phase 4 for full set of 8
+- Status effect icons (Poison, Stone, Paralysis, Confusion, KO) — adds to 3 from Phase 4a for full set of 8
 - Phoenix Down / revive target selection
 - Field poison step-damage indicator
 
@@ -336,7 +351,7 @@ Adds full equipment management with special properties, shop buy/sell, the inn a
   - Elemental resistance: halves damage from specific elements
   - Spell-casting armor: use as item to cast spell (e.g., Healing Helm → Heal, Gauntlets → Thundara)
 - Absorb/Evade tradeoff: heavier armor increases Absorb, decreases Evade% per SPEC §1.5
-- Shop system: extends Phase 4 buy screen with sell screen (sell price = half buy price) and equipment shop categories
+- Shop system: extends Phase 4b buy screen with sell screen (sell price = half buy price) and equipment shop categories
 - Inn system: rest at inn → full HP + all spell charges restored; cost varies by town (30–300 Gil); inn saving deferred to Phase 8
 - Economy validation: Cornelia shop prices match SPEC (Rapier 10 Gil, Leather Armor 50 Gil, Lv 1 spells 50 Gil, Potion 40 Gil)
 - Equipment beyond Phase 3 starter gear (new items covering all categories and special types):
