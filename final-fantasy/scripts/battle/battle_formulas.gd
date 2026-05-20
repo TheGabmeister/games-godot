@@ -21,7 +21,7 @@ static func run_chance(party_avg_luck: float, enemy_avg_agility: float) -> bool:
 	var chance := party_avg_luck * 2.0 - enemy_avg_agility + 80.0
 	return randi_range(1, 100) <= int(chance)
 
-static func pick_party_target(alive_party: Array, party_indices: Array[int]) -> int:
+static func pick_party_target(party_indices: Array[int]) -> int:
 	var total := 0
 	for idx: int in party_indices:
 		total += FORMATION_WEIGHTS[idx]

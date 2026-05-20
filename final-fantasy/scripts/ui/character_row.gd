@@ -24,4 +24,4 @@ func populate(character: PartyData.CharacterData) -> void:
 	_hp_value.text = "  %3d / %3d" % [character.current_hp, character.max_hp]
 	_mp_value.text = "MP  0 /  0 /  0 /  0"
 	_lv_label.text = "Lv. %d" % character.level
-	_next_label.text = "Next Level in   0"
+	_next_label.text = "Next Level in %d" % character.get_exp_to_next()

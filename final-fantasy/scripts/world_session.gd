@@ -25,7 +25,7 @@ func _ready() -> void:
 
 	_warrior = warrior_scene.instantiate()
 	add_child(_warrior)
-	_warrior.encounter_triggered.connect(_on_encounter_triggered)
+	var _err := _warrior.encounter_triggered.connect(_on_encounter_triggered)
 
 	_camera = Camera2D.new()
 	_warrior.add_child(_camera)
@@ -40,7 +40,7 @@ func _ready() -> void:
 	if battle_scene_packed:
 		_battle_scene = battle_scene_packed.instantiate()
 		_battle_scene.set(&"party_data", _party_data)
-		var _err: int = _battle_scene.connect(&"battle_ended", Callable(self, &"_on_battle_ended"))
+		var _err2: int = _battle_scene.connect(&"battle_ended", Callable(self, &"_on_battle_ended"))
 		add_child(_battle_scene)
 
 	_load_level(initial_level_path)

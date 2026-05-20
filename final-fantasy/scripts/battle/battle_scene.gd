@@ -199,14 +199,14 @@ func _play_intro_transition() -> void:
 	if battle_start_sfx:
 		SfxManager.play(battle_start_sfx, -12.0)
 
-	var tween := create_tween()
-	tween.tween_property(_transition_rect, "color", Color(1, 1, 1, 1), 0.1)
-	tween.tween_interval(0.05)
-	tween.tween_property(_transition_rect, "color", Color(0, 0, 0, 1), 0.3)
-	tween.tween_callback(_show_battle_scene)
-	tween.tween_property(_transition_rect, "color", Color(0, 0, 0, 0), 0.3)
-	tween.tween_callback(func() -> void: _transition_rect.visible = false)
-	await tween.finished
+	var tw := create_tween()
+	var _t1 := tw.tween_property(_transition_rect, "color", Color(1, 1, 1, 1), 0.1)
+	var _t2 := tw.tween_interval(0.05)
+	var _t3 := tw.tween_property(_transition_rect, "color", Color(0, 0, 0, 1), 0.3)
+	var _t4 := tw.tween_callback(_show_battle_scene)
+	var _t5 := tw.tween_property(_transition_rect, "color", Color(0, 0, 0, 0), 0.3)
+	var _t6 := tw.tween_callback(func() -> void: _transition_rect.visible = false)
+	await tw.finished
 
 func _show_battle_scene() -> void:
 	_battle_container.visible = true
@@ -399,7 +399,7 @@ func _handle_command_input(event: InputEvent) -> void:
 			_command_index -= 1
 			while _command_index > 0 and _party_battlers[_command_index].is_dead():
 				_command_index -= 1
-			_commands.resize(_command_index)
+			var _ok := _commands.resize(_command_index)
 			_show_command_menu()
 			if cancel_sfx:
 				SfxManager.play(cancel_sfx)
@@ -496,8 +496,8 @@ func _enter_item_select() -> void:
 	_item_cursor = 0
 	_battle_items.clear()
 
-	for item_key: Variant in party_data.inventory:
-		var item := item_key as ItemData
+	for item_key: ItemData in party_data.inventory:
+		var item: ItemData = item_key
 		if item and item.effect_type == ItemData.EffectType.HEAL_HP:
 			_battle_items.append(item)
 
@@ -652,7 +652,7 @@ func _resolve_round() -> void:
 		var alive_indices := _get_alive_party_indices()
 		if alive_indices.is_empty():
 			continue
-		cmd.target_index = BattleFormulas.pick_party_target(_party_battlers, alive_indices)
+		cmd.target_index = BattleFormulas.pick_party_target(alive_indices)
 		_commands.append(cmd)
 
 	var actions: Array[Dictionary] = []
@@ -728,13 +728,13 @@ func _execute_attack(actor: Battler, cmd: BattleCommand, is_enemy: bool) -> void
 		await _animate_party_attack(actor, target)
 
 	# Multi-hit resolution
-	var total_damage := 0
+	var _total_damage := 0
 	for hit_i: int in actor.max_hits:
 		var hit := BattleFormulas.hit_check(actor.accuracy, target.evade)
 		if hit:
 			var is_crit := BattleFormulas.crit_check(actor.crit_rate)
 			var dmg := BattleFormulas.physical_damage(actor.attack_power, target.defense, is_crit)
-			total_damage += dmg
+			_total_damage += dmg
 			target.take_damage(dmg)
 
 			await _show_damage_number(target.sprite.position, dmg, is_crit)
@@ -775,26 +775,26 @@ func _animate_party_attack(actor: Battler, target: Battler) -> void:
 	if attack_swing_sfx:
 		SfxManager.play(attack_swing_sfx)
 	var lunge_pos := Vector2(target.sprite.position.x + 60, actor.sprite.position.y)
-	var tween := create_tween()
-	tween.tween_property(actor.sprite, "position", lunge_pos, 0.15)
-	tween.tween_interval(0.1)
-	tween.tween_property(actor.sprite, "position", actor.home_position, 0.15)
-	await tween.finished
+	var tw := create_tween()
+	var _t1 := tw.tween_property(actor.sprite, "position", lunge_pos, 0.15)
+	var _t2 := tw.tween_interval(0.1)
+	var _t3 := tw.tween_property(actor.sprite, "position", actor.home_position, 0.15)
+	await tw.finished
 
 func _animate_enemy_attack(actor: Battler) -> void:
 	if attack_swing_sfx:
 		SfxManager.play(attack_swing_sfx)
-	var tween := create_tween()
-	tween.tween_property(actor.sprite, "modulate", Color(3, 3, 3), 0.0)
-	tween.tween_interval(0.1)
-	tween.tween_property(actor.sprite, "modulate", Color.WHITE, 0.0)
-	await tween.finished
+	var tw := create_tween()
+	var _t1 := tw.tween_property(actor.sprite, "modulate", Color(3, 3, 3), 0.0)
+	var _t2 := tw.tween_interval(0.1)
+	var _t3 := tw.tween_property(actor.sprite, "modulate", Color.WHITE, 0.0)
+	await tw.finished
 
 func _flash_sprite(sprite: Sprite2D) -> void:
-	var tween := create_tween()
-	tween.tween_property(sprite, "modulate", Color(3, 3, 3), 0.0)
-	tween.tween_interval(0.05)
-	tween.tween_property(sprite, "modulate", Color.WHITE, 0.0)
+	var tw := create_tween()
+	var _t1 := tw.tween_property(sprite, "modulate", Color(3, 3, 3), 0.0)
+	var _t2 := tw.tween_interval(0.05)
+	var _t3 := tw.tween_property(sprite, "modulate", Color.WHITE, 0.0)
 
 func _show_damage_number(pos: Vector2, amount: int, is_crit: bool, is_heal := false) -> void:
 	var label := Label.new()
@@ -807,10 +807,10 @@ func _show_damage_number(pos: Vector2, amount: int, is_crit: bool, is_heal := fa
 		label.add_theme_color_override("font_color", Color.YELLOW)
 	_damage_container.add_child(label)
 
-	var tween := create_tween()
-	tween.tween_property(label, "position:y", label.position.y - 40, 0.6)
-	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.3)
-	tween.tween_callback(label.queue_free)
+	var tw := create_tween()
+	var _t1 := tw.tween_property(label, "position:y", label.position.y - 40, 0.6)
+	var _t2 := tw.parallel().tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.3)
+	var _t3 := tw.tween_callback(label.queue_free)
 	await get_tree().create_timer(0.3).timeout
 
 func _show_miss(pos: Vector2) -> void:
@@ -821,18 +821,18 @@ func _show_miss(pos: Vector2) -> void:
 	label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 	_damage_container.add_child(label)
 
-	var tween := create_tween()
-	tween.tween_property(label, "position:y", label.position.y - 30, 0.5)
-	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.2)
-	tween.tween_callback(label.queue_free)
+	var tw := create_tween()
+	var _t1 := tw.tween_property(label, "position:y", label.position.y - 30, 0.5)
+	var _t2 := tw.parallel().tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.2)
+	var _t3 := tw.tween_callback(label.queue_free)
 	await get_tree().create_timer(0.25).timeout
 
 func _kill_enemy(enemy: Battler) -> void:
 	if enemy_death_sfx:
 		SfxManager.play(enemy_death_sfx)
-	var tween := create_tween()
-	tween.tween_property(enemy.sprite, "modulate:a", 0.0, 0.3)
-	await tween.finished
+	var tw := create_tween()
+	var _t1 := tw.tween_property(enemy.sprite, "modulate:a", 0.0, 0.3)
+	await tw.finished
 	_update_enemy_list()
 
 # --- RETARGETING ---
@@ -948,12 +948,12 @@ func _end_battle_no_rewards() -> void:
 func _play_exit_transition() -> void:
 	_transition_rect.visible = true
 	_transition_rect.color = Color(0, 0, 0, 0)
-	var tween := create_tween()
-	tween.tween_property(_transition_rect, "color", Color(0, 0, 0, 1), 0.3)
-	tween.tween_callback(func() -> void: _battle_container.visible = false)
-	tween.tween_property(_transition_rect, "color", Color(0, 0, 0, 0), 0.3)
-	tween.tween_callback(func() -> void: _transition_rect.visible = false)
-	await tween.finished
+	var tw := create_tween()
+	var _t1 := tw.tween_property(_transition_rect, "color", Color(0, 0, 0, 1), 0.3)
+	var _t2 := tw.tween_callback(func() -> void: _battle_container.visible = false)
+	var _t3 := tw.tween_property(_transition_rect, "color", Color(0, 0, 0, 0), 0.3)
+	var _t4 := tw.tween_callback(func() -> void: _transition_rect.visible = false)
+	await tw.finished
 
 func _cleanup_battle() -> void:
 	for child: Node in _battler_container.get_children():
@@ -989,15 +989,15 @@ func _start_game_over() -> void:
 	_game_over_overlay.color = Color(0, 0, 0, 0)
 	_game_over_label.visible = false
 
-	var tween := create_tween()
-	tween.tween_property(_game_over_overlay, "color", Color(0, 0, 0, 0.85), 1.0)
-	tween.tween_callback(func() -> void: _game_over_label.visible = true)
-	await tween.finished
+	var tw := create_tween()
+	var _t1 := tw.tween_property(_game_over_overlay, "color", Color(0, 0, 0, 0.85), 1.0)
+	var _t2 := tw.tween_callback(func() -> void: _game_over_label.visible = true)
+	await tw.finished
 
 func _handle_game_over_input(event: InputEvent) -> void:
 	if event.is_action_pressed("confirm"):
 		get_viewport().set_input_as_handled()
-		get_tree().change_scene_to_file("res://title_screen.tscn")
+		var _err := get_tree().change_scene_to_file("res://title_screen.tscn")
 
 # --- MESSAGES ---
 
