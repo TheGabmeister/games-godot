@@ -9,6 +9,9 @@ var _viewing_detail := false
 var _cursor_index := 0
 var _character_labels: Array[Label] = []
 
+func _get_party_data() -> PartyData:
+	return get_tree().get_first_node_in_group(Groups.PARTY_DATA) as PartyData
+
 func open() -> void:
 	_active = true
 	_viewing_detail = false
@@ -29,20 +32,21 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 
+	var pd: PartyData = _get_party_data()
 	if event.is_action_pressed("move_up"):
-		_cursor_index = (_cursor_index - 1 + PartyData.party.size()) % PartyData.party.size()
+		_cursor_index = (_cursor_index - 1 + pd.party.size()) % pd.party.size()
 		_update_cursor()
 		SfxManager.play(CURSOR_MOVE)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
-		_cursor_index = (_cursor_index + 1) % PartyData.party.size()
+		_cursor_index = (_cursor_index + 1) % pd.party.size()
 		_update_cursor()
 		SfxManager.play(CURSOR_MOVE)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
 		SfxManager.play(CONFIRM_SFX)
 		_viewing_detail = true
-		_show_detail(PartyData.party[_cursor_index])
+		_show_detail(pd.party[_cursor_index])
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("cancel"):
 		SfxManager.play(CANCEL_SFX)
@@ -55,9 +59,10 @@ func _show_character_select() -> void:
 	for child: Node in panel.get_children():
 		child.queue_free()
 
+	var pd: PartyData = _get_party_data()
 	_character_labels.clear()
-	for i: int in PartyData.party.size():
-		var character: PartyData.CharacterData = PartyData.party[i]
+	for i: int in pd.party.size():
+		var character: PartyData.CharacterData = pd.party[i]
 		var label := Label.new()
 		label.text = "  %s" % character.char_name
 		label.add_theme_font_size_override(&"font_size", 22)
@@ -68,8 +73,9 @@ func _show_character_select() -> void:
 	_update_cursor()
 
 func _update_cursor() -> void:
+	var pd: PartyData = _get_party_data()
 	for i: int in _character_labels.size():
-		var character: PartyData.CharacterData = PartyData.party[i]
+		var character: PartyData.CharacterData = pd.party[i]
 		if i == _cursor_index:
 			_character_labels[i].text = "> %s" % character.char_name
 		else:

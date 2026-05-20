@@ -22,6 +22,6 @@ func _on_body_entered(_body: Node2D) -> void:
 		return
 	if target_scene_path.is_empty():
 		return
-	GameState.spawn_position = spawn_position
-	GameState.has_spawn_override = true
-	get_tree().change_scene_to_file.call_deferred(target_scene_path)
+	var session := get_tree().get_first_node_in_group(Groups.WORLD_SESSION)
+	if session:
+		session.call(&"transition_to_level", target_scene_path, spawn_position)

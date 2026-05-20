@@ -5,8 +5,6 @@ signal state_changed(old_state: State, new_state: State)
 enum State { TITLE, FIELD, DIALOGUE, BATTLE, CUTSCENE, MENU }
 
 var current: State = State.TITLE
-var spawn_position := Vector2.ZERO
-var has_spawn_override := false
 
 func transition(new_state: State) -> void:
 	if new_state == current:

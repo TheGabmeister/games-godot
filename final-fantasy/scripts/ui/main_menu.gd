@@ -126,12 +126,13 @@ func _show_stub(title: String) -> void:
 func _update_cursor() -> void:
 	for i: int in _cursor_labels.size():
 		_cursor_labels[i].text = "> " + MENU_ENTRIES[i] if i == _cursor_index else "  " + MENU_ENTRIES[i]
-	_time_label.text = "Time  " + PartyData.get_play_time_string()
-	_gil_label.text = "Gil   " + str(PartyData.gil)
+	var pd: PartyData = _get_party_data()
+	_time_label.text = "Time  " + pd.get_play_time_string()
+	_gil_label.text = "Gil   " + str(pd.gil)
 
 func _show_party_overview() -> void:
 	_clear_right_panel()
-	for character: PartyData.CharacterData in PartyData.party:
+	for character: PartyData.CharacterData in _get_party_data().party:
 		var row := _create_character_row(character)
 		_right_panel.add_child(row)
 		var sep := HSeparator.new()
@@ -209,6 +210,9 @@ func _create_character_row(character: PartyData.CharacterData) -> HBoxContainer:
 
 	row.add_child(info)
 	return row
+
+func _get_party_data() -> PartyData:
+	return get_tree().get_first_node_in_group(Groups.PARTY_DATA) as PartyData
 
 func _create_separator_style() -> StyleBoxLine:
 	var style := StyleBoxLine.new()
