@@ -95,9 +95,10 @@ var _total_gil := 0
 @onready var _background: TextureRect = %Background
 
 # HUD
-@onready var _bottom_bar: PanelContainer = %BottomBar
+@onready var _bottom_bar: HBoxContainer = %BottomBar
 @onready var _char_names: Array[Label] = [%CharName0, %CharName1, %CharName2, %CharName3]
 @onready var _char_hps: Array[Label] = [%CharHP0, %CharHP1, %CharHP2, %CharHP3]
+@onready var _enemy_list_container: VBoxContainer = %EnemyListContainer
 
 # Command menu
 @onready var _command_panel: PanelContainer = %CommandPanel
@@ -196,7 +197,7 @@ func _play_intro_transition() -> void:
 	_transition_rect.color = Color(1, 1, 1, 0)
 
 	if battle_start_sfx:
-		SfxManager.play(battle_start_sfx)
+		SfxManager.play(battle_start_sfx, -12.0)
 
 	var tween := create_tween()
 	tween.tween_property(_transition_rect, "color", Color(1, 1, 1, 1), 0.1)
@@ -300,12 +301,32 @@ func _spawn_sprites() -> void:
 func _setup_hud() -> void:
 	_bottom_bar.visible = true
 	_update_hud()
+	_update_enemy_list()
 
 func _update_hud() -> void:
 	for i: int in 4:
 		var b: Battler = _party_battlers[i]
-		_char_names[i].text = b.display_name
-		_char_hps[i].text = "%d/%d" % [maxi(0, b.current_hp), b.max_hp]
+		var abbrev := b.display_name.substr(0, 3)
+		_char_names[i].text = abbrev
+		_char_hps[i].text = "%d/ %d" % [maxi(0, b.current_hp), b.max_hp]
+
+func _update_enemy_list() -> void:
+	for child: Node in _enemy_list_container.get_children():
+		child.queue_free()
+	var counts: Dictionary = {}
+	for b: Battler in _enemy_battlers:
+		if b.is_dead():
+			continue
+		if b.display_name in counts:
+			counts[b.display_name] += 1
+		else:
+			counts[b.display_name] = 1
+	for enemy_name: String in counts:
+		var label := Label.new()
+		var count: int = counts[enemy_name]
+		label.text = "%s    %d" % [enemy_name, count] if count > 1 else enemy_name
+		label.add_theme_font_size_override("font_size", 18)
+		_enemy_list_container.add_child(label)
 
 # --- COMMAND PHASE ---
 
@@ -812,6 +833,7 @@ func _kill_enemy(enemy: Battler) -> void:
 	var tween := create_tween()
 	tween.tween_property(enemy.sprite, "modulate:a", 0.0, 0.3)
 	await tween.finished
+	_update_enemy_list()
 
 # --- RETARGETING ---
 

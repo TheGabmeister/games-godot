@@ -32,14 +32,21 @@ content_margin_top = 8.0
 content_margin_right = 12.0
 content_margin_bottom = 8.0
 
-[sub_resource type="StyleBoxFlat" id="bottom_bar_style"]
-bg_color = Color(0.02, 0.02, 0.18, 0.95)
-border_width_top = 2
-border_color = Color(0.6, 0.6, 1.0, 0.8)
-content_margin_left = 16.0
-content_margin_top = 8.0
-content_margin_right = 16.0
-content_margin_bottom = 8.0
+[sub_resource type="StyleBoxFlat" id="hud_panel_style"]
+bg_color = Color(0.0, 0.0, 0.25, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.75, 0.75, 1.0, 1.0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
 
 [node name="BattleScene" type="CanvasLayer"]
 layer = 20
@@ -76,7 +83,7 @@ unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = -100.0
+offset_bottom = -140.0
 stretch_mode = 6
 
 [node name="BattlerContainer" type="Node2D" parent="BattleContainer"]
@@ -89,126 +96,160 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 offset_left = 0.0
 offset_top = 0.0
-offset_right = 40.0
-offset_bottom = 30.0
+offset_right = 30.0
+offset_bottom = 24.0
 theme = ExtResource("theme")
-text = ">"
+text = "▶"
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(1.0, 1.0, 0.3, 1.0)
 horizontal_alignment = 1
 
-[node name="BottomBar" type="PanelContainer" parent="BattleContainer"]
+[node name="BottomBar" type="HBoxContainer" parent="BattleContainer"]
 unique_name_in_owner = true
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -100.0
-theme_override_styles/panel = SubResource("bottom_bar_style")
+offset_top = -140.0
+offset_left = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+theme_override_constants/separation = 4
 
-[node name="HBox" type="HBoxContainer" parent="BattleContainer/BottomBar"]
-theme_override_constants/separation = 40
-
-[node name="Col0" type="VBoxContainer" parent="BattleContainer/BottomBar/HBox"]
-size_flags_horizontal = 3
-
-[node name="CharName0" type="Label" parent="BattleContainer/BottomBar/HBox/Col0"]
+[node name="CommandPanel" type="PanelContainer" parent="BattleContainer/BottomBar"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 0)
+theme_override_styles/panel = SubResource("hud_panel_style")
+
+[node name="VBox" type="VBoxContainer" parent="BattleContainer/BottomBar/CommandPanel"]
+theme_override_constants/separation = 0
+
+[node name="ActiveCharLabel" type="Label" parent="BattleContainer/BottomBar/CommandPanel/VBox"]
+unique_name_in_owner = true
+visible = false
 theme = ExtResource("theme")
 text = "Warrior"
 
-[node name="CharHP0" type="Label" parent="BattleContainer/BottomBar/HBox/Col0"]
-unique_name_in_owner = true
-theme = ExtResource("theme")
-text = "35/35"
-theme_type_variation = "ValueLabel"
-
-[node name="Col1" type="VBoxContainer" parent="BattleContainer/BottomBar/HBox"]
-size_flags_horizontal = 3
-
-[node name="CharName1" type="Label" parent="BattleContainer/BottomBar/HBox/Col1"]
-unique_name_in_owner = true
-theme = ExtResource("theme")
-text = "Monk"
-
-[node name="CharHP1" type="Label" parent="BattleContainer/BottomBar/HBox/Col1"]
-unique_name_in_owner = true
-theme = ExtResource("theme")
-text = "33/33"
-theme_type_variation = "ValueLabel"
-
-[node name="Col2" type="VBoxContainer" parent="BattleContainer/BottomBar/HBox"]
-size_flags_horizontal = 3
-
-[node name="CharName2" type="Label" parent="BattleContainer/BottomBar/HBox/Col2"]
-unique_name_in_owner = true
-theme = ExtResource("theme")
-text = "W.Mage"
-
-[node name="CharHP2" type="Label" parent="BattleContainer/BottomBar/HBox/Col2"]
-unique_name_in_owner = true
-theme = ExtResource("theme")
-text = "33/33"
-theme_type_variation = "ValueLabel"
-
-[node name="Col3" type="VBoxContainer" parent="BattleContainer/BottomBar/HBox"]
-size_flags_horizontal = 3
-
-[node name="CharName3" type="Label" parent="BattleContainer/BottomBar/HBox/Col3"]
-unique_name_in_owner = true
-theme = ExtResource("theme")
-text = "B.Mage"
-
-[node name="CharHP3" type="Label" parent="BattleContainer/BottomBar/HBox/Col3"]
-unique_name_in_owner = true
-theme = ExtResource("theme")
-text = "25/25"
-theme_type_variation = "ValueLabel"
-
-[node name="CommandPanel" type="PanelContainer" parent="BattleContainer"]
-unique_name_in_owner = true
-anchors_preset = 0
-offset_left = 30.0
-offset_top = 420.0
-offset_right = 200.0
-offset_bottom = 600.0
-theme_override_styles/panel = SubResource("panel_style")
-
-[node name="VBox" type="VBoxContainer" parent="BattleContainer/CommandPanel"]
-
-[node name="ActiveCharLabel" type="Label" parent="BattleContainer/CommandPanel/VBox"]
-unique_name_in_owner = true
-theme = ExtResource("theme")
-text = "Warrior"
-theme_type_variation = "AccentLabel"
-
-[node name="CmdAttack" type="Label" parent="BattleContainer/CommandPanel/VBox"]
+[node name="CmdAttack" type="Label" parent="BattleContainer/BottomBar/CommandPanel/VBox"]
 unique_name_in_owner = true
 theme = ExtResource("theme")
 text = "> Attack"
+theme_override_font_sizes/font_size = 18
 
-[node name="CmdMagic" type="Label" parent="BattleContainer/CommandPanel/VBox"]
+[node name="CmdMagic" type="Label" parent="BattleContainer/BottomBar/CommandPanel/VBox"]
 unique_name_in_owner = true
 theme = ExtResource("theme")
 text = "  Magic"
-modulate = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+modulate = Color(0.4, 0.4, 0.4, 1)
 
-[node name="CmdItem" type="Label" parent="BattleContainer/CommandPanel/VBox"]
+[node name="CmdItem" type="Label" parent="BattleContainer/BottomBar/CommandPanel/VBox"]
 unique_name_in_owner = true
 theme = ExtResource("theme")
 text = "  Item"
+theme_override_font_sizes/font_size = 18
 
-[node name="CmdRun" type="Label" parent="BattleContainer/CommandPanel/VBox"]
+[node name="CmdRun" type="Label" parent="BattleContainer/BottomBar/CommandPanel/VBox"]
 unique_name_in_owner = true
 theme = ExtResource("theme")
 text = "  Run"
+theme_override_font_sizes/font_size = 18
+
+[node name="EnemyPanel" type="PanelContainer" parent="BattleContainer/BottomBar"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.2
+theme_override_styles/panel = SubResource("hud_panel_style")
+
+[node name="EnemyListContainer" type="VBoxContainer" parent="BattleContainer/BottomBar/EnemyPanel"]
+unique_name_in_owner = true
+theme_override_constants/separation = 0
+
+[node name="PartyPanel" type="PanelContainer" parent="BattleContainer/BottomBar"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.8
+theme_override_styles/panel = SubResource("hud_panel_style")
+
+[node name="PartyVBox" type="VBoxContainer" parent="BattleContainer/BottomBar/PartyPanel"]
+theme_override_constants/separation = 0
+
+[node name="Row0" type="HBoxContainer" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox"]
+
+[node name="CharName0" type="Label" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox/Row0"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+theme = ExtResource("theme")
+text = "War"
+theme_override_font_sizes/font_size = 18
+
+[node name="CharHP0" type="Label" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox/Row0"]
+unique_name_in_owner = true
+size_flags_horizontal = 10
+theme = ExtResource("theme")
+text = "35/  35"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 2
+
+[node name="Row1" type="HBoxContainer" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox"]
+
+[node name="CharName1" type="Label" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox/Row1"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+theme = ExtResource("theme")
+text = "Mon"
+theme_override_font_sizes/font_size = 18
+
+[node name="CharHP1" type="Label" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox/Row1"]
+unique_name_in_owner = true
+size_flags_horizontal = 10
+theme = ExtResource("theme")
+text = "33/  33"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 2
+
+[node name="Row2" type="HBoxContainer" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox"]
+
+[node name="CharName2" type="Label" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox/Row2"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+theme = ExtResource("theme")
+text = "W.M"
+theme_override_font_sizes/font_size = 18
+
+[node name="CharHP2" type="Label" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox/Row2"]
+unique_name_in_owner = true
+size_flags_horizontal = 10
+theme = ExtResource("theme")
+text = "33/  33"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 2
+
+[node name="Row3" type="HBoxContainer" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox"]
+
+[node name="CharName3" type="Label" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox/Row3"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+theme = ExtResource("theme")
+text = "B.M"
+theme_override_font_sizes/font_size = 18
+
+[node name="CharHP3" type="Label" parent="BattleContainer/BottomBar/PartyPanel/PartyVBox/Row3"]
+unique_name_in_owner = true
+size_flags_horizontal = 10
+theme = ExtResource("theme")
+text = "25/  25"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 2
 
 [node name="ItemPanel" type="PanelContainer" parent="BattleContainer"]
 unique_name_in_owner = true
 anchors_preset = 0
 offset_left = 220.0
-offset_top = 300.0
+offset_top = 250.0
 offset_right = 500.0
-offset_bottom = 580.0
-theme_override_styles/panel = SubResource("panel_style")
+offset_bottom = 530.0
+theme_override_styles/panel = SubResource("hud_panel_style")
 
 [node name="ItemListContainer" type="VBoxContainer" parent="BattleContainer/ItemPanel"]
 unique_name_in_owner = true
@@ -217,10 +258,10 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 anchors_preset = 0
 offset_left = 520.0
-offset_top = 300.0
+offset_top = 250.0
 offset_right = 800.0
-offset_bottom = 520.0
-theme_override_styles/panel = SubResource("panel_style")
+offset_bottom = 470.0
+theme_override_styles/panel = SubResource("hud_panel_style")
 
 [node name="ItemTargetContainer" type="VBoxContainer" parent="BattleContainer/ItemTargetPanel"]
 unique_name_in_owner = true
@@ -236,7 +277,7 @@ offset_left = -250.0
 offset_top = -100.0
 offset_right = 250.0
 offset_bottom = 100.0
-theme_override_styles/panel = SubResource("panel_style")
+theme_override_styles/panel = SubResource("hud_panel_style")
 
 [node name="VictoryLabel" type="Label" parent="BattleContainer/VictoryPanel"]
 unique_name_in_owner = true
@@ -256,10 +297,10 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -150.0
-offset_top = -160.0
+offset_top = -200.0
 offset_right = 150.0
-offset_bottom = -110.0
-theme_override_styles/panel = SubResource("panel_style")
+offset_bottom = -150.0
+theme_override_styles/panel = SubResource("hud_panel_style")
 
 [node name="MessageLabel" type="Label" parent="BattleContainer/MessagePanel"]
 unique_name_in_owner = true
