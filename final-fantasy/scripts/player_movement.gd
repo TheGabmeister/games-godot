@@ -1,3 +1,4 @@
+class_name PlayerMovement
 extends CharacterBody2D
 
 enum Dir { DOWN, UP, LEFT, RIGHT }
@@ -27,6 +28,9 @@ const FOOTSTEP_STONE := preload("res://ui/footstep_stone.ogg")
 const FOOTSTEP_GRASS := preload("res://ui/footstep_grass.ogg")
 const FOOTSTEP_INTERVAL := 0.35
 const FOOTSTEP_VOLUME := -6.0
+const TILE_SIZE := 64.0
+
+signal encounter_triggered(formation: EncounterFormation)
 
 @export var speed: float = 200.0
 
@@ -34,6 +38,14 @@ const FOOTSTEP_VOLUME := -6.0
 @onready var interact_area: Area2D = $InteractArea
 var facing: Dir = Dir.DOWN
 var _footstep_timer := 0.0
+
+var encounter_table: EncounterTable
+var _step_accumulator := 0.0
+var _step_count := 0
+var _steps_to_encounter := 0
+
+func _ready() -> void:
+	reset_step_counter()
 
 func _physics_process(delta: float) -> void:
 	if not GameState.is_state(GameState.State.FIELD):
@@ -55,6 +67,7 @@ func _physics_process(delta: float) -> void:
 		if _footstep_timer <= 0.0:
 			SfxManager.play(FOOTSTEP_STONE, FOOTSTEP_VOLUME)
 			_footstep_timer = FOOTSTEP_INTERVAL
+		_count_steps(delta)
 	else:
 		velocity = Vector2.ZERO
 		sprite.play(IDLE_ANIM[facing])
@@ -78,6 +91,39 @@ func _input(event: InputEvent) -> void:
 			sprite.play(IDLE_ANIM[facing])
 			target.call(&"interact")
 			get_viewport().set_input_as_handled()
+
+func _count_steps(delta: float) -> void:
+	if not encounter_table:
+		return
+	_step_accumulator += velocity.length() * delta
+	while _step_accumulator >= TILE_SIZE:
+		_step_accumulator -= TILE_SIZE
+		_step_count += 1
+		if _step_count >= _steps_to_encounter:
+			velocity = Vector2.ZERO
+			sprite.play(IDLE_ANIM[facing])
+			var formation := _pick_formation()
+			reset_step_counter()
+			encounter_triggered.emit(formation)
+			return
+
+func reset_step_counter() -> void:
+	_step_count = 0
+	_step_accumulator = 0.0
+	if encounter_table:
+		_steps_to_encounter = randi_range(encounter_table.steps_min, encounter_table.steps_max)
+
+func _pick_formation() -> EncounterFormation:
+	var total_weight := 0
+	for f: EncounterFormation in encounter_table.formations:
+		total_weight += f.weight
+	var roll := randi_range(1, total_weight)
+	var accum := 0
+	for f: EncounterFormation in encounter_table.formations:
+		accum += f.weight
+		if roll <= accum:
+			return f
+	return encounter_table.formations.back()
 
 func _update_facing(dir: Vector2) -> void:
 	if absf(dir.x) > absf(dir.y):

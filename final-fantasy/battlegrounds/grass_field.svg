@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="620" viewBox="0 0 1280 620" shape-rendering="crispEdges">
+  <defs>
+    <!-- Sky gradient -->
+    <linearGradient id="skyGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a4e"/>
+      <stop offset="40%" stop-color="#2a3a7c"/>
+      <stop offset="70%" stop-color="#4a6aaa"/>
+      <stop offset="100%" stop-color="#6a8ac0"/>
+    </linearGradient>
+    <!-- Grass gradient -->
+    <linearGradient id="grassGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a7a2a"/>
+      <stop offset="30%" stop-color="#1e6e1e"/>
+      <stop offset="70%" stop-color="#1a5a1a"/>
+      <stop offset="100%" stop-color="#144e14"/>
+    </linearGradient>
+    <!-- Distant grass gradient -->
+    <linearGradient id="distantGrassGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a7a4a"/>
+      <stop offset="100%" stop-color="#2a7a2a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect x="0" y="0" width="1280" height="620" fill="url(#skyGradient)"/>
+
+  <!-- Distant hills / horizon line -->
+  <rect x="0" y="280" width="1280" height="20" fill="#3a6a5a"/>
+
+  <!-- Distant tree line (small silhouettes along horizon) -->
+  <!-- Tree 1 - left cluster -->
+  <rect x="60" y="240" width="16" height="48" fill="#1a3a2a"/>
+  <rect x="52" y="248" width="32" height="32" fill="#1a3a2a"/>
+  <rect x="44" y="256" width="48" height="16" fill="#1a3a2a"/>
+
+  <!-- Tree 2 -->
+  <rect x="140" y="248" width="12" height="40" fill="#1a3a2a"/>
+  <rect x="132" y="256" width="28" height="24" fill="#1a3a2a"/>
+  <rect x="124" y="264" width="44" height="8" fill="#1a3a2a"/>
+
+  <!-- Tree 3 - tall -->
+  <rect x="260" y="228" width="16" height="56" fill="#1a3a2a"/>
+  <rect x="248" y="236" width="40" height="40" fill="#1a3a2a"/>
+  <rect x="240" y="252" width="56" height="16" fill="#1a3a2a"/>
+
+  <!-- Tree 4 -->
+  <rect x="380" y="244" width="12" height="44" fill="#1a3a2a"/>
+  <rect x="372" y="252" width="28" height="28" fill="#1a3a2a"/>
+  <rect x="364" y="264" width="44" height="8" fill="#1a3a2a"/>
+
+  <!-- Tree 5 - large center -->
+  <rect x="520" y="220" width="20" height="64" fill="#1a3a2a"/>
+  <rect x="504" y="228" width="52" height="48" fill="#1a3a2a"/>
+  <rect x="496" y="244" width="68" height="24" fill="#1a3a2a"/>
+
+  <!-- Tree 6 -->
+  <rect x="660" y="240" width="16" height="48" fill="#1a3a2a"/>
+  <rect x="648" y="248" width="40" height="32" fill="#1a3a2a"/>
+  <rect x="640" y="260" width="56" height="12" fill="#1a3a2a"/>
+
+  <!-- Tree 7 -->
+  <rect x="780" y="248" width="12" height="40" fill="#1a3a2a"/>
+  <rect x="772" y="256" width="28" height="24" fill="#1a3a2a"/>
+  <rect x="764" y="264" width="44" height="8" fill="#1a3a2a"/>
+
+  <!-- Tree 8 - right cluster -->
+  <rect x="900" y="232" width="16" height="52" fill="#1a3a2a"/>
+  <rect x="888" y="240" width="40" height="36" fill="#1a3a2a"/>
+  <rect x="880" y="256" width="56" height="12" fill="#1a3a2a"/>
+
+  <!-- Tree 9 -->
+  <rect x="1020" y="244" width="12" height="44" fill="#1a3a2a"/>
+  <rect x="1012" y="252" width="28" height="28" fill="#1a3a2a"/>
+  <rect x="1004" y="264" width="44" height="8" fill="#1a3a2a"/>
+
+  <!-- Tree 10 -->
+  <rect x="1140" y="236" width="16" height="48" fill="#1a3a2a"/>
+  <rect x="1128" y="244" width="40" height="32" fill="#1a3a2a"/>
+  <rect x="1120" y="260" width="56" height="12" fill="#1a3a2a"/>
+
+  <!-- Tree 11 - far right -->
+  <rect x="1220" y="248" width="12" height="40" fill="#1a3a2a"/>
+  <rect x="1212" y="256" width="28" height="24" fill="#1a3a2a"/>
+  <rect x="1204" y="264" width="44" height="8" fill="#1a3a2a"/>
+
+  <!-- Distant grass strip -->
+  <rect x="0" y="280" width="1280" height="40" fill="url(#distantGrassGradient)"/>
+
+  <!-- Main grass field -->
+  <rect x="0" y="320" width="1280" height="300" fill="url(#grassGradient)"/>
+
+  <!-- Grass texture - horizontal stripes for pixel art feel -->
+  <rect x="0" y="330" width="1280" height="4" fill="#2e7e2e" opacity="0.5"/>
+  <rect x="0" y="360" width="1280" height="4" fill="#227222" opacity="0.4"/>
+  <rect x="0" y="390" width="1280" height="4" fill="#2e7e2e" opacity="0.3"/>
+  <rect x="0" y="420" width="1280" height="4" fill="#1a6a1a" opacity="0.4"/>
+  <rect x="0" y="450" width="1280" height="4" fill="#227222" opacity="0.3"/>
+  <rect x="0" y="480" width="1280" height="4" fill="#186818" opacity="0.4"/>
+  <rect x="0" y="510" width="1280" height="4" fill="#1a6a1a" opacity="0.3"/>
+  <rect x="0" y="540" width="1280" height="4" fill="#186818" opacity="0.3"/>
+  <rect x="0" y="570" width="1280" height="4" fill="#145a14" opacity="0.4"/>
+  <rect x="0" y="600" width="1280" height="4" fill="#125212" opacity="0.3"/>
+
+  <!-- Grass tufts - small pixel clusters scattered on the field -->
+  <!-- Row 1 (near horizon) -->
+  <rect x="40" y="324" width="8" height="4" fill="#3a8a3a" opacity="0.6"/>
+  <rect x="120" y="328" width="8" height="4" fill="#3a8a3a" opacity="0.6"/>
+  <rect x="240" y="322" width="12" height="4" fill="#3a8a3a" opacity="0.6"/>
+  <rect x="400" y="326" width="8" height="4" fill="#3a8a3a" opacity="0.6"/>
+  <rect x="560" y="324" width="12" height="4" fill="#3a8a3a" opacity="0.6"/>
+  <rect x="720" y="328" width="8" height="4" fill="#3a8a3a" opacity="0.6"/>
+  <rect x="880" y="322" width="12" height="4" fill="#3a8a3a" opacity="0.6"/>
+  <rect x="1040" y="326" width="8" height="4" fill="#3a8a3a" opacity="0.6"/>
+  <rect x="1200" y="324" width="8" height="4" fill="#3a8a3a" opacity="0.6"/>
+
+  <!-- Row 2 -->
+  <rect x="80" y="370" width="12" height="8" fill="#2a8a2a" opacity="0.5"/>
+  <rect x="200" y="374" width="8" height="8" fill="#2a8a2a" opacity="0.5"/>
+  <rect x="340" y="368" width="12" height="8" fill="#2a8a2a" opacity="0.5"/>
+  <rect x="500" y="372" width="16" height="8" fill="#2a8a2a" opacity="0.5"/>
+  <rect x="640" y="370" width="12" height="8" fill="#2a8a2a" opacity="0.5"/>
+  <rect x="820" y="376" width="8" height="8" fill="#2a8a2a" opacity="0.5"/>
+  <rect x="960" y="368" width="16" height="8" fill="#2a8a2a" opacity="0.5"/>
+  <rect x="1100" y="374" width="12" height="8" fill="#2a8a2a" opacity="0.5"/>
+
+  <!-- Row 3 -->
+  <rect x="160" y="430" width="16" height="8" fill="#248024" opacity="0.5"/>
+  <rect x="320" y="426" width="12" height="8" fill="#248024" opacity="0.5"/>
+  <rect x="460" y="434" width="16" height="8" fill="#248024" opacity="0.5"/>
+  <rect x="600" y="428" width="12" height="8" fill="#248024" opacity="0.5"/>
+  <rect x="760" y="432" width="16" height="8" fill="#248024" opacity="0.5"/>
+  <rect x="940" y="426" width="12" height="8" fill="#248024" opacity="0.5"/>
+  <rect x="1060" y="430" width="16" height="8" fill="#248024" opacity="0.5"/>
+
+  <!-- Row 4 -->
+  <rect x="100" y="490" width="16" height="8" fill="#1e761e" opacity="0.5"/>
+  <rect x="280" y="494" width="12" height="8" fill="#1e761e" opacity="0.5"/>
+  <rect x="440" y="488" width="16" height="8" fill="#1e761e" opacity="0.5"/>
+  <rect x="620" y="492" width="12" height="8" fill="#1e761e" opacity="0.5"/>
+  <rect x="780" y="486" width="16" height="8" fill="#1e761e" opacity="0.5"/>
+  <rect x="1000" y="490" width="12" height="8" fill="#1e761e" opacity="0.5"/>
+  <rect x="1180" y="494" width="16" height="8" fill="#1e761e" opacity="0.5"/>
+
+  <!-- Row 5 (foreground) -->
+  <rect x="60" y="556" width="20" height="8" fill="#187018" opacity="0.5"/>
+  <rect x="220" y="552" width="16" height="8" fill="#187018" opacity="0.5"/>
+  <rect x="380" y="558" width="20" height="8" fill="#187018" opacity="0.5"/>
+  <rect x="540" y="554" width="16" height="8" fill="#187018" opacity="0.5"/>
+  <rect x="700" y="550" width="20" height="8" fill="#187018" opacity="0.5"/>
+  <rect x="860" y="556" width="16" height="8" fill="#187018" opacity="0.5"/>
+  <rect x="1040" y="552" width="20" height="8" fill="#187018" opacity="0.5"/>
+  <rect x="1220" y="558" width="16" height="8" fill="#187018" opacity="0.5"/>
+
+  <!-- Foreground tree silhouettes (larger, closer) -->
+  <!-- Left tree -->
+  <rect x="-20" y="180" width="24" height="108" fill="#0e2e16"/>
+  <rect x="-40" y="196" width="64" height="72" fill="#0e2e16"/>
+  <rect x="-52" y="220" width="88" height="40" fill="#0e2e16"/>
+  <rect x="-44" y="260" width="72" height="20" fill="#0e2e16"/>
+
+  <!-- Right tree -->
+  <rect x="1220" y="190" width="24" height="100" fill="#0e2e16"/>
+  <rect x="1200" y="206" width="64" height="68" fill="#0e2e16"/>
+  <rect x="1188" y="230" width="88" height="36" fill="#0e2e16"/>
+  <rect x="1196" y="266" width="72" height="16" fill="#0e2e16"/>
+
+  <!-- Subtle cloud shapes in sky (blocky pixel art) -->
+  <rect x="200" y="60" width="80" height="16" fill="#ffffff" opacity="0.08"/>
+  <rect x="188" y="68" width="104" height="16" fill="#ffffff" opacity="0.08"/>
+  <rect x="196" y="76" width="88" height="12" fill="#ffffff" opacity="0.06"/>
+
+  <rect x="600" y="100" width="120" height="16" fill="#ffffff" opacity="0.08"/>
+  <rect x="584" y="108" width="152" height="16" fill="#ffffff" opacity="0.08"/>
+  <rect x="596" y="116" width="128" height="12" fill="#ffffff" opacity="0.06"/>
+
+  <rect x="950" y="40" width="64" height="12" fill="#ffffff" opacity="0.08"/>
+  <rect x="942" y="48" width="80" height="12" fill="#ffffff" opacity="0.08"/>
+  <rect x="950" y="56" width="64" height="8" fill="#ffffff" opacity="0.06"/>
+
+  <rect x="1050" y="130" width="96" height="16" fill="#ffffff" opacity="0.08"/>
+  <rect x="1038" y="138" width="120" height="16" fill="#ffffff" opacity="0.08"/>
+  <rect x="1046" y="146" width="104" height="12" fill="#ffffff" opacity="0.06"/>
+</svg>

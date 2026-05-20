@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://71eyefnavbkk" path="res://scripts_consts/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://enemies/gigas_worm.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+sprite = ExtResource("2")
+enemy_name = "Gigas Worm"
+max_hp = 52
+attack = 16
+accuracy = 24
+num_hits = 1
+defense = 4
+agility = 4
+evade = 4
+magic_defense = 32
+exp_reward = 60
+gil_reward = 30

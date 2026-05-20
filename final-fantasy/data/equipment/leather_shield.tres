@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EquipmentData" format=3]
+
+[ext_resource type="Script" uid="uid://b53umn3tadk1s" path="res://scripts_consts/equipment_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+equip_name = "Leather Shield"
+slot = 1
+attack_power = 0
+absorb = 2
+evade_penalty = 2
+hit_percent = 0
+weapon_index = 0
+price = 15

@@ -1,0 +1,104 @@
+[gd_resource type="Resource" script_class="EncounterTable" load_steps=21 format=3]
+
+[ext_resource type="Script" uid="uid://dje3cxfcq6hfr" path="res://scripts_consts/encounter_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://cpqw4f61t4fyv" path="res://scripts_consts/encounter_formation.gd" id="2"]
+[ext_resource type="Script" uid="uid://ck22q8ee1jyed" path="res://scripts_consts/enemy_entry.gd" id="3"]
+[ext_resource type="Resource" path="res://data/enemies/goblin.tres" id="goblin"]
+[ext_resource type="Resource" path="res://data/enemies/goblin_guard.tres" id="goblin_guard"]
+[ext_resource type="Resource" path="res://data/enemies/wolf.tres" id="wolf"]
+[ext_resource type="Resource" path="res://data/enemies/black_widow.tres" id="black_widow"]
+[ext_resource type="Resource" path="res://data/enemies/gigas_worm.tres" id="gigas_worm"]
+[ext_resource type="Texture2D" path="res://battlegrounds/grass_field.png" id="bg"]
+
+[sub_resource type="Resource" id="entry_goblin2"]
+script = ExtResource("3")
+enemy = ExtResource("goblin")
+count = 2
+
+[sub_resource type="Resource" id="entry_goblin3"]
+script = ExtResource("3")
+enemy = ExtResource("goblin")
+count = 3
+
+[sub_resource type="Resource" id="entry_wolf1"]
+script = ExtResource("3")
+enemy = ExtResource("wolf")
+count = 1
+
+[sub_resource type="Resource" id="entry_goblin1"]
+script = ExtResource("3")
+enemy = ExtResource("goblin")
+count = 1
+
+[sub_resource type="Resource" id="entry_goblin_guard1"]
+script = ExtResource("3")
+enemy = ExtResource("goblin_guard")
+count = 1
+
+[sub_resource type="Resource" id="entry_goblin_guard1b"]
+script = ExtResource("3")
+enemy = ExtResource("goblin_guard")
+count = 1
+
+[sub_resource type="Resource" id="entry_goblin2b"]
+script = ExtResource("3")
+enemy = ExtResource("goblin")
+count = 2
+
+[sub_resource type="Resource" id="entry_black_widow1"]
+script = ExtResource("3")
+enemy = ExtResource("black_widow")
+count = 1
+
+[sub_resource type="Resource" id="entry_gigas_worm1"]
+script = ExtResource("3")
+enemy = ExtResource("gigas_worm")
+count = 1
+
+[sub_resource type="Resource" id="form_goblin2"]
+script = ExtResource("2")
+enemies = [SubResource("entry_goblin2")]
+weight = 4
+
+[sub_resource type="Resource" id="form_goblin3"]
+script = ExtResource("2")
+enemies = [SubResource("entry_goblin3")]
+weight = 3
+
+[sub_resource type="Resource" id="form_wolf1"]
+script = ExtResource("2")
+enemies = [SubResource("entry_wolf1")]
+weight = 3
+
+[sub_resource type="Resource" id="form_wolf_goblin"]
+script = ExtResource("2")
+enemies = [SubResource("entry_wolf1"), SubResource("entry_goblin1")]
+weight = 3
+
+[sub_resource type="Resource" id="form_guard1"]
+script = ExtResource("2")
+enemies = [SubResource("entry_goblin_guard1")]
+weight = 2
+
+[sub_resource type="Resource" id="form_guard_goblins"]
+script = ExtResource("2")
+enemies = [SubResource("entry_goblin_guard1b"), SubResource("entry_goblin2b")]
+weight = 2
+
+[sub_resource type="Resource" id="form_widow"]
+script = ExtResource("2")
+enemies = [SubResource("entry_black_widow1")]
+weight = 1
+
+[sub_resource type="Resource" id="form_worm"]
+script = ExtResource("2")
+enemies = [SubResource("entry_gigas_worm1")]
+weight = 1
+
+[resource]
+script = ExtResource("1")
+battle_background = ExtResource("bg")
+formations = [SubResource("form_goblin2"), SubResource("form_goblin3"), SubResource("form_wolf1"), SubResource("form_wolf_goblin"), SubResource("form_guard1"), SubResource("form_guard_goblins"), SubResource("form_widow"), SubResource("form_worm")]
+can_flee = true
+steps_min = 20
+steps_max = 30

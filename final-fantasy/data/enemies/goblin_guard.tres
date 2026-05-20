@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://71eyefnavbkk" path="res://scripts_consts/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://enemies/goblin_guard.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+sprite = ExtResource("2")
+enemy_name = "Goblin Guard"
+max_hp = 16
+attack = 8
+accuracy = 18
+num_hits = 1
+defense = 4
+agility = 6
+evade = 6
+magic_defense = 20
+exp_reward = 18
+gil_reward = 18

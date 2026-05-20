@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://71eyefnavbkk" path="res://scripts_consts/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://enemies/black_widow.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+sprite = ExtResource("2")
+enemy_name = "Black Widow"
+max_hp = 28
+attack = 12
+accuracy = 24
+num_hits = 1
+defense = 2
+agility = 8
+evade = 8
+magic_defense = 28
+exp_reward = 30
+gil_reward = 15

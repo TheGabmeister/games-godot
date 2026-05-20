@@ -91,3 +91,12 @@ monitorable = false
 script = ExtResource("12_vw132")
 target_scene_path = "res://_scenes/cornelia_castle.tscn"
 spawn_position = Vector2(480, 608)
+
+[node name="OutskirtsDoor" type="Area2D" parent="." instance=ExtResource("6")]
+position = Vector2(544, 830)
+collision_layer = 8
+collision_mask = 2
+monitorable = false
+script = ExtResource("12_vw132")
+target_scene_path = "res://_scenes/cornelia_outskirts.tscn"
+spawn_position = Vector2(608, 128)

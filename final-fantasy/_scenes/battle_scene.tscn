@@ -1,0 +1,292 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/battle_scene.gd" id="1"]
+[ext_resource type="Theme" path="res://ui/menu_theme.tres" id="theme"]
+[ext_resource type="AudioStream" path="res://ui/cursor_move.ogg" id="cursor_move"]
+[ext_resource type="AudioStream" path="res://ui/confirm.ogg" id="confirm"]
+[ext_resource type="AudioStream" path="res://ui/cancel.ogg" id="cancel"]
+[ext_resource type="AudioStream" path="res://sfx/attack_swing.ogg" id="attack_swing"]
+[ext_resource type="AudioStream" path="res://sfx/hit.ogg" id="attack_hit"]
+[ext_resource type="AudioStream" path="res://sfx/miss.ogg" id="attack_miss"]
+[ext_resource type="AudioStream" path="res://sfx/critical_hit.ogg" id="critical_hit"]
+[ext_resource type="AudioStream" path="res://sfx/enemy_death.ogg" id="enemy_death"]
+[ext_resource type="AudioStream" path="res://sfx/level_up.ogg" id="level_up"]
+[ext_resource type="AudioStream" path="res://sfx/battle_start.ogg" id="battle_start"]
+[ext_resource type="AudioStream" path="res://music/battle_theme.ogg" id="battle_theme"]
+[ext_resource type="AudioStream" path="res://music/victory_fanfare.ogg" id="victory_fanfare"]
+[ext_resource type="AudioStream" path="res://music/game_over.ogg" id="game_over"]
+
+[sub_resource type="StyleBoxFlat" id="panel_style"]
+bg_color = Color(0.05, 0.05, 0.3, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.6, 1.0, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="bottom_bar_style"]
+bg_color = Color(0.02, 0.02, 0.18, 0.95)
+border_width_top = 2
+border_color = Color(0.6, 0.6, 1.0, 0.8)
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[node name="BattleScene" type="CanvasLayer"]
+layer = 20
+script = ExtResource("1")
+cursor_move_sfx = ExtResource("cursor_move")
+confirm_sfx = ExtResource("confirm")
+cancel_sfx = ExtResource("cancel")
+attack_swing_sfx = ExtResource("attack_swing")
+attack_hit_sfx = ExtResource("attack_hit")
+attack_miss_sfx = ExtResource("attack_miss")
+critical_hit_sfx = ExtResource("critical_hit")
+enemy_death_sfx = ExtResource("enemy_death")
+level_up_sfx = ExtResource("level_up")
+battle_start_sfx = ExtResource("battle_start")
+battle_theme = ExtResource("battle_theme")
+victory_fanfare = ExtResource("victory_fanfare")
+game_over_theme = ExtResource("game_over")
+
+[node name="TransitionRect" type="ColorRect" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0)
+
+[node name="BattleContainer" type="Control" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Background" type="TextureRect" parent="BattleContainer"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -100.0
+stretch_mode = 6
+
+[node name="BattlerContainer" type="Node2D" parent="BattleContainer"]
+unique_name_in_owner = true
+
+[node name="DamageContainer" type="Node2D" parent="BattleContainer"]
+unique_name_in_owner = true
+
+[node name="TargetArrow" type="Label" parent="BattleContainer"]
+unique_name_in_owner = true
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 40.0
+offset_bottom = 30.0
+theme = ExtResource("theme")
+text = ">"
+horizontal_alignment = 1
+
+[node name="BottomBar" type="PanelContainer" parent="BattleContainer"]
+unique_name_in_owner = true
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -100.0
+theme_override_styles/panel = SubResource("bottom_bar_style")
+
+[node name="HBox" type="HBoxContainer" parent="BattleContainer/BottomBar"]
+theme_override_constants/separation = 40
+
+[node name="Col0" type="VBoxContainer" parent="BattleContainer/BottomBar/HBox"]
+size_flags_horizontal = 3
+
+[node name="CharName0" type="Label" parent="BattleContainer/BottomBar/HBox/Col0"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "Warrior"
+
+[node name="CharHP0" type="Label" parent="BattleContainer/BottomBar/HBox/Col0"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "35/35"
+theme_type_variation = "ValueLabel"
+
+[node name="Col1" type="VBoxContainer" parent="BattleContainer/BottomBar/HBox"]
+size_flags_horizontal = 3
+
+[node name="CharName1" type="Label" parent="BattleContainer/BottomBar/HBox/Col1"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "Monk"
+
+[node name="CharHP1" type="Label" parent="BattleContainer/BottomBar/HBox/Col1"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "33/33"
+theme_type_variation = "ValueLabel"
+
+[node name="Col2" type="VBoxContainer" parent="BattleContainer/BottomBar/HBox"]
+size_flags_horizontal = 3
+
+[node name="CharName2" type="Label" parent="BattleContainer/BottomBar/HBox/Col2"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "W.Mage"
+
+[node name="CharHP2" type="Label" parent="BattleContainer/BottomBar/HBox/Col2"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "33/33"
+theme_type_variation = "ValueLabel"
+
+[node name="Col3" type="VBoxContainer" parent="BattleContainer/BottomBar/HBox"]
+size_flags_horizontal = 3
+
+[node name="CharName3" type="Label" parent="BattleContainer/BottomBar/HBox/Col3"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "B.Mage"
+
+[node name="CharHP3" type="Label" parent="BattleContainer/BottomBar/HBox/Col3"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "25/25"
+theme_type_variation = "ValueLabel"
+
+[node name="CommandPanel" type="PanelContainer" parent="BattleContainer"]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = 30.0
+offset_top = 420.0
+offset_right = 200.0
+offset_bottom = 600.0
+theme_override_styles/panel = SubResource("panel_style")
+
+[node name="VBox" type="VBoxContainer" parent="BattleContainer/CommandPanel"]
+
+[node name="ActiveCharLabel" type="Label" parent="BattleContainer/CommandPanel/VBox"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "Warrior"
+theme_type_variation = "AccentLabel"
+
+[node name="CmdAttack" type="Label" parent="BattleContainer/CommandPanel/VBox"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "> Attack"
+
+[node name="CmdMagic" type="Label" parent="BattleContainer/CommandPanel/VBox"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "  Magic"
+modulate = Color(0.5, 0.5, 0.5, 1)
+
+[node name="CmdItem" type="Label" parent="BattleContainer/CommandPanel/VBox"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "  Item"
+
+[node name="CmdRun" type="Label" parent="BattleContainer/CommandPanel/VBox"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "  Run"
+
+[node name="ItemPanel" type="PanelContainer" parent="BattleContainer"]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = 220.0
+offset_top = 300.0
+offset_right = 500.0
+offset_bottom = 580.0
+theme_override_styles/panel = SubResource("panel_style")
+
+[node name="ItemListContainer" type="VBoxContainer" parent="BattleContainer/ItemPanel"]
+unique_name_in_owner = true
+
+[node name="ItemTargetPanel" type="PanelContainer" parent="BattleContainer"]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = 520.0
+offset_top = 300.0
+offset_right = 800.0
+offset_bottom = 520.0
+theme_override_styles/panel = SubResource("panel_style")
+
+[node name="ItemTargetContainer" type="VBoxContainer" parent="BattleContainer/ItemTargetPanel"]
+unique_name_in_owner = true
+
+[node name="VictoryPanel" type="PanelContainer" parent="BattleContainer"]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -100.0
+offset_right = 250.0
+offset_bottom = 100.0
+theme_override_styles/panel = SubResource("panel_style")
+
+[node name="VictoryLabel" type="Label" parent="BattleContainer/VictoryPanel"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("theme")
+text = "Enemies defeated!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MessagePanel" type="PanelContainer" parent="BattleContainer"]
+unique_name_in_owner = true
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -160.0
+offset_right = 150.0
+offset_bottom = -110.0
+theme_override_styles/panel = SubResource("panel_style")
+
+[node name="MessageLabel" type="Label" parent="BattleContainer/MessagePanel"]
+unique_name_in_owner = true
+theme = ExtResource("theme")
+text = "Message"
+horizontal_alignment = 1
+
+[node name="GameOverOverlay" type="ColorRect" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0)
+
+[node name="GameOverLabel" type="Label" parent="GameOverOverlay"]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -40.0
+offset_right = 200.0
+offset_bottom = 40.0
+theme = ExtResource("theme")
+text = "Game Over"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_type_variation = "TitleLabel"

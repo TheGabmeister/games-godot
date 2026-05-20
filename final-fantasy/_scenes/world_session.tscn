@@ -1,13 +1,15 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/world_session.gd" id="1"]
 [ext_resource type="PackedScene" path="res://_scenes/warrior.tscn" id="warrior_scene"]
 [ext_resource type="PackedScene" path="res://_scenes/dialogue_box.tscn" id="dialogue_box_scene"]
 [ext_resource type="PackedScene" path="res://_scenes/party_menu.tscn" id="party_menu_scene"]
+[ext_resource type="PackedScene" path="res://_scenes/battle_scene.tscn" id="battle_scene"]
 
 [node name="WorldSession" type="Node"]
 script = ExtResource("1")
 warrior_scene = ExtResource("warrior_scene")
 dialogue_box_scene = ExtResource("dialogue_box_scene")
 party_menu_scene = ExtResource("party_menu_scene")
+battle_scene_packed = ExtResource("battle_scene")
 initial_level_path = "res://_scenes/cornelia_town.tscn"
