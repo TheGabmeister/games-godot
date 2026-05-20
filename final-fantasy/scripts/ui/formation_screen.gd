@@ -4,13 +4,12 @@ const CURSOR_MOVE := preload("res://ui/cursor_move.ogg")
 const CONFIRM_SFX := preload("res://ui/confirm.ogg")
 const CANCEL_SFX := preload("res://ui/cancel.ogg")
 
+var party_data: PartyData
+
 var _active := false
 var _cursor_index := 0
 var _selected_index := -1
 var _formation_labels: Array[Label] = []
-
-func _get_party_data() -> PartyData:
-	return get_tree().get_first_node_in_group(Groups.PARTY_DATA) as PartyData
 
 func open() -> void:
 	_active = true
@@ -24,14 +23,13 @@ func _input(event: InputEvent) -> void:
 	if not GameState.is_state(GameState.State.MENU):
 		return
 
-	var pd: PartyData = _get_party_data()
 	if event.is_action_pressed("move_up"):
-		_cursor_index = (_cursor_index - 1 + pd.party.size()) % pd.party.size()
+		_cursor_index = (_cursor_index - 1 + party_data.party.size()) % party_data.party.size()
 		_update_cursor()
 		SfxManager.play(CURSOR_MOVE)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
-		_cursor_index = (_cursor_index + 1) % pd.party.size()
+		_cursor_index = (_cursor_index + 1) % party_data.party.size()
 		_update_cursor()
 		SfxManager.play(CURSOR_MOVE)
 		get_viewport().set_input_as_handled()
@@ -41,9 +39,9 @@ func _input(event: InputEvent) -> void:
 			SfxManager.play(CONFIRM_SFX)
 			_update_cursor()
 		else:
-			var temp: PartyData.CharacterData = pd.party[_selected_index]
-			pd.party[_selected_index] = pd.party[_cursor_index]
-			pd.party[_cursor_index] = temp
+			var temp: PartyData.CharacterData = party_data.party[_selected_index]
+			party_data.party[_selected_index] = party_data.party[_cursor_index]
+			party_data.party[_cursor_index] = temp
 			_selected_index = -1
 			SfxManager.play(CONFIRM_SFX)
 			_show_formation()
@@ -64,10 +62,9 @@ func _show_formation() -> void:
 	for child: Node in panel.get_children():
 		child.queue_free()
 
-	var pd: PartyData = _get_party_data()
 	_formation_labels.clear()
-	for i: int in pd.party.size():
-		var character: PartyData.CharacterData = pd.party[i]
+	for i: int in party_data.party.size():
+		var character: PartyData.CharacterData = party_data.party[i]
 		var label := Label.new()
 		label.text = "  %d. %s" % [i + 1, character.char_name]
 		label.add_theme_font_size_override(&"font_size", 22)
@@ -78,9 +75,8 @@ func _show_formation() -> void:
 	_update_cursor()
 
 func _update_cursor() -> void:
-	var pd: PartyData = _get_party_data()
 	for i: int in _formation_labels.size():
-		var character: PartyData.CharacterData = pd.party[i]
+		var character: PartyData.CharacterData = party_data.party[i]
 		var prefix: String
 		if i == _cursor_index:
 			prefix = "> "

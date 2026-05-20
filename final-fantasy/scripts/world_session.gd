@@ -16,9 +16,8 @@ var _has_pending_spawn := false
 func _ready() -> void:
 	add_to_group(Groups.WORLD_SESSION)
 
-	var party_data: Node = preload("res://scripts/autoloads/party_data.gd").new()
+	var party_data := PartyData.new()
 	party_data.name = "PartyData"
-	party_data.add_to_group(Groups.PARTY_DATA)
 	add_child(party_data)
 
 	_warrior = warrior_scene.instantiate()
@@ -31,6 +30,7 @@ func _ready() -> void:
 	add_child(dialogue_box)
 
 	var main_menu: MainMenu = main_menu_scene.instantiate()
+	main_menu.party_data = party_data
 	add_child(main_menu)
 
 	_load_level(initial_level_path)

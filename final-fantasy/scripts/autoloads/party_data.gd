@@ -30,7 +30,6 @@ var gil: int = 0
 var play_time: float = 0.0
 
 func _ready() -> void:
-	add_to_group(Groups.PARTY_DATA)
 	party = [
 		_create(Job.WARRIOR,    35, 10, 8, 15,  1,  8),
 		_create(Job.MONK,       33, 12, 5, 10,  1,  5),

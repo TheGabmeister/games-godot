@@ -30,6 +30,8 @@ var _time_label: Label
 var _gil_label: Label
 var _root: PanelContainer
 
+var party_data: PartyData
+
 var _items_screen: Node
 var _status_screen: Node
 var _formation_screen: Node
@@ -126,13 +128,12 @@ func _show_stub(title: String) -> void:
 func _update_cursor() -> void:
 	for i: int in _cursor_labels.size():
 		_cursor_labels[i].text = "> " + MENU_ENTRIES[i] if i == _cursor_index else "  " + MENU_ENTRIES[i]
-	var pd: PartyData = _get_party_data()
-	_time_label.text = "Time  " + pd.get_play_time_string()
-	_gil_label.text = "Gil   " + str(pd.gil)
+	_time_label.text = "Time  " + party_data.get_play_time_string()
+	_gil_label.text = "Gil   " + str(party_data.gil)
 
 func _show_party_overview() -> void:
 	_clear_right_panel()
-	for character: PartyData.CharacterData in _get_party_data().party:
+	for character: PartyData.CharacterData in party_data.party:
 		var row := _create_character_row(character)
 		_right_panel.add_child(row)
 		var sep := HSeparator.new()
@@ -210,9 +211,6 @@ func _create_character_row(character: PartyData.CharacterData) -> HBoxContainer:
 
 	row.add_child(info)
 	return row
-
-func _get_party_data() -> PartyData:
-	return get_tree().get_first_node_in_group(Groups.PARTY_DATA) as PartyData
 
 func _create_separator_style() -> StyleBoxLine:
 	var style := StyleBoxLine.new()
@@ -313,16 +311,19 @@ func _create_items_screen() -> Node:
 	var screen := preload("res://scripts/ui/items_screen.gd").new()
 	screen.name = "ItemsScreen"
 	screen.set_meta(&"menu", self)
+	screen.set(&"party_data", party_data)
 	return screen
 
 func _create_status_screen() -> Node:
 	var screen := preload("res://scripts/ui/status_screen.gd").new()
 	screen.name = "StatusScreen"
 	screen.set_meta(&"menu", self)
+	screen.set(&"party_data", party_data)
 	return screen
 
 func _create_formation_screen() -> Node:
 	var screen := preload("res://scripts/ui/formation_screen.gd").new()
 	screen.name = "FormationScreen"
 	screen.set_meta(&"menu", self)
+	screen.set(&"party_data", party_data)
 	return screen
