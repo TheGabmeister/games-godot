@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/battle/battle_scene.gd" id="1"]
 [ext_resource type="Theme" path="res://ui/menu_theme.tres" id="theme"]
@@ -15,6 +15,7 @@
 [ext_resource type="AudioStream" path="res://music/battle_theme.ogg" id="battle_theme"]
 [ext_resource type="AudioStream" path="res://music/victory_fanfare.ogg" id="victory_fanfare"]
 [ext_resource type="AudioStream" path="res://music/game_over.ogg" id="game_over"]
+[ext_resource type="Script" path="res://scripts/battle/battle_resolver.gd" id="resolver_script"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
 bg_color = Color(0.05, 0.05, 0.3, 0.92)
@@ -54,16 +55,20 @@ script = ExtResource("1")
 cursor_move_sfx = ExtResource("cursor_move")
 confirm_sfx = ExtResource("confirm")
 cancel_sfx = ExtResource("cancel")
-attack_swing_sfx = ExtResource("attack_swing")
-attack_hit_sfx = ExtResource("attack_hit")
-attack_miss_sfx = ExtResource("attack_miss")
-critical_hit_sfx = ExtResource("critical_hit")
-enemy_death_sfx = ExtResource("enemy_death")
 level_up_sfx = ExtResource("level_up")
 battle_start_sfx = ExtResource("battle_start")
 battle_theme = ExtResource("battle_theme")
 victory_fanfare = ExtResource("victory_fanfare")
 game_over_theme = ExtResource("game_over")
+
+[node name="Resolver" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("resolver_script")
+attack_swing_sfx = ExtResource("attack_swing")
+attack_hit_sfx = ExtResource("attack_hit")
+attack_miss_sfx = ExtResource("attack_miss")
+critical_hit_sfx = ExtResource("critical_hit")
+enemy_death_sfx = ExtResource("enemy_death")
 
 [node name="TransitionRect" type="ColorRect" parent="."]
 unique_name_in_owner = true

@@ -8,7 +8,6 @@ enum BattlePhase {
 	TARGETING,
 	ITEM_SELECT,
 	ITEM_TARGET,
-	RESOLVING,
 	ANIMATING,
 	VICTORY,
 	GAME_OVER,
@@ -48,15 +47,16 @@ var _command_cursor := 0
 var _item_cursor := 0
 var _item_target_cursor := 0
 var _battle_items: Array[ItemData] = []
+var _item_buttons: Array[GameButton] = []
+var _item_target_buttons: Array[GameButton] = []
 
 var _total_exp := 0
 var _total_gil := 0
 var _victory_state := 0
-var _victory_exp_each := 0
 var _victory_level_ups: Array[Dictionary] = []
 var _victory_level_index := 0
 
-var _resolver: BattleResolver
+@onready var _resolver: BattleResolver = %Resolver
 
 @onready var _transition_rect: ColorRect = %TransitionRect
 @onready var _battle_container: Control = %BattleContainer
@@ -104,11 +104,6 @@ var _resolver: BattleResolver
 @export var cursor_move_sfx: AudioStream
 @export var confirm_sfx: AudioStream
 @export var cancel_sfx: AudioStream
-@export var attack_swing_sfx: AudioStream
-@export var attack_hit_sfx: AudioStream
-@export var attack_miss_sfx: AudioStream
-@export var critical_hit_sfx: AudioStream
-@export var enemy_death_sfx: AudioStream
 @export var level_up_sfx: AudioStream
 @export var battle_start_sfx: AudioStream
 @export var run_fail_sfx: AudioStream
@@ -118,19 +113,11 @@ var _resolver: BattleResolver
 
 func _ready() -> void:
 	add_to_group(Groups.BATTLE_SCENE)
-	_resolver = BattleResolver.new()
-	add_child(_resolver)
 	var _c1 := _resolver.round_completed.connect(_begin_command_phase)
 	var _c2 := _resolver.battle_won.connect(_start_victory)
 	var _c3 := _resolver.battle_lost.connect(_start_game_over)
 	var _c4 := _resolver.hud_update_requested.connect(_update_hud)
 	var _c5 := _resolver.enemy_list_update_requested.connect(_update_enemy_list)
-	_resolver.damage_container = _damage_container
-	_resolver.attack_swing_sfx = attack_swing_sfx
-	_resolver.attack_hit_sfx = attack_hit_sfx
-	_resolver.attack_miss_sfx = attack_miss_sfx
-	_resolver.critical_hit_sfx = critical_hit_sfx
-	_resolver.enemy_death_sfx = enemy_death_sfx
 	_battle_container.visible = false
 	_transition_rect.visible = false
 	_command_panel.visible = false
@@ -308,7 +295,6 @@ func _update_enemy_list() -> void:
 		var label := Label.new()
 		var count: int = counts[enemy_name]
 		label.text = "%s    %d" % [enemy_name, count] if count > 1 else enemy_name
-		label.add_theme_font_size_override("font_size", 18)
 		_enemy_list_container.add_child(label)
 
 # --- COMMAND PHASE ---
@@ -479,31 +465,36 @@ func _enter_item_select() -> void:
 		_battle_phase = BattlePhase.COMMAND_SELECT
 		return
 
-	_rebuild_item_list()
+	_build_item_list()
 	_item_panel.visible = true
 
-func _rebuild_item_list() -> void:
+func _build_item_list() -> void:
 	_clear_children(_item_list_container)
+	_item_buttons.clear()
 	for i: int in _battle_items.size():
 		var item: ItemData = _battle_items[i]
 		var qty: int = party_data.inventory.get(item, 0)
-		var label := Label.new()
-		var prefix := "> " if i == _item_cursor else "  "
-		label.text = "%s%s  x%d" % [prefix, item.item_name, qty]
-		label.add_theme_font_size_override("font_size", 20)
-		_item_list_container.add_child(label)
+		var btn := GameButton.new()
+		btn.button_text = "%s  x%d" % [item.item_name, qty]
+		btn.set_selected(i == _item_cursor)
+		_item_list_container.add_child(btn)
+		_item_buttons.append(btn)
+
+func _update_item_cursor() -> void:
+	for i: int in _item_buttons.size():
+		_item_buttons[i].set_selected(i == _item_cursor)
 
 func _handle_item_select_input(event: InputEvent) -> void:
 	if _battle_items.is_empty():
 		return
 	if event.is_action_pressed("move_up"):
 		_item_cursor = (_item_cursor - 1 + _battle_items.size()) % _battle_items.size()
-		_rebuild_item_list()
+		_update_item_cursor()
 		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
 		_item_cursor = (_item_cursor + 1) % _battle_items.size()
-		_rebuild_item_list()
+		_update_item_cursor()
 		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
@@ -523,28 +514,33 @@ func _enter_item_target() -> void:
 	_battle_phase = BattlePhase.ITEM_TARGET
 	_item_panel.visible = false
 	_item_target_cursor = 0
-	_rebuild_item_target_list()
+	_build_item_target_list()
 	_item_target_panel.visible = true
 
-func _rebuild_item_target_list() -> void:
+func _build_item_target_list() -> void:
 	_clear_children(_item_target_container)
+	_item_target_buttons.clear()
 	for i: int in _party_battlers.size():
 		var b: Battler = _party_battlers[i]
-		var label := Label.new()
-		var prefix := "> " if i == _item_target_cursor else "  "
-		label.text = "%s%s  %d/%d" % [prefix, b.display_name, maxi(0, b.current_hp), b.max_hp]
-		label.add_theme_font_size_override("font_size", 20)
-		_item_target_container.add_child(label)
+		var btn := GameButton.new()
+		btn.button_text = "%s  %d/%d" % [b.display_name, maxi(0, b.current_hp), b.max_hp]
+		btn.set_selected(i == _item_target_cursor)
+		_item_target_container.add_child(btn)
+		_item_target_buttons.append(btn)
+
+func _update_item_target_cursor() -> void:
+	for i: int in _item_target_buttons.size():
+		_item_target_buttons[i].set_selected(i == _item_target_cursor)
 
 func _handle_item_target_input(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
 		_item_target_cursor = (_item_target_cursor - 1 + _party_battlers.size()) % _party_battlers.size()
-		_rebuild_item_target_list()
+		_update_item_target_cursor()
 		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
 		_item_target_cursor = (_item_target_cursor + 1) % _party_battlers.size()
-		_rebuild_item_target_list()
+		_update_item_target_cursor()
 		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
@@ -627,7 +623,6 @@ func _start_victory() -> void:
 	party_data.gil += _total_gil
 
 	_victory_state = 0
-	_victory_exp_each = exp_each
 	_victory_level_ups.clear()
 
 	for b: Battler in _party_battlers:

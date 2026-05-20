@@ -14,13 +14,14 @@ signal enemy_list_update_requested
 var party_battlers: Array[Battler] = []
 var enemy_battlers: Array[Battler] = []
 var party_data: PartyData
-var damage_container: Node2D
 
-var attack_swing_sfx: AudioStream
-var attack_hit_sfx: AudioStream
-var attack_miss_sfx: AudioStream
-var critical_hit_sfx: AudioStream
-var enemy_death_sfx: AudioStream
+@onready var damage_container: Node2D = %DamageContainer
+
+@export var attack_swing_sfx: AudioStream
+@export var attack_hit_sfx: AudioStream
+@export var attack_miss_sfx: AudioStream
+@export var critical_hit_sfx: AudioStream
+@export var enemy_death_sfx: AudioStream
 
 func resolve_round(commands: Array[BattleCommand]) -> void:
 	for i: int in enemy_battlers.size():
