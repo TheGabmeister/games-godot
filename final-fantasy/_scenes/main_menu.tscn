@@ -55,6 +55,7 @@ confirm_sfx = ExtResource("confirm")
 cancel_sfx = ExtResource("cancel")
 
 [node name="Panel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -85,26 +86,32 @@ layout_mode = 2
 theme_override_constants/separation = 4
 
 [node name="Items" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  Items"
 
 [node name="Magic" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  Magic"
 
 [node name="Equipment" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  Equipment"
 
 [node name="Status" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  Status"
 
 [node name="Formation" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  Formation"
 
 [node name="Config" type="Label" parent="Panel/HBox/LeftPanel/VBox/MenuEntries"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  Config"
 
@@ -113,11 +120,13 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="TimeLabel" type="Label" parent="Panel/HBox/LeftPanel/VBox"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "Time  00:00"
 
 [node name="GilLabel" type="Label" parent="Panel/HBox/LeftPanel/VBox"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "Gil   0"
@@ -131,6 +140,7 @@ theme_override_styles/panel = SubResource("right_style")
 layout_mode = 2
 
 [node name="PartyOverview" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -140,11 +150,13 @@ grow_vertical = 2
 theme_override_constants/separation = 2
 
 [node name="CharRow0" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 100)
 theme_override_constants/separation = 16
 
-[node name="Portrait" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0"]
+[node name="Portrait0" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(64, 96)
 stretch_mode = 5
@@ -156,7 +168,8 @@ size_flags_horizontal = 3
 [node name="NameHP" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info"]
 layout_mode = 2
 
-[node name="Name" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/NameHP"]
+[node name="CharName0" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/NameHP"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(180, 0)
 text = "---"
@@ -166,12 +179,14 @@ layout_mode = 2
 theme_type_variation = &"AccentLabel"
 text = "HP"
 
-[node name="HPValue" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/NameHP"]
+[node name="CharHP0" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/NameHP"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "  --- / ---"
 
-[node name="MPLine" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info"]
+[node name="CharMP0" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "MP  0 /  0 /  0 /  0"
@@ -179,7 +194,8 @@ text = "MP  0 /  0 /  0 /  0"
 [node name="LvLine" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info"]
 layout_mode = 2
 
-[node name="LvLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/LvLine"]
+[node name="CharLv0" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/LvLine"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "Lv. 1"
@@ -188,7 +204,8 @@ text = "Lv. 1"
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="NextLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/LvLine"]
+[node name="CharNext0" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/LvLine"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "Next Level in   0"
@@ -197,11 +214,13 @@ text = "Next Level in   0"
 layout_mode = 2
 
 [node name="CharRow1" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 100)
 theme_override_constants/separation = 16
 
-[node name="Portrait" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1"]
+[node name="Portrait1" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(64, 96)
 stretch_mode = 5
@@ -213,7 +232,8 @@ size_flags_horizontal = 3
 [node name="NameHP" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info"]
 layout_mode = 2
 
-[node name="Name" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/NameHP"]
+[node name="CharName1" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/NameHP"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(180, 0)
 text = "---"
@@ -223,12 +243,14 @@ layout_mode = 2
 theme_type_variation = &"AccentLabel"
 text = "HP"
 
-[node name="HPValue" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/NameHP"]
+[node name="CharHP1" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/NameHP"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "  --- / ---"
 
-[node name="MPLine" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info"]
+[node name="CharMP1" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "MP  0 /  0 /  0 /  0"
@@ -236,7 +258,8 @@ text = "MP  0 /  0 /  0 /  0"
 [node name="LvLine" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info"]
 layout_mode = 2
 
-[node name="LvLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/LvLine"]
+[node name="CharLv1" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/LvLine"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "Lv. 1"
@@ -245,7 +268,8 @@ text = "Lv. 1"
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="NextLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/LvLine"]
+[node name="CharNext1" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/LvLine"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "Next Level in   0"
@@ -254,11 +278,13 @@ text = "Next Level in   0"
 layout_mode = 2
 
 [node name="CharRow2" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 100)
 theme_override_constants/separation = 16
 
-[node name="Portrait" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2"]
+[node name="Portrait2" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(64, 96)
 stretch_mode = 5
@@ -270,7 +296,8 @@ size_flags_horizontal = 3
 [node name="NameHP" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info"]
 layout_mode = 2
 
-[node name="Name" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/NameHP"]
+[node name="CharName2" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/NameHP"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(180, 0)
 text = "---"
@@ -280,12 +307,14 @@ layout_mode = 2
 theme_type_variation = &"AccentLabel"
 text = "HP"
 
-[node name="HPValue" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/NameHP"]
+[node name="CharHP2" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/NameHP"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "  --- / ---"
 
-[node name="MPLine" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info"]
+[node name="CharMP2" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "MP  0 /  0 /  0 /  0"
@@ -293,7 +322,8 @@ text = "MP  0 /  0 /  0 /  0"
 [node name="LvLine" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info"]
 layout_mode = 2
 
-[node name="LvLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/LvLine"]
+[node name="CharLv2" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/LvLine"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "Lv. 1"
@@ -302,7 +332,8 @@ text = "Lv. 1"
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="NextLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/LvLine"]
+[node name="CharNext2" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/LvLine"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "Next Level in   0"
@@ -311,11 +342,13 @@ text = "Next Level in   0"
 layout_mode = 2
 
 [node name="CharRow3" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 100)
 theme_override_constants/separation = 16
 
-[node name="Portrait" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3"]
+[node name="Portrait3" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(64, 96)
 stretch_mode = 5
@@ -327,7 +360,8 @@ size_flags_horizontal = 3
 [node name="NameHP" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info"]
 layout_mode = 2
 
-[node name="Name" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/NameHP"]
+[node name="CharName3" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/NameHP"]
+unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(180, 0)
 text = "---"
@@ -337,12 +371,14 @@ layout_mode = 2
 theme_type_variation = &"AccentLabel"
 text = "HP"
 
-[node name="HPValue" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/NameHP"]
+[node name="CharHP3" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/NameHP"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "  --- / ---"
 
-[node name="MPLine" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info"]
+[node name="CharMP3" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "MP  0 /  0 /  0 /  0"
@@ -350,7 +386,8 @@ text = "MP  0 /  0 /  0 /  0"
 [node name="LvLine" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info"]
 layout_mode = 2
 
-[node name="LvLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/LvLine"]
+[node name="CharLv3" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/LvLine"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "Lv. 1"
@@ -359,12 +396,14 @@ text = "Lv. 1"
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="NextLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/LvLine"]
+[node name="CharNext3" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/LvLine"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "Next Level in   0"
 
 [node name="ItemsList" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -375,6 +414,7 @@ grow_vertical = 2
 theme_override_constants/separation = 4
 
 [node name="TargetSelect" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -385,22 +425,27 @@ grow_vertical = 2
 theme_override_constants/separation = 4
 
 [node name="Target0" type="Label" parent="Panel/HBox/RightPanel/Screens/TargetSelect"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  ---"
 
 [node name="Target1" type="Label" parent="Panel/HBox/RightPanel/Screens/TargetSelect"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  ---"
 
 [node name="Target2" type="Label" parent="Panel/HBox/RightPanel/Screens/TargetSelect"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  ---"
 
 [node name="Target3" type="Label" parent="Panel/HBox/RightPanel/Screens/TargetSelect"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  ---"
 
 [node name="StatusSelect" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -411,22 +456,27 @@ grow_vertical = 2
 theme_override_constants/separation = 4
 
 [node name="StatusChar0" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusSelect"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  ---"
 
 [node name="StatusChar1" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusSelect"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  ---"
 
 [node name="StatusChar2" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusSelect"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  ---"
 
 [node name="StatusChar3" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusSelect"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  ---"
 
 [node name="StatusDetail" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -436,6 +486,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="DetailName" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusDetail"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
 text = "---"
@@ -450,6 +501,7 @@ theme_type_variation = &"HintLabel"
 text = "Level"
 
 [node name="LevelValue" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusDetail/DetailLevelLine"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "1"
 
@@ -462,7 +514,8 @@ custom_minimum_size = Vector2(100, 0)
 theme_type_variation = &"HintLabel"
 text = "HP"
 
-[node name="HPValue" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusDetail/DetailHPLine"]
+[node name="DetailHPValue" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusDetail/DetailHPLine"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "--- / ---"
 
@@ -482,6 +535,7 @@ theme_type_variation = &"HintLabel"
 text = "STR"
 
 [node name="STRValue" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusDetail/StatGrid"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "  0"
@@ -492,6 +546,7 @@ theme_type_variation = &"HintLabel"
 text = "AGI"
 
 [node name="AGIValue" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusDetail/StatGrid"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "  0"
@@ -502,6 +557,7 @@ theme_type_variation = &"HintLabel"
 text = "VIT"
 
 [node name="VITValue" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusDetail/StatGrid"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "  0"
@@ -512,6 +568,7 @@ theme_type_variation = &"HintLabel"
 text = "INT"
 
 [node name="INTValue" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusDetail/StatGrid"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "  0"
@@ -522,11 +579,13 @@ theme_type_variation = &"HintLabel"
 text = "LCK"
 
 [node name="LCKValue" type="Label" parent="Panel/HBox/RightPanel/Screens/StatusDetail/StatGrid"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ValueLabel"
 text = "  0"
 
 [node name="FormationList" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -537,22 +596,27 @@ grow_vertical = 2
 theme_override_constants/separation = 4
 
 [node name="Formation0" type="Label" parent="Panel/HBox/RightPanel/Screens/FormationList"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  1. ---"
 
 [node name="Formation1" type="Label" parent="Panel/HBox/RightPanel/Screens/FormationList"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  2. ---"
 
 [node name="Formation2" type="Label" parent="Panel/HBox/RightPanel/Screens/FormationList"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  3. ---"
 
 [node name="Formation3" type="Label" parent="Panel/HBox/RightPanel/Screens/FormationList"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "  4. ---"
 
 [node name="StubPanel" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -562,6 +626,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="StubLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/StubPanel"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"MutedLabel"
 text = "Not yet available"

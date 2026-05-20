@@ -29,56 +29,42 @@ var _item_labels: Array[Label] = []
 var _item_target_index := 0
 var _formation_selected_index := -1
 
-@onready var _root: PanelContainer = $Panel
-@onready var _time_label: Label = $Panel/HBox/LeftPanel/VBox/TimeLabel
-@onready var _gil_label: Label = $Panel/HBox/LeftPanel/VBox/GilLabel
+@onready var _root: PanelContainer = %Panel
+@onready var _time_label: Label = %TimeLabel
+@onready var _gil_label: Label = %GilLabel
 
-@onready var _cursor_labels: Array[Label] = [
-	$Panel/HBox/LeftPanel/VBox/MenuEntries/Items,
-	$Panel/HBox/LeftPanel/VBox/MenuEntries/Magic,
-	$Panel/HBox/LeftPanel/VBox/MenuEntries/Equipment,
-	$Panel/HBox/LeftPanel/VBox/MenuEntries/Status,
-	$Panel/HBox/LeftPanel/VBox/MenuEntries/Formation,
-	$Panel/HBox/LeftPanel/VBox/MenuEntries/Config,
-]
+@onready var _cursor_labels: Array[Label] = [%Items, %Magic, %Equipment, %Status, %Formation, %Config]
 
-@onready var _party_overview: VBoxContainer = $Panel/HBox/RightPanel/Screens/PartyOverview
-@onready var _items_list: VBoxContainer = $Panel/HBox/RightPanel/Screens/ItemsList
-@onready var _target_select: VBoxContainer = $Panel/HBox/RightPanel/Screens/TargetSelect
-@onready var _status_select: VBoxContainer = $Panel/HBox/RightPanel/Screens/StatusSelect
-@onready var _status_detail: VBoxContainer = $Panel/HBox/RightPanel/Screens/StatusDetail
-@onready var _formation_list: VBoxContainer = $Panel/HBox/RightPanel/Screens/FormationList
-@onready var _stub_panel: VBoxContainer = $Panel/HBox/RightPanel/Screens/StubPanel
+@onready var _party_overview: VBoxContainer = %PartyOverview
+@onready var _items_list: VBoxContainer = %ItemsList
+@onready var _target_select: VBoxContainer = %TargetSelect
+@onready var _status_select: VBoxContainer = %StatusSelect
+@onready var _status_detail: VBoxContainer = %StatusDetail
+@onready var _formation_list: VBoxContainer = %FormationList
+@onready var _stub_panel: VBoxContainer = %StubPanel
 
-@onready var _char_rows: Array[HBoxContainer] = [
-	$Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0,
-	$Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1,
-	$Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2,
-	$Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3,
-]
+@onready var _char_rows: Array[HBoxContainer] = [%CharRow0, %CharRow1, %CharRow2, %CharRow3]
+@onready var _char_portraits: Array[TextureRect] = [%Portrait0, %Portrait1, %Portrait2, %Portrait3]
+@onready var _char_names: Array[Label] = [%CharName0, %CharName1, %CharName2, %CharName3]
+@onready var _char_hp_values: Array[Label] = [%CharHP0, %CharHP1, %CharHP2, %CharHP3]
+@onready var _char_mp_lines: Array[Label] = [%CharMP0, %CharMP1, %CharMP2, %CharMP3]
+@onready var _char_lv_labels: Array[Label] = [%CharLv0, %CharLv1, %CharLv2, %CharLv3]
+@onready var _char_next_labels: Array[Label] = [%CharNext0, %CharNext1, %CharNext2, %CharNext3]
 
-@onready var _target_labels: Array[Label] = [
-	$Panel/HBox/RightPanel/Screens/TargetSelect/Target0,
-	$Panel/HBox/RightPanel/Screens/TargetSelect/Target1,
-	$Panel/HBox/RightPanel/Screens/TargetSelect/Target2,
-	$Panel/HBox/RightPanel/Screens/TargetSelect/Target3,
-]
+@onready var _target_labels: Array[Label] = [%Target0, %Target1, %Target2, %Target3]
+@onready var _status_labels: Array[Label] = [%StatusChar0, %StatusChar1, %StatusChar2, %StatusChar3]
 
-@onready var _status_labels: Array[Label] = [
-	$Panel/HBox/RightPanel/Screens/StatusSelect/StatusChar0,
-	$Panel/HBox/RightPanel/Screens/StatusSelect/StatusChar1,
-	$Panel/HBox/RightPanel/Screens/StatusSelect/StatusChar2,
-	$Panel/HBox/RightPanel/Screens/StatusSelect/StatusChar3,
-]
+@onready var _detail_name: Label = %DetailName
+@onready var _detail_level_value: Label = %LevelValue
+@onready var _detail_hp_value: Label = %DetailHPValue
+@onready var _stat_str: Label = %STRValue
+@onready var _stat_agi: Label = %AGIValue
+@onready var _stat_vit: Label = %VITValue
+@onready var _stat_int: Label = %INTValue
+@onready var _stat_lck: Label = %LCKValue
 
-@onready var _formation_labels: Array[Label] = [
-	$Panel/HBox/RightPanel/Screens/FormationList/Formation0,
-	$Panel/HBox/RightPanel/Screens/FormationList/Formation1,
-	$Panel/HBox/RightPanel/Screens/FormationList/Formation2,
-	$Panel/HBox/RightPanel/Screens/FormationList/Formation3,
-]
-
-@onready var _stub_label: Label = $Panel/HBox/RightPanel/Screens/StubPanel/StubLabel
+@onready var _formation_labels: Array[Label] = [%Formation0, %Formation1, %Formation2, %Formation3]
+@onready var _stub_label: Label = %StubLabel
 
 @onready var _screen_panels: Array[Control] = [
 	_party_overview, _items_list, _target_select, _status_select,
@@ -109,8 +95,6 @@ func _close_menu() -> void:
 	_active = false
 	_root.visible = false
 	closed.emit()
-
-# --- Input dispatch ---
 
 func _input(event: InputEvent) -> void:
 	if not _active:
@@ -199,20 +183,18 @@ func _show_party_overview() -> void:
 	_switch_panel(_party_overview)
 	for i: int in party_data.party.size():
 		var character: PartyData.CharacterData = party_data.party[i]
-		var row: HBoxContainer = _char_rows[i]
-		row.visible = true
+		_char_rows[i].visible = true
 
-		var portrait := row.get_node(^"Portrait") as TextureRect
 		var atlas := AtlasTexture.new()
 		atlas.atlas = SPRITE_SHEETS[character.job]
 		atlas.region = Rect2(0, 0, 64, 96)
-		portrait.texture = atlas
+		_char_portraits[i].texture = atlas
 
-		(row.get_node(^"Info/NameHP/Name") as Label).text = character.char_name
-		(row.get_node(^"Info/NameHP/HPValue") as Label).text = "  %3d / %3d" % [character.current_hp, character.max_hp]
-		(row.get_node(^"Info/MPLine") as Label).text = "MP  0 /  0 /  0 /  0"
-		(row.get_node(^"Info/LvLine/LvLabel") as Label).text = "Lv. %d" % character.level
-		(row.get_node(^"Info/LvLine/NextLabel") as Label).text = "Next Level in   0"
+		_char_names[i].text = character.char_name
+		_char_hp_values[i].text = "  %3d / %3d" % [character.current_hp, character.max_hp]
+		_char_mp_lines[i].text = "MP  0 /  0 /  0 /  0"
+		_char_lv_labels[i].text = "Lv. %d" % character.level
+		_char_next_labels[i].text = "Next Level in   0"
 
 	for i: int in range(party_data.party.size(), 4):
 		_char_rows[i].visible = false
@@ -372,15 +354,14 @@ func _input_status_detail(event: InputEvent) -> void:
 
 func _show_status_detail(character: PartyData.CharacterData) -> void:
 	_switch_panel(_status_detail)
-	(_status_detail.get_node(^"DetailName") as Label).text = character.char_name
-	(_status_detail.get_node(^"DetailLevelLine/LevelValue") as Label).text = str(character.level)
-	(_status_detail.get_node(^"DetailHPLine/HPValue") as Label).text = "%d / %d" % [character.current_hp, character.max_hp]
-	var grid := _status_detail.get_node(^"StatGrid") as GridContainer
-	(grid.get_node(^"STRValue") as Label).text = "%3d" % character.strength
-	(grid.get_node(^"AGIValue") as Label).text = "%3d" % character.agility
-	(grid.get_node(^"VITValue") as Label).text = "%3d" % character.vitality
-	(grid.get_node(^"INTValue") as Label).text = "%3d" % character.intelligence
-	(grid.get_node(^"LCKValue") as Label).text = "%3d" % character.luck
+	_detail_name.text = character.char_name
+	_detail_level_value.text = str(character.level)
+	_detail_hp_value.text = "%d / %d" % [character.current_hp, character.max_hp]
+	_stat_str.text = "%3d" % character.strength
+	_stat_agi.text = "%3d" % character.agility
+	_stat_vit.text = "%3d" % character.vitality
+	_stat_int.text = "%3d" % character.intelligence
+	_stat_lck.text = "%3d" % character.luck
 
 # --- Formation screen ---
 
