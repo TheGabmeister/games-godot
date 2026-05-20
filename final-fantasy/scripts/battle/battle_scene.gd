@@ -87,6 +87,10 @@ var _battle_items: Array[ItemData] = []
 
 var _total_exp := 0
 var _total_gil := 0
+var _victory_state := 0
+var _victory_exp_each := 0
+var _victory_level_ups: Array[Dictionary] = []
+var _victory_level_index := 0
 
 @onready var _transition_rect: ColorRect = %TransitionRect
 @onready var _battle_container: Control = %BattleContainer
@@ -196,8 +200,7 @@ func _play_intro_transition() -> void:
 	_transition_rect.visible = true
 	_transition_rect.color = Color(1, 1, 1, 0)
 
-	if battle_start_sfx:
-		SfxManager.play(battle_start_sfx, -12.0)
+	_play_sfx(battle_start_sfx, -12.0)
 
 	var tw := create_tween()
 	var _t1 := tw.tween_property(_transition_rect, "color", Color(1, 1, 1, 1), 0.1)
@@ -273,8 +276,7 @@ func _assign_enemy_positions() -> void:
 		b.home_position = Vector2(250.0 + x_offset, start_y + i * spacing)
 
 func _spawn_sprites() -> void:
-	for child: Node in _battler_container.get_children():
-		child.queue_free()
+	_clear_children(_battler_container)
 
 	for b: Battler in _party_battlers:
 		var sprite := Sprite2D.new()
@@ -311,8 +313,7 @@ func _update_hud() -> void:
 		_char_hps[i].text = "%d/ %d" % [maxi(0, b.current_hp), b.max_hp]
 
 func _update_enemy_list() -> void:
-	for child: Node in _enemy_list_container.get_children():
-		child.queue_free()
+	_clear_children(_enemy_list_container)
 	var counts: Dictionary = {}
 	for b: Battler in _enemy_battlers:
 		if b.is_dead():
@@ -380,16 +381,14 @@ func _handle_command_input(event: InputEvent) -> void:
 		if _command_cursor == 1:
 			_command_cursor = 0
 		_update_command_cursor()
-		if cursor_move_sfx:
-			SfxManager.play(cursor_move_sfx)
+		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
 		_command_cursor = (_command_cursor + 1) % 4
 		if _command_cursor == 1:
 			_command_cursor = 2
 		_update_command_cursor()
-		if cursor_move_sfx:
-			SfxManager.play(cursor_move_sfx)
+		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
 		_select_command()
@@ -401,25 +400,21 @@ func _handle_command_input(event: InputEvent) -> void:
 				_command_index -= 1
 			var _ok := _commands.resize(_command_index)
 			_show_command_menu()
-			if cancel_sfx:
-				SfxManager.play(cancel_sfx)
+			_play_sfx(cancel_sfx)
 		get_viewport().set_input_as_handled()
 
 func _select_command() -> void:
 	match _command_cursor:
 		0: # Attack
-			if confirm_sfx:
-				SfxManager.play(confirm_sfx)
+			_play_sfx(confirm_sfx)
 			_enter_targeting()
 		1: # Magic - disabled
 			pass
 		2: # Item
-			if confirm_sfx:
-				SfxManager.play(confirm_sfx)
+			_play_sfx(confirm_sfx)
 			_enter_item_select()
 		3: # Run
-			if confirm_sfx:
-				SfxManager.play(confirm_sfx)
+			_play_sfx(confirm_sfx)
 			_attempt_run()
 
 # --- TARGETING ---
@@ -448,7 +443,7 @@ func _update_target_cursor() -> void:
 		_target_arrow.visible = false
 
 func _handle_targeting_input(event: InputEvent) -> void:
-	var alive_enemies := _get_alive_enemy_indices()
+	var alive_enemies := _get_alive_indices(_enemy_battlers)
 	if alive_enemies.is_empty():
 		return
 
@@ -457,16 +452,14 @@ func _handle_targeting_input(event: InputEvent) -> void:
 		cur_pos = (cur_pos - 1 + alive_enemies.size()) % alive_enemies.size()
 		_target_cursor = alive_enemies[cur_pos]
 		_update_target_cursor()
-		if cursor_move_sfx:
-			SfxManager.play(cursor_move_sfx)
+		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
 		var cur_pos := alive_enemies.find(_target_cursor)
 		cur_pos = (cur_pos + 1) % alive_enemies.size()
 		_target_cursor = alive_enemies[cur_pos]
 		_update_target_cursor()
-		if cursor_move_sfx:
-			SfxManager.play(cursor_move_sfx)
+		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
 		var cmd := BattleCommand.new()
@@ -476,16 +469,14 @@ func _handle_targeting_input(event: InputEvent) -> void:
 		_commands.append(cmd)
 		_target_arrow.visible = false
 		_command_index += 1
-		if confirm_sfx:
-			SfxManager.play(confirm_sfx)
+		_play_sfx(confirm_sfx)
 		_show_command_menu()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("cancel"):
 		_target_arrow.visible = false
 		_command_panel.visible = true
 		_battle_phase = BattlePhase.COMMAND_SELECT
-		if cancel_sfx:
-			SfxManager.play(cancel_sfx)
+		_play_sfx(cancel_sfx)
 		get_viewport().set_input_as_handled()
 
 # --- ITEM SELECT ---
@@ -510,8 +501,7 @@ func _enter_item_select() -> void:
 	_item_panel.visible = true
 
 func _rebuild_item_list() -> void:
-	for child: Node in _item_list_container.get_children():
-		child.queue_free()
+	_clear_children(_item_list_container)
 	for i: int in _battle_items.size():
 		var item: ItemData = _battle_items[i]
 		var qty: int = party_data.inventory.get(item, 0)
@@ -527,26 +517,22 @@ func _handle_item_select_input(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
 		_item_cursor = (_item_cursor - 1 + _battle_items.size()) % _battle_items.size()
 		_rebuild_item_list()
-		if cursor_move_sfx:
-			SfxManager.play(cursor_move_sfx)
+		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
 		_item_cursor = (_item_cursor + 1) % _battle_items.size()
 		_rebuild_item_list()
-		if cursor_move_sfx:
-			SfxManager.play(cursor_move_sfx)
+		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
-		if confirm_sfx:
-			SfxManager.play(confirm_sfx)
+		_play_sfx(confirm_sfx)
 		_enter_item_target()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("cancel"):
 		_item_panel.visible = false
 		_command_panel.visible = true
 		_battle_phase = BattlePhase.COMMAND_SELECT
-		if cancel_sfx:
-			SfxManager.play(cancel_sfx)
+		_play_sfx(cancel_sfx)
 		get_viewport().set_input_as_handled()
 
 # --- ITEM TARGET ---
@@ -559,8 +545,7 @@ func _enter_item_target() -> void:
 	_item_target_panel.visible = true
 
 func _rebuild_item_target_list() -> void:
-	for child: Node in _item_target_container.get_children():
-		child.queue_free()
+	_clear_children(_item_target_container)
 	for i: int in _party_battlers.size():
 		var b: Battler = _party_battlers[i]
 		var label := Label.new()
@@ -573,14 +558,12 @@ func _handle_item_target_input(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
 		_item_target_cursor = (_item_target_cursor - 1 + _party_battlers.size()) % _party_battlers.size()
 		_rebuild_item_target_list()
-		if cursor_move_sfx:
-			SfxManager.play(cursor_move_sfx)
+		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
 		_item_target_cursor = (_item_target_cursor + 1) % _party_battlers.size()
 		_rebuild_item_target_list()
-		if cursor_move_sfx:
-			SfxManager.play(cursor_move_sfx)
+		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
 		var cmd := BattleCommand.new()
@@ -591,16 +574,14 @@ func _handle_item_target_input(event: InputEvent) -> void:
 		_commands.append(cmd)
 		_item_target_panel.visible = false
 		_command_index += 1
-		if confirm_sfx:
-			SfxManager.play(confirm_sfx)
+		_play_sfx(confirm_sfx)
 		_show_command_menu()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("cancel"):
 		_item_target_panel.visible = false
 		_item_panel.visible = true
 		_battle_phase = BattlePhase.ITEM_SELECT
-		if cancel_sfx:
-			SfxManager.play(cancel_sfx)
+		_play_sfx(cancel_sfx)
 		get_viewport().set_input_as_handled()
 
 # --- RUN ---
@@ -630,8 +611,7 @@ func _attempt_run() -> void:
 		await _show_battle_message_await("Got away safely!")
 		_end_battle_no_rewards()
 	else:
-		if run_fail_sfx:
-			SfxManager.play(run_fail_sfx)
+		_play_sfx(run_fail_sfx)
 		await _show_battle_message_await("Can't escape!")
 		_command_index = _party_battlers.size()
 		_command_panel.visible = false
@@ -649,7 +629,7 @@ func _resolve_round() -> void:
 		cmd.type = CommandType.ATTACK
 		cmd.actor_index = i
 		cmd.is_enemy_command = true
-		var alive_indices := _get_alive_party_indices()
+		var alive_indices := _get_alive_indices(_party_battlers)
 		if alive_indices.is_empty():
 			continue
 		cmd.target_index = BattleFormulas.pick_party_target(alive_indices)
@@ -693,10 +673,10 @@ func _execute_actions(actions: Array[Dictionary]) -> void:
 
 		_update_hud()
 
-		if _check_all_enemies_dead():
+		if _all_dead(_enemy_battlers):
 			_start_victory()
 			return
-		if _check_all_party_dead():
+		if _all_dead(_party_battlers):
 			_start_game_over()
 			return
 
@@ -705,29 +685,25 @@ func _execute_actions(actions: Array[Dictionary]) -> void:
 func _execute_attack(actor: Battler, cmd: BattleCommand, is_enemy: bool) -> void:
 	var target: Battler
 	if is_enemy:
-		# Enemy attacks party
 		var idx := cmd.target_index
 		if idx >= 0 and idx < _party_battlers.size() and _party_battlers[idx].is_dead():
-			idx = _retarget_party(idx)
+			idx = _retarget(_party_battlers, idx)
 		if idx < 0:
 			return
 		target = _party_battlers[idx]
 	else:
-		# Party attacks enemy
 		var idx := cmd.target_index
 		if idx >= 0 and idx < _enemy_battlers.size() and _enemy_battlers[idx].is_dead():
-			idx = _retarget_enemy(idx)
+			idx = _retarget(_enemy_battlers, idx)
 		if idx < 0:
 			return
 		target = _enemy_battlers[idx]
 
-	# Attack animation
 	if is_enemy:
 		await _animate_enemy_attack(actor)
 	else:
 		await _animate_party_attack(actor, target)
 
-	# Multi-hit resolution
 	var _total_damage := 0
 	for hit_i: int in actor.max_hits:
 		var hit := BattleFormulas.hit_check(actor.accuracy, target.evade)
@@ -741,13 +717,12 @@ func _execute_attack(actor: Battler, cmd: BattleCommand, is_enemy: bool) -> void
 			_flash_sprite(target.sprite)
 
 			if is_crit and critical_hit_sfx:
-				SfxManager.play(critical_hit_sfx)
-			elif attack_hit_sfx:
-				SfxManager.play(attack_hit_sfx)
+				_play_sfx(critical_hit_sfx)
+			else:
+				_play_sfx(attack_hit_sfx)
 		else:
 			await _show_miss(target.sprite.position)
-			if attack_miss_sfx:
-				SfxManager.play(attack_miss_sfx)
+			_play_sfx(attack_miss_sfx)
 
 		_update_hud()
 
@@ -772,8 +747,7 @@ func _execute_item(actor: Battler, cmd: BattleCommand) -> void:
 # --- ANIMATIONS ---
 
 func _animate_party_attack(actor: Battler, target: Battler) -> void:
-	if attack_swing_sfx:
-		SfxManager.play(attack_swing_sfx)
+	_play_sfx(attack_swing_sfx)
 	var lunge_pos := Vector2(target.sprite.position.x + 60, actor.sprite.position.y)
 	var tw := create_tween()
 	var _t1 := tw.tween_property(actor.sprite, "position", lunge_pos, 0.15)
@@ -782,8 +756,7 @@ func _animate_party_attack(actor: Battler, target: Battler) -> void:
 	await tw.finished
 
 func _animate_enemy_attack(actor: Battler) -> void:
-	if attack_swing_sfx:
-		SfxManager.play(attack_swing_sfx)
+	_play_sfx(attack_swing_sfx)
 	var tw := create_tween()
 	var _t1 := tw.tween_property(actor.sprite, "modulate", Color(3, 3, 3), 0.0)
 	var _t2 := tw.tween_interval(0.1)
@@ -828,44 +801,13 @@ func _show_miss(pos: Vector2) -> void:
 	await get_tree().create_timer(0.25).timeout
 
 func _kill_enemy(enemy: Battler) -> void:
-	if enemy_death_sfx:
-		SfxManager.play(enemy_death_sfx)
+	_play_sfx(enemy_death_sfx)
 	var tw := create_tween()
 	var _t1 := tw.tween_property(enemy.sprite, "modulate:a", 0.0, 0.3)
 	await tw.finished
 	_update_enemy_list()
 
-# --- RETARGETING ---
-
-func _retarget_enemy(original: int) -> int:
-	for i: int in _enemy_battlers.size():
-		var idx := (original + i) % _enemy_battlers.size()
-		if not _enemy_battlers[idx].is_dead():
-			return idx
-	return -1
-
-func _retarget_party(original: int) -> int:
-	for i: int in _party_battlers.size():
-		var idx := (original + i) % _party_battlers.size()
-		if not _party_battlers[idx].is_dead():
-			return idx
-	return -1
-
-# --- BATTLE END CHECKS ---
-
-func _check_all_enemies_dead() -> bool:
-	for b: Battler in _enemy_battlers:
-		if not b.is_dead():
-			return false
-	return true
-
-func _check_all_party_dead() -> bool:
-	for b: Battler in _party_battlers:
-		if not b.is_dead():
-			return false
-	return true
-
-# --- VICTORY ---
+# --- BATTLE END ---
 
 func _start_victory() -> void:
 	_battle_phase = BattlePhase.VICTORY
@@ -895,11 +837,6 @@ func _start_victory() -> void:
 			var ups := b.character_data.add_exp(exp_each)
 			if not ups.is_empty():
 				_victory_level_ups.append({"name": b.display_name, "ups": ups})
-
-var _victory_state := 0
-var _victory_exp_each := 0
-var _victory_level_ups: Array[Dictionary] = []
-var _victory_level_index := 0
 
 func _handle_victory_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("confirm"):
@@ -931,8 +868,7 @@ func _show_next_level_up() -> void:
 			up.get("vit", 0), up.get("int", 0), up.get("lck", 0),
 		]
 	_victory_label.text = text
-	if level_up_sfx:
-		SfxManager.play(level_up_sfx)
+	_play_sfx(level_up_sfx)
 
 func _end_battle_with_rewards() -> void:
 	_victory_panel.visible = false
@@ -956,10 +892,8 @@ func _play_exit_transition() -> void:
 	await tw.finished
 
 func _cleanup_battle() -> void:
-	for child: Node in _battler_container.get_children():
-		child.queue_free()
-	for child: Node in _damage_container.get_children():
-		child.queue_free()
+	_clear_children(_battler_container)
+	_clear_children(_damage_container)
 	_party_battlers.clear()
 	_enemy_battlers.clear()
 	_commands.clear()
@@ -1013,16 +947,30 @@ func _show_battle_message_await(text: String) -> void:
 
 # --- HELPERS ---
 
-func _get_alive_enemy_indices() -> Array[int]:
+func _play_sfx(stream: AudioStream, volume_db := 0.0) -> void:
+	if stream:
+		SfxManager.play(stream, volume_db)
+
+func _clear_children(node: Node) -> void:
+	for child: Node in node.get_children():
+		child.queue_free()
+
+func _get_alive_indices(battlers: Array[Battler]) -> Array[int]:
 	var result: Array[int] = []
-	for i: int in _enemy_battlers.size():
-		if not _enemy_battlers[i].is_dead():
+	for i: int in battlers.size():
+		if not battlers[i].is_dead():
 			result.append(i)
 	return result
 
-func _get_alive_party_indices() -> Array[int]:
-	var result: Array[int] = []
-	for i: int in _party_battlers.size():
-		if not _party_battlers[i].is_dead():
-			result.append(i)
-	return result
+func _retarget(battlers: Array[Battler], original: int) -> int:
+	for i: int in battlers.size():
+		var idx := (original + i) % battlers.size()
+		if not battlers[idx].is_dead():
+			return idx
+	return -1
+
+func _all_dead(battlers: Array[Battler]) -> bool:
+	for b: Battler in battlers:
+		if not b.is_dead():
+			return false
+	return true
