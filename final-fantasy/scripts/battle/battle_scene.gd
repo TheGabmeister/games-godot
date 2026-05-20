@@ -14,45 +14,9 @@ enum BattlePhase {
 	GAME_OVER,
 }
 
-enum CommandType { ATTACK, ITEM, RUN }
-
-class BattleCommand:
-	var type: CommandType
-	var actor_index: int
-	var target_index: int = -1
-	var item: ItemData
-	var is_enemy_command: bool = false
-
-class Battler:
-	var display_name: String
-	var max_hp: int
-	var current_hp: int
-	var attack_power: int
-	var accuracy: int
-	var defense: int
-	var agility: int
-	var evade: int
-	var crit_rate: int
-	var max_hits: int
-	var is_party: bool
-	var party_index: int = -1
-	var character_data: PartyData.CharacterData
-	var enemy_data: EnemyData
-	var sprite: Sprite2D
-	var home_position: Vector2
-
-	func is_dead() -> bool:
-		return current_hp <= 0
-
-	func take_damage(amount: int) -> void:
-		current_hp = maxi(0, current_hp - amount)
-		if character_data:
-			character_data.current_hp = current_hp
-
-	func heal(amount: int) -> void:
-		current_hp = mini(current_hp + amount, max_hp)
-		if character_data:
-			character_data.current_hp = current_hp
+const Battler = BattleTypes.Battler
+const BattleCommand = BattleTypes.BattleCommand
+const CommandType = BattleTypes.CommandType
 
 const PARTY_POSITIONS: Array[Vector2] = [
 	Vector2(900, 160),
@@ -91,6 +55,8 @@ var _victory_state := 0
 var _victory_exp_each := 0
 var _victory_level_ups: Array[Dictionary] = []
 var _victory_level_index := 0
+
+var _resolver: BattleResolver
 
 @onready var _transition_rect: ColorRect = %TransitionRect
 @onready var _battle_container: Control = %BattleContainer
@@ -152,6 +118,19 @@ var _victory_level_index := 0
 
 func _ready() -> void:
 	add_to_group(Groups.BATTLE_SCENE)
+	_resolver = BattleResolver.new()
+	add_child(_resolver)
+	var _c1 := _resolver.round_completed.connect(_begin_command_phase)
+	var _c2 := _resolver.battle_won.connect(_start_victory)
+	var _c3 := _resolver.battle_lost.connect(_start_game_over)
+	var _c4 := _resolver.hud_update_requested.connect(_update_hud)
+	var _c5 := _resolver.enemy_list_update_requested.connect(_update_enemy_list)
+	_resolver.damage_container = _damage_container
+	_resolver.attack_swing_sfx = attack_swing_sfx
+	_resolver.attack_hit_sfx = attack_hit_sfx
+	_resolver.attack_miss_sfx = attack_miss_sfx
+	_resolver.critical_hit_sfx = critical_hit_sfx
+	_resolver.enemy_death_sfx = enemy_death_sfx
 	_battle_container.visible = false
 	_transition_rect.visible = false
 	_command_panel.visible = false
@@ -166,6 +145,9 @@ func start_battle(formation: EncounterFormation, encounter_table: EncounterTable
 	_encounter_table = encounter_table
 	_can_flee = encounter_table.can_flee if encounter_table else true
 	_setup_battlers(formation)
+	_resolver.party_battlers = _party_battlers
+	_resolver.enemy_battlers = _enemy_battlers
+	_resolver.party_data = party_data
 	_total_exp = 0
 	_total_gil = 0
 	for b: Battler in _enemy_battlers:
@@ -443,7 +425,7 @@ func _update_target_cursor() -> void:
 		_target_arrow.visible = false
 
 func _handle_targeting_input(event: InputEvent) -> void:
-	var alive_enemies := _get_alive_indices(_enemy_battlers)
+	var alive_enemies := _resolver.get_alive_indices(_enemy_battlers)
 	if alive_enemies.is_empty():
 		return
 
@@ -620,192 +602,8 @@ func _attempt_run() -> void:
 # --- TURN RESOLUTION ---
 
 func _resolve_round() -> void:
-	_battle_phase = BattlePhase.RESOLVING
-
-	for i: int in _enemy_battlers.size():
-		if _enemy_battlers[i].is_dead():
-			continue
-		var cmd := BattleCommand.new()
-		cmd.type = CommandType.ATTACK
-		cmd.actor_index = i
-		cmd.is_enemy_command = true
-		var alive_indices := _get_alive_indices(_party_battlers)
-		if alive_indices.is_empty():
-			continue
-		cmd.target_index = BattleFormulas.pick_party_target(alive_indices)
-		_commands.append(cmd)
-
-	var actions: Array[Dictionary] = []
-	for cmd: BattleCommand in _commands:
-		if cmd.target_index == -1 and cmd.type == CommandType.ATTACK:
-			continue
-		var actor_b: Battler
-		if cmd.is_enemy_command:
-			actor_b = _enemy_battlers[cmd.actor_index]
-		else:
-			actor_b = _party_battlers[cmd.actor_index]
-		actions.append({
-			"cmd": cmd,
-			"actor": actor_b,
-			"is_enemy": cmd.is_enemy_command,
-			"agility": actor_b.agility + randf() * 0.5,
-		})
-
-	actions.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["agility"] > b["agility"])
-
 	_battle_phase = BattlePhase.ANIMATING
-	await _execute_actions(actions)
-
-func _execute_actions(actions: Array[Dictionary]) -> void:
-	for action: Dictionary in actions:
-		var cmd: BattleCommand = action["cmd"]
-		var actor: Battler = action["actor"]
-		var is_enemy: bool = action["is_enemy"]
-
-		if actor.is_dead():
-			continue
-
-		match cmd.type:
-			CommandType.ATTACK:
-				await _execute_attack(actor, cmd, is_enemy)
-			CommandType.ITEM:
-				await _execute_item(actor, cmd)
-
-		_update_hud()
-
-		if _all_dead(_enemy_battlers):
-			_start_victory()
-			return
-		if _all_dead(_party_battlers):
-			_start_game_over()
-			return
-
-	_begin_command_phase()
-
-func _execute_attack(actor: Battler, cmd: BattleCommand, is_enemy: bool) -> void:
-	var target: Battler
-	if is_enemy:
-		var idx := cmd.target_index
-		if idx >= 0 and idx < _party_battlers.size() and _party_battlers[idx].is_dead():
-			idx = _retarget(_party_battlers, idx)
-		if idx < 0:
-			return
-		target = _party_battlers[idx]
-	else:
-		var idx := cmd.target_index
-		if idx >= 0 and idx < _enemy_battlers.size() and _enemy_battlers[idx].is_dead():
-			idx = _retarget(_enemy_battlers, idx)
-		if idx < 0:
-			return
-		target = _enemy_battlers[idx]
-
-	if is_enemy:
-		await _animate_enemy_attack(actor)
-	else:
-		await _animate_party_attack(actor, target)
-
-	var _total_damage := 0
-	for hit_i: int in actor.max_hits:
-		var hit := BattleFormulas.hit_check(actor.accuracy, target.evade)
-		if hit:
-			var is_crit := BattleFormulas.crit_check(actor.crit_rate)
-			var dmg := BattleFormulas.physical_damage(actor.attack_power, target.defense, is_crit)
-			_total_damage += dmg
-			target.take_damage(dmg)
-
-			await _show_damage_number(target.sprite.position, dmg, is_crit)
-			_flash_sprite(target.sprite)
-
-			if is_crit and critical_hit_sfx:
-				_play_sfx(critical_hit_sfx)
-			else:
-				_play_sfx(attack_hit_sfx)
-		else:
-			await _show_miss(target.sprite.position)
-			_play_sfx(attack_miss_sfx)
-
-		_update_hud()
-
-		if target.is_dead():
-			if not target.is_party:
-				await _kill_enemy(target)
-			break
-
-		if hit_i < actor.max_hits - 1:
-			await get_tree().create_timer(0.15).timeout
-
-func _execute_item(actor: Battler, cmd: BattleCommand) -> void:
-	if actor.is_dead():
-		return
-	var target: Battler = _party_battlers[cmd.target_index]
-	var item: ItemData = cmd.item
-	if not party_data.use_item(item, target.character_data):
-		return
-	target.current_hp = target.character_data.current_hp
-	await _show_damage_number(target.sprite.position, item.potency, false, true)
-
-# --- ANIMATIONS ---
-
-func _animate_party_attack(actor: Battler, target: Battler) -> void:
-	_play_sfx(attack_swing_sfx)
-	var lunge_pos := Vector2(target.sprite.position.x + 60, actor.sprite.position.y)
-	var tw := create_tween()
-	var _t1 := tw.tween_property(actor.sprite, "position", lunge_pos, 0.15)
-	var _t2 := tw.tween_interval(0.1)
-	var _t3 := tw.tween_property(actor.sprite, "position", actor.home_position, 0.15)
-	await tw.finished
-
-func _animate_enemy_attack(actor: Battler) -> void:
-	_play_sfx(attack_swing_sfx)
-	var tw := create_tween()
-	var _t1 := tw.tween_property(actor.sprite, "modulate", Color(3, 3, 3), 0.0)
-	var _t2 := tw.tween_interval(0.1)
-	var _t3 := tw.tween_property(actor.sprite, "modulate", Color.WHITE, 0.0)
-	await tw.finished
-
-func _flash_sprite(sprite: Sprite2D) -> void:
-	var tw := create_tween()
-	var _t1 := tw.tween_property(sprite, "modulate", Color(3, 3, 3), 0.0)
-	var _t2 := tw.tween_interval(0.05)
-	var _t3 := tw.tween_property(sprite, "modulate", Color.WHITE, 0.0)
-
-func _show_damage_number(pos: Vector2, amount: int, is_crit: bool, is_heal := false) -> void:
-	var label := Label.new()
-	label.text = str(amount)
-	label.position = pos + Vector2(-20, -40)
-	label.add_theme_font_size_override("font_size", 24)
-	if is_heal:
-		label.add_theme_color_override("font_color", Color.GREEN)
-	elif is_crit:
-		label.add_theme_color_override("font_color", Color.YELLOW)
-	_damage_container.add_child(label)
-
-	var tw := create_tween()
-	var _t1 := tw.tween_property(label, "position:y", label.position.y - 40, 0.6)
-	var _t2 := tw.parallel().tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.3)
-	var _t3 := tw.tween_callback(label.queue_free)
-	await get_tree().create_timer(0.3).timeout
-
-func _show_miss(pos: Vector2) -> void:
-	var label := Label.new()
-	label.text = "Miss"
-	label.position = pos + Vector2(-20, -40)
-	label.add_theme_font_size_override("font_size", 20)
-	label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-	_damage_container.add_child(label)
-
-	var tw := create_tween()
-	var _t1 := tw.tween_property(label, "position:y", label.position.y - 30, 0.5)
-	var _t2 := tw.parallel().tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.2)
-	var _t3 := tw.tween_callback(label.queue_free)
-	await get_tree().create_timer(0.25).timeout
-
-func _kill_enemy(enemy: Battler) -> void:
-	_play_sfx(enemy_death_sfx)
-	var tw := create_tween()
-	var _t1 := tw.tween_property(enemy.sprite, "modulate:a", 0.0, 0.3)
-	await tw.finished
-	_update_enemy_list()
+	_resolver.resolve_round(_commands)
 
 # --- BATTLE END ---
 
@@ -954,23 +752,3 @@ func _play_sfx(stream: AudioStream, volume_db := 0.0) -> void:
 func _clear_children(node: Node) -> void:
 	for child: Node in node.get_children():
 		child.queue_free()
-
-func _get_alive_indices(battlers: Array[Battler]) -> Array[int]:
-	var result: Array[int] = []
-	for i: int in battlers.size():
-		if not battlers[i].is_dead():
-			result.append(i)
-	return result
-
-func _retarget(battlers: Array[Battler], original: int) -> int:
-	for i: int in battlers.size():
-		var idx := (original + i) % battlers.size()
-		if not battlers[idx].is_dead():
-			return idx
-	return -1
-
-func _all_dead(battlers: Array[Battler]) -> bool:
-	for b: Battler in battlers:
-		if not b.is_dead():
-			return false
-	return true
