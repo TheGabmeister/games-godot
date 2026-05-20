@@ -66,7 +66,7 @@ WorldSession (Node)
 ├── Warrior (CharacterBody2D from warrior.tscn)
 │   └── Camera2D (limits updated per level)
 ├── DialogueBox (CanvasLayer from dialogue_box.tscn)
-├── MainMenu (CanvasLayer from main_menu.tscn)
+├── PartyMenu (CanvasLayer from party_menu.tscn)
 └── [Current Level] (swapped on door transitions)
     ├── TileMapLayer
     ├── NPCs
@@ -87,7 +87,7 @@ WorldSession (Node)
 - **`_scenes/npc.tscn`** — Reusable NPC template (StaticBody2D). Exports: `sprite_texture`, `dialogue_file`, `dialogue_id`. Has `interact()` method called via duck typing.
 - **`_scenes/dialogue_box.tscn`** — CanvasLayer (layer 10) with character-by-character text reveal + SFX. `class_name DialogueBox`. Emits `dialogue_finished` signal.
 - **`_scenes/door_trigger.tscn`** — Reusable Area2D (collision layer 4, mask 2). Exports: `target_scene_path`, `spawn_position`. Calls `WorldSession.transition_to_level()` on player body enter.
-- **`_scenes/main_menu.tscn`** — CanvasLayer (layer 10) with left panel (menu entries, time, gil) and right panel (content area). UI structure defined in scene; script handles logic. SFX set as exports on the scene.
+- **`_scenes/party_menu.tscn`** — CanvasLayer (layer 10) with left panel (menu entries, time, gil) and right panel (subscreen panels toggled by visibility). All layout in scene, all styling via `ui/menu_theme.tres` theme resource. Node references use `%` unique names. Single script (`party_menu.gd`) handles all subscreen logic.
 - **Level scenes** (`cornelia_town.tscn`, `cornelia_castle.tscn`) — Use `LevelData` script with `@export var music` and `@export var default_spawn`. Contain only TileMapLayer, NPCs, and door triggers — no player, camera, or UI.
 
 ### PartyData access pattern
@@ -95,12 +95,12 @@ WorldSession (Node)
 `PartyData` (`scripts/autoloads/party_data.gd`) has `class_name PartyData` so type references (`PartyData.Job`, `PartyData.CharacterData`) work globally. But it is NOT an autoload — WorldSession creates it and passes it via properties:
 
 ```
-WorldSession._ready() → PartyData.new() → main_menu.party_data = party_data
+WorldSession._ready() → PartyData.new() → party_menu.party_data = party_data
 ```
 
 ### Menu system
 
-**MainMenu** (`scripts/ui/main_menu.gd`, `_scenes/main_menu.tscn`) — single CanvasLayer containing all menu UI. Listens to `GameState.state_changed` — opens when state enters MENU, closes when state leaves MENU. All subscreen layouts (party overview, items, target select, status select/detail, formation, stub) are built into the scene as sibling VBoxContainers under `Screens`; the script toggles visibility via `_switch_panel()`.
+**PartyMenu** (`scripts/ui/party_menu.gd`, `_scenes/party_menu.tscn`) — single CanvasLayer containing all menu UI. Listens to `GameState.state_changed` — opens when state enters MENU, closes when state leaves MENU. All subscreen layouts (party overview, items, target select, status select/detail, formation, stub) are built into the scene as sibling VBoxContainers under `Screens`; the script toggles visibility via `_switch_panel()`.
 
 **Theme** (`ui/menu_theme.tres`) — shared theme resource set on the root Panel. Defines default Label style and type variations: `TitleLabel` (gold, 24px), `ValueLabel` (white, 20px), `AccentLabel` (gold, 20px), `HintLabel` (light blue, 20px), `SmallLabel` (light blue, 18px), `MutedLabel` (muted, 22px). Designers edit the theme in Godot's visual editor to change all menu styling.
 
@@ -112,7 +112,7 @@ NPCs (and future interactables) use duck typing via `Groups.INTERACTABLE` (`scri
 
 ### Input handling pattern
 
-Scripts check `GameState.is_state()` at the top of `_physics_process` and `_input`. Discrete actions use `_input()`, continuous movement uses `_physics_process()`. Consume events with `get_viewport().set_input_as_handled()`. The player transitions FIELD → MENU by calling `GameState.transition(State.MENU)` — MainMenu reacts via signal, not direct call.
+Scripts check `GameState.is_state()` at the top of `_physics_process` and `_input`. Discrete actions use `_input()`, continuous movement uses `_physics_process()`. Consume events with `get_viewport().set_input_as_handled()`. The player transitions FIELD → MENU by calling `GameState.transition(State.MENU)` — PartyMenu reacts via signal, not direct call.
 
 ### Collision layers
 
@@ -159,7 +159,8 @@ JSON files in `data/dialogue/` (one per area). Structure: `{ "id": { "name": "NP
 - Stateless constants and resource classes in `scripts_consts/` (`Groups`, `ItemData`, `LevelData`)
 - Direction handling uses `enum Dir { DOWN, UP, LEFT, RIGHT }` with typed `Dictionary[Dir, StringName]` constants (`IDLE_ANIM`, `WALK_ANIM`) and `Dictionary[Dir, Vector2]` for `DIR_VECTORS`
 - Animation names as `&"StringName"` literals for compile-time validation
-- Group constants in `scripts_consts/groups.gd` (`class_name Groups`) — use `Groups.INTERACTABLE`, `Groups.MAIN_MENU`, etc. instead of string literals
+- Group constants in `scripts_consts/groups.gd` (`class_name Groups`) — use `Groups.INTERACTABLE`, `Groups.PARTY_MENU`, etc. instead of string literals
 - Scene exports (`@export var music: AudioStream`, `@export var default_spawn: Vector2`) over hardcoded paths
 - Autoloads accessed by global name directly (`GameState`, `MusicManager`, etc.)
 - No `@warning_ignore` — use typed dictionaries, `is` type guards, explicit variable typing, and `call()` for duck-typed methods
+- UI scenes use `%` unique names (`unique_name_in_owner = true`) for all script-referenced nodes — reference via `%NodeName` in GDScript, not `$Path/To/Node`. Duplicated structures (e.g., 4 character rows) use indexed unique names (`CharName0`, `CharName1`, etc.)

@@ -1,4 +1,4 @@
-class_name MainMenu
+class_name PartyMenu
 extends CanvasLayer
 
 signal closed
@@ -72,7 +72,7 @@ var _formation_selected_index := -1
 ]
 
 func _ready() -> void:
-	add_to_group(Groups.MAIN_MENU)
+	add_to_group(Groups.PARTY_MENU)
 	_root.visible = false
 	var _err := GameState.state_changed.connect(_on_state_changed)
 

@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/party_menu.gd" id="1"]
 [ext_resource type="Theme" path="res://ui/menu_theme.tres" id="theme"]
 [ext_resource type="AudioStream" path="res://ui/cursor_move.ogg" id="cursor_move"]
 [ext_resource type="AudioStream" path="res://ui/menu_open.ogg" id="menu_open"]
@@ -46,7 +46,7 @@ content_margin_top = 12.0
 content_margin_right = 16.0
 content_margin_bottom = 12.0
 
-[node name="MainMenu" type="CanvasLayer"]
+[node name="PartyMenu" type="CanvasLayer"]
 layer = 10
 script = ExtResource("1")
 cursor_move_sfx = ExtResource("cursor_move")

@@ -3,7 +3,7 @@ extends Node
 
 @export var warrior_scene: PackedScene
 @export var dialogue_box_scene: PackedScene
-@export var main_menu_scene: PackedScene
+@export var party_menu_scene: PackedScene
 @export_file("*.tscn") var initial_level_path: String
 
 var _warrior: CharacterBody2D
@@ -29,9 +29,9 @@ func _ready() -> void:
 	var dialogue_box: DialogueBox = dialogue_box_scene.instantiate()
 	add_child(dialogue_box)
 
-	var main_menu: MainMenu = main_menu_scene.instantiate()
-	main_menu.party_data = party_data
-	add_child(main_menu)
+	var party_menu: PartyMenu = party_menu_scene.instantiate()
+	party_menu.party_data = party_data
+	add_child(party_menu)
 
 	_load_level(initial_level_path)
 
