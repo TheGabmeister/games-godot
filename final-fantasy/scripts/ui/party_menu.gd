@@ -8,13 +8,6 @@ signal closed
 @export var confirm_sfx: AudioStream
 @export var cancel_sfx: AudioStream
 
-const SPRITE_SHEETS: Dictionary[PartyData.Job, Texture2D] = {
-	PartyData.Job.WARRIOR:    preload("res://characters/warrior/warrior_sheet.png"),
-	PartyData.Job.MONK:       preload("res://characters/monk/monk_sheet.png"),
-	PartyData.Job.WHITE_MAGE: preload("res://characters/white_mage/white_mage_sheet.png"),
-	PartyData.Job.BLACK_MAGE: preload("res://characters/black_mage/black_mage_sheet.png"),
-}
-
 const MENU_ENTRIES: Array[StringName] = [&"Items", &"Magic", &"Equipment", &"Status", &"Formation", &"Config"]
 
 enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }
@@ -43,13 +36,7 @@ var _formation_selected_index := -1
 @onready var _formation_list: VBoxContainer = %FormationList
 @onready var _stub_panel: VBoxContainer = %StubPanel
 
-@onready var _char_rows: Array[HBoxContainer] = [%CharRow0, %CharRow1, %CharRow2, %CharRow3]
-@onready var _char_portraits: Array[TextureRect] = [%Portrait0, %Portrait1, %Portrait2, %Portrait3]
-@onready var _char_names: Array[Label] = [%CharName0, %CharName1, %CharName2, %CharName3]
-@onready var _char_hp_values: Array[Label] = [%CharHP0, %CharHP1, %CharHP2, %CharHP3]
-@onready var _char_mp_lines: Array[Label] = [%CharMP0, %CharMP1, %CharMP2, %CharMP3]
-@onready var _char_lv_labels: Array[Label] = [%CharLv0, %CharLv1, %CharLv2, %CharLv3]
-@onready var _char_next_labels: Array[Label] = [%CharNext0, %CharNext1, %CharNext2, %CharNext3]
+@onready var _char_rows: Array[CharacterRow] = [%CharRow0, %CharRow1, %CharRow2, %CharRow3]
 
 @onready var _target_labels: Array[Label] = [%Target0, %Target1, %Target2, %Target3]
 @onready var _status_labels: Array[Label] = [%StatusChar0, %StatusChar1, %StatusChar2, %StatusChar3]
@@ -182,20 +169,8 @@ func _return_to_main() -> void:
 func _show_party_overview() -> void:
 	_switch_panel(_party_overview)
 	for i: int in party_data.party.size():
-		var character: PartyData.CharacterData = party_data.party[i]
 		_char_rows[i].visible = true
-
-		var atlas := AtlasTexture.new()
-		atlas.atlas = SPRITE_SHEETS[character.job]
-		atlas.region = Rect2(0, 0, 64, 96)
-		_char_portraits[i].texture = atlas
-
-		_char_names[i].text = character.char_name
-		_char_hp_values[i].text = "  %3d / %3d" % [character.current_hp, character.max_hp]
-		_char_mp_lines[i].text = "MP  0 /  0 /  0 /  0"
-		_char_lv_labels[i].text = "Lv. %d" % character.level
-		_char_next_labels[i].text = "Next Level in   0"
-
+		_char_rows[i].populate(party_data.party[i])
 	for i: int in range(party_data.party.size(), 4):
 		_char_rows[i].visible = false
 

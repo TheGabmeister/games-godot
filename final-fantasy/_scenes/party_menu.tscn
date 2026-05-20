@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/party_menu.gd" id="1"]
 [ext_resource type="Theme" path="res://ui/menu_theme.tres" id="theme"]
@@ -6,6 +6,7 @@
 [ext_resource type="AudioStream" path="res://ui/menu_open.ogg" id="menu_open"]
 [ext_resource type="AudioStream" path="res://ui/confirm.ogg" id="confirm"]
 [ext_resource type="AudioStream" path="res://ui/cancel.ogg" id="cancel"]
+[ext_resource type="PackedScene" path="res://_scenes/character_row.tscn" id="char_row"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
 bg_color = Color(0.05, 0.05, 0.2, 0.95)
@@ -149,258 +150,30 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 2
 
-[node name="CharRow0" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
+[node name="CharRow0" parent="Panel/HBox/RightPanel/Screens/PartyOverview" instance=ExtResource("char_row")]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 100)
-theme_override_constants/separation = 16
-
-[node name="Portrait0" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(64, 96)
-stretch_mode = 5
-
-[node name="Info" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="NameHP" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info"]
-layout_mode = 2
-
-[node name="CharName0" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/NameHP"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(180, 0)
-text = "---"
-
-[node name="HPLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/NameHP"]
-layout_mode = 2
-theme_type_variation = &"AccentLabel"
-text = "HP"
-
-[node name="CharHP0" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/NameHP"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"ValueLabel"
-text = "  --- / ---"
-
-[node name="CharMP0" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "MP  0 /  0 /  0 /  0"
-
-[node name="LvLine" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info"]
-layout_mode = 2
-
-[node name="CharLv0" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/LvLine"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Lv. 1"
-
-[node name="LvSpacer" type="Control" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/LvLine"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CharNext0" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0/Info/LvLine"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Next Level in   0"
 
 [node name="Sep0" type="HSeparator" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
 layout_mode = 2
 
-[node name="CharRow1" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
+[node name="CharRow1" parent="Panel/HBox/RightPanel/Screens/PartyOverview" instance=ExtResource("char_row")]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 100)
-theme_override_constants/separation = 16
-
-[node name="Portrait1" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(64, 96)
-stretch_mode = 5
-
-[node name="Info" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="NameHP" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info"]
-layout_mode = 2
-
-[node name="CharName1" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/NameHP"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(180, 0)
-text = "---"
-
-[node name="HPLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/NameHP"]
-layout_mode = 2
-theme_type_variation = &"AccentLabel"
-text = "HP"
-
-[node name="CharHP1" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/NameHP"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"ValueLabel"
-text = "  --- / ---"
-
-[node name="CharMP1" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "MP  0 /  0 /  0 /  0"
-
-[node name="LvLine" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info"]
-layout_mode = 2
-
-[node name="CharLv1" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/LvLine"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Lv. 1"
-
-[node name="LvSpacer" type="Control" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/LvLine"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CharNext1" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1/Info/LvLine"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Next Level in   0"
 
 [node name="Sep1" type="HSeparator" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
 layout_mode = 2
 
-[node name="CharRow2" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
+[node name="CharRow2" parent="Panel/HBox/RightPanel/Screens/PartyOverview" instance=ExtResource("char_row")]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 100)
-theme_override_constants/separation = 16
-
-[node name="Portrait2" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(64, 96)
-stretch_mode = 5
-
-[node name="Info" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="NameHP" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info"]
-layout_mode = 2
-
-[node name="CharName2" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/NameHP"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(180, 0)
-text = "---"
-
-[node name="HPLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/NameHP"]
-layout_mode = 2
-theme_type_variation = &"AccentLabel"
-text = "HP"
-
-[node name="CharHP2" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/NameHP"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"ValueLabel"
-text = "  --- / ---"
-
-[node name="CharMP2" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "MP  0 /  0 /  0 /  0"
-
-[node name="LvLine" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info"]
-layout_mode = 2
-
-[node name="CharLv2" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/LvLine"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Lv. 1"
-
-[node name="LvSpacer" type="Control" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/LvLine"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CharNext2" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2/Info/LvLine"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Next Level in   0"
 
 [node name="Sep2" type="HSeparator" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
 layout_mode = 2
 
-[node name="CharRow3" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview"]
+[node name="CharRow3" parent="Panel/HBox/RightPanel/Screens/PartyOverview" instance=ExtResource("char_row")]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 100)
-theme_override_constants/separation = 16
-
-[node name="Portrait3" type="TextureRect" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(64, 96)
-stretch_mode = 5
-
-[node name="Info" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="NameHP" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info"]
-layout_mode = 2
-
-[node name="CharName3" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/NameHP"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(180, 0)
-text = "---"
-
-[node name="HPLabel" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/NameHP"]
-layout_mode = 2
-theme_type_variation = &"AccentLabel"
-text = "HP"
-
-[node name="CharHP3" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/NameHP"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"ValueLabel"
-text = "  --- / ---"
-
-[node name="CharMP3" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "MP  0 /  0 /  0 /  0"
-
-[node name="LvLine" type="HBoxContainer" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info"]
-layout_mode = 2
-
-[node name="CharLv3" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/LvLine"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Lv. 1"
-
-[node name="LvSpacer" type="Control" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/LvLine"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CharNext3" type="Label" parent="Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3/Info/LvLine"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Next Level in   0"
 
 [node name="ItemsList" type="VBoxContainer" parent="Panel/HBox/RightPanel/Screens"]
 unique_name_in_owner = true
