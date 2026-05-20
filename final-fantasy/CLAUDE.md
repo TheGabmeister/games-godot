@@ -36,6 +36,8 @@ Godot_v4.6.2-stable_win64.exe --path . --headless --import
 Godot_v4.6.2-stable_win64.exe --path . --headless --export-release "Windows Desktop"
 ```
 
+**Warning:** `--headless --import` may re-add removed autoloads to `project.godot`. If PartyData reappears in the `[autoload]` section, remove it — PartyData uses `class_name` and is instantiated by WorldSession, not the autoload system.
+
 ## Resolution
 
 - **Base viewport:** 1280x720 (stretch mode `viewport`)
@@ -47,35 +49,70 @@ Godot_v4.6.2-stable_win64.exe --path . --headless --export-release "Windows Desk
 
 ### Autoloads (initialization order)
 
-1. **GameState** (`scripts/autoloads/game_state.gd`) — State machine with enum `State { TITLE, FIELD, DIALOGUE, BATTLE, CUTSCENE, MENU }`. All scripts gate input with `GameState.is_state()`. Transitions via `GameState.transition()`, emits `state_changed` signal.
-2. **DialogueData** (`scripts/dialogue_data.gd`) — Loads and caches JSON dialogue files from `data/dialogue/`. Called with `DialogueData.get_dialogue(path, id)`.
-3. **MusicManager** (`scripts/autoloads/music_manager.gd`) — Single-track music on "Music" audio bus. `play(stream)` prevents restarting same track. Auto-loops.
-4. **SfxManager** (`scripts/autoloads/sfx_manager.gd`) — Pool of 16 AudioStreamPlayers on "SFX" audio bus. `play(stream, volume_db)`.
-5. **PartyData** (`scripts/autoloads/party_data.gd`) — Holds party array of `CharacterData` objects with Level 1 stats. `enum Job { WARRIOR, MONK, WHITE_MAGE, BLACK_MAGE }`.
+1. **DialogueData** (`scripts/dialogue_data.gd`) — Loads and caches JSON dialogue files from `data/dialogue/`. Called with `DialogueData.get_dialogue(path, id)`.
+2. **MusicManager** (`scripts/autoloads/music_manager.gd`) — Single-track music on "Music" audio bus. `play(stream)` prevents restarting same track. Auto-loops.
+3. **SfxManager** (`scripts/autoloads/sfx_manager.gd`) — Pool of 16 AudioStreamPlayers on "SFX" audio bus. `play(stream, volume_db)`.
+4. **GameState** (`scripts/autoloads/game_state.gd`) — State machine with enum `State { TITLE, FIELD, DIALOGUE, BATTLE, CUTSCENE, MENU }`. All scripts gate input with `GameState.is_state()`. Transitions via `GameState.transition()`, emits `state_changed(old_state, new_state)` signal.
+
+**PartyData is NOT an autoload.** It has `class_name PartyData` for type references but is instantiated by WorldSession and passed to consumers via properties. See "PartyData access pattern" below.
+
+### WorldSession — persistent game root
+
+`WorldSession` (`scripts/world_session.gd`) is the persistent root scene loaded after the title screen. It owns all elements that survive level transitions:
+
+```
+WorldSession (Node)
+├── PartyData (instantiated via PartyData.new(), not autoload)
+├── Warrior (CharacterBody2D from warrior.tscn)
+│   └── Camera2D (limits updated per level)
+├── DialogueBox (CanvasLayer from dialogue_box.tscn)
+├── MainMenu (CanvasLayer from main_menu.tscn)
+└── [Current Level] (swapped on door transitions)
+    ├── TileMapLayer
+    ├── NPCs
+    └── DoorTriggers
+```
+
+**Level loading:** `_load_level(scene_path)` frees the old level, instantiates the new one at child index 0 (renders behind player), reads `LevelData.music` and `LevelData.default_spawn`, updates camera limits from the TileMapLayer's `get_used_rect()`, and transitions to FIELD state.
+
+**Door transitions:** `door_trigger.gd` finds the WorldSession via `Groups.WORLD_SESSION` group and calls `transition_to_level(scene_path, spawn_position)`. No `change_scene_to_file` — only the level child is swapped.
 
 ### Scene flow
 
-`title_screen.tscn` → (confirm) → `cornelia_town.tscn` ↔ (door trigger) ↔ `cornelia_castle.tscn`
+`title_screen.tscn` → (confirm) → `world_session.tscn` → loads `cornelia_town.tscn` ↔ (door trigger) ↔ `cornelia_castle.tscn`
 
 ### Key scenes
 
 - **`_scenes/warrior.tscn`** — Player character (CharacterBody2D, collision layer 2 + AnimatedSprite2D + InteractArea). Script: `player_movement.gd`. Only processes in FIELD state.
-- **`_scenes/npc.tscn`** — Reusable NPC template (StaticBody2D). Exports: `sprite_texture`, `dialogue_file`, `dialogue_id`. Loads dialogue from JSON on `_ready()`. Has `interact()` method called via duck typing.
+- **`_scenes/npc.tscn`** — Reusable NPC template (StaticBody2D). Exports: `sprite_texture`, `dialogue_file`, `dialogue_id`. Has `interact()` method called via duck typing.
 - **`_scenes/dialogue_box.tscn`** — CanvasLayer (layer 10) with character-by-character text reveal + SFX. `class_name DialogueBox`. Emits `dialogue_finished` signal.
-- **`_scenes/door_trigger.tscn`** — Reusable Area2D (collision layer 4, mask 2). Exports: `target_scene_path`, `spawn_position`. Transitions scenes on player body enter, sets spawn override on GameState.
-- **Level scenes** (`cornelia_town.tscn`, `cornelia_castle.tscn`) — All use `scripts/level.gd` with `@export var music: AudioStream`. Tiles painted in editor (TileMapLayer `tile_map_data`). Level.gd handles FIELD state transition, music playback, and spawn position override.
+- **`_scenes/door_trigger.tscn`** — Reusable Area2D (collision layer 4, mask 2). Exports: `target_scene_path`, `spawn_position`. Calls `WorldSession.transition_to_level()` on player body enter.
+- **`_scenes/main_menu.tscn`** — CanvasLayer (layer 10) with left panel (menu entries, time, gil) and right panel (content area). UI structure defined in scene; script handles logic. SFX set as exports on the scene.
+- **Level scenes** (`cornelia_town.tscn`, `cornelia_castle.tscn`) — Use `LevelData` script with `@export var music` and `@export var default_spawn`. Contain only TileMapLayer, NPCs, and door triggers — no player, camera, or UI.
 
-### Gameplay node instantiation
+### PartyData access pattern
 
-`level.gd` auto-creates three nodes on `_ready()`: Warrior (from `warrior.tscn`), Camera2D (limits derived from TileMapLayer used rect), and DialogueBox (from `dialogue_box.tscn`). Level scenes should NOT contain these nodes — only TileMapLayer, NPCs, and door triggers.
+`PartyData` (`scripts/autoloads/party_data.gd`) has `class_name PartyData` so type references (`PartyData.Job`, `PartyData.CharacterData`) work globally. But it is NOT an autoload — WorldSession creates it and passes it via properties:
+
+```
+WorldSession._ready() → PartyData.new() → main_menu.party_data = party_data
+```
+
+### Menu system
+
+**MainMenu** (`scripts/ui/main_menu.gd`, `_scenes/main_menu.tscn`) — single CanvasLayer containing all menu UI. Listens to `GameState.state_changed` — opens when state enters MENU, closes when state leaves MENU. All subscreen layouts (party overview, items, target select, status select/detail, formation, stub) are built into the scene as sibling VBoxContainers under `Screens`; the script toggles visibility via `_switch_panel()`.
+
+**Theme** (`ui/menu_theme.tres`) — shared theme resource set on the root Panel. Defines default Label style and type variations: `TitleLabel` (gold, 24px), `ValueLabel` (white, 20px), `AccentLabel` (gold, 20px), `HintLabel` (light blue, 20px), `SmallLabel` (light blue, 18px), `MutedLabel` (muted, 22px). Designers edit the theme in Godot's visual editor to change all menu styling.
+
+**Screen state** uses `enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }`. Input is dispatched via `match _current_screen` in `_input()`. Dynamic content (item lists) creates Labels in code that inherit the theme; fixed content (party rows, formation, targets) uses pre-built scene nodes populated with data.
 
 ### Interactable system
 
-NPCs (and future interactables) use duck typing via `Groups.INTERACTABLE` (`scripts/groups.gd`). The NPC's `InteractionArea` (Area2D child) is in the `"interactable"` group. The player finds the nearest interactable facing them and calls `target.call(&"interact")`. Each interactable implements its own `interact()` method — NPCs open dialogue, future objects (chests, signs) do their own thing.
+NPCs (and future interactables) use duck typing via `Groups.INTERACTABLE` (`scripts_consts/groups.gd`). The NPC's `InteractionArea` (Area2D child) is in the `"interactable"` group. The player finds the nearest interactable facing them and calls `target.call(&"interact")`. Each interactable implements its own `interact()` method.
 
 ### Input handling pattern
 
-Scripts check `GameState.is_state()` at the top of `_physics_process` and `_input`. The player transitions FIELD → DIALOGUE when talking to NPCs, and back to FIELD when dialogue finishes. Discrete actions use `_input()`, continuous movement uses `_physics_process()`. Consume events with `get_viewport().set_input_as_handled()`.
+Scripts check `GameState.is_state()` at the top of `_physics_process` and `_input`. Discrete actions use `_input()`, continuous movement uses `_physics_process()`. Consume events with `get_viewport().set_input_as_handled()`. The player transitions FIELD → MENU by calling `GameState.transition(State.MENU)` — MainMenu reacts via signal, not direct call.
 
 ### Collision layers
 
@@ -118,9 +155,11 @@ JSON files in `data/dialogue/` (one per area). Structure: `{ "id": { "name": "NP
 
 - Scenes in `_scenes/` (underscore prefix for editor sorting)
 - Autoloads in `scripts/autoloads/`
+- UI scripts in `scripts/ui/`
+- Stateless constants and resource classes in `scripts_consts/` (`Groups`, `ItemData`, `LevelData`)
 - Direction handling uses `enum Dir { DOWN, UP, LEFT, RIGHT }` with typed `Dictionary[Dir, StringName]` constants (`IDLE_ANIM`, `WALK_ANIM`) and `Dictionary[Dir, Vector2]` for `DIR_VECTORS`
 - Animation names as `&"StringName"` literals for compile-time validation
-- Group constants in `scripts/groups.gd` (`class_name Groups`) — use `Groups.INTERACTABLE`, `Groups.DIALOGUE_BOX` instead of string literals
+- Group constants in `scripts_consts/groups.gd` (`class_name Groups`) — use `Groups.INTERACTABLE`, `Groups.MAIN_MENU`, etc. instead of string literals
 - Scene exports (`@export var music: AudioStream`, `@export var default_spawn: Vector2`) over hardcoded paths
 - Autoloads accessed by global name directly (`GameState`, `MusicManager`, etc.)
 - No `@warning_ignore` — use typed dictionaries, `is` type guards, explicit variable typing, and `call()` for duck-typed methods

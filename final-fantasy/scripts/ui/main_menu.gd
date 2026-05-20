@@ -17,29 +17,76 @@ const SPRITE_SHEETS: Dictionary[PartyData.Job, Texture2D] = {
 
 const MENU_ENTRIES: Array[StringName] = [&"Items", &"Magic", &"Equipment", &"Status", &"Formation", &"Config"]
 
-enum Screen { MAIN, ITEMS, MAGIC, EQUIPMENT, STATUS, FORMATION, CONFIG }
+enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }
 
 var _active := false
 var _cursor_index := 0
 var _current_screen: Screen = Screen.MAIN
-
-var _left_panel: VBoxContainer
-var _right_panel: VBoxContainer
-var _cursor_labels: Array[Label] = []
-var _time_label: Label
-var _gil_label: Label
-var _root: PanelContainer
-
 var party_data: PartyData
 
-var _items_screen: Node
-var _status_screen: Node
-var _formation_screen: Node
+var _items: Array[ItemData] = []
+var _item_labels: Array[Label] = []
+var _item_target_index := 0
+var _formation_selected_index := -1
+
+@onready var _root: PanelContainer = $Panel
+@onready var _time_label: Label = $Panel/HBox/LeftPanel/VBox/TimeLabel
+@onready var _gil_label: Label = $Panel/HBox/LeftPanel/VBox/GilLabel
+
+@onready var _cursor_labels: Array[Label] = [
+	$Panel/HBox/LeftPanel/VBox/MenuEntries/Items,
+	$Panel/HBox/LeftPanel/VBox/MenuEntries/Magic,
+	$Panel/HBox/LeftPanel/VBox/MenuEntries/Equipment,
+	$Panel/HBox/LeftPanel/VBox/MenuEntries/Status,
+	$Panel/HBox/LeftPanel/VBox/MenuEntries/Formation,
+	$Panel/HBox/LeftPanel/VBox/MenuEntries/Config,
+]
+
+@onready var _party_overview: VBoxContainer = $Panel/HBox/RightPanel/Screens/PartyOverview
+@onready var _items_list: VBoxContainer = $Panel/HBox/RightPanel/Screens/ItemsList
+@onready var _target_select: VBoxContainer = $Panel/HBox/RightPanel/Screens/TargetSelect
+@onready var _status_select: VBoxContainer = $Panel/HBox/RightPanel/Screens/StatusSelect
+@onready var _status_detail: VBoxContainer = $Panel/HBox/RightPanel/Screens/StatusDetail
+@onready var _formation_list: VBoxContainer = $Panel/HBox/RightPanel/Screens/FormationList
+@onready var _stub_panel: VBoxContainer = $Panel/HBox/RightPanel/Screens/StubPanel
+
+@onready var _char_rows: Array[HBoxContainer] = [
+	$Panel/HBox/RightPanel/Screens/PartyOverview/CharRow0,
+	$Panel/HBox/RightPanel/Screens/PartyOverview/CharRow1,
+	$Panel/HBox/RightPanel/Screens/PartyOverview/CharRow2,
+	$Panel/HBox/RightPanel/Screens/PartyOverview/CharRow3,
+]
+
+@onready var _target_labels: Array[Label] = [
+	$Panel/HBox/RightPanel/Screens/TargetSelect/Target0,
+	$Panel/HBox/RightPanel/Screens/TargetSelect/Target1,
+	$Panel/HBox/RightPanel/Screens/TargetSelect/Target2,
+	$Panel/HBox/RightPanel/Screens/TargetSelect/Target3,
+]
+
+@onready var _status_labels: Array[Label] = [
+	$Panel/HBox/RightPanel/Screens/StatusSelect/StatusChar0,
+	$Panel/HBox/RightPanel/Screens/StatusSelect/StatusChar1,
+	$Panel/HBox/RightPanel/Screens/StatusSelect/StatusChar2,
+	$Panel/HBox/RightPanel/Screens/StatusSelect/StatusChar3,
+]
+
+@onready var _formation_labels: Array[Label] = [
+	$Panel/HBox/RightPanel/Screens/FormationList/Formation0,
+	$Panel/HBox/RightPanel/Screens/FormationList/Formation1,
+	$Panel/HBox/RightPanel/Screens/FormationList/Formation2,
+	$Panel/HBox/RightPanel/Screens/FormationList/Formation3,
+]
+
+@onready var _stub_label: Label = $Panel/HBox/RightPanel/Screens/StubPanel/StubLabel
+
+@onready var _screen_panels: Array[Control] = [
+	_party_overview, _items_list, _target_select, _status_select,
+	_status_detail, _formation_list, _stub_panel,
+]
 
 func _ready() -> void:
-	layer = 10
 	add_to_group(Groups.MAIN_MENU)
-	_build_ui()
 	_root.visible = false
 	var _err := GameState.state_changed.connect(_on_state_changed)
 
@@ -48,7 +95,7 @@ func open() -> void:
 	_current_screen = Screen.MAIN
 	_cursor_index = 0
 	_root.visible = true
-	_update_cursor()
+	_update_main_cursor()
 	_show_party_overview()
 	SfxManager.play(menu_open_sfx)
 
@@ -63,30 +110,41 @@ func _close_menu() -> void:
 	_root.visible = false
 	closed.emit()
 
+# --- Input dispatch ---
+
 func _input(event: InputEvent) -> void:
 	if not _active:
 		return
 	if not GameState.is_state(GameState.State.MENU):
 		return
 
-	if _current_screen in [Screen.MAGIC, Screen.EQUIPMENT, Screen.CONFIG]:
-		if event.is_action_pressed("cancel"):
-			SfxManager.play(cancel_sfx)
-			return_to_main()
-			get_viewport().set_input_as_handled()
-		return
+	match _current_screen:
+		Screen.MAIN:
+			_input_main(event)
+		Screen.ITEMS:
+			_input_items(event)
+		Screen.ITEMS_TARGET:
+			_input_items_target(event)
+		Screen.STATUS:
+			_input_status(event)
+		Screen.STATUS_DETAIL:
+			_input_status_detail(event)
+		Screen.FORMATION:
+			_input_formation(event)
+		Screen.MAGIC, Screen.EQUIPMENT, Screen.CONFIG:
+			_input_stub(event)
 
-	if _current_screen != Screen.MAIN:
-		return
+# --- Main screen ---
 
+func _input_main(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
 		_cursor_index = (_cursor_index - 1 + MENU_ENTRIES.size()) % MENU_ENTRIES.size()
-		_update_cursor()
+		_update_main_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
 		_cursor_index = (_cursor_index + 1) % MENU_ENTRIES.size()
-		_update_cursor()
+		_update_main_cursor()
 		SfxManager.play(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
@@ -97,12 +155,19 @@ func _input(event: InputEvent) -> void:
 		GameState.transition(GameState.State.FIELD)
 		get_viewport().set_input_as_handled()
 
+func _update_main_cursor() -> void:
+	for i: int in _cursor_labels.size():
+		_cursor_labels[i].text = "> " + MENU_ENTRIES[i] if i == _cursor_index else "  " + MENU_ENTRIES[i]
+	_time_label.text = "Time  " + party_data.get_play_time_string()
+	_gil_label.text = "Gil   " + str(party_data.gil)
+
 func _open_submenu(index: int) -> void:
 	SfxManager.play(confirm_sfx)
 	match index:
 		0:
 			_current_screen = Screen.ITEMS
-			_items_screen.call(&"open")
+			_cursor_index = 0
+			_open_items()
 		1:
 			_current_screen = Screen.MAGIC
 			_show_stub("Magic")
@@ -111,214 +176,283 @@ func _open_submenu(index: int) -> void:
 			_show_stub("Equipment")
 		3:
 			_current_screen = Screen.STATUS
-			_status_screen.call(&"open")
+			_cursor_index = 0
+			_open_status_select()
 		4:
 			_current_screen = Screen.FORMATION
-			_formation_screen.call(&"open")
+			_cursor_index = 0
+			_formation_selected_index = -1
+			_open_formation()
 		5:
 			_current_screen = Screen.CONFIG
 			_show_stub("Config")
 
-func return_to_main() -> void:
+func _return_to_main() -> void:
 	_current_screen = Screen.MAIN
+	_cursor_index = 0
+	_update_main_cursor()
 	_show_party_overview()
 
-func _show_stub(title: String) -> void:
-	_clear_right_panel()
-	var label := Label.new()
-	label.text = title + " - Not yet available"
-	label.add_theme_font_size_override(&"font_size", 22)
-	label.add_theme_color_override(&"font_color", Color(0.6, 0.6, 0.8))
-	_right_panel.add_child(label)
-
-func _update_cursor() -> void:
-	for i: int in _cursor_labels.size():
-		_cursor_labels[i].text = "> " + MENU_ENTRIES[i] if i == _cursor_index else "  " + MENU_ENTRIES[i]
-	_time_label.text = "Time  " + party_data.get_play_time_string()
-	_gil_label.text = "Gil   " + str(party_data.gil)
+# --- Party overview ---
 
 func _show_party_overview() -> void:
-	_clear_right_panel()
-	for character: PartyData.CharacterData in party_data.party:
-		var row := _create_character_row(character)
-		_right_panel.add_child(row)
-		var sep := HSeparator.new()
-		sep.add_theme_stylebox_override(&"separator", _create_separator_style())
-		_right_panel.add_child(sep)
+	_switch_panel(_party_overview)
+	for i: int in party_data.party.size():
+		var character: PartyData.CharacterData = party_data.party[i]
+		var row: HBoxContainer = _char_rows[i]
+		row.visible = true
 
-func _clear_right_panel() -> void:
-	for child: Node in _right_panel.get_children():
+		var portrait := row.get_node(^"Portrait") as TextureRect
+		var atlas := AtlasTexture.new()
+		atlas.atlas = SPRITE_SHEETS[character.job]
+		atlas.region = Rect2(0, 0, 64, 96)
+		portrait.texture = atlas
+
+		(row.get_node(^"Info/NameHP/Name") as Label).text = character.char_name
+		(row.get_node(^"Info/NameHP/HPValue") as Label).text = "  %3d / %3d" % [character.current_hp, character.max_hp]
+		(row.get_node(^"Info/MPLine") as Label).text = "MP  0 /  0 /  0 /  0"
+		(row.get_node(^"Info/LvLine/LvLabel") as Label).text = "Lv. %d" % character.level
+		(row.get_node(^"Info/LvLine/NextLabel") as Label).text = "Next Level in   0"
+
+	for i: int in range(party_data.party.size(), 4):
+		_char_rows[i].visible = false
+
+# --- Items screen ---
+
+func _open_items() -> void:
+	_refresh_item_list()
+
+func _input_items(event: InputEvent) -> void:
+	if event.is_action_pressed("move_up"):
+		if not _items.is_empty():
+			_cursor_index = (_cursor_index - 1 + _items.size()) % _items.size()
+			_update_items_cursor()
+			SfxManager.play(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_down"):
+		if not _items.is_empty():
+			_cursor_index = (_cursor_index + 1) % _items.size()
+			_update_items_cursor()
+			SfxManager.play(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("confirm"):
+		if not _items.is_empty():
+			var item: ItemData = _items[_cursor_index]
+			if item.effect_type == ItemData.EffectType.HEAL_HP:
+				SfxManager.play(confirm_sfx)
+				_current_screen = Screen.ITEMS_TARGET
+				_item_target_index = 0
+				_show_target_select()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("cancel"):
+		SfxManager.play(cancel_sfx)
+		_return_to_main()
+		get_viewport().set_input_as_handled()
+
+func _refresh_item_list() -> void:
+	_switch_panel(_items_list)
+
+	for child: Node in _items_list.get_children():
 		child.queue_free()
+	_item_labels.clear()
+	_items.clear()
 
-func get_right_panel() -> VBoxContainer:
-	return _right_panel
+	for item: Variant in party_data.inventory:
+		if item is ItemData:
+			_items.append(item)
 
-func _create_character_row(character: PartyData.CharacterData) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0, 100)
-	row.add_theme_constant_override(&"separation", 16)
-
-	var sprite_rect := TextureRect.new()
-	var atlas := AtlasTexture.new()
-	atlas.atlas = SPRITE_SHEETS[character.job]
-	atlas.region = Rect2(0, 0, 64, 96)
-	sprite_rect.texture = atlas
-	sprite_rect.custom_minimum_size = Vector2(64, 96)
-	sprite_rect.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-	row.add_child(sprite_rect)
-
-	var info := VBoxContainer.new()
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var name_hp := HBoxContainer.new()
-	var name_label := Label.new()
-	name_label.text = character.char_name
-	name_label.add_theme_font_size_override(&"font_size", 22)
-	name_label.add_theme_color_override(&"font_color", Color(1.0, 1.0, 1.0))
-	name_label.custom_minimum_size = Vector2(180, 0)
-	name_hp.add_child(name_label)
-
-	var hp_label := Label.new()
-	hp_label.text = "HP"
-	hp_label.add_theme_font_size_override(&"font_size", 20)
-	hp_label.add_theme_color_override(&"font_color", Color(1.0, 0.85, 0.4))
-	name_hp.add_child(hp_label)
-
-	var hp_val := Label.new()
-	hp_val.text = "  %3d / %3d" % [character.current_hp, character.max_hp]
-	hp_val.add_theme_font_size_override(&"font_size", 20)
-	hp_val.add_theme_color_override(&"font_color", Color(1.0, 1.0, 1.0))
-	name_hp.add_child(hp_val)
-	info.add_child(name_hp)
-
-	var mp_line := Label.new()
-	mp_line.text = "MP  0 /  0 /  0 /  0"
-	mp_line.add_theme_font_size_override(&"font_size", 18)
-	mp_line.add_theme_color_override(&"font_color", Color(0.8, 0.8, 1.0))
-	info.add_child(mp_line)
-
-	var lv_line := HBoxContainer.new()
-	var lv_label := Label.new()
-	lv_label.text = "Lv. %d" % character.level
-	lv_label.add_theme_font_size_override(&"font_size", 18)
-	lv_label.add_theme_color_override(&"font_color", Color(1.0, 1.0, 1.0))
-	lv_line.add_child(lv_label)
-
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lv_line.add_child(spacer)
-
-	var next_label := Label.new()
-	next_label.text = "Next Level in   0"
-	next_label.add_theme_font_size_override(&"font_size", 18)
-	next_label.add_theme_color_override(&"font_color", Color(0.8, 0.8, 1.0))
-	lv_line.add_child(next_label)
-	info.add_child(lv_line)
-
-	row.add_child(info)
-	return row
-
-func _create_separator_style() -> StyleBoxLine:
-	var style := StyleBoxLine.new()
-	style.color = Color(0.5, 0.5, 0.8, 0.5)
-	style.thickness = 1
-	return style
-
-func _build_ui() -> void:
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.05, 0.05, 0.2, 0.95)
-	panel_style.border_width_left = 3
-	panel_style.border_width_top = 3
-	panel_style.border_width_right = 3
-	panel_style.border_width_bottom = 3
-	panel_style.border_color = Color(0.8, 0.8, 1.0, 1.0)
-	panel_style.corner_radius_top_left = 4
-	panel_style.corner_radius_top_right = 4
-	panel_style.corner_radius_bottom_right = 4
-	panel_style.corner_radius_bottom_left = 4
-	panel_style.content_margin_left = 16.0
-	panel_style.content_margin_top = 12.0
-	panel_style.content_margin_right = 16.0
-	panel_style.content_margin_bottom = 12.0
-
-	_root = PanelContainer.new()
-	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_root.offset_left = 20.0
-	_root.offset_top = 20.0
-	_root.offset_right = -20.0
-	_root.offset_bottom = -20.0
-	_root.add_theme_stylebox_override(&"panel", panel_style)
-	add_child(_root)
-
-	var main_hbox := HBoxContainer.new()
-	main_hbox.add_theme_constant_override(&"separation", 0)
-	_root.add_child(main_hbox)
-
-	var left_container := PanelContainer.new()
-	var left_style: StyleBoxFlat = panel_style.duplicate()
-	left_style.bg_color = Color(0.03, 0.03, 0.15, 0.95)
-	left_container.add_theme_stylebox_override(&"panel", left_style)
-	left_container.custom_minimum_size = Vector2(230, 0)
-	main_hbox.add_child(left_container)
-
-	_left_panel = VBoxContainer.new()
-	_left_panel.add_theme_constant_override(&"separation", 4)
-	left_container.add_child(_left_panel)
-
-	for entry: StringName in MENU_ENTRIES:
+	if _items.is_empty():
 		var label := Label.new()
-		label.text = "  " + entry
-		label.add_theme_font_size_override(&"font_size", 22)
-		label.add_theme_color_override(&"font_color", Color(1.0, 1.0, 1.0))
-		_left_panel.add_child(label)
-		_cursor_labels.append(label)
+		label.text = "No items"
+		label.theme_type_variation = &"MutedLabel"
+		_items_list.add_child(label)
+		return
 
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_left_panel.add_child(spacer)
+	for i: int in _items.size():
+		var item: ItemData = _items[i]
+		var qty: int = party_data.inventory[item]
+		var label := Label.new()
+		label.text = "  %s          x%d" % [item.item_name, qty]
+		_items_list.add_child(label)
+		_item_labels.append(label)
 
-	_time_label = Label.new()
-	_time_label.text = "Time  00:00"
-	_time_label.add_theme_font_size_override(&"font_size", 20)
-	_time_label.add_theme_color_override(&"font_color", Color(1.0, 1.0, 1.0))
-	_left_panel.add_child(_time_label)
+	if _cursor_index >= _items.size():
+		_cursor_index = maxi(_items.size() - 1, 0)
+	_update_items_cursor()
 
-	_gil_label = Label.new()
-	_gil_label.text = "Gil   0"
-	_gil_label.add_theme_font_size_override(&"font_size", 20)
-	_gil_label.add_theme_color_override(&"font_color", Color(1.0, 1.0, 1.0))
-	_left_panel.add_child(_gil_label)
+func _update_items_cursor() -> void:
+	for i: int in _item_labels.size():
+		var item: ItemData = _items[i]
+		var qty: int = party_data.inventory[item]
+		if i == _cursor_index:
+			_item_labels[i].text = "> %s          x%d" % [item.item_name, qty]
+		else:
+			_item_labels[i].text = "  %s          x%d" % [item.item_name, qty]
 
-	var right_container := PanelContainer.new()
-	var right_style: StyleBoxFlat = panel_style.duplicate()
-	right_style.bg_color = Color(0.05, 0.05, 0.2, 0.0)
-	right_style.border_width_left = 0
-	right_style.border_width_top = 0
-	right_style.border_width_right = 0
-	right_style.border_width_bottom = 0
-	right_container.add_theme_stylebox_override(&"panel", right_style)
-	right_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_hbox.add_child(right_container)
+# --- Items target select ---
 
-	_right_panel = VBoxContainer.new()
-	_right_panel.add_theme_constant_override(&"separation", 2)
-	right_container.add_child(_right_panel)
+func _show_target_select() -> void:
+	_switch_panel(_target_select)
+	_update_target_cursor()
 
-	_items_screen = _create_screen(preload("res://scripts/ui/items_screen.gd"), "ItemsScreen")
-	add_child(_items_screen)
+func _input_items_target(event: InputEvent) -> void:
+	if event.is_action_pressed("move_up"):
+		_item_target_index = (_item_target_index - 1 + party_data.party.size()) % party_data.party.size()
+		_update_target_cursor()
+		SfxManager.play(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_down"):
+		_item_target_index = (_item_target_index + 1) % party_data.party.size()
+		_update_target_cursor()
+		SfxManager.play(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("confirm"):
+		var item: ItemData = _items[_cursor_index]
+		var target: PartyData.CharacterData = party_data.party[_item_target_index]
+		if party_data.use_item(item, target):
+			SfxManager.play(confirm_sfx)
+		_current_screen = Screen.ITEMS
+		_refresh_item_list()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("cancel"):
+		SfxManager.play(cancel_sfx)
+		_current_screen = Screen.ITEMS
+		_refresh_item_list()
+		get_viewport().set_input_as_handled()
 
-	_status_screen = _create_screen(preload("res://scripts/ui/status_screen.gd"), "StatusScreen")
-	add_child(_status_screen)
+func _update_target_cursor() -> void:
+	for i: int in party_data.party.size():
+		var character: PartyData.CharacterData = party_data.party[i]
+		if i == _item_target_index:
+			_target_labels[i].text = "> %s    HP %d / %d" % [character.char_name, character.current_hp, character.max_hp]
+		else:
+			_target_labels[i].text = "  %s    HP %d / %d" % [character.char_name, character.current_hp, character.max_hp]
 
-	_formation_screen = _create_screen(preload("res://scripts/ui/formation_screen.gd"), "FormationScreen")
-	add_child(_formation_screen)
+# --- Status screen ---
 
-func _create_screen(script: GDScript, screen_name: String) -> MenuScreen:
-	var screen: MenuScreen = script.new()
-	screen.name = screen_name
-	screen.menu = self
-	screen.party_data = party_data
-	screen.cursor_move_sfx = cursor_move_sfx
-	screen.confirm_sfx = confirm_sfx
-	screen.cancel_sfx = cancel_sfx
-	return screen
+func _open_status_select() -> void:
+	_switch_panel(_status_select)
+	_update_status_cursor()
+
+func _input_status(event: InputEvent) -> void:
+	if event.is_action_pressed("move_up"):
+		_cursor_index = (_cursor_index - 1 + party_data.party.size()) % party_data.party.size()
+		_update_status_cursor()
+		SfxManager.play(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_down"):
+		_cursor_index = (_cursor_index + 1) % party_data.party.size()
+		_update_status_cursor()
+		SfxManager.play(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("confirm"):
+		SfxManager.play(confirm_sfx)
+		_current_screen = Screen.STATUS_DETAIL
+		_show_status_detail(party_data.party[_cursor_index])
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("cancel"):
+		SfxManager.play(cancel_sfx)
+		_return_to_main()
+		get_viewport().set_input_as_handled()
+
+func _update_status_cursor() -> void:
+	for i: int in party_data.party.size():
+		var character: PartyData.CharacterData = party_data.party[i]
+		if i == _cursor_index:
+			_status_labels[i].text = "> %s" % character.char_name
+		else:
+			_status_labels[i].text = "  %s" % character.char_name
+
+func _input_status_detail(event: InputEvent) -> void:
+	if event.is_action_pressed("cancel"):
+		SfxManager.play(cancel_sfx)
+		_current_screen = Screen.STATUS
+		_open_status_select()
+		get_viewport().set_input_as_handled()
+
+func _show_status_detail(character: PartyData.CharacterData) -> void:
+	_switch_panel(_status_detail)
+	(_status_detail.get_node(^"DetailName") as Label).text = character.char_name
+	(_status_detail.get_node(^"DetailLevelLine/LevelValue") as Label).text = str(character.level)
+	(_status_detail.get_node(^"DetailHPLine/HPValue") as Label).text = "%d / %d" % [character.current_hp, character.max_hp]
+	var grid := _status_detail.get_node(^"StatGrid") as GridContainer
+	(grid.get_node(^"STRValue") as Label).text = "%3d" % character.strength
+	(grid.get_node(^"AGIValue") as Label).text = "%3d" % character.agility
+	(grid.get_node(^"VITValue") as Label).text = "%3d" % character.vitality
+	(grid.get_node(^"INTValue") as Label).text = "%3d" % character.intelligence
+	(grid.get_node(^"LCKValue") as Label).text = "%3d" % character.luck
+
+# --- Formation screen ---
+
+func _open_formation() -> void:
+	_switch_panel(_formation_list)
+	_update_formation_display()
+
+func _input_formation(event: InputEvent) -> void:
+	if event.is_action_pressed("move_up"):
+		_cursor_index = (_cursor_index - 1 + party_data.party.size()) % party_data.party.size()
+		_update_formation_display()
+		SfxManager.play(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_down"):
+		_cursor_index = (_cursor_index + 1) % party_data.party.size()
+		_update_formation_display()
+		SfxManager.play(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("confirm"):
+		if _formation_selected_index < 0:
+			_formation_selected_index = _cursor_index
+			SfxManager.play(confirm_sfx)
+			_update_formation_display()
+		else:
+			var temp: PartyData.CharacterData = party_data.party[_formation_selected_index]
+			party_data.party[_formation_selected_index] = party_data.party[_cursor_index]
+			party_data.party[_cursor_index] = temp
+			_formation_selected_index = -1
+			SfxManager.play(confirm_sfx)
+			_update_formation_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("cancel"):
+		if _formation_selected_index >= 0:
+			_formation_selected_index = -1
+			SfxManager.play(cancel_sfx)
+			_update_formation_display()
+		else:
+			SfxManager.play(cancel_sfx)
+			_return_to_main()
+		get_viewport().set_input_as_handled()
+
+func _update_formation_display() -> void:
+	for i: int in party_data.party.size():
+		var character: PartyData.CharacterData = party_data.party[i]
+		var prefix: String
+		if i == _cursor_index:
+			prefix = "> "
+		elif i == _formation_selected_index:
+			prefix = "* "
+		else:
+			prefix = "  "
+		_formation_labels[i].text = "%s%d. %s" % [prefix, i + 1, character.char_name]
+		if i == _formation_selected_index:
+			_formation_labels[i].add_theme_color_override(&"font_color", Color(1.0, 0.85, 0.4))
+		else:
+			_formation_labels[i].remove_theme_color_override(&"font_color")
+
+# --- Stub screens ---
+
+func _show_stub(title: String) -> void:
+	_switch_panel(_stub_panel)
+	_stub_label.text = title + " - Not yet available"
+
+func _input_stub(event: InputEvent) -> void:
+	if event.is_action_pressed("cancel"):
+		SfxManager.play(cancel_sfx)
+		_return_to_main()
+		get_viewport().set_input_as_handled()
+
+# --- Panel switching ---
+
+func _switch_panel(panel: Control) -> void:
+	for p: Control in _screen_panels:
+		p.visible = false
+	panel.visible = true

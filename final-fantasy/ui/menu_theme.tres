@@ -1,0 +1,35 @@
+[gd_resource type="Theme" load_steps=2 format=3]
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_sep"]
+color = Color(0.5, 0.5, 0.8, 0.5)
+thickness = 1
+
+[resource]
+Label/colors/font_color = Color(1, 1, 1, 1)
+Label/font_sizes/font_size = 22
+
+type_variation/TitleLabel = &"Label"
+TitleLabel/colors/font_color = Color(1, 0.85, 0.4, 1)
+TitleLabel/font_sizes/font_size = 24
+
+type_variation/ValueLabel = &"Label"
+ValueLabel/colors/font_color = Color(1, 1, 1, 1)
+ValueLabel/font_sizes/font_size = 20
+
+type_variation/AccentLabel = &"Label"
+AccentLabel/colors/font_color = Color(1, 0.85, 0.4, 1)
+AccentLabel/font_sizes/font_size = 20
+
+type_variation/HintLabel = &"Label"
+HintLabel/colors/font_color = Color(0.8, 0.8, 1, 1)
+HintLabel/font_sizes/font_size = 20
+
+type_variation/SmallLabel = &"Label"
+SmallLabel/colors/font_color = Color(0.8, 0.8, 1, 1)
+SmallLabel/font_sizes/font_size = 18
+
+type_variation/MutedLabel = &"Label"
+MutedLabel/colors/font_color = Color(0.6, 0.6, 0.8, 1)
+MutedLabel/font_sizes/font_size = 22
+
+HSeparator/styles/separator = SubResource("StyleBoxLine_sep")

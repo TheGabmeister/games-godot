@@ -1,6 +1,6 @@
 [gd_scene format=4]
 
-[ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts_consts/level_data.gd" id="1"]
 [ext_resource type="AudioStream" path="res://music/castle_theme.ogg" id="music"]
 [ext_resource type="TileSet" path="res://tilesets/cornelia_tileset.tres" id="2"]
 [ext_resource type="PackedScene" path="res://_scenes/npc.tscn" id="4"]
