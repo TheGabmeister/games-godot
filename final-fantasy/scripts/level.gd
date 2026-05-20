@@ -1,9 +1,8 @@
 extends Node2D
 
-const WARRIOR_SCENE := preload("res://_scenes/warrior.tscn")
-const DIALOGUE_BOX_SCENE := preload("res://_scenes/dialogue_box.tscn")
-const MAIN_MENU_SCENE := preload("res://_scenes/main_menu.tscn")
-
+@export var warrior_scene: PackedScene
+@export var dialogue_box_scene: PackedScene
+@export var main_menu_scene: PackedScene
 @export var music: AudioStream
 @export var default_spawn := Vector2(224, 224)
 
@@ -14,7 +13,7 @@ func _ready() -> void:
 	if music:
 		MusicManager.play(music)
 
-	var warrior: CharacterBody2D = WARRIOR_SCENE.instantiate()
+	var warrior: CharacterBody2D = warrior_scene.instantiate()
 	if GameState.has_spawn_override:
 		warrior.position = GameState.spawn_position
 		GameState.has_spawn_override = false
@@ -31,8 +30,8 @@ func _ready() -> void:
 	camera.limit_bottom = used.end.y * tile_size.y
 	warrior.add_child(camera)
 
-	var dialogue_box: DialogueBox = DIALOGUE_BOX_SCENE.instantiate()
+	var dialogue_box: DialogueBox = dialogue_box_scene.instantiate()
 	add_child(dialogue_box)
 
-	var main_menu: MainMenu = MAIN_MENU_SCENE.instantiate()
+	var main_menu: MainMenu = main_menu_scene.instantiate()
 	add_child(main_menu)

@@ -4,6 +4,9 @@
 [ext_resource type="AudioStream" path="res://music/castle_theme.ogg" id="music"]
 [ext_resource type="TileSet" path="res://tilesets/cornelia_tileset.tres" id="2"]
 [ext_resource type="PackedScene" path="res://_scenes/npc.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://_scenes/warrior.tscn" id="warrior_scene"]
+[ext_resource type="PackedScene" path="res://_scenes/dialogue_box.tscn" id="dialogue_box_scene"]
+[ext_resource type="PackedScene" path="res://_scenes/main_menu.tscn" id="main_menu_scene"]
 [ext_resource type="PackedScene" path="res://_scenes/door_trigger.tscn" id="6"]
 [ext_resource type="Script" path="res://scripts/npc.gd" id="6_b32c1"]
 [ext_resource type="Script" path="res://scripts/door_trigger.gd" id="10_7gnkd"]
@@ -12,6 +15,9 @@
 
 [node name="CorneliaCastle" type="Node2D" unique_id=646642032]
 script = ExtResource("1")
+warrior_scene = ExtResource("warrior_scene")
+dialogue_box_scene = ExtResource("dialogue_box_scene")
+main_menu_scene = ExtResource("main_menu_scene")
 music = ExtResource("music")
 default_spawn = Vector2(480, 608)
 
