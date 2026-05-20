@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Final Fantasy I Pixel Remaster systems recreation in Godot 4.6. The goal is to build scalable gameplay systems (combat, magic, equipment, progression, world traversal) with enough content to validate each system — not a full game recreation. See SPEC.md for the gameplay systems spec and PHASES.md for the 14-phase implementation plan.
+Final Fantasy I Pixel Remaster systems recreation in Godot 4.6. The goal is to build scalable gameplay systems (combat, magic, equipment, progression, world traversal) with enough content to validate each system — not a full game recreation. See SPEC.md for the gameplay systems spec and PHASES.md for the implementation plan (Phases 1-3 complete, 4a next).
 
 When implementing a phase, read both SPEC.md and PHASES.md. The spec has the formulas and numbers; the phases have the build order and scope boundaries.
 
@@ -91,7 +91,7 @@ Battle flow: field movement → step counter triggers encounter → `GameState.t
 - **`_scenes/dialogue_box.tscn`** — CanvasLayer (layer 10) with character-by-character text reveal + SFX. `class_name DialogueBox`. Emits `dialogue_finished` signal.
 - **`_scenes/door_trigger.tscn`** — Reusable Area2D (collision layer 4, mask 2). Exports: `target_scene_path`, `spawn_position`. Calls `WorldSession.transition_to_level()` on player body enter.
 - **`_scenes/party_menu.tscn`** — CanvasLayer (layer 10) with left panel (menu entries, time, gil) and right panel (subscreen panels toggled by visibility). All layout in scene, all styling via `ui/menu_theme.tres` theme resource. Node references use `%` unique names. Single script (`party_menu.gd`) handles all subscreen logic.
-- **`_scenes/battle_scene.tscn`** — CanvasLayer (layer 20) overlay for turn-based combat. `class_name BattleScene`. Three-panel bottom HUD (command menu, enemy list, party HP) matching FF1 Pixel Remaster layout (see `docs/ff1/battle_menu.png`). Enum state machine (`BattlePhase`) drives input dispatch via `match _battle_phase` in `_input()`. WorldSession instantiates it and passes `party_data`. Uses `BattleFormulas` for damage/hit/crit calculations and `Battler` inner class as a unified wrapper for both party members and enemies during combat.
+- **`_scenes/battle_scene.tscn`** — CanvasLayer (layer 20) overlay for turn-based combat. `class_name BattleScene`. Three-panel bottom HUD (command menu, enemy list, party HP) matching FF1 Pixel Remaster layout (see `docs/ff1/battle_menu.png`). Enum state machine (`BattlePhase`) drives input dispatch via `match _battle_phase` in `_input()`. WorldSession instantiates it and passes `party_data`. Contains a `BattleResolver` child node that handles turn resolution and combat animations.
 - **Level scenes** (`cornelia_town.tscn`, `cornelia_castle.tscn`, `cornelia_outskirts.tscn`) — Use `LevelData` script with `@export var music`, `@export var default_spawn`, and `@export var encounter_table: EncounterTable` (null for towns = no random encounters). Contain only TileMapLayer, NPCs, and door triggers — no player, camera, or UI.
 
 ### PartyData access pattern
@@ -117,15 +117,19 @@ WorldSession._ready() → PartyData.new() → party_menu.party_data = party_data
 
 ### Battle system
 
-**BattleScene** (`scripts/battle/battle_scene.gd`, `_scenes/battle_scene.tscn`) — CanvasLayer overlay that runs turn-based combat. Internal enum `BattlePhase { INACTIVE, INTRO, COMMAND_SELECT, TARGETING, ITEM_SELECT, ITEM_TARGET, RESOLVING, ANIMATING, VICTORY, GAME_OVER }`. Input dispatch uses `match _battle_phase` in `_input()`, gated by `GameState.is_state(BATTLE)`.
+Three-file split: shared types, scene controller, and resolution logic.
 
-**Battler** (inner class in `battle_scene.gd`) — unified wrapper for party members and enemies during combat. Party Battlers hold a reference to `CharacterData` (HP changes sync back). Enemy Battlers are ephemeral, created from `EnemyData`. Turn order sorts a single `Array[Battler]` by agility.
+**BattleTypes** (`scripts/battle/battle_types.gd`) — `class_name BattleTypes`. Defines `CommandType { ATTACK, ITEM, RUN }`, `BattleCommand` (action + target + optional item), and `Battler` (unified wrapper for party members and enemies). Party Battlers sync HP back to `CharacterData`. BattleScene and BattleResolver use `const` aliases (`const Battler = BattleTypes.Battler`, etc.) to keep references short.
+
+**BattleScene** (`scripts/battle/battle_scene.gd`, `_scenes/battle_scene.tscn`) — CanvasLayer overlay, controller for turn-based combat. Owns phase state, input dispatch, HUD, command/targeting/item UI, victory/game-over flows, and transitions. Internal enum `BattlePhase { INACTIVE, INTRO, COMMAND_SELECT, TARGETING, ITEM_SELECT, ITEM_TARGET, ANIMATING, VICTORY, GAME_OVER }`. Input dispatch uses `match _battle_phase` in `_input()`, gated by `GameState.is_state(BATTLE)`. Item and target lists use `GameButton` instances (created once, cursor toggled via `set_selected`).
+
+**BattleResolver** (`scripts/battle/battle_resolver.gd`, `class_name BattleResolver`) — child Node in `battle_scene.tscn` (not created via `.new()`). Owns turn resolution: generates enemy commands, sorts by agility, executes attacks/items, runs animations and damage numbers. Communicates back via signals: `round_completed`, `battle_won`, `battle_lost`, `hud_update_requested`, `enemy_list_update_requested`. Has `@export` SFX (attack/hit/miss/crit/death) and `@onready` reference to `%DamageContainer`. Exposes `get_alive_indices(battlers)` for use by BattleScene's targeting input.
 
 **BattleFormulas** (`scripts/battle/battle_formulas.gd`) — static functions for damage calculation, hit/crit checks, run chance, formation targeting weights, EXP distribution. All formulas from SPEC.md §1.3.
 
 **Encounter flow:** PlayerMovement counts tile-steps, picks a weighted-random formation from the level's `EncounterTable`, emits `encounter_triggered`. WorldSession receives the signal and calls `BattleScene.start_battle()`. After battle, WorldSession restores field music via `battle_ended` signal.
 
-**Command input:** Index-driven loop (`_command_index` 0-3). Each character picks Attack/Item/Run, then selects a target. After all 4, round resolves. Enemy commands use formation-weighted targeting (50/25/12.5/12.5% by party position).
+**Command input:** Index-driven loop (`_command_index` 0-3). Each character picks Attack/Item/Run, then selects a target. After all 4, `_resolve_round()` delegates to the resolver. Enemy commands use formation-weighted targeting (50/25/12.5/12.5% by party position).
 
 ### Data resources
 

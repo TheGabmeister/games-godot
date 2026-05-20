@@ -81,10 +81,11 @@ In `scripts/battle/battle_formulas.gd`, add static functions:
 - `apply_elemental_modifiers(damage: int, element, weaknesses, resistances) -> Dictionary` — returns `{ "damage": int, "weak": bool, "resist": bool }` with +50%/-50% applied
 - `spell_hit_with_element(spell_accuracy: int, magic_defense: int, element, weaknesses) -> bool` — adds +20% for weakness
 
-### Step 5 — BattleResolver: _execute_spell + Status Hooks
+### Step 5 — BattleResolver: Spell Execution + Status Hooks
 
 In `scripts/battle/battle_resolver.gd`:
-- Add `_execute_spell(actor: Battler, cmd: BattleCommand) -> void`:
+- Add `CommandType.MAGIC` case in `_execute_actions` match, following the same pattern as `_execute_attack` and `_execute_item`
+- Spell execution logic:
   - Deduct charge from `actor.character_data.spend_charge(spell.level)`
   - Branch on `spell.effect_type`:
     - DAMAGE: calculate damage, check hit, apply elemental mods, deal damage, show number
@@ -95,7 +96,6 @@ In `scripts/battle/battle_resolver.gd`:
     - STATUS_CURE: clear status flag, show text
   - For NulShock-type: append `spell.resist_element` to target's `resistances` array
   - Color-tinted flash for VFX (element → color mapping)
-- Add `CommandType.MAGIC` case in `_execute_actions` match
 - Status hooks in existing flow:
   - In `_execute_actions`: after dead check, skip actors with Sleep status
   - In `_execute_attack`: subtract 40 from accuracy if attacker has Darkness
