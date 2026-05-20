@@ -41,6 +41,7 @@ func _ready() -> void:
 	add_to_group(Groups.MAIN_MENU)
 	_build_ui()
 	_root.visible = false
+	var _err := GameState.state_changed.connect(_on_state_changed)
 
 func open() -> void:
 	_active = true
@@ -51,10 +52,15 @@ func open() -> void:
 	_show_party_overview()
 	SfxManager.play(menu_open_sfx)
 
-func close() -> void:
+func _on_state_changed(_old_state: GameState.State, new_state: GameState.State) -> void:
+	if new_state == GameState.State.MENU:
+		open()
+	elif _active:
+		_close_menu()
+
+func _close_menu() -> void:
 	_active = false
 	_root.visible = false
-	GameState.transition(GameState.State.FIELD)
 	closed.emit()
 
 func _input(event: InputEvent) -> void:
@@ -88,7 +94,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("cancel") or event.is_action_pressed("menu"):
 		SfxManager.play(cancel_sfx)
-		close()
+		GameState.transition(GameState.State.FIELD)
 		get_viewport().set_input_as_handled()
 
 func _open_submenu(index: int) -> void:

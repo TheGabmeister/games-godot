@@ -69,9 +69,6 @@ func _input(event: InputEvent) -> void:
 		velocity = Vector2.ZERO
 		sprite.play(IDLE_ANIM[facing])
 		GameState.transition(GameState.State.MENU)
-		var menu_node := get_tree().get_first_node_in_group(Groups.MAIN_MENU)
-		if menu_node:
-			menu_node.call(&"open")
 		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("confirm"):
