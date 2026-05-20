@@ -40,6 +40,7 @@ func _ready() -> void:
 	if battle_scene_packed:
 		_battle_scene = battle_scene_packed.instantiate()
 		_battle_scene.set(&"party_data", _party_data)
+		var _err: int = _battle_scene.connect(&"battle_ended", Callable(self, &"_on_battle_ended"))
 		add_child(_battle_scene)
 
 	_load_level(initial_level_path)
@@ -75,6 +76,11 @@ func _load_level(scene_path: String) -> void:
 
 	_update_camera_limits()
 	GameState.transition(GameState.State.FIELD)
+
+func _on_battle_ended() -> void:
+	var level_data := _current_level as LevelData
+	if level_data and level_data.music:
+		MusicManager.play(level_data.music)
 
 func _on_encounter_triggered(formation: EncounterFormation) -> void:
 	if _battle_scene:
