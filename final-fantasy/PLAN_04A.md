@@ -7,7 +7,7 @@ Implementation plan for the Vancian spell charge engine, Magic battle command, e
 - **SpellData**: Resource class (`scripts_consts/spell_data.gd`, `.tres` files in `data/spells/`), matching EnemyData/EquipmentData pattern
 - **Element enum**: Defined on SpellData — `enum Element { FIRE, ICE, LIGHTNING, EARTH, POISON, TIME, DEATH, STATUS }`; `-1` for non-elemental
 - **Target types**: `enum TargetType { SINGLE_ENEMY, ALL_ENEMIES, SINGLE_ALLY, ALL_ALLIES, SELF }` — full enum now, Lv 1-2 only uses SINGLE_ENEMY and SINGLE_ALLY
-- **Effect types**: `enum SpellEffect { DAMAGE, HEAL, BUFF, DEBUFF, STATUS_INFLICT, STATUS_CURE }`
+- **Effect types**: `enum SpellEffect { DAMAGE, HEAL, BUFF, DEBUFF, STATUS_INFLICT, STATUS_CURE }`. Spells carry an `Array[SpellEffect]` (effects list) so compound spells (e.g., Curaja = HEAL + STATUS_CURE, Saber = BUFF + BUFF) work without special-case code. Most spells have a single effect; the resolver iterates the array
 - **Learned spells**: Flat `Array[SpellData]` of size 24 on CharacterData (indices `level * 3 + slot`), null for empty slots. Helper methods `get_spells_for_level(level)` and `learn_spell(spell)`
 - **Spell charges**: `Array[int]` of size 8 on CharacterData, one per spell level. Battler reads at battle start, syncs back on spend
 - **Status effects**: `Dictionary[StringName, bool]` on Battler, keyed by `&"sleep"`, `&"darkness"`, `&"silence"`. Inline checks at relevant points in combat loop
@@ -31,16 +31,23 @@ Create `scripts_consts/spell_data.gd` with `class_name SpellData`:
 - `enum SpellEffect { DAMAGE, HEAL, BUFF, DEBUFF, STATUS_INFLICT, STATUS_CURE }`
 - `@export var spell_name: String`
 - `@export var level: int` (1-8)
-- `@export var spell_power: int`
 - `@export var spell_accuracy: int`
-- `@export var element: Element` (-1 for non-elemental, use a sentinel or add NONE to enum)
+- `@export var element: Element` (use `NONE` for non-elemental)
 - `@export var target_type: TargetType`
-- `@export var effect_type: SpellEffect`
+- `@export var effects: Array[SpellEffectEntry]` — one or more effects per spell (see SpellEffectEntry below)
+- `@export var is_white_magic: bool`
+
+Add `NONE` as the first Element value: `enum Element { NONE = -1, FIRE, ICE, LIGHTNING, EARTH, POISON, TIME, DEATH, STATUS }`
+
+**SpellEffectEntry** — inner Resource class (or separate `spell_effect_entry.gd`):
+- `@export var type: SpellData.SpellEffect`
+- `@export var power: int` (damage/heal base, 0 if N/A)
 - `@export var status_name: StringName` (for STATUS_INFLICT/STATUS_CURE — e.g., `&"sleep"`)
 - `@export var buff_stat: StringName` (for BUFF/DEBUFF — e.g., `&"atk"`, `&"def"`, `&"evade"`, `&"hits"`)
 - `@export var buff_amount: int` (e.g., +14 for Temper, -20 for Focus)
-- `@export var resist_element: Element` (for NulShock-type spells; -1 if N/A)
-- `@export var is_white_magic: bool`
+- `@export var resist_element: SpellData.Element` (for NulShock-type spells; NONE if N/A)
+
+Most spells have a single entry. Compound spells (Curaja, Saber) have multiple entries sharing the parent spell's target_type and accuracy
 
 Create 16 `.tres` files in `data/spells/`:
 - White Lv 1: Cure, Protect, Dia, Blink
@@ -87,14 +94,14 @@ In `scripts/battle/battle_resolver.gd`:
 - Add `CommandType.MAGIC` case in `_execute_actions` match, following the same pattern as `_execute_attack` and `_execute_item`
 - Spell execution logic:
   - Deduct charge from `actor.character_data.spend_charge(spell.level)`
-  - Branch on `spell.effect_type`:
-    - DAMAGE: calculate damage, check hit, apply elemental mods, deal damage, show number
-    - HEAL: calculate heal amount, apply to target, show green number
-    - BUFF: add `spell.buff_amount` to target's buff accumulator, show text ("+8 DEF")
-    - DEBUFF: apply to target's debuff field, show text
-    - STATUS_INFLICT: check spell hit, set status flag, show text ("Sleep!")
-    - STATUS_CURE: clear status flag, show text
-  - For NulShock-type: append `spell.resist_element` to target's `resistances` array
+  - Iterate `spell.effects` array — for each `SpellEffectEntry`, branch on `entry.type`:
+    - DAMAGE: calculate damage from `entry.power`, check hit, apply elemental mods, deal damage, show number
+    - HEAL: calculate heal amount from `entry.power`, apply to target, show green number
+    - BUFF: add `entry.buff_amount` to target's buff accumulator for `entry.buff_stat`, show text ("+8 DEF")
+    - DEBUFF: apply `entry.buff_amount` to target's debuff field for `entry.buff_stat`, show text
+    - STATUS_INFLICT: check spell hit, set `entry.status_name` flag, show text ("Sleep!")
+    - STATUS_CURE: clear `entry.status_name` flag, show text
+  - For NulShock-type entries: append `entry.resist_element` to target's `resistances` array (handled inside BUFF branch when `resist_element != NONE`)
   - Color-tinted flash for VFX (element → color mapping)
 - Status hooks in existing flow:
   - In `_execute_actions`: after dead check, skip actors with Sleep status
@@ -156,21 +163,21 @@ In `scripts/autoloads/party_data.gd`, in party initialization:
 
 ## Spells Reference
 
-| Spell | Level | Type | Power | Acc | Element | Target | Effect |
-|-------|-------|------|-------|-----|---------|--------|--------|
-| Cure | W1 | HEAL | 16 | — | — | SINGLE_ALLY | Heal 16-32 HP |
-| Protect | W1 | BUFF | — | — | — | SINGLE_ALLY | +8 DEF |
-| Dia | W1 | DAMAGE | 20 | 64 | DEATH | SINGLE_ENEMY | 20-80, undead bonus |
-| Blink | W1 | BUFF | — | — | — | SINGLE_ALLY | +80 Evade |
-| Blindna | W2 | STATUS_CURE | — | — | — | SINGLE_ALLY | Cure Darkness |
-| Silence | W2 | STATUS_INFLICT | — | 64 | — | SINGLE_ENEMY | Inflict Silence |
-| NulShock | W2 | BUFF | — | — | LIGHTNING | SINGLE_ALLY | Add Lightning resist |
-| Invis | W2 | BUFF | — | — | — | SINGLE_ALLY | +40 Evade |
+| Spell | Level | Effects | Power | Acc | Element | Target | Effect |
+|-------|-------|---------|-------|-----|---------|--------|--------|
+| Cure | W1 | HEAL | 16 | — | NONE | SINGLE_ALLY | Heal 16-32 HP |
+| Protect | W1 | BUFF | — | — | NONE | SINGLE_ALLY | +8 DEF |
+| Dia | W1 | DAMAGE | 20 | 64 | DEATH | ALL_ENEMIES | 20-80, undead bonus |
+| Blink | W1 | BUFF | — | — | NONE | SELF | +80 Evade |
+| Blindna | W2 | STATUS_CURE | — | — | NONE | SINGLE_ALLY | Cure Darkness |
+| Silence | W2 | STATUS_INFLICT | — | 64 | NONE | ALL_ENEMIES | Inflict Silence |
+| NulShock | W2 | BUFF | — | — | LIGHTNING | ALL_ALLIES | Add Lightning resist |
+| Invis | W2 | BUFF | — | — | NONE | SINGLE_ALLY | +40 Evade |
 | Fire | B1 | DAMAGE | 10 | 24 | FIRE | SINGLE_ENEMY | 10-40 Fire |
-| Sleep | B1 | STATUS_INFLICT | — | 24 | — | SINGLE_ENEMY | Inflict Sleep |
-| Focus | B1 | DEBUFF | — | 24 | — | SINGLE_ENEMY | -20 Evade |
+| Sleep | B1 | STATUS_INFLICT | — | 24 | NONE | ALL_ENEMIES | Inflict Sleep |
+| Focus | B1 | DEBUFF | — | 24 | NONE | SINGLE_ENEMY | -20 Evade |
 | Thunder | B1 | DAMAGE | 10 | 24 | LIGHTNING | SINGLE_ENEMY | 10-40 Lightning |
 | Blizzard | B2 | DAMAGE | 20 | 24 | ICE | SINGLE_ENEMY | 20-80 Ice |
-| Dark | B2 | STATUS_INFLICT | — | 24 | — | SINGLE_ENEMY | Inflict Darkness |
-| Temper | B2 | BUFF | — | — | — | SINGLE_ALLY | +14 ATK |
-| Slow | B2 | DEBUFF | — | 24 | — | SINGLE_ENEMY | -1 Hits |
+| Dark | B2 | STATUS_INFLICT | — | 24 | NONE | ALL_ENEMIES | Inflict Darkness |
+| Temper | B2 | BUFF | — | — | NONE | SINGLE_ALLY | +14 ATK |
+| Slow | B2 | DEBUFF | — | 24 | NONE | ALL_ENEMIES | -1 Hits |
