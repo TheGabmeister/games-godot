@@ -1,7 +1,7 @@
 class_name ItemData
 extends Resource
 
-enum EffectType { HEAL_HP }
+enum EffectType { HEAL_HP, RESTORE_CHARGES }
 
 @export var item_name: String
 @export var description: String

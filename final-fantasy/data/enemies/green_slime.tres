@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://71eyefnavbkk" path="res://scripts_consts/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://bubxyo155ld4v" path="res://enemies/green_slime.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+sprite = ExtResource("2")
+enemy_name = "Green Slime"
+max_hp = 24
+attack = 3
+accuracy = 8
+num_hits = 1
+defense = 255
+agility = 3
+evade = 3
+magic_defense = 8
+weaknesses = [0, 1]
+resistances = []
+exp_reward = 12
+gil_reward = 10

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://71eyefnavbkk" path="res://scripts_consts/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://sr2dk5qe0gki" path="res://enemies/skeleton.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+sprite = ExtResource("2")
+enemy_name = "Skeleton"
+max_hp = 10
+attack = 6
+accuracy = 10
+num_hits = 1
+defense = 4
+agility = 6
+evade = 6
+magic_defense = 12
+weaknesses = [0, 6]
+resistances = []
+exp_reward = 9
+gil_reward = 9

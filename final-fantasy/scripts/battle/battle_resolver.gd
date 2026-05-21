@@ -64,12 +64,17 @@ func _execute_actions(actions: Array[Dictionary]) -> void:
 
 		if actor.is_dead():
 			continue
+		if actor.statuses.get(&"sleep", 0) != 0:
+			await _show_status_text(actor.sprite.position, "Sleep")
+			continue
 
 		match cmd.type:
 			CommandType.ATTACK:
 				await _execute_attack(actor, cmd, is_enemy)
 			CommandType.ITEM:
 				await _execute_item(actor, cmd)
+			CommandType.MAGIC:
+				await _execute_spell(actor, cmd, is_enemy)
 
 		hud_update_requested.emit()
 
@@ -80,6 +85,7 @@ func _execute_actions(actions: Array[Dictionary]) -> void:
 			battle_lost.emit()
 			return
 
+	_tick_statuses()
 	round_completed.emit()
 
 func _execute_attack(actor: Battler, cmd: BattleCommand, is_enemy: bool) -> void:
@@ -104,12 +110,20 @@ func _execute_attack(actor: Battler, cmd: BattleCommand, is_enemy: bool) -> void
 	else:
 		await _animate_party_attack(actor, target)
 
+	var effective_accuracy := actor.accuracy
+	if actor.statuses.get(&"darkness", 0) != 0:
+		effective_accuracy -= 40
+	var effective_atk := actor.attack_power + actor.buff_atk
+	var effective_def := target.defense + target.buff_def
+	var effective_evade := target.evade + target.buff_evade
+	var effective_hits := maxi(1, actor.max_hits + actor.debuff_hits)
+
 	var _total_damage := 0
-	for hit_i: int in actor.max_hits:
-		var hit := BattleFormulas.hit_check(actor.accuracy, target.evade)
+	for hit_i: int in effective_hits:
+		var hit := BattleFormulas.hit_check(effective_accuracy, effective_evade)
 		if hit:
 			var is_crit := BattleFormulas.crit_check(actor.crit_rate)
-			var dmg := BattleFormulas.physical_damage(actor.attack_power, target.defense, is_crit)
+			var dmg := BattleFormulas.physical_damage(effective_atk, effective_def, is_crit)
 			_total_damage += dmg
 			target.take_damage(dmg)
 
@@ -126,12 +140,15 @@ func _execute_attack(actor: Battler, cmd: BattleCommand, is_enemy: bool) -> void
 
 		hud_update_requested.emit()
 
+		if target.statuses.get(&"sleep", 0) != 0:
+			target.statuses[&"sleep"] = 0
+
 		if target.is_dead():
 			if not target.is_party:
 				await _kill_enemy(target)
 			break
 
-		if hit_i < actor.max_hits - 1:
+		if hit_i < effective_hits - 1:
 			await get_tree().create_timer(0.15).timeout
 
 func _execute_item(actor: Battler, cmd: BattleCommand) -> void:
@@ -143,6 +160,164 @@ func _execute_item(actor: Battler, cmd: BattleCommand) -> void:
 		return
 	target.current_hp = target.character_data.current_hp
 	await _show_damage_number(target.sprite.position, item.potency, false, true)
+
+func _execute_spell(actor: Battler, cmd: BattleCommand, is_enemy: bool) -> void:
+	var spell: SpellData = cmd.spell
+	if actor.character_data:
+		var _spent := actor.character_data.spend_charge(spell.level)
+
+	var targets: Array[Battler] = _resolve_spell_targets(spell, cmd, is_enemy)
+	if targets.is_empty():
+		return
+
+	_flash_spell_color(spell.element)
+	await _show_status_text(actor.sprite.position, spell.spell_name)
+
+	for target: Battler in targets:
+		if target.is_dead():
+			continue
+		for entry: SpellEffectEntry in spell.effects:
+			await _apply_spell_effect(entry, spell, actor, target)
+		hud_update_requested.emit()
+
+func _apply_spell_effect(entry: SpellEffectEntry, spell: SpellData, _actor: Battler, target: Battler) -> void:
+	match entry.type:
+		SpellData.SpellEffect.DAMAGE:
+			var weaknesses: Array[SpellData.Element] = []
+			if target.enemy_data:
+				weaknesses = target.enemy_data.weaknesses
+			var hit := true
+			if spell.spell_accuracy > 0:
+				hit = BattleFormulas.spell_hit_with_element(spell.spell_accuracy, target.magic_defense, spell.element, weaknesses)
+			if hit:
+				var raw := BattleFormulas.magic_damage(entry.power)
+				var result: Dictionary = BattleFormulas.apply_elemental_modifiers(raw, spell.element, weaknesses, target.resistances)
+				var dmg: int = result["damage"]
+				target.take_damage(dmg)
+				await _show_damage_number(target.sprite.position, dmg, false)
+				_flash_sprite(target.sprite)
+			else:
+				var raw := BattleFormulas.magic_damage(entry.power)
+				var half := maxi(1, floori(float(raw) * 0.5))
+				target.take_damage(half)
+				await _show_damage_number(target.sprite.position, half, false)
+			if target.is_dead() and not target.is_party:
+				await _kill_enemy(target)
+
+		SpellData.SpellEffect.HEAL:
+			var amount := BattleFormulas.magic_damage(entry.power)
+			target.heal(amount)
+			await _show_damage_number(target.sprite.position, amount, false, true)
+
+		SpellData.SpellEffect.BUFF:
+			if entry.resist_element != SpellData.Element.NONE:
+				if entry.resist_element not in target.resistances:
+					target.resistances.append(entry.resist_element)
+				await _show_status_text(target.sprite.position, spell.spell_name)
+			else:
+				_apply_buff(target, entry.buff_stat, entry.buff_amount)
+				var sign_str := "+" if entry.buff_amount > 0 else ""
+				await _show_status_text(target.sprite.position, "%s%d %s" % [sign_str, entry.buff_amount, entry.buff_stat.to_upper()])
+
+		SpellData.SpellEffect.DEBUFF:
+			var weaknesses: Array[SpellData.Element] = []
+			if target.enemy_data:
+				weaknesses = target.enemy_data.weaknesses
+			var hit := true
+			if spell.spell_accuracy > 0:
+				hit = BattleFormulas.spell_hit_with_element(spell.spell_accuracy, target.magic_defense, spell.element, weaknesses)
+			if hit:
+				_apply_buff(target, entry.buff_stat, entry.buff_amount)
+				var sign_str := "+" if entry.buff_amount > 0 else ""
+				await _show_status_text(target.sprite.position, "%s%d %s" % [sign_str, entry.buff_amount, entry.buff_stat.to_upper()])
+			else:
+				await _show_miss(target.sprite.position)
+
+		SpellData.SpellEffect.STATUS_INFLICT:
+			var weaknesses: Array[SpellData.Element] = []
+			if target.enemy_data:
+				weaknesses = target.enemy_data.weaknesses
+			var hit := BattleFormulas.spell_hit_with_element(spell.spell_accuracy, target.magic_defense, spell.element, weaknesses)
+			if hit:
+				target.statuses[entry.status_name] = -1
+				await _show_status_text(target.sprite.position, entry.status_name.capitalize())
+			else:
+				await _show_miss(target.sprite.position)
+
+		SpellData.SpellEffect.STATUS_CURE:
+			target.statuses[entry.status_name] = 0
+			await _show_status_text(target.sprite.position, "Cured")
+
+func _apply_buff(target: Battler, stat: StringName, amount: int) -> void:
+	match stat:
+		&"atk":
+			target.buff_atk += amount
+		&"def":
+			target.buff_def += amount
+		&"evade":
+			target.buff_evade += amount
+		&"hits":
+			target.debuff_hits += amount
+
+func _resolve_spell_targets(spell: SpellData, cmd: BattleCommand, is_enemy: bool) -> Array[Battler]:
+	var targets: Array[Battler] = []
+	match spell.target_type:
+		SpellData.TargetType.SINGLE_ENEMY:
+			var pool := party_battlers if is_enemy else enemy_battlers
+			var idx := cmd.target_index
+			if idx >= 0 and idx < pool.size():
+				if pool[idx].is_dead():
+					idx = _retarget(pool, idx)
+				if idx >= 0:
+					targets.append(pool[idx])
+		SpellData.TargetType.ALL_ENEMIES:
+			var pool := party_battlers if is_enemy else enemy_battlers
+			for b: Battler in pool:
+				if not b.is_dead():
+					targets.append(b)
+		SpellData.TargetType.SINGLE_ALLY:
+			var pool := enemy_battlers if is_enemy else party_battlers
+			var idx := cmd.target_index
+			if idx >= 0 and idx < pool.size():
+				targets.append(pool[idx])
+		SpellData.TargetType.ALL_ALLIES:
+			var pool := enemy_battlers if is_enemy else party_battlers
+			for b: Battler in pool:
+				if not b.is_dead():
+					targets.append(b)
+		SpellData.TargetType.SELF:
+			var pool := enemy_battlers if is_enemy else party_battlers
+			if cmd.actor_index >= 0 and cmd.actor_index < pool.size():
+				targets.append(pool[cmd.actor_index])
+	return targets
+
+func _tick_statuses() -> void:
+	var all_battlers: Array[Battler] = []
+	all_battlers.append_array(party_battlers)
+	all_battlers.append_array(enemy_battlers)
+	for b: Battler in all_battlers:
+		if b.is_dead():
+			continue
+		for status_name: StringName in b.statuses:
+			var val: int = b.statuses[status_name]
+			if val > 0:
+				b.statuses[status_name] = val - 1
+
+const ELEMENT_COLORS: Dictionary = {
+	SpellData.Element.FIRE: Color(1.0, 0.4, 0.2),
+	SpellData.Element.ICE: Color(0.4, 0.8, 1.0),
+	SpellData.Element.LIGHTNING: Color(1.0, 1.0, 0.3),
+	SpellData.Element.DEATH: Color(1.0, 1.0, 0.8),
+}
+
+func _flash_spell_color(element: SpellData.Element) -> void:
+	var color: Color = ELEMENT_COLORS.get(element, Color(0.8, 0.8, 1.0))
+	var canvas := damage_container.get_parent()
+	if canvas:
+		var tw := create_tween()
+		var _t1 := tw.tween_property(canvas, "modulate", color, 0.0)
+		var _t2 := tw.tween_interval(0.08)
+		var _t3 := tw.tween_property(canvas, "modulate", Color.WHITE, 0.0)
 
 # --- ANIMATIONS ---
 
@@ -185,6 +360,20 @@ func _show_damage_number(pos: Vector2, amount: int, is_crit: bool, is_heal := fa
 	var _t2 := tw.parallel().tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.3)
 	var _t3 := tw.tween_callback(label.queue_free)
 	await get_tree().create_timer(0.3).timeout
+
+func _show_status_text(pos: Vector2, text: String) -> void:
+	var label := Label.new()
+	label.text = text
+	label.position = pos + Vector2(-30, -50)
+	label.add_theme_font_size_override("font_size", 20)
+	label.add_theme_color_override("font_color", Color(0.6, 0.9, 1.0))
+	damage_container.add_child(label)
+
+	var tw := create_tween()
+	var _t1 := tw.tween_property(label, "position:y", label.position.y - 30, 0.6)
+	var _t2 := tw.parallel().tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.3)
+	var _t3 := tw.tween_callback(label.queue_free)
+	await get_tree().create_timer(0.35).timeout
 
 func _show_miss(pos: Vector2) -> void:
 	var label := Label.new()

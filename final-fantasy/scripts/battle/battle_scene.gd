@@ -8,6 +8,9 @@ enum BattlePhase {
 	TARGETING,
 	ITEM_SELECT,
 	ITEM_TARGET,
+	MAGIC_LEVEL_SELECT,
+	MAGIC_SPELL_SELECT,
+	MAGIC_TARGET,
 	ANIMATING,
 	VICTORY,
 	GAME_OVER,
@@ -49,6 +52,15 @@ var _item_target_cursor := 0
 var _battle_items: Array[ItemData] = []
 var _item_buttons: Array[GameButton] = []
 var _item_target_buttons: Array[GameButton] = []
+var _magic_level_cursor := 0
+var _magic_spell_cursor := 0
+var _magic_level_buttons: Array[GameButton] = []
+var _magic_spell_buttons: Array[GameButton] = []
+var _magic_spells_for_level: Array[SpellData] = []
+var _selected_spell: SpellData
+var _magic_target_cursor := 0
+var _magic_target_buttons: Array[GameButton] = []
+var _pending_magic_command_type: SpellData.TargetType
 
 var _total_exp := 0
 var _total_gil := 0
@@ -157,6 +169,12 @@ func _input(event: InputEvent) -> void:
 			_handle_item_select_input(event)
 		BattlePhase.ITEM_TARGET:
 			_handle_item_target_input(event)
+		BattlePhase.MAGIC_LEVEL_SELECT:
+			_handle_magic_level_input(event)
+		BattlePhase.MAGIC_SPELL_SELECT:
+			_handle_magic_spell_input(event)
+		BattlePhase.MAGIC_TARGET:
+			_handle_magic_target_input(event)
 		BattlePhase.VICTORY:
 			_handle_victory_input(event)
 		BattlePhase.GAME_OVER:
@@ -208,6 +226,7 @@ func _setup_battlers(formation: EncounterFormation) -> void:
 		b.evade = c.get_evade()
 		b.crit_rate = c.get_crit_rate()
 		b.max_hits = c.get_max_hits()
+		b.magic_defense = c.magic_defense
 		b.is_party = true
 		b.party_index = i
 		b.character_data = c
@@ -228,6 +247,7 @@ func _setup_battlers(formation: EncounterFormation) -> void:
 			b.evade = e.evade
 			b.crit_rate = 0
 			b.max_hits = e.num_hits
+			b.magic_defense = e.magic_defense
 			b.is_party = false
 			b.enemy_data = e
 			_enemy_battlers.append(b)
@@ -346,15 +366,11 @@ func _get_cmd_name(idx: int) -> String:
 func _handle_command_input(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
 		_command_cursor = (_command_cursor - 1 + 4) % 4
-		if _command_cursor == 1:
-			_command_cursor = 0
 		_update_command_cursor()
 		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("move_down"):
 		_command_cursor = (_command_cursor + 1) % 4
-		if _command_cursor == 1:
-			_command_cursor = 2
 		_update_command_cursor()
 		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
@@ -376,8 +392,13 @@ func _select_command() -> void:
 		0: # Attack
 			_play_sfx(confirm_sfx)
 			_enter_targeting()
-		1: # Magic - disabled
-			pass
+		1: # Magic
+			var battler := _party_battlers[_command_index]
+			if battler.statuses.get(&"silence", 0) != 0:
+				_play_sfx(cancel_sfx)
+				return
+			_play_sfx(confirm_sfx)
+			_enter_magic_level_select()
 		2: # Item
 			_play_sfx(confirm_sfx)
 			_enter_item_select()
@@ -390,6 +411,7 @@ func _select_command() -> void:
 func _enter_targeting() -> void:
 	_battle_phase = BattlePhase.TARGETING
 	_command_panel.visible = false
+	_selected_spell = null
 	_target_cursor = 0
 	_find_alive_enemy_target()
 	_update_target_cursor()
@@ -430,20 +452,30 @@ func _handle_targeting_input(event: InputEvent) -> void:
 		_play_sfx(cursor_move_sfx)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("confirm"):
-		var cmd := BattleCommand.new()
-		cmd.type = CommandType.ATTACK
-		cmd.actor_index = _command_index
-		cmd.target_index = _target_cursor
-		_commands.append(cmd)
-		_target_arrow.visible = false
-		_command_index += 1
 		_play_sfx(confirm_sfx)
-		_show_command_menu()
+		if _selected_spell != null and _pending_magic_command_type == SpellData.TargetType.SINGLE_ENEMY:
+			_commit_magic_command(_target_cursor)
+			_selected_spell = null
+		else:
+			var cmd := BattleCommand.new()
+			cmd.type = CommandType.ATTACK
+			cmd.actor_index = _command_index
+			cmd.target_index = _target_cursor
+			_commands.append(cmd)
+			_target_arrow.visible = false
+			_command_index += 1
+			_show_command_menu()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("cancel"):
 		_target_arrow.visible = false
-		_command_panel.visible = true
-		_battle_phase = BattlePhase.COMMAND_SELECT
+		if _selected_spell != null:
+			_item_panel.visible = true
+			_build_magic_spell_list()
+			_battle_phase = BattlePhase.MAGIC_SPELL_SELECT
+			_selected_spell = null
+		else:
+			_command_panel.visible = true
+			_battle_phase = BattlePhase.COMMAND_SELECT
 		_play_sfx(cancel_sfx)
 		get_viewport().set_input_as_handled()
 
@@ -457,7 +489,7 @@ func _enter_item_select() -> void:
 
 	for item_key: ItemData in party_data.inventory:
 		var item: ItemData = item_key
-		if item and item.effect_type == ItemData.EffectType.HEAL_HP:
+		if item:
 			_battle_items.append(item)
 
 	if _battle_items.is_empty():
@@ -561,6 +593,186 @@ func _handle_item_target_input(event: InputEvent) -> void:
 		_battle_phase = BattlePhase.ITEM_SELECT
 		_play_sfx(cancel_sfx)
 		get_viewport().set_input_as_handled()
+
+# --- MAGIC LEVEL SELECT ---
+
+func _enter_magic_level_select() -> void:
+	_battle_phase = BattlePhase.MAGIC_LEVEL_SELECT
+	_command_panel.visible = false
+	_magic_level_cursor = 0
+	_build_magic_level_list()
+	_item_panel.visible = true
+
+func _build_magic_level_list() -> void:
+	_clear_children(_item_list_container)
+	_magic_level_buttons.clear()
+	var char_data: PartyData.CharacterData = _party_battlers[_command_index].character_data
+	for i: int in 8:
+		var spell_level := i + 1
+		var spells := char_data.get_spells_for_level(spell_level)
+		var charges := char_data.spell_charges[i]
+		var max_charges := char_data.max_spell_charges[i]
+		var btn := GameButton.new()
+		if spells.is_empty():
+			btn.button_text = "Lv %d  --" % spell_level
+		else:
+			btn.button_text = "Lv %d  %d/%d" % [spell_level, charges, max_charges]
+		btn.set_selected(i == _magic_level_cursor)
+		_item_list_container.add_child(btn)
+		_magic_level_buttons.append(btn)
+
+func _update_magic_level_cursor() -> void:
+	for i: int in _magic_level_buttons.size():
+		_magic_level_buttons[i].set_selected(i == _magic_level_cursor)
+
+func _handle_magic_level_input(event: InputEvent) -> void:
+	if event.is_action_pressed("move_up"):
+		_magic_level_cursor = (_magic_level_cursor - 1 + 8) % 8
+		_update_magic_level_cursor()
+		_play_sfx(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_down"):
+		_magic_level_cursor = (_magic_level_cursor + 1) % 8
+		_update_magic_level_cursor()
+		_play_sfx(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("confirm"):
+		var char_data: PartyData.CharacterData = _party_battlers[_command_index].character_data
+		var spell_level := _magic_level_cursor + 1
+		var spells := char_data.get_spells_for_level(spell_level)
+		var charges := char_data.spell_charges[_magic_level_cursor]
+		if spells.is_empty() or charges <= 0:
+			_play_sfx(cancel_sfx)
+		else:
+			_play_sfx(confirm_sfx)
+			_magic_spells_for_level = spells
+			_enter_magic_spell_select()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("cancel"):
+		_item_panel.visible = false
+		_command_panel.visible = true
+		_battle_phase = BattlePhase.COMMAND_SELECT
+		_play_sfx(cancel_sfx)
+		get_viewport().set_input_as_handled()
+
+# --- MAGIC SPELL SELECT ---
+
+func _enter_magic_spell_select() -> void:
+	_battle_phase = BattlePhase.MAGIC_SPELL_SELECT
+	_magic_spell_cursor = 0
+	_build_magic_spell_list()
+
+func _build_magic_spell_list() -> void:
+	_clear_children(_item_list_container)
+	_magic_spell_buttons.clear()
+	for i: int in _magic_spells_for_level.size():
+		var spell: SpellData = _magic_spells_for_level[i]
+		var btn := GameButton.new()
+		btn.button_text = spell.spell_name
+		btn.set_selected(i == _magic_spell_cursor)
+		_item_list_container.add_child(btn)
+		_magic_spell_buttons.append(btn)
+
+func _update_magic_spell_cursor() -> void:
+	for i: int in _magic_spell_buttons.size():
+		_magic_spell_buttons[i].set_selected(i == _magic_spell_cursor)
+
+func _handle_magic_spell_input(event: InputEvent) -> void:
+	if event.is_action_pressed("move_up"):
+		_magic_spell_cursor = (_magic_spell_cursor - 1 + _magic_spells_for_level.size()) % _magic_spells_for_level.size()
+		_update_magic_spell_cursor()
+		_play_sfx(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_down"):
+		_magic_spell_cursor = (_magic_spell_cursor + 1) % _magic_spells_for_level.size()
+		_update_magic_spell_cursor()
+		_play_sfx(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("confirm"):
+		_selected_spell = _magic_spells_for_level[_magic_spell_cursor]
+		_play_sfx(confirm_sfx)
+		_pending_magic_command_type = _selected_spell.target_type
+		match _selected_spell.target_type:
+			SpellData.TargetType.SINGLE_ENEMY:
+				_item_panel.visible = false
+				_enter_magic_enemy_targeting()
+			SpellData.TargetType.SINGLE_ALLY:
+				_item_panel.visible = false
+				_enter_magic_ally_targeting()
+			SpellData.TargetType.ALL_ENEMIES, SpellData.TargetType.ALL_ALLIES, SpellData.TargetType.SELF:
+				_commit_magic_command(-1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("cancel"):
+		_play_sfx(cancel_sfx)
+		_build_magic_level_list()
+		_battle_phase = BattlePhase.MAGIC_LEVEL_SELECT
+		get_viewport().set_input_as_handled()
+
+# --- MAGIC TARGETING ---
+
+func _enter_magic_enemy_targeting() -> void:
+	_battle_phase = BattlePhase.TARGETING
+	_target_cursor = 0
+	_find_alive_enemy_target()
+	_update_target_cursor()
+
+func _enter_magic_ally_targeting() -> void:
+	_battle_phase = BattlePhase.MAGIC_TARGET
+	_magic_target_cursor = 0
+	_build_magic_target_list()
+	_item_target_panel.visible = true
+
+func _build_magic_target_list() -> void:
+	_clear_children(_item_target_container)
+	_magic_target_buttons.clear()
+	for i: int in _party_battlers.size():
+		var b: Battler = _party_battlers[i]
+		var btn := GameButton.new()
+		btn.button_text = "%s  %d/%d" % [b.display_name, maxi(0, b.current_hp), b.max_hp]
+		btn.set_selected(i == _magic_target_cursor)
+		_item_target_container.add_child(btn)
+		_magic_target_buttons.append(btn)
+
+func _update_magic_target_cursor() -> void:
+	for i: int in _magic_target_buttons.size():
+		_magic_target_buttons[i].set_selected(i == _magic_target_cursor)
+
+func _handle_magic_target_input(event: InputEvent) -> void:
+	if event.is_action_pressed("move_up"):
+		_magic_target_cursor = (_magic_target_cursor - 1 + _party_battlers.size()) % _party_battlers.size()
+		_update_magic_target_cursor()
+		_play_sfx(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_down"):
+		_magic_target_cursor = (_magic_target_cursor + 1) % _party_battlers.size()
+		_update_magic_target_cursor()
+		_play_sfx(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("confirm"):
+		_play_sfx(confirm_sfx)
+		_item_target_panel.visible = false
+		_commit_magic_command(_magic_target_cursor)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("cancel"):
+		_item_target_panel.visible = false
+		_item_panel.visible = true
+		_build_magic_spell_list()
+		_battle_phase = BattlePhase.MAGIC_SPELL_SELECT
+		_play_sfx(cancel_sfx)
+		get_viewport().set_input_as_handled()
+
+func _commit_magic_command(target_idx: int) -> void:
+	var cmd := BattleCommand.new()
+	cmd.type = CommandType.MAGIC
+	cmd.actor_index = _command_index
+	cmd.target_index = target_idx
+	cmd.spell = _selected_spell
+	_commands.append(cmd)
+	_item_panel.visible = false
+	_item_target_panel.visible = false
+	_target_arrow.visible = false
+	_command_index += 1
+	_show_command_menu()
 
 # --- RUN ---
 

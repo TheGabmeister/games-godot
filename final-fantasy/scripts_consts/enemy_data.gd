@@ -10,6 +10,8 @@ extends Resource
 @export var agility: int
 @export var evade: int
 @export var magic_defense: int
+@export var weaknesses: Array[SpellData.Element] = []
+@export var resistances: Array[SpellData.Element] = []
 @export var exp_reward: int
 @export var gil_reward: int
 @export var sprite: Texture2D

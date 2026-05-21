@@ -37,3 +37,26 @@ static func distribute_exp(total_exp: int, alive_count: int) -> int:
 	if alive_count <= 0:
 		return 0
 	return floori(float(total_exp) / float(alive_count))
+
+static func magic_damage(spell_power: int) -> int:
+	return randi_range(spell_power, spell_power * 2)
+
+static func spell_hit_check(spell_accuracy: int, target_magic_defense: int) -> bool:
+	var chance := spell_accuracy - target_magic_defense
+	return randf() * 100.0 < chance
+
+static func spell_hit_with_element(spell_accuracy: int, target_magic_defense: int, element: SpellData.Element, weaknesses: Array[SpellData.Element]) -> bool:
+	var chance := spell_accuracy - target_magic_defense
+	if element != SpellData.Element.NONE and element in weaknesses:
+		chance += 20
+	return randf() * 100.0 < chance
+
+static func apply_elemental_modifiers(damage: int, element: SpellData.Element, weaknesses: Array[SpellData.Element], target_resistances: Array[SpellData.Element]) -> Dictionary:
+	var weak := element != SpellData.Element.NONE and element in weaknesses
+	var resist := element != SpellData.Element.NONE and element in target_resistances
+	var modified := damage
+	if weak:
+		modified = floori(float(modified) * 1.5)
+	if resist:
+		modified = floori(float(modified) * 0.5)
+	return { "damage": modified, "weak": weak, "resist": resist }

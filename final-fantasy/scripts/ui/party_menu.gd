@@ -8,13 +8,14 @@ signal closed
 @export var confirm_sfx: AudioStream
 @export var cancel_sfx: AudioStream
 
-enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }
+enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, MAGIC_DETAIL, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }
 
 var _active := false
 var _main_cursor := 0
 var _items_cursor := 0
 var _status_cursor := 0
 var _formation_cursor := 0
+var _magic_cursor := 0
 var _current_screen: Screen = Screen.MAIN
 var party_data: PartyData
 
@@ -103,7 +104,11 @@ func _input(event: InputEvent) -> void:
 			_input_status_detail(event)
 		Screen.FORMATION:
 			_input_formation(event)
-		Screen.MAGIC, Screen.EQUIPMENT, Screen.CONFIG:
+		Screen.MAGIC:
+			_input_magic(event)
+		Screen.MAGIC_DETAIL:
+			_input_magic_detail(event)
+		Screen.EQUIPMENT, Screen.CONFIG:
 			_input_stub(event)
 
 # --- Main screen ---
@@ -138,7 +143,8 @@ func _open_submenu(index: int) -> void:
 			_open_items()
 		1:
 			_current_screen = Screen.MAGIC
-			_show_stub("Magic")
+			_magic_cursor = 0
+			_open_magic_select()
 		2:
 			_current_screen = Screen.EQUIPMENT
 			_show_stub("Equipment")
@@ -353,6 +359,72 @@ func _update_formation_display() -> void:
 		_formation_labels[i].button_text = "%d. %s" % [i + 1, character.char_name]
 		_formation_labels[i].set_selected(i == _formation_cursor)
 		_formation_labels[i].set_marked(i == _formation_selected_index)
+
+# --- Magic screen ---
+
+func _open_magic_select() -> void:
+	_switch_panel(_status_select)
+	_update_magic_cursor()
+
+func _input_magic(event: InputEvent) -> void:
+	var prev := _magic_cursor
+	_magic_cursor = _move_cursor(event, _magic_cursor, party_data.party.size())
+	if _magic_cursor != prev:
+		_update_magic_cursor()
+		SfxManager.play(cursor_move_sfx)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("confirm"):
+		SfxManager.play(confirm_sfx)
+		_current_screen = Screen.MAGIC_DETAIL
+		_show_magic_detail(party_data.party[_magic_cursor])
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("cancel"):
+		SfxManager.play(cancel_sfx)
+		_return_to_main()
+		get_viewport().set_input_as_handled()
+
+func _update_magic_cursor() -> void:
+	for i: int in party_data.party.size():
+		var character: PartyData.CharacterData = party_data.party[i]
+		_status_labels[i].button_text = character.char_name
+		_status_labels[i].set_selected(i == _magic_cursor)
+
+func _input_magic_detail(event: InputEvent) -> void:
+	if event.is_action_pressed("cancel"):
+		SfxManager.play(cancel_sfx)
+		_current_screen = Screen.MAGIC
+		_open_magic_select()
+		get_viewport().set_input_as_handled()
+
+func _show_magic_detail(character: PartyData.CharacterData) -> void:
+	_switch_panel(_stub_panel)
+	for child: Node in _stub_panel.get_children():
+		child.queue_free()
+
+	var title := Label.new()
+	title.text = character.char_name + " — Spells"
+	title.theme_type_variation = &"TitleLabel"
+	_stub_panel.add_child(title)
+
+	for i: int in 8:
+		var spell_level := i + 1
+		var spells := character.get_spells_for_level(spell_level)
+		var charges := character.spell_charges[i]
+		var max_charges := character.max_spell_charges[i]
+
+		if max_charges == 0 and spells.is_empty():
+			continue
+
+		var row := Label.new()
+		var spell_names := ""
+		for spell: SpellData in spells:
+			if spell_names != "":
+				spell_names += "  "
+			spell_names += spell.spell_name
+		if spell_names == "":
+			spell_names = "--"
+		row.text = "Lv %d  %d/%d    %s" % [spell_level, charges, max_charges, spell_names]
+		_stub_panel.add_child(row)
 
 # --- Stub screens ---
 

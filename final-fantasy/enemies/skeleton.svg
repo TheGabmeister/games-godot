@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <!-- FF1 Skeleton - Bone-white skeleton warrior -->
+  <!-- Skull -->
+  <rect x="22" y="2" width="20" height="16" fill="#E8E0D0"/>
+  <rect x="24" y="4" width="16" height="12" fill="#F0E8D8"/>
+  <!-- Eye sockets -->
+  <rect x="26" y="6" width="5" height="5" fill="#201010"/>
+  <rect x="33" y="6" width="5" height="5" fill="#201010"/>
+  <!-- Eye glow -->
+  <rect x="27" y="7" width="3" height="3" fill="#C03030"/>
+  <rect x="34" y="7" width="3" height="3" fill="#C03030"/>
+  <!-- Nose -->
+  <rect x="31" y="11" width="2" height="3" fill="#201010"/>
+  <!-- Jaw -->
+  <rect x="26" y="14" width="12" height="4" fill="#D8D0C0"/>
+  <rect x="27" y="15" width="2" height="2" fill="#201010"/>
+  <rect x="31" y="15" width="2" height="2" fill="#201010"/>
+  <rect x="35" y="15" width="2" height="2" fill="#201010"/>
+  <!-- Spine / Ribcage -->
+  <rect x="30" y="18" width="4" height="4" fill="#D8D0C0"/>
+  <rect x="22" y="22" width="20" height="14" fill="#E8E0D0"/>
+  <rect x="24" y="24" width="16" height="10" fill="#D8D0C0"/>
+  <!-- Rib details -->
+  <rect x="25" y="24" width="14" height="2" fill="#C8C0B0"/>
+  <rect x="25" y="28" width="14" height="2" fill="#C8C0B0"/>
+  <rect x="25" y="32" width="14" height="2" fill="#C8C0B0"/>
+  <!-- Spine -->
+  <rect x="30" y="36" width="4" height="6" fill="#D8D0C0"/>
+  <!-- Arms -->
+  <rect x="14" y="22" width="8" height="4" fill="#E8E0D0"/>
+  <rect x="12" y="26" width="4" height="12" fill="#D8D0C0"/>
+  <rect x="42" y="22" width="8" height="4" fill="#E8E0D0"/>
+  <rect x="48" y="26" width="4" height="12" fill="#D8D0C0"/>
+  <!-- Sword (right hand) -->
+  <rect x="50" y="14" width="4" height="16" fill="#A0B0C0"/>
+  <rect x="49" y="12" width="6" height="3" fill="#C0C8D0"/>
+  <rect x="48" y="30" width="8" height="4" fill="#806830"/>
+  <!-- Hands -->
+  <rect x="10" y="36" width="6" height="4" fill="#E8E0D0"/>
+  <rect x="48" y="28" width="6" height="4" fill="#E8E0D0"/>
+  <!-- Pelvis -->
+  <rect x="24" y="42" width="16" height="4" fill="#D8D0C0"/>
+  <!-- Legs -->
+  <rect x="24" y="46" width="6" height="12" fill="#D8D0C0"/>
+  <rect x="34" y="46" width="6" height="12" fill="#D8D0C0"/>
+  <!-- Feet -->
+  <rect x="22" y="58" width="8" height="4" fill="#E8E0D0"/>
+  <rect x="34" y="58" width="8" height="4" fill="#E8E0D0"/>
+</svg>

@@ -18,6 +18,77 @@ const HIT_GROWTH: Dictionary[Job, int] = {
 	Job.BLACK_MAGE: 1,
 }
 
+# Magic Defense at each level (index 0 = level 1)
+const MAGIC_DEF_GROWTH: Dictionary[Job, Array] = {
+	Job.WARRIOR: [
+		15, 17, 19, 21, 23, 25, 27, 29, 31, 33,
+		35, 37, 39, 41, 43, 45, 47, 49, 51, 53,
+	],
+	Job.MONK: [
+		20, 22, 24, 27, 29, 32, 34, 37, 39, 42,
+		44, 47, 49, 52, 54, 57, 59, 62, 64, 67,
+	],
+	Job.WHITE_MAGE: [
+		25, 28, 31, 34, 37, 40, 44, 47, 51, 54,
+		58, 61, 65, 68, 72, 76, 80, 84, 88, 92,
+	],
+	Job.BLACK_MAGE: [
+		20, 23, 26, 29, 32, 35, 38, 41, 44, 47,
+		50, 53, 57, 60, 63, 67, 70, 74, 77, 81,
+	],
+}
+
+# Max spell charges per level at each character level, by job
+# Index 0 = level 1. Each entry is an Array[int] of size 8 (one per spell level)
+const SPELL_CHARGE_GROWTH: Dictionary[Job, Array] = {
+	Job.WARRIOR: [],
+	Job.MONK: [],
+	Job.WHITE_MAGE: [
+		[3, 0, 0, 0, 0, 0, 0, 0],  # Lv1
+		[3, 2, 0, 0, 0, 0, 0, 0],  # Lv2
+		[3, 3, 0, 0, 0, 0, 0, 0],  # Lv3
+		[4, 3, 2, 0, 0, 0, 0, 0],  # Lv4
+		[4, 3, 3, 0, 0, 0, 0, 0],  # Lv5
+		[4, 4, 3, 2, 0, 0, 0, 0],  # Lv6
+		[5, 4, 3, 3, 0, 0, 0, 0],  # Lv7
+		[5, 4, 4, 3, 2, 0, 0, 0],  # Lv8
+		[5, 5, 4, 3, 3, 0, 0, 0],  # Lv9
+		[6, 5, 4, 4, 3, 2, 0, 0],  # Lv10
+		[6, 5, 5, 4, 3, 3, 0, 0],  # Lv11
+		[6, 6, 5, 4, 4, 3, 2, 0],  # Lv12
+		[7, 6, 5, 5, 4, 3, 3, 0],  # Lv13
+		[7, 6, 6, 5, 4, 4, 3, 2],  # Lv14
+		[7, 7, 6, 5, 5, 4, 3, 3],  # Lv15
+		[8, 7, 6, 6, 5, 4, 4, 3],  # Lv16
+		[8, 7, 7, 6, 5, 5, 4, 3],  # Lv17
+		[8, 8, 7, 6, 6, 5, 4, 4],  # Lv18
+		[9, 8, 7, 7, 6, 5, 5, 4],  # Lv19
+		[9, 8, 8, 7, 6, 6, 5, 4],  # Lv20
+	],
+	Job.BLACK_MAGE: [
+		[3, 0, 0, 0, 0, 0, 0, 0],
+		[3, 2, 0, 0, 0, 0, 0, 0],
+		[3, 3, 0, 0, 0, 0, 0, 0],
+		[4, 3, 2, 0, 0, 0, 0, 0],
+		[4, 3, 3, 0, 0, 0, 0, 0],
+		[4, 4, 3, 2, 0, 0, 0, 0],
+		[5, 4, 3, 3, 0, 0, 0, 0],
+		[5, 4, 4, 3, 2, 0, 0, 0],
+		[5, 5, 4, 3, 3, 0, 0, 0],
+		[6, 5, 4, 4, 3, 2, 0, 0],
+		[6, 5, 5, 4, 3, 3, 0, 0],
+		[6, 6, 5, 4, 4, 3, 2, 0],
+		[7, 6, 5, 5, 4, 3, 3, 0],
+		[7, 6, 6, 5, 4, 4, 3, 2],
+		[7, 7, 6, 5, 5, 4, 3, 3],
+		[8, 7, 6, 6, 5, 4, 4, 3],
+		[8, 7, 7, 6, 5, 5, 4, 3],
+		[8, 8, 7, 6, 6, 5, 4, 4],
+		[9, 8, 7, 7, 6, 5, 5, 4],
+		[9, 8, 8, 7, 6, 6, 5, 4],
+	],
+}
+
 # Stat tables: stats at each level (index 0 = level 1, index 1 = level 2, etc.)
 # Format: [max_hp, strength, agility, vitality, intelligence, luck]
 const GROWTH: Dictionary[Job, Array] = {
@@ -148,6 +219,10 @@ class CharacterData:
 	var luck: int
 	var current_exp: int = 0
 	var base_hit_percent: int = 0
+	var magic_defense: int = 0
+	var learned_spells: Array[SpellData] = []
+	var spell_charges: Array[int] = [0, 0, 0, 0, 0, 0, 0, 0]
+	var max_spell_charges: Array[int] = [0, 0, 0, 0, 0, 0, 0, 0]
 
 	var weapon: EquipmentData
 	var shield: EquipmentData
@@ -238,9 +313,61 @@ class CharacterData:
 		vitality = row[3]
 		intelligence = row[4]
 		luck = row[5]
+		var mdef_table: Array = MAGIC_DEF_GROWTH[job]
+		magic_defense = mdef_table[clampi(level - 1, 0, mdef_table.size() - 1)]
+		var charge_table: Array = SPELL_CHARGE_GROWTH[job]
+		if not charge_table.is_empty():
+			var charge_row: Array = charge_table[clampi(level - 1, 0, charge_table.size() - 1)]
+			for i: int in 8:
+				max_spell_charges[i] = charge_row[i]
+				spell_charges[i] = mini(spell_charges[i], max_spell_charges[i])
+
+	func get_spells_for_level(spell_level: int) -> Array[SpellData]:
+		var result: Array[SpellData] = []
+		var base := (spell_level - 1) * 3
+		for i: int in 3:
+			var idx := base + i
+			if idx < learned_spells.size() and learned_spells[idx] != null:
+				result.append(learned_spells[idx])
+		return result
+
+	func learn_spell(spell: SpellData) -> bool:
+		var base := (spell.level - 1) * 3
+		for i: int in 3:
+			var idx := base + i
+			if idx < learned_spells.size() and learned_spells[idx] == null:
+				learned_spells[idx] = spell
+				return true
+		return false
+
+	func spend_charge(spell_level: int) -> bool:
+		var idx := spell_level - 1
+		if idx < 0 or idx >= spell_charges.size() or spell_charges[idx] <= 0:
+			return false
+		spell_charges[idx] -= 1
+		return true
+
+	func restore_all_charges() -> void:
+		for i: int in 8:
+			spell_charges[i] = max_spell_charges[i]
 
 
 const POTION := preload("res://data/items/potion.tres")
+const ETHER := preload("res://data/items/ether.tres")
+
+const CURE := preload("res://data/spells/cure.tres")
+const PROTECT := preload("res://data/spells/protect.tres")
+const DIA := preload("res://data/spells/dia.tres")
+const BLINDNA := preload("res://data/spells/blindna.tres")
+const SILENCE := preload("res://data/spells/silence.tres")
+const NULSHOCK := preload("res://data/spells/nulshock.tres")
+
+const FIRE := preload("res://data/spells/fire.tres")
+const SLEEP := preload("res://data/spells/sleep.tres")
+const THUNDER := preload("res://data/spells/thunder.tres")
+const BLIZZARD := preload("res://data/spells/blizzard.tres")
+const DARK := preload("res://data/spells/dark.tres")
+const TEMPER := preload("res://data/spells/temper.tres")
 
 const RAPIER := preload("res://data/equipment/rapier.tres")
 const NUNCHAKU := preload("res://data/equipment/nunchaku.tres")
@@ -265,7 +392,9 @@ func _ready() -> void:
 		_create(Job.BLACK_MAGE, 25,  3, 5,  2, 20, 10),
 	]
 	_equip_starter_gear()
+	_assign_starter_spells()
 	add_item(POTION, 3)
+	add_item(ETHER, 2)
 
 func _process(delta: float) -> void:
 	if GameState.is_state(GameState.State.FIELD):
@@ -287,8 +416,11 @@ func remove_item(item: ItemData, qty: int = 1) -> void:
 func use_item(item: ItemData, target: CharacterData) -> bool:
 	if item not in inventory:
 		return false
-	if item.effect_type == ItemData.EffectType.HEAL_HP:
-		target.current_hp = mini(target.current_hp + item.potency, target.max_hp)
+	match item.effect_type:
+		ItemData.EffectType.HEAL_HP:
+			target.current_hp = mini(target.current_hp + item.potency, target.max_hp)
+		ItemData.EffectType.RESTORE_CHARGES:
+			target.restore_all_charges()
 	remove_item(item)
 	return true
 
@@ -310,6 +442,15 @@ func _create(job: Job, hp: int, str_: int, agi: int, vit: int, int_: int, lck: i
 	c.vitality = vit
 	c.intelligence = int_
 	c.luck = lck
+	var _r := c.learned_spells.resize(24)
+	var mdef_table: Array = MAGIC_DEF_GROWTH[job]
+	c.magic_defense = mdef_table[0]
+	var charge_table: Array = SPELL_CHARGE_GROWTH[job]
+	if not charge_table.is_empty():
+		var charge_row: Array = charge_table[0]
+		for i: int in 8:
+			c.max_spell_charges[i] = charge_row[i]
+			c.spell_charges[i] = charge_row[i]
 	return c
 
 func _equip_starter_gear() -> void:
@@ -333,3 +474,20 @@ func _equip_starter_gear() -> void:
 	black_mage.weapon = KNIFE
 	black_mage.body_armor = CLOTHES
 	black_mage.arm_armor = LEATHER_GLOVES
+
+func _assign_starter_spells() -> void:
+	var wm := party[2]
+	var _w1 := wm.learn_spell(CURE)
+	var _w2 := wm.learn_spell(PROTECT)
+	var _w3 := wm.learn_spell(DIA)
+	var _w4 := wm.learn_spell(BLINDNA)
+	var _w5 := wm.learn_spell(SILENCE)
+	var _w6 := wm.learn_spell(NULSHOCK)
+
+	var bm := party[3]
+	var _b1 := bm.learn_spell(FIRE)
+	var _b2 := bm.learn_spell(SLEEP)
+	var _b3 := bm.learn_spell(THUNDER)
+	var _b4 := bm.learn_spell(BLIZZARD)
+	var _b5 := bm.learn_spell(DARK)
+	var _b6 := bm.learn_spell(TEMPER)

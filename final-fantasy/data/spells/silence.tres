@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://cf5367v8pir5q" path="res://scripts_consts/spell_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://ba33rvenlwn32" path="res://scripts_consts/spell_effect_entry.gd" id="2"]
+
+[sub_resource type="Resource" id="effect_0"]
+script = ExtResource("2")
+type = 4
+power = 0
+status_name = &"silence"
+buff_stat = &""
+buff_amount = 0
+resist_element = -1
+
+[resource]
+script = ExtResource("1")
+spell_name = "Silence"
+level = 2
+spell_accuracy = 64
+element = -1
+target_type = 1
+effects = [SubResource("effect_0")]
+is_white_magic = true

@@ -1,12 +1,13 @@
 class_name BattleTypes
 
-enum CommandType { ATTACK, ITEM, RUN }
+enum CommandType { ATTACK, ITEM, RUN, MAGIC }
 
 class BattleCommand:
 	var type: CommandType
 	var actor_index: int
 	var target_index: int = -1
 	var item: ItemData
+	var spell: SpellData
 	var is_enemy_command: bool = false
 
 class Battler:
@@ -26,6 +27,13 @@ class Battler:
 	var enemy_data: EnemyData
 	var sprite: Sprite2D
 	var home_position: Vector2
+	var statuses: Dictionary = {}
+	var buff_atk: int = 0
+	var buff_def: int = 0
+	var buff_evade: int = 0
+	var debuff_hits: int = 0
+	var resistances: Array[SpellData.Element] = []
+	var magic_defense: int = 0
 
 	func is_dead() -> bool:
 		return current_hp <= 0

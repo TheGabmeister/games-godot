@@ -15,7 +15,8 @@ Implementation plan for the Vancian spell charge engine, Magic battle command, e
 - **Elemental resistances on party**: `Array[SpellData.Element]` on Battler for NulShock and future resist spells. Mirrors EnemyData pattern
 - **Magic UI flow**: COMMAND_SELECT → MAGIC_LEVEL_SELECT (new phase) → MAGIC_SPELL_SELECT (new phase) → reuse TARGETING or ITEM_TARGET depending on spell target type. Silence blocks entering Magic
 - **Spell execution**: New `_execute_spell` in BattleResolver. Deducts charge, branches on effect type, uses BattleFormulas for damage/hit
-- **VFX**: Minimal — color-tinted flash + floating text ("Fire!", "Sleep!", "+8 DEF"). Upgrade to real VFX later
+- **Spell SFX**: `@export var sfx: AudioStream` on SpellData. Generated via ffmpeg synthesis in `sfx/spells/`. 5 distinct SFX: fire, thunder, ice, heal, holy. Plus 3 shared: buff_cast, debuff_cast, status_inflict. Mapped per spell in `.tres` files
+- **VFX**: Per-spell animated effects as lightweight scene snippets (particles or tween-driven sprites). 5 spell VFX: fire burst, lightning bolt, ice shards, healing glow, holy light. 1 generic buff shimmer (tinted per element). 3 status indicators on battler sprites: sleep bubbles, darkness cloud, silence X icon
 - **Enemy AI**: No enemy spellcasting. New enemies are melee-only with elemental weaknesses
 - **Ether**: New `ItemData.EffectType.RESTORE_CHARGES`. Full recharge (all levels to max)
 - **Starter spells**: White Mage gets all Lv 1-2 White spells, Black Mage gets all Lv 1-2 Black spells, assigned in PartyData init with starting charges. 3-per-level limit enforced in Phase 4b when shops arrive
@@ -35,6 +36,7 @@ Create `scripts_consts/spell_data.gd` with `class_name SpellData`:
 - `@export var element: Element` (use `NONE` for non-elemental)
 - `@export var target_type: TargetType`
 - `@export var effects: Array[SpellEffectEntry]` — one or more effects per spell (see SpellEffectEntry below)
+- `@export var sfx: AudioStream` — per-spell cast sound effect
 - `@export var is_white_magic: bool`
 
 Add `NONE` as the first Element value: `enum Element { NONE = -1, FIRE, ICE, LIGHTNING, EARTH, POISON, TIME, DEATH, STATUS }`
@@ -65,6 +67,7 @@ In `scripts/autoloads/party_data.gd`, add to CharacterData:
 - `func learn_spell(spell: SpellData) -> bool` — places spell in first empty slot for its level, returns false if full
 - `func spend_charge(level: int) -> bool` — decrements charge, returns false if empty
 - `func restore_all_charges() -> void` — fills all levels to max
+- `var magic_defense: int` — per-class, level-based. Add a `MAGIC_DEF_GROWTH: Dictionary[Job, Array]` table (same pattern as `GROWTH`). Apply in `_apply_level_stats()`. Starting values at Lv 1: Warrior 15, Monk 20, White Mage 25, Black Mage 20. Casters scale faster (White Wizard reaches ~120 by Lv 50, Warrior ~60)
 
 ### Step 3 — BattleTypes Extensions
 
@@ -72,13 +75,13 @@ In `scripts/battle/battle_types.gd`:
 - Add `MAGIC` to `CommandType` enum
 - Add `var spell: SpellData` to BattleCommand
 - Add to Battler:
-  - `var statuses: Dictionary` — `{ &"sleep": bool, &"darkness": bool, &"silence": bool }`
+  - `var statuses: Dictionary` — `{ &"sleep": int, &"darkness": int, &"silence": int }`. Value = turns remaining (-1 = permanent/until cured, 0 = inactive). Sleep is set to -1 (cleared on physical hit), Darkness/Silence are -1 (cleared by cure spells). Status checks use `statuses.get(name, 0) != 0`. Turn-decrement hook in resolver's end-of-round for future timed statuses (Poison, etc.)
   - `var buff_atk: int = 0`
   - `var buff_def: int = 0`
   - `var buff_evade: int = 0`
   - `var debuff_hits: int = 0`
   - `var resistances: Array[SpellData.Element] = []`
-  - `var magic_defense: int = 0` (sourced from EnemyData or a base value for party)
+  - `var magic_defense: int = 0` — for enemies, sourced from EnemyData. For party members, sourced from CharacterData (see Step 2 addition)
 
 ### Step 4 — BattleFormulas
 
@@ -99,14 +102,17 @@ In `scripts/battle/battle_resolver.gd`:
     - HEAL: calculate heal amount from `entry.power`, apply to target, show green number
     - BUFF: add `entry.buff_amount` to target's buff accumulator for `entry.buff_stat`, show text ("+8 DEF")
     - DEBUFF: apply `entry.buff_amount` to target's debuff field for `entry.buff_stat`, show text
-    - STATUS_INFLICT: check spell hit, set `entry.status_name` flag, show text ("Sleep!")
-    - STATUS_CURE: clear `entry.status_name` flag, show text
+    - STATUS_INFLICT: check spell hit, set `entry.status_name` to -1 (permanent until cured), show text ("Sleep!")
+    - STATUS_CURE: set `entry.status_name` to 0, show text
   - For NulShock-type entries: append `entry.resist_element` to target's `resistances` array (handled inside BUFF branch when `resist_element != NONE`)
-  - Color-tinted flash for VFX (element → color mapping)
+  - Play `spell.sfx` via SfxManager when spell executes
+  - Play spell VFX scene on target(s) — instantiate from element-keyed VFX map, queue_free on completion
+  - Show "Weak!" popup text when elemental weakness triggers, "Resist!" when resistance reduces damage
 - Status hooks in existing flow:
-  - In `_execute_actions`: after dead check, skip actors with Sleep status
-  - In `_execute_attack`: subtract 40 from accuracy if attacker has Darkness
-  - In `_execute_attack`: on physical hit against sleeping target, clear sleep
+  - In `_execute_actions`: after dead check, skip actors where `statuses.get(&"sleep", 0) != 0`
+  - In `_execute_attack`: subtract 40 from accuracy if `statuses.get(&"darkness", 0) != 0`
+  - In `_execute_attack`: on physical hit against sleeping target, set `statuses[&"sleep"] = 0`
+  - End-of-round: iterate all battlers' statuses, decrement any value > 0 (future timed statuses auto-expire)
   - In `_execute_attack`: apply `buff_atk` to attack power, `buff_def` to defense, `buff_evade` to evade, `debuff_hits` to max_hits
 
 ### Step 6 — BattleScene: Magic Command UI
@@ -115,7 +121,7 @@ In `scripts/battle/battle_scene.gd`:
 - Add `MAGIC_LEVEL_SELECT` and `MAGIC_SPELL_SELECT` to `BattlePhase` enum
 - Add cursor vars: `_magic_level_cursor`, `_magic_spell_cursor`
 - Add `_handle_magic_level_input(event)` and `_handle_magic_spell_input(event)` to `_input` dispatch
-- Silence gate: in `_select_command`, if current battler has Silence status, play buzzer and don't enter magic flow
+- Silence gate: in `_select_command`, if `statuses.get(&"silence", 0) != 0`, play buzzer and don't enter magic flow
 - MAGIC_LEVEL_SELECT: show spell levels 1-8, gray out levels with 0 charges or no spells, up/down to navigate, confirm to enter spell list, cancel to return to command select
 - MAGIC_SPELL_SELECT: show learned spells for selected level, up/down to navigate, confirm to enter targeting, cancel to go back to level select
 - On spell confirm: set target phase based on `spell.target_type` — TARGETING for SINGLE_ENEMY, ITEM_TARGET (reused) for SINGLE_ALLY, auto-resolve for SELF/ALL
@@ -156,28 +162,85 @@ Build UI with GameButton for character select, Labels for spell display.
 ### Step 10 — Starter Spell Assignment
 
 In `scripts/autoloads/party_data.gd`, in party initialization:
-- White Mage: learn all 4 White Lv 1 + all 4 White Lv 2 spells, set Lv 1 charges to 3, Lv 2 charges to 2
-- Black Mage: learn all 4 Black Lv 1 + all 4 Black Lv 2 spells, set Lv 1 charges to 3, Lv 2 charges to 2
+- White Mage: learn 3 of 4 per level (3-slot limit). Lv 1: Cure, Protect, Dia (skip Blink). Lv 2: Blindna, Silence, NulShock (skip Invis). Set Lv 1 charges to 3, Lv 2 charges to 2
+- Black Mage: learn 3 of 4 per level (3-slot limit). Lv 1: Fire, Sleep, Thunder (skip Focus). Lv 2: Blizzard, Dark, Temper (skip Slow). Set Lv 1 charges to 3, Lv 2 charges to 2
 - Warrior / Monk: no spells, all charges 0
 - Add 2 Ethers to starting inventory for testing
 
+### Step 11 — Spell SFX
+
+Generate 8 OGG files in `sfx/spells/` via ffmpeg synthesis:
+- `fire.ogg` — crackling whoosh (noise burst + sine sweep)
+- `thunder.ogg` — sharp electric zap (high-freq sine + noise)
+- `ice.ogg` — crystalline shatter (high sine + filtered noise)
+- `heal.ogg` — warm ascending chime (multi-sine arpeggio)
+- `holy.ogg` — bright bell tone (high sine chord)
+- `buff_cast.ogg` — soft rising shimmer (sine sweep up)
+- `debuff_cast.ogg` — low descending tone (sine sweep down)
+- `status_inflict.ogg` — dull thud/impact (low sine + noise)
+
+Add `@export var sfx: AudioStream` to `spell_data.gd`. Wire each spell `.tres` to the appropriate SFX:
+- Fire → fire.ogg, Thunder → thunder.ogg, Blizzard → ice.ogg
+- Cure → heal.ogg, Dia → holy.ogg
+- Protect, Blink, Invis, Temper, NulShock → buff_cast.ogg
+- Focus, Slow → debuff_cast.ogg
+- Sleep, Silence, Dark, Blindna → status_inflict.ogg
+
+In BattleResolver `_execute_spell`: play `spell.sfx` via SfxManager before effects iterate.
+
+### Step 12 — Spell VFX
+
+Create per-element VFX as `GPUParticles2D` scenes in `_scenes/vfx/`. Each is a standalone scene instantiated at the target position, auto-freed via `one_shot = true` + a timer or `finished` signal.
+
+**Per-element particle scenes** (`_scenes/vfx/`):
+- `vfx_fire.tscn` — orange-red embers rising and fading, warm glow
+- `vfx_thunder.tscn` — yellow-white sparks in a burst pattern, bright flash
+- `vfx_ice.tscn` — cyan shards expanding outward, crystalline
+- `vfx_heal.tscn` — green sparkles drifting upward, soft glow
+- `vfx_holy.tscn` — white-gold radial burst, bright
+
+**Buff/debuff shimmer** — brief color tint pulse on target sprite via tween (gold for buff, purple for debuff). No separate scene needed.
+
+**Element → VFX map** in BattleResolver: `const ELEMENT_VFX: Dictionary` keyed by `SpellData.Element`, values are preloaded PackedScenes. HEAL/BUFF/STATUS effects use a lookup by spell effect type instead. Instantiate at target sprite position, add to `_battler_container`, auto-frees after particle lifetime.
+
+Replace `_flash_spell_color` with `_play_spell_vfx(element, target_position)` that spawns the particle scene.
+
+### Step 13 — Elemental Popup Text
+
+In BattleResolver `_apply_spell_effect`, after `apply_elemental_modifiers`:
+- If `result["weak"]` is true: show "Weak!" text in orange above target (same pattern as `_show_status_text`)
+- If `result["resist"]` is true: show "Resist!" text in blue above target
+
+### Step 14 — Status Effect Icons
+
+Add persistent status indicators on battler sprites during battle:
+- Sleep: small "Zzz" Label above sprite, bobbing animation (tween loop)
+- Darkness: dark translucent overlay on sprite (modulate toward dark purple)
+- Silence: small "X" Label near sprite in red
+
+In BattleResolver:
+- `_update_status_indicators(battler)` — called after any status change. Creates/removes indicator nodes as children of `battler.sprite`
+- On status set to non-zero: create indicator if not present
+- On status cleared to 0: remove indicator
+- Indicators are cleaned up in battle cleanup
+
 ## Spells Reference
 
-| Spell | Level | Effects | Power | Acc | Element | Target | Effect |
-|-------|-------|---------|-------|-----|---------|--------|--------|
-| Cure | W1 | HEAL | 16 | — | NONE | SINGLE_ALLY | Heal 16-32 HP |
-| Protect | W1 | BUFF | — | — | NONE | SINGLE_ALLY | +8 DEF |
-| Dia | W1 | DAMAGE | 20 | 64 | DEATH | ALL_ENEMIES | 20-80, undead bonus |
-| Blink | W1 | BUFF | — | — | NONE | SELF | +80 Evade |
-| Blindna | W2 | STATUS_CURE | — | — | NONE | SINGLE_ALLY | Cure Darkness |
-| Silence | W2 | STATUS_INFLICT | — | 64 | NONE | ALL_ENEMIES | Inflict Silence |
-| NulShock | W2 | BUFF | — | — | LIGHTNING | ALL_ALLIES | Add Lightning resist |
-| Invis | W2 | BUFF | — | — | NONE | SINGLE_ALLY | +40 Evade |
-| Fire | B1 | DAMAGE | 10 | 24 | FIRE | SINGLE_ENEMY | 10-40 Fire |
-| Sleep | B1 | STATUS_INFLICT | — | 24 | NONE | ALL_ENEMIES | Inflict Sleep |
-| Focus | B1 | DEBUFF | — | 24 | NONE | SINGLE_ENEMY | -20 Evade |
-| Thunder | B1 | DAMAGE | 10 | 24 | LIGHTNING | SINGLE_ENEMY | 10-40 Lightning |
-| Blizzard | B2 | DAMAGE | 20 | 24 | ICE | SINGLE_ENEMY | 20-80 Ice |
-| Dark | B2 | STATUS_INFLICT | — | 24 | NONE | ALL_ENEMIES | Inflict Darkness |
-| Temper | B2 | BUFF | — | — | NONE | SINGLE_ALLY | +14 ATK |
-| Slow | B2 | DEBUFF | — | 24 | NONE | ALL_ENEMIES | -1 Hits |
+| Spell | Level | Effects | Power | Acc | Element | Target | SFX | Effect |
+|-------|-------|---------|-------|-----|---------|--------|-----|--------|
+| Cure | W1 | HEAL | 16 | — | NONE | SINGLE_ALLY | heal | Heal 16-32 HP |
+| Protect | W1 | BUFF | — | — | NONE | SINGLE_ALLY | buff_cast | +8 DEF |
+| Dia | W1 | DAMAGE | 20 | 64 | DEATH | ALL_ENEMIES | holy | 20-80, undead bonus |
+| Blink | W1 | BUFF | — | — | NONE | SELF | buff_cast | +80 Evade |
+| Blindna | W2 | STATUS_CURE | — | — | NONE | SINGLE_ALLY | heal | Cure Darkness |
+| Silence | W2 | STATUS_INFLICT | — | 64 | NONE | ALL_ENEMIES | status_inflict | Inflict Silence |
+| NulShock | W2 | BUFF | — | — | LIGHTNING | ALL_ALLIES | buff_cast | Add Lightning resist |
+| Invis | W2 | BUFF | — | — | NONE | SINGLE_ALLY | buff_cast | +40 Evade |
+| Fire | B1 | DAMAGE | 10 | 24 | FIRE | SINGLE_ENEMY | fire | 10-40 Fire |
+| Sleep | B1 | STATUS_INFLICT | — | 24 | NONE | ALL_ENEMIES | status_inflict | Inflict Sleep |
+| Focus | B1 | DEBUFF | — | 24 | NONE | SINGLE_ENEMY | debuff_cast | -20 Evade |
+| Thunder | B1 | DAMAGE | 10 | 24 | LIGHTNING | SINGLE_ENEMY | thunder | 10-40 Lightning |
+| Blizzard | B2 | DAMAGE | 20 | 24 | ICE | SINGLE_ENEMY | ice | 20-80 Ice |
+| Dark | B2 | STATUS_INFLICT | — | 24 | NONE | ALL_ENEMIES | status_inflict | Inflict Darkness |
+| Temper | B2 | BUFF | — | — | NONE | SINGLE_ALLY | buff_cast | +14 ATK |
+| Slow | B2 | DEBUFF | — | 24 | NONE | ALL_ENEMIES | debuff_cast | -1 Hits |
