@@ -84,6 +84,16 @@ func _input(event: InputEvent) -> void:
 		GameState.transition(GameState.State.MENU)
 		get_viewport().set_input_as_handled()
 		return
+	var key := event as InputEventKey
+	if OS.is_debug_build() and key and key.pressed and key.keycode == KEY_F1:
+		if encounter_table:
+			velocity = Vector2.ZERO
+			sprite.play(IDLE_ANIM[facing])
+			var formation := _pick_formation()
+			reset_step_counter()
+			encounter_triggered.emit(formation)
+			get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("confirm"):
 		var target := _get_facing_interactable()
 		if target:
