@@ -11,4 +11,5 @@ enum SpellEffect { DAMAGE, HEAL, BUFF, DEBUFF, STATUS_INFLICT, STATUS_CURE }
 @export var element: Element = Element.NONE
 @export var target_type: TargetType
 @export var effects: Array[SpellEffectEntry] = []
+@export var sfx: AudioStream
 @export var is_white_magic: bool

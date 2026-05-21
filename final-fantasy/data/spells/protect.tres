@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="SpellData" load_steps=4 format=3]
 
 [ext_resource type="Script" uid="uid://cf5367v8pir5q" path="res://scripts_consts/spell_data.gd" id="1"]
 [ext_resource type="Script" uid="uid://ba33rvenlwn32" path="res://scripts_consts/spell_effect_entry.gd" id="2"]
+[ext_resource type="AudioStreamOggVorbis" path="res://sfx/spells/buff_cast.ogg" id="3"]
 
 [sub_resource type="Resource" id="effect_0"]
 script = ExtResource("2")
@@ -20,4 +21,5 @@ spell_accuracy = 0
 element = -1
 target_type = 2
 effects = [SubResource("effect_0")]
+sfx = ExtResource("3")
 is_white_magic = true

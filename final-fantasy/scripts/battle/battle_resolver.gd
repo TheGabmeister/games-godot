@@ -142,6 +142,7 @@ func _execute_attack(actor: Battler, cmd: BattleCommand, is_enemy: bool) -> void
 
 		if target.statuses.get(&"sleep", 0) != 0:
 			target.statuses[&"sleep"] = 0
+			_update_status_indicators(target)
 
 		if target.is_dead():
 			if not target.is_party:
@@ -170,6 +171,8 @@ func _execute_spell(actor: Battler, cmd: BattleCommand, is_enemy: bool) -> void:
 	if targets.is_empty():
 		return
 
+	if spell.sfx:
+		_play_sfx(spell.sfx)
 	_flash_spell_color(spell.element)
 	await _show_status_text(actor.sprite.position, spell.spell_name)
 
@@ -186,6 +189,7 @@ func _apply_spell_effect(entry: SpellEffectEntry, spell: SpellData, _actor: Batt
 			var weaknesses: Array[SpellData.Element] = []
 			if target.enemy_data:
 				weaknesses = target.enemy_data.weaknesses
+			_play_spell_vfx(spell.element, entry.type, target.sprite.position)
 			var hit := true
 			if spell.spell_accuracy > 0:
 				hit = BattleFormulas.spell_hit_with_element(spell.spell_accuracy, target.magic_defense, spell.element, weaknesses)
@@ -196,6 +200,10 @@ func _apply_spell_effect(entry: SpellEffectEntry, spell: SpellData, _actor: Batt
 				target.take_damage(dmg)
 				await _show_damage_number(target.sprite.position, dmg, false)
 				_flash_sprite(target.sprite)
+				if result["weak"]:
+					await _show_popup_text(target.sprite.position, "Weak!", Color(1.0, 0.6, 0.2))
+				elif result["resist"]:
+					await _show_popup_text(target.sprite.position, "Resist!", Color(0.4, 0.6, 1.0))
 			else:
 				var raw := BattleFormulas.magic_damage(entry.power)
 				var half := maxi(1, floori(float(raw) * 0.5))
@@ -205,11 +213,13 @@ func _apply_spell_effect(entry: SpellEffectEntry, spell: SpellData, _actor: Batt
 				await _kill_enemy(target)
 
 		SpellData.SpellEffect.HEAL:
+			_play_spell_vfx(spell.element, entry.type, target.sprite.position)
 			var amount := BattleFormulas.magic_damage(entry.power)
 			target.heal(amount)
 			await _show_damage_number(target.sprite.position, amount, false, true)
 
 		SpellData.SpellEffect.BUFF:
+			_shimmer_sprite(target.sprite, Color(1.0, 0.9, 0.5))
 			if entry.resist_element != SpellData.Element.NONE:
 				if entry.resist_element not in target.resistances:
 					target.resistances.append(entry.resist_element)
@@ -227,6 +237,7 @@ func _apply_spell_effect(entry: SpellEffectEntry, spell: SpellData, _actor: Batt
 			if spell.spell_accuracy > 0:
 				hit = BattleFormulas.spell_hit_with_element(spell.spell_accuracy, target.magic_defense, spell.element, weaknesses)
 			if hit:
+				_shimmer_sprite(target.sprite, Color(0.7, 0.4, 0.9))
 				_apply_buff(target, entry.buff_stat, entry.buff_amount)
 				var sign_str := "+" if entry.buff_amount > 0 else ""
 				await _show_status_text(target.sprite.position, "%s%d %s" % [sign_str, entry.buff_amount, entry.buff_stat.to_upper()])
@@ -240,12 +251,14 @@ func _apply_spell_effect(entry: SpellEffectEntry, spell: SpellData, _actor: Batt
 			var hit := BattleFormulas.spell_hit_with_element(spell.spell_accuracy, target.magic_defense, spell.element, weaknesses)
 			if hit:
 				target.statuses[entry.status_name] = -1
+				_update_status_indicators(target)
 				await _show_status_text(target.sprite.position, entry.status_name.capitalize())
 			else:
 				await _show_miss(target.sprite.position)
 
 		SpellData.SpellEffect.STATUS_CURE:
 			target.statuses[entry.status_name] = 0
+			_update_status_indicators(target)
 			await _show_status_text(target.sprite.position, "Cured")
 
 func _apply_buff(target: Battler, stat: StringName, amount: int) -> void:
@@ -310,6 +323,15 @@ const ELEMENT_COLORS: Dictionary = {
 	SpellData.Element.DEATH: Color(1.0, 1.0, 0.8),
 }
 
+const ELEMENT_VFX: Dictionary = {
+	SpellData.Element.FIRE: preload("res://_scenes/vfx/vfx_fire.tscn"),
+	SpellData.Element.ICE: preload("res://_scenes/vfx/vfx_ice.tscn"),
+	SpellData.Element.LIGHTNING: preload("res://_scenes/vfx/vfx_thunder.tscn"),
+	SpellData.Element.DEATH: preload("res://_scenes/vfx/vfx_holy.tscn"),
+}
+
+const HEAL_VFX: PackedScene = preload("res://_scenes/vfx/vfx_heal.tscn")
+
 func _flash_spell_color(element: SpellData.Element) -> void:
 	var color: Color = ELEMENT_COLORS.get(element, Color(0.8, 0.8, 1.0))
 	var canvas := damage_container.get_parent()
@@ -318,6 +340,78 @@ func _flash_spell_color(element: SpellData.Element) -> void:
 		var _t1 := tw.tween_property(canvas, "modulate", color, 0.0)
 		var _t2 := tw.tween_interval(0.08)
 		var _t3 := tw.tween_property(canvas, "modulate", Color.WHITE, 0.0)
+
+func _spawn_vfx_at(pos: Vector2, vfx_scene: PackedScene) -> void:
+	var vfx: GPUParticles2D = vfx_scene.instantiate()
+	vfx.position = pos
+	damage_container.add_child(vfx)
+	var lifetime: float = vfx.lifetime
+	var _c := get_tree().create_timer(lifetime + 0.2).timeout.connect(vfx.queue_free)
+
+func _play_spell_vfx(element: SpellData.Element, effect_type: SpellData.SpellEffect, pos: Vector2) -> void:
+	if effect_type == SpellData.SpellEffect.HEAL:
+		_spawn_vfx_at(pos, HEAL_VFX)
+		return
+	var scene: PackedScene = ELEMENT_VFX.get(element)
+	if scene:
+		_spawn_vfx_at(pos, scene)
+
+func _shimmer_sprite(sprite: Sprite2D, color: Color) -> void:
+	var tw := create_tween()
+	var _t1 := tw.tween_property(sprite, "modulate", color, 0.1)
+	var _t2 := tw.tween_property(sprite, "modulate", Color.WHITE, 0.2)
+
+func _show_popup_text(pos: Vector2, text: String, color: Color) -> void:
+	var label := Label.new()
+	label.text = text
+	label.position = pos + Vector2(-25, -60)
+	label.add_theme_font_size_override("font_size", 18)
+	label.add_theme_color_override("font_color", color)
+	damage_container.add_child(label)
+
+	var tw := create_tween()
+	var _t1 := tw.tween_property(label, "position:y", label.position.y - 20, 0.5)
+	var _t2 := tw.parallel().tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.2)
+	var _t3 := tw.tween_callback(label.queue_free)
+	await get_tree().create_timer(0.3).timeout
+
+const STATUS_INDICATOR_GROUP := &"status_indicator"
+
+func _update_status_indicators(battler: Battler) -> void:
+	if not battler.sprite:
+		return
+	for child: Node in battler.sprite.get_children():
+		if child.is_in_group(STATUS_INDICATOR_GROUP):
+			child.queue_free()
+
+	if battler.statuses.get(&"sleep", 0) != 0:
+		var label := Label.new()
+		label.text = "Zzz"
+		label.position = Vector2(-10, -50)
+		label.add_theme_font_size_override("font_size", 14)
+		label.add_theme_color_override("font_color", Color(0.7, 0.7, 1.0))
+		label.add_to_group(STATUS_INDICATOR_GROUP)
+		battler.sprite.add_child(label)
+		var tw := create_tween().set_loops()
+		var _t1 := tw.tween_property(label, "position:y", -55.0, 0.6)
+		var _t2 := tw.tween_property(label, "position:y", -50.0, 0.6)
+
+	if battler.statuses.get(&"darkness", 0) != 0:
+		var overlay := ColorRect.new()
+		overlay.color = Color(0.2, 0.0, 0.3, 0.4)
+		overlay.size = Vector2(64, 96)
+		overlay.position = Vector2(-32, -48)
+		overlay.add_to_group(STATUS_INDICATOR_GROUP)
+		battler.sprite.add_child(overlay)
+
+	if battler.statuses.get(&"silence", 0) != 0:
+		var label := Label.new()
+		label.text = "X"
+		label.position = Vector2(20, -40)
+		label.add_theme_font_size_override("font_size", 16)
+		label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+		label.add_to_group(STATUS_INDICATOR_GROUP)
+		battler.sprite.add_child(label)
 
 # --- ANIMATIONS ---
 
