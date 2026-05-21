@@ -224,6 +224,81 @@ In BattleResolver:
 - On status cleared to 0: remove indicator
 - Indicators are cleaned up in battle cleanup
 
+## Testing Checklist
+
+### Magic Command UI
+- [ ] Magic option in battle command menu is selectable and navigable (cursor moves through all 4 options)
+- [ ] Silence gate: silenced character cannot enter Magic menu (plays cancel SFX)
+- [ ] Spell level select shows 8 levels, grayed-out levels with 0 charges or no spells are blocked on confirm
+- [ ] Spell select shows learned spells for the chosen level, navigable with up/down
+- [ ] Cancel from spell select returns to level select; cancel from level select returns to command menu
+- [ ] SINGLE_ENEMY spells enter enemy targeting; SINGLE_ALLY spells enter ally targeting; ALL/SELF auto-resolve
+- [ ] After selecting a spell target, command advances to next character
+
+### Spell Charges
+- [ ] White Mage starts with 3 Lv1 charges and 2 Lv2 charges
+- [ ] Black Mage starts with 3 Lv1 charges and 2 Lv2 charges
+- [ ] Warrior and Monk have no spells and 0 charges on all levels
+- [ ] Casting a spell deducts 1 charge from the correct level
+- [ ] Cannot select a spell level with 0 charges remaining
+- [ ] Ether restores all charges to max (use in battle via Item command)
+
+### Damage Spells
+- [ ] Fire deals 10-20 damage to a single enemy; fire VFX plays, fire SFX plays
+- [ ] Thunder deals 10-20 damage; lightning VFX, thunder SFX
+- [ ] Blizzard deals 20-40 damage; ice VFX, ice SFX
+- [ ] Dia deals 20-40 damage to ALL enemies; holy VFX, holy SFX
+- [ ] Damage spells that miss deal half damage (no "Miss" text — reduced number shown)
+- [ ] Fire on Skeleton (weak Fire): "Weak!" popup, +50% damage, higher hit rate
+- [ ] Fire on Green Slime (weak Fire): same weak bonus
+- [ ] Blizzard on Green Slime (weak Ice): "Weak!" popup, +50% damage
+- [ ] NulShock on party → cast Thunder on party member → "Resist!" popup, damage halved
+
+### Healing & Buffs
+- [ ] Cure heals 16-32 HP on a single ally; green heal number, heal VFX, heal SFX
+- [ ] Cure does not exceed max HP
+- [ ] Protect: "+8 DEF" text, gold shimmer on target, subsequent physical damage reduced
+- [ ] Blink: "+80 EVADE" text on caster (SELF target), gold shimmer
+- [ ] Invis: "+40 EVADE" text on target ally, gold shimmer
+- [ ] Temper: "+14 ATK" text on target ally, gold shimmer, subsequent physical attacks hit harder
+- [ ] NulShock: adds Lightning resistance to all allies, buff SFX
+
+### Debuffs
+- [ ] Focus: "-20 EVADE" text on single enemy, purple shimmer, debuff SFX
+- [ ] Slow: "-1 HITS" text on all enemies, purple shimmer, debuff SFX
+- [ ] Focus/Slow can miss — shows "Miss" text on failure
+
+### Status Effects
+- [ ] Sleep on all enemies: "Sleep" text on each hit target, "Zzz" bobbing indicator appears
+- [ ] Sleeping enemy skips their turn (shows "Sleep" text during action phase)
+- [ ] Physical hit on sleeping target clears sleep, "Zzz" indicator removed
+- [ ] Dark on all enemies: "Darkness" text, dark purple overlay on affected sprites
+- [ ] Darkness reduces hit accuracy by 40 (enemy misses more often)
+- [ ] Silence on all enemies: "Silence" text, red "X" indicator (enemies don't cast spells yet, but indicator should display)
+- [ ] Blindna on ally with Darkness: "Cured" text, dark overlay removed, heal SFX
+- [ ] Status effects can miss — shows "Miss" text on failure
+
+### PartyMenu Magic Screen
+- [ ] Magic option in main menu opens character select (same layout as Status)
+- [ ] Selecting a character shows spell levels with charge counts and spell names
+- [ ] Levels with no spells or 0 max charges are hidden
+- [ ] Cancel returns through character select → main menu
+- [ ] Charge counts update after battle (charges spent in combat are reflected)
+
+### New Enemies
+- [ ] Skeleton appears in Cornelia Outskirts encounters (verify encounter runs)
+- [ ] Green Slime appears in encounters; DEF 255 makes physical attacks deal minimal damage (magic is effective)
+- [ ] Both enemies display their sprites correctly in battle
+
+### Edge Cases
+- [ ] Cast all charges → level grays out, cannot re-enter
+- [ ] ALL_ENEMIES spell with some enemies dead: only hits alive enemies
+- [ ] ALL_ALLIES spell: hits all 4 party members
+- [ ] Retargeting: if selected enemy dies before spell resolves, spell retargets to next alive enemy
+- [ ] Multiple buffs stack: casting Temper twice gives +28 ATK total
+- [ ] Battle cleanup: status indicators, VFX particles, and buff accumulators reset between battles
+- [ ] Game over still works: party wipe during magic battle returns to title screen
+
 ## Spells Reference
 
 | Spell | Level | Effects | Power | Acc | Element | Target | SFX | Effect |
