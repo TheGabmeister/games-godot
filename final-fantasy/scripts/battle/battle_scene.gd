@@ -85,10 +85,10 @@ var _victory_level_index := 0
 # Command menu
 @onready var _command_panel: PanelContainer = %CommandPanel
 @onready var _command_label: Label = %ActiveCharLabel
-@onready var _cmd_attack: Label = %CmdAttack
-@onready var _cmd_magic: Label = %CmdMagic
-@onready var _cmd_item: Label = %CmdItem
-@onready var _cmd_run: Label = %CmdRun
+@onready var _cmd_attack: GameButton = %CmdAttack
+@onready var _cmd_magic: GameButton = %CmdMagic
+@onready var _cmd_item: GameButton = %CmdItem
+@onready var _cmd_run: GameButton = %CmdRun
 
 # Target cursor
 @onready var _target_arrow: Label = %TargetArrow
@@ -337,7 +337,11 @@ func _show_command_menu() -> void:
 	_battle_phase = BattlePhase.COMMAND_SELECT
 	_command_cursor = 0
 	_command_panel.visible = true
-	_command_label.text = _party_battlers[_command_index].display_name
+	var battler := _party_battlers[_command_index]
+	_command_label.text = battler.display_name
+	var has_spells := battler.character_data and not battler.character_data.learned_spells.all(func(s: SpellData) -> bool: return s == null)
+	var silenced: bool = battler.statuses.get(&"silence", 0) != 0
+	_cmd_magic.set_disabled(not has_spells or silenced)
 	_update_command_cursor()
 
 func _make_skip_command(idx: int) -> BattleCommand:
@@ -348,20 +352,9 @@ func _make_skip_command(idx: int) -> BattleCommand:
 	return cmd
 
 func _update_command_cursor() -> void:
-	var labels: Array[Label] = [_cmd_attack, _cmd_magic, _cmd_item, _cmd_run]
-	for i: int in labels.size():
-		if i == _command_cursor:
-			labels[i].text = "> " + _get_cmd_name(i)
-		else:
-			labels[i].text = "  " + _get_cmd_name(i)
-
-func _get_cmd_name(idx: int) -> String:
-	match idx:
-		0: return "Attack"
-		1: return "Magic"
-		2: return "Item"
-		3: return "Run"
-	return ""
+	var buttons: Array[GameButton] = [_cmd_attack, _cmd_magic, _cmd_item, _cmd_run]
+	for i: int in buttons.size():
+		buttons[i].set_selected(i == _command_cursor)
 
 func _handle_command_input(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
