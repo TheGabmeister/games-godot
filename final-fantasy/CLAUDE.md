@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Final Fantasy I Pixel Remaster systems recreation in Godot 4.6. The goal is to build scalable gameplay systems (combat, magic, equipment, progression, world traversal) with enough content to validate each system — not a full game recreation. See SPEC.md for the gameplay systems spec and PHASES.md for the implementation plan (Phases 1-3 complete, 4a next).
+Final Fantasy I Pixel Remaster systems recreation in Godot 4.6. The goal is to build scalable gameplay systems (combat, magic, equipment, progression, world traversal) with enough content to validate each system — not a full game recreation. See SPEC.md for the gameplay systems spec and PHASES.md for the implementation plan (Phases 1-4a complete, 4b next).
 
 When implementing a phase, read both SPEC.md and PHASES.md. The spec has the formulas and numbers; the phases have the build order and scope boundaries.
 
@@ -92,6 +92,7 @@ Battle flow: field movement → step counter triggers encounter → `GameState.t
 - **`_scenes/door_trigger.tscn`** — Reusable Area2D (collision layer 4, mask 2). Exports: `target_scene_path`, `spawn_position`. Calls `WorldSession.transition_to_level()` on player body enter.
 - **`_scenes/party_menu.tscn`** — CanvasLayer (layer 10) with left panel (menu entries, time, gil) and right panel (subscreen panels toggled by visibility). All layout in scene, all styling via `ui/menu_theme.tres` theme resource. Node references use `%` unique names. Single script (`party_menu.gd`) handles all subscreen logic.
 - **`_scenes/battle_scene.tscn`** — CanvasLayer (layer 20) overlay for turn-based combat. `class_name BattleScene`. Three-panel bottom HUD (command menu, enemy list, party HP) matching FF1 Pixel Remaster layout (see `docs/ff1/battle_menu.png`). Enum state machine (`BattlePhase`) drives input dispatch via `match _battle_phase` in `_input()`. WorldSession instantiates it and passes `party_data`. Contains a `BattleResolver` child node that handles turn resolution and combat animations.
+- **Spell VFX** (`_scenes/vfx/vfx_fire.tscn`, `vfx_thunder.tscn`, `vfx_ice.tscn`, `vfx_heal.tscn`, `vfx_holy.tscn`) — GPUParticles2D one-shot scenes. Instantiated at target position by BattleResolver, auto-freed after particle lifetime. Element → VFX mapping in `ELEMENT_VFX` dictionary. Buff/debuff use tween shimmer (gold/purple) instead of particles.
 - **Level scenes** (`cornelia_town.tscn`, `cornelia_castle.tscn`, `cornelia_outskirts.tscn`) — Use `LevelData` script with `@export var music`, `@export var default_spawn`, and `@export var encounter_table: EncounterTable` (null for towns = no random encounters). Contain only TileMapLayer, NPCs, and door triggers — no player, camera, or UI.
 
 ### PartyData access pattern
@@ -113,33 +114,39 @@ WorldSession._ready() → PartyData.new() → party_menu.party_data = party_data
 
 **Theme** (`ui/menu_theme.tres`) — shared theme resource set on the root Panel. Defines default Label style and type variations: `TitleLabel` (gold, 24px), `ValueLabel` (white, 20px), `AccentLabel` (gold, 20px), `HintLabel` (light blue, 20px), `SmallLabel` (light blue, 18px), `MutedLabel` (muted, 22px). Designers edit the theme in Godot's visual editor to change all menu styling.
 
-**Screen state** uses `enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }`. Each screen owns its own cursor variable (`_main_cursor`, `_items_cursor`, `_status_cursor`, `_formation_cursor`) so backing out of a submenu preserves the parent screen's position. Input is dispatched via `match _current_screen` in `_input()`. Cursor movement is handled by a shared `_move_cursor(event, current, size) -> int` helper.
+**Screen state** uses `enum Screen { MAIN, ITEMS, ITEMS_TARGET, MAGIC, MAGIC_DETAIL, EQUIPMENT, STATUS, STATUS_DETAIL, FORMATION, CONFIG }`. MAGIC screen is character select → MAGIC_DETAIL shows spells and charges per level (view-only, built dynamically into `_stub_panel`). Each screen owns its own cursor variable (`_main_cursor`, `_items_cursor`, `_status_cursor`, `_formation_cursor`) so backing out of a submenu preserves the parent screen's position. Input is dispatched via `match _current_screen` in `_input()`. Cursor movement is handled by a shared `_move_cursor(event, current, size) -> int` helper.
 
 ### Battle system
 
 Three-file split: shared types, scene controller, and resolution logic.
 
-**BattleTypes** (`scripts/battle/battle_types.gd`) — `class_name BattleTypes`. Defines `CommandType { ATTACK, ITEM, RUN }`, `BattleCommand` (action + target + optional item), and `Battler` (unified wrapper for party members and enemies). Party Battlers sync HP back to `CharacterData`. BattleScene and BattleResolver use `const` aliases (`const Battler = BattleTypes.Battler`, etc.) to keep references short.
+**BattleTypes** (`scripts/battle/battle_types.gd`) — `class_name BattleTypes`. Defines `CommandType { ATTACK, ITEM, RUN, MAGIC }`, `BattleCommand` (action + target + optional item/spell), and `Battler` (unified wrapper for party members and enemies with status/buff tracking). Party Battlers sync HP back to `CharacterData`. BattleScene and BattleResolver use `const` aliases (`const Battler = BattleTypes.Battler`, etc.) to keep references short. Battler carries `statuses: Dictionary` (StringName → int turn counter, -1 = permanent, 0 = inactive), buff accumulators (`buff_atk`, `buff_def`, `buff_evade`, `debuff_hits`), `resistances: Array[SpellData.Element]`, and `magic_defense: int`.
 
-**BattleScene** (`scripts/battle/battle_scene.gd`, `_scenes/battle_scene.tscn`) — CanvasLayer overlay, controller for turn-based combat. Owns phase state, input dispatch, HUD, command/targeting/item UI, victory/game-over flows, and transitions. Internal enum `BattlePhase { INACTIVE, INTRO, COMMAND_SELECT, TARGETING, ITEM_SELECT, ITEM_TARGET, ANIMATING, VICTORY, GAME_OVER }`. Input dispatch uses `match _battle_phase` in `_input()`, gated by `GameState.is_state(BATTLE)`. Item and target lists use `GameButton` instances (created once, cursor toggled via `set_selected`).
+**BattleScene** (`scripts/battle/battle_scene.gd`, `_scenes/battle_scene.tscn`) — CanvasLayer overlay, controller for turn-based combat. Owns phase state, input dispatch, HUD, command/targeting/item/magic UI, victory/game-over flows, and transitions. Internal enum `BattlePhase { INACTIVE, INTRO, COMMAND_SELECT, TARGETING, ITEM_SELECT, ITEM_TARGET, MAGIC_LEVEL_SELECT, MAGIC_SPELL_SELECT, MAGIC_TARGET, ANIMATING, VICTORY, GAME_OVER }`. Input dispatch uses `match _battle_phase` in `_input()`, gated by `GameState.is_state(BATTLE)`. Item and target lists use `GameButton` instances (created once, cursor toggled via `set_selected`). Magic UI flow: COMMAND_SELECT → MAGIC_LEVEL_SELECT (pick spell level 1-8) → MAGIC_SPELL_SELECT (pick spell) → targeting phase based on `spell.target_type`. Silence status blocks entering magic.
 
 **BattleResolver** (`scripts/battle/battle_resolver.gd`, `class_name BattleResolver`) — child Node in `battle_scene.tscn` (not created via `.new()`). Owns turn resolution: generates enemy commands, sorts by agility, executes attacks/items, runs animations and damage numbers. Communicates back via signals: `round_completed`, `battle_won`, `battle_lost`, `hud_update_requested`, `enemy_list_update_requested`. Has `@export` SFX (attack/hit/miss/crit/death) and `@onready` reference to `%DamageContainer`. Exposes `get_alive_indices(battlers)` for use by BattleScene's targeting input.
 
-**BattleFormulas** (`scripts/battle/battle_formulas.gd`) — static functions for damage calculation, hit/crit checks, run chance, formation targeting weights, EXP distribution. All formulas from SPEC.md §1.3.
+**BattleFormulas** (`scripts/battle/battle_formulas.gd`) — static functions for damage calculation, hit/crit checks, run chance, formation targeting weights, EXP distribution, magic damage, spell hit checks, and elemental modifiers. All formulas from SPEC.md §1.3 and §1.4.
 
 **Encounter flow:** PlayerMovement counts tile-steps, picks a weighted-random formation from the level's `EncounterTable`, emits `encounter_triggered`. WorldSession receives the signal and calls `BattleScene.start_battle()`. After battle, WorldSession restores field music via `battle_ended` signal.
 
-**Command input:** Index-driven loop (`_command_index` 0-3). Each character picks Attack/Item/Run, then selects a target. After all 4, `_resolve_round()` delegates to the resolver. Enemy commands use formation-weighted targeting (50/25/12.5/12.5% by party position).
+**Command input:** Index-driven loop (`_command_index` 0-3). Each character picks Attack/Magic/Item/Run, then selects a target. After all 4, `_resolve_round()` delegates to the resolver. Enemy commands use formation-weighted targeting (50/25/12.5/12.5% by party position).
+
+**Spell execution:** BattleResolver's `_execute_spell` deducts charges, iterates the spell's `effects` array, and for each `SpellEffectEntry` branches on type (DAMAGE/HEAL/BUFF/DEBUFF/STATUS_INFLICT/STATUS_CURE). Plays per-spell SFX, spawns GPUParticles2D VFX at target, shows elemental popup text ("Weak!"/"Resist!"). Status hooks: sleeping actors skip turns, darkness reduces accuracy by 40, physical hits wake sleeping targets. Buff accumulators are applied to combat stats during attack resolution. End-of-round decrements timed statuses. Status indicators (Zzz/overlay/X) update on battler sprites when statuses change.
 
 ### Data resources
 
 - **EquipmentData** (`scripts_consts/equipment_data.gd`) — `Slot { WEAPON, SHIELD, BODY, HEAD, ARMS }`, attack_power, absorb, evade_penalty, hit_percent, weapon_index. `.tres` files in `data/equipment/`.
-- **EnemyData** (`scripts_consts/enemy_data.gd`) — enemy stats + sprite texture. `.tres` files in `data/enemies/`.
+- **SpellData** (`scripts_consts/spell_data.gd`) — `Element { NONE, FIRE, ICE, LIGHTNING, EARTH, POISON, TIME, DEATH, STATUS }`, `TargetType`, `SpellEffect` enums. Carries `effects: Array[SpellEffectEntry]` (compound spell support), `sfx: AudioStream`, accuracy, element, target type. `.tres` files in `data/spells/`.
+- **SpellEffectEntry** (`scripts_consts/spell_effect_entry.gd`) — sub-resource for spell effects. Each entry has type (DAMAGE/HEAL/BUFF/DEBUFF/STATUS_INFLICT/STATUS_CURE), power, status_name, buff_stat, buff_amount, resist_element. Most spells have one entry; compound spells (Curaja, Saber) have multiple.
+- **EnemyData** (`scripts_consts/enemy_data.gd`) — enemy stats + sprite texture + `weaknesses: Array[SpellData.Element]` + `resistances: Array[SpellData.Element]` + `magic_defense: int`. `.tres` files in `data/enemies/`.
 - **EncounterTable** (`scripts_consts/encounter_data.gd`) — battle_background, formations array, can_flee, steps_min/max. Assigned to LevelData via `@export var encounter_table`.
 - **EncounterFormation** (`scripts_consts/encounter_formation.gd`) — array of `EnemyEntry` + weight for weighted random selection.
 - **EnemyEntry** (`scripts_consts/enemy_entry.gd`) — enemy reference + count.
 
-CharacterData (in `party_data.gd`) has 5 equipment slots, computed combat properties (`get_attack_power()`, `get_absorb()`, `get_evade()`, `get_hit_percent()`, `get_max_hits()`, `get_crit_rate()`), EXP tracking, and deterministic level-up via stat growth tables.
+- **ItemData** (`scripts_consts/item_data.gd`) — `EffectType { HEAL_HP, RESTORE_CHARGES }`. `.tres` files in `data/items/`.
+
+CharacterData (in `party_data.gd`) has 5 equipment slots, computed combat properties (`get_attack_power()`, `get_absorb()`, `get_evade()`, `get_hit_percent()`, `get_max_hits()`, `get_crit_rate()`), EXP tracking, deterministic level-up via stat growth tables, and spell system fields: `learned_spells: Array[SpellData]` (size 24, 3 slots per spell level), `spell_charges/max_spell_charges: Array[int]` (size 8), `magic_defense: int`. Spell charges scale per class via `SPELL_CHARGE_GROWTH` table; magic defense via `MAGIC_DEF_GROWTH`. Helper methods: `get_spells_for_level()`, `learn_spell()`, `spend_charge()`, `restore_all_charges()`.
 
 ### Interactable system
 
@@ -182,7 +189,7 @@ Python scripts generate MIDI via `midiutil`: `music/gen_music.py` (title/town/ca
 
 ### SFX
 
-Generated via ffmpeg synthesis filters (`sine`, `anoisesrc`, `aevalsrc`). Menu SFX in `ui/`, battle SFX in `sfx/`. No generator script — created via one-off commands.
+Generated via ffmpeg synthesis filters (`sine`, `anoisesrc`, `aevalsrc`). Menu SFX in `ui/`, battle SFX in `sfx/`, spell SFX in `sfx/spells/` (fire, thunder, ice, heal, holy, buff_cast, debuff_cast, status_inflict). No generator script — created via one-off commands. Each spell's `.tres` references its SFX via `@export var sfx: AudioStream`.
 
 ### Dialogue
 
@@ -195,7 +202,7 @@ JSON files in `data/dialogue/` (one per area). Structure: `{ "id": { "name": "NP
 - UI scripts in `scripts/ui/`
 - Battle scripts in `scripts/battle/`
 - Stateless constants and resource classes in `scripts_consts/` (`Groups`, `ItemData`, `LevelData`, `EnemyData`, `EquipmentData`, `EncounterTable`, etc.)
-- Data resources (`.tres`) in `data/` subdirectories (`items/`, `equipment/`, `enemies/`, `encounters/`)
+- Data resources (`.tres`) in `data/` subdirectories (`items/`, `equipment/`, `enemies/`, `encounters/`, `spells/`)
 - Direction handling uses `enum Dir { DOWN, UP, LEFT, RIGHT }` with typed `Dictionary[Dir, StringName]` constants (`IDLE_ANIM`, `WALK_ANIM`) and `Dictionary[Dir, Vector2]` for `DIR_VECTORS`
 - Animation names as `&"StringName"` literals for compile-time validation
 - Group constants in `scripts_consts/groups.gd` (`class_name Groups`) — use `Groups.INTERACTABLE`, `Groups.PARTY_MENU`, etc. instead of string literals
