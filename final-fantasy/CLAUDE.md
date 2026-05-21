@@ -38,6 +38,9 @@ Godot_v4.6.2-stable_win64.exe --path . --headless --export-release "Windows Desk
 
 **Warning:** `--headless --import` may re-add removed autoloads to `project.godot`. If PartyData reappears in the `[autoload]` section, remove it — PartyData uses `class_name` and is instantiated by WorldSession, not the autoload system.
 
+**Debug shortcuts (debug builds only):**
+- **F1** — Instantly trigger a random encounter while walking in the field (requires the level to have an `encounter_table`)
+
 ## Resolution
 
 - **Base viewport:** 1280x720 (stretch mode `viewport`)
@@ -52,7 +55,7 @@ Godot_v4.6.2-stable_win64.exe --path . --headless --export-release "Windows Desk
 1. **DialogueData** (`scripts/dialogue_data.gd`) — Loads and caches JSON dialogue files from `data/dialogue/`. Called with `DialogueData.get_dialogue(path, id)`.
 2. **MusicManager** (`scripts/autoloads/music_manager.gd`) — Single-track music on "Music" audio bus. `play(stream)` prevents restarting same track. Auto-loops.
 3. **SfxManager** (`scripts/autoloads/sfx_manager.gd`) — Pool of 16 AudioStreamPlayers on "SFX" audio bus. `play(stream, volume_db)`.
-4. **GameState** (`scripts/autoloads/game_state.gd`) — State machine with enum `State { TITLE, FIELD, DIALOGUE, BATTLE, CUTSCENE, MENU }`. All scripts gate input with `GameState.is_state()`. Transitions via `GameState.transition()`, emits `state_changed(old_state, new_state)` signal.
+4. **GameState** (`scripts/autoloads/game_state.gd`) — State machine with enum `State { TITLE, FIELD, DIALOGUE, BATTLE, CUTSCENE, MENU }`. All scripts gate input with `GameState.is_state()`. Transitions via `GameState.transition()`, emits `state_changed(old_state, new_state)` signal. Also contains a **level bootstrapper** (`_check_bootstrap`) — if the current scene is a `LevelData` and no WorldSession exists (i.e., a level was run directly), it auto-instantiates WorldSession with that level as `initial_level_path`. This lets "Run Current Scene" work on any level.
 
 **PartyData is NOT an autoload.** It has `class_name PartyData` for type references but is instantiated by WorldSession and passed to consumers via properties. See "PartyData access pattern" below.
 
@@ -80,7 +83,7 @@ WorldSession (Node)
 
 ### Scene flow
 
-`title_screen.tscn` → (confirm) → `world_session.tscn` → loads `cornelia_town.tscn` ↔ (door trigger) ↔ `cornelia_castle.tscn` / `cornelia_outskirts.tscn`
+`title_screen.tscn` → (confirm) → `world_session.tscn` → loads `cornelia_town.tscn` ↔ (door trigger) ↔ `cornelia_castle.tscn` / `cornelia_outskirts.tscn`. Running any level scene directly also works — GameState's bootstrapper auto-wraps it in WorldSession.
 
 Battle flow: field movement → step counter triggers encounter → `GameState.transition(BATTLE)` → BattleScene overlay → victory/game over → `GameState.transition(FIELD)` (field music resumes via `_on_battle_ended`). Game Over is the one case that uses `change_scene_to_file` to tear down WorldSession and return to title.
 
@@ -108,7 +111,7 @@ WorldSession._ready() → PartyData.new() → party_menu.party_data = party_data
 
 **PartyMenu** (`scripts/ui/party_menu.gd`, `_scenes/party_menu.tscn`) — single CanvasLayer containing all menu UI. Listens to `GameState.state_changed` — opens when state enters MENU, closes when state leaves MENU. All subscreen layouts (party overview, items, target select, status select/detail, formation, stub) are built into the scene as sibling VBoxContainers under `Screens`; the script toggles visibility via `_switch_panel()`.
 
-**GameButton** (`scripts/ui/game_button.gd`, `_scenes/game_button.tscn`) — reusable Label subclass for selectable menu entries. Manages cursor prefix (`"> "` selected, `"* "` marked, `"  "` default) and gold color override for marked state. Set text via `button_text` property, toggle state via `set_selected(bool)` and `set_marked(bool)`. Used for all selectable items: main menu entries, item list, target/status select, formation list. Dynamic items (e.g., inventory) create instances via `GameButton.new()`.
+**GameButton** (`scripts/ui/game_button.gd`) — reusable Label subclass for selectable menu entries. Manages cursor prefix (`"> "` selected, `"* "` marked, `"  "` default), gold color override for marked state, and gray modulate for disabled state. Set text via `button_text` property, toggle state via `set_selected(bool)`, `set_marked(bool)`, and `set_disabled(bool)`. Used for all selectable items: main menu entries, item list, target/status select, formation list, and battle command buttons (Attack/Magic/Item/Run). Dynamic items (e.g., inventory) create instances via `GameButton.new()`.
 
 **CharacterRow** (`scripts/ui/character_row.gd`, `_scenes/character_row.tscn`) — self-contained HBoxContainer for party overview rows. Owns portrait, name, HP, MP, level, and next-level labels. Call `populate(character: PartyData.CharacterData)` to fill all fields. Four instances in the party overview panel.
 
@@ -122,7 +125,7 @@ Three-file split: shared types, scene controller, and resolution logic.
 
 **BattleTypes** (`scripts/battle/battle_types.gd`) — `class_name BattleTypes`. Defines `CommandType { ATTACK, ITEM, RUN, MAGIC }`, `BattleCommand` (action + target + optional item/spell), and `Battler` (unified wrapper for party members and enemies with status/buff tracking). Party Battlers sync HP back to `CharacterData`. BattleScene and BattleResolver use `const` aliases (`const Battler = BattleTypes.Battler`, etc.) to keep references short. Battler carries `statuses: Dictionary` (StringName → int turn counter, -1 = permanent, 0 = inactive), buff accumulators (`buff_atk`, `buff_def`, `buff_evade`, `debuff_hits`), `resistances: Array[SpellData.Element]`, and `magic_defense: int`.
 
-**BattleScene** (`scripts/battle/battle_scene.gd`, `_scenes/battle_scene.tscn`) — CanvasLayer overlay, controller for turn-based combat. Owns phase state, input dispatch, HUD, command/targeting/item/magic UI, victory/game-over flows, and transitions. Internal enum `BattlePhase { INACTIVE, INTRO, COMMAND_SELECT, TARGETING, ITEM_SELECT, ITEM_TARGET, MAGIC_LEVEL_SELECT, MAGIC_SPELL_SELECT, MAGIC_TARGET, ANIMATING, VICTORY, GAME_OVER }`. Input dispatch uses `match _battle_phase` in `_input()`, gated by `GameState.is_state(BATTLE)`. Item and target lists use `GameButton` instances (created once, cursor toggled via `set_selected`). Magic UI flow: COMMAND_SELECT → MAGIC_LEVEL_SELECT (pick spell level 1-8) → MAGIC_SPELL_SELECT (pick spell) → targeting phase based on `spell.target_type`. Silence status blocks entering magic.
+**BattleScene** (`scripts/battle/battle_scene.gd`, `_scenes/battle_scene.tscn`) — CanvasLayer overlay, controller for turn-based combat. Owns phase state, input dispatch, HUD, command/targeting/item/magic UI, victory/game-over flows, and transitions. Internal enum `BattlePhase { INACTIVE, INTRO, COMMAND_SELECT, TARGETING, ITEM_SELECT, ITEM_TARGET, MAGIC_LEVEL_SELECT, MAGIC_SPELL_SELECT, MAGIC_TARGET, ANIMATING, VICTORY, GAME_OVER }`. Input dispatch uses `match _battle_phase` in `_input()`, gated by `GameState.is_state(BATTLE)`. Command menu buttons (Attack/Magic/Item/Run) are `GameButton` nodes — Magic is disabled (`set_disabled(true)`) when the character has no spells or is silenced. Item and target lists use `GameButton` instances (created once, cursor toggled via `set_selected`). Magic UI flow: COMMAND_SELECT → MAGIC_LEVEL_SELECT (pick spell level 1-8) → MAGIC_SPELL_SELECT (pick spell) → targeting phase based on `spell.target_type`.
 
 **BattleResolver** (`scripts/battle/battle_resolver.gd`, `class_name BattleResolver`) — child Node in `battle_scene.tscn` (not created via `.new()`). Owns turn resolution: generates enemy commands, sorts by agility, executes attacks/items, runs animations and damage numbers. Communicates back via signals: `round_completed`, `battle_won`, `battle_lost`, `hud_update_requested`, `enemy_list_update_requested`. Has `@export` SFX (attack/hit/miss/crit/death) and `@onready` reference to `%DamageContainer`. Exposes `get_alive_indices(battlers)` for use by BattleScene's targeting input.
 
