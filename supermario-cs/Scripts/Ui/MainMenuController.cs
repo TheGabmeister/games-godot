@@ -1,14 +1,15 @@
+using System;
 using Godot;
 
 namespace SuperMario;
 
 public partial class MainMenuController : Control
 {
-    [Signal] public delegate void StartPressedEventHandler();
+    public event Action StartPressed;
 
     public override void _Ready()
     {
         var btn = GetNode<Button>("CenterContainer/VBoxContainer/StartButton");
-        btn.Pressed += () => EmitSignal(SignalName.StartPressed);
+        btn.Pressed += () => StartPressed?.Invoke();
     }
 }

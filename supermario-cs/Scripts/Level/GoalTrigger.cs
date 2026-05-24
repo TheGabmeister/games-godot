@@ -1,10 +1,11 @@
+using System;
 using Godot;
 
 namespace SuperMario;
 
 public partial class GoalTrigger : Area2D
 {
-    [Signal] public delegate void ReachedEventHandler();
+    public event Action Reached;
 
     private bool _triggered;
 
@@ -23,6 +24,6 @@ public partial class GoalTrigger : Area2D
 
     private void EmitReached()
     {
-        EmitSignal(SignalName.Reached);
+        Reached?.Invoke();
     }
 }

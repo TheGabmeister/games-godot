@@ -1,10 +1,11 @@
+using System;
 using Godot;
 
 namespace SuperMario;
 
 public partial class GameSession : Node
 {
-    [Signal] public delegate void SessionEndedEventHandler();
+    public event Action SessionEnded;
 
     private const float DeathPauseSeconds = 1.5f;
 
@@ -54,7 +55,7 @@ public partial class GameSession : Node
         _currentLevelIndex++;
         if (_currentLevelIndex >= _campaign.Levels.Length)
         {
-            EmitSignal(SignalName.SessionEnded);
+            SessionEnded?.Invoke();
             return;
         }
 
@@ -71,7 +72,7 @@ public partial class GameSession : Node
         {
             if (!IsInsideTree()) return;
             if (State.Lives <= 0)
-                EmitSignal(SignalName.SessionEnded);
+                SessionEnded?.Invoke();
             else
                 LoadCurrentLevel();
         };
