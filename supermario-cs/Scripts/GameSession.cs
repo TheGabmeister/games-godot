@@ -30,7 +30,7 @@ public partial class GameSession : Node
 
     private void LoadCurrentLevel()
     {
-        var def = GetCurrentLevelDefinition();
+        var def = _campaign.Levels[_currentLevelIndex];
         State.SetLevel(def.Name, def.TimeLimit);
 
         if (def.MusicTrack != null)
@@ -41,11 +41,6 @@ public partial class GameSession : Node
         level.LevelCompleted += OnLevelCompleted;
         level.PlayerDied += OnPlayerDied;
         SwapLevel(level);
-    }
-
-    private LevelDefinition GetCurrentLevelDefinition()
-    {
-        return _campaign.Levels[_currentLevelIndex];
     }
 
     private void OnLevelCompleted()
