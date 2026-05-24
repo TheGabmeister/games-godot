@@ -11,11 +11,11 @@ public partial class Hud : CanvasLayer
 
     private float _timeRemaining;
     private bool _timedOut;
-    private GameState _boundState;
+    private GameState _gameState;
 
     public void Bind(GameState state)
     {
-        _boundState = state;
+        _gameState = state;
         state.ScoreChanged += OnScoreChanged;
         state.LivesChanged += OnLivesChanged;
         state.LevelChanged += OnLevelChanged;
@@ -31,25 +31,25 @@ public partial class Hud : CanvasLayer
 
     private void UnbindState()
     {
-        if (_boundState == null) return;
+        if (_gameState == null) return;
 
-        _boundState.ScoreChanged -= OnScoreChanged;
-        _boundState.LivesChanged -= OnLivesChanged;
-        _boundState.LevelChanged -= OnLevelChanged;
-        _boundState = null;
+        _gameState.ScoreChanged -= OnScoreChanged;
+        _gameState.LivesChanged -= OnLivesChanged;
+        _gameState.LevelChanged -= OnLevelChanged;
+        _gameState = null;
     }
 
     private void RefreshLabels()
     {
-        WorldLabel.Text = _boundState.CurrentLevelName;
+        WorldLabel.Text = _gameState.CurrentLevelName;
         TimeLabel.Text = ((int)_timeRemaining).ToString();
-        OnScoreChanged(_boundState.Score);
-        OnLivesChanged(_boundState.Lives);
+        OnScoreChanged(_gameState.Score);
+        OnLivesChanged(_gameState.Lives);
     }
 
     public override void _Process(double delta)
     {
-        if (_boundState == null) return;
+        if (_gameState == null) return;
         if (_timedOut) return;
 
         _timeRemaining = Mathf.Max(0f, _timeRemaining - (float)delta);
