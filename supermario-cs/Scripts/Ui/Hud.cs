@@ -1,6 +1,4 @@
 using Godot;
-using supermariocs.Autoloads;
-using supermariocs.Resources;
 
 namespace supermariocs.Ui;
 
@@ -11,7 +9,6 @@ public partial class Hud : CanvasLayer
     private Label _timeLabel;
     private Label _livesLabel;
 
-    private LevelDefinition _config;
     private float _timeRemaining;
     private bool _timedOut;
     private GameState _boundState;
@@ -26,18 +23,16 @@ public partial class Hud : CanvasLayer
         RefreshLabels();
     }
 
-    public void Bind(LevelDefinition config)
+    public void Bind(GameState state)
     {
-        _config = config;
-        _timeRemaining = config?.TimeLimit ?? 0f;
-
-        var state = GameManager.Instance?.State;
         if (state != null && state != _boundState)
         {
             UnbindState();
             _boundState = state;
             state.ScoreChanged += OnScoreChanged;
             state.LivesChanged += OnLivesChanged;
+            state.LevelChanged += OnLevelChanged;
+            _timeRemaining = state.CurrentLevelTimeLimit;
         }
 
         RefreshLabels();
@@ -54,6 +49,7 @@ public partial class Hud : CanvasLayer
         {
             _boundState.ScoreChanged -= OnScoreChanged;
             _boundState.LivesChanged -= OnLivesChanged;
+            _boundState.LevelChanged -= OnLevelChanged;
             _boundState = null;
         }
     }
@@ -61,7 +57,7 @@ public partial class Hud : CanvasLayer
     private void RefreshLabels()
     {
         if (_worldLabel != null)
-            _worldLabel.Text = _config?.Name ?? "";
+            _worldLabel.Text = _boundState?.CurrentLevelName ?? "";
         if (_timeLabel != null)
             _timeLabel.Text = ((int)_timeRemaining).ToString();
         if (_boundState != null)
@@ -73,6 +69,7 @@ public partial class Hud : CanvasLayer
 
     public override void _Process(double delta)
     {
+        if (_boundState == null) return;
         if (_timedOut) return;
         _timeRemaining = Mathf.Max(0f, _timeRemaining - (float)delta);
         if (_timeLabel != null)
@@ -94,5 +91,13 @@ public partial class Hud : CanvasLayer
     private void OnLivesChanged(int lives)
     {
         if (_livesLabel != null) _livesLabel.Text = "x " + lives;
+    }
+
+    private void OnLevelChanged(string name, float timeLimit)
+    {
+        _timeRemaining = timeLimit;
+        _timedOut = false;
+        if (_worldLabel != null) _worldLabel.Text = name;
+        if (_timeLabel != null) _timeLabel.Text = ((int)_timeRemaining).ToString();
     }
 }

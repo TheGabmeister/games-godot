@@ -15,7 +15,37 @@ public partial class LevelBase : Node2D
     [Signal] public delegate void LevelCompletedEventHandler();
     [Signal] public delegate void PlayerDiedEventHandler();
 
+    private GameState _state;
+    private bool _initialized;
+
+    public void Initialize(LevelDefinition config, GameState state)
+    {
+        Config = config;
+        _state = state;
+
+        if (IsInsideTree())
+            InitializeOnce();
+    }
+
     public override void _Ready()
+    {
+        InitializeOnce();
+    }
+
+    private void InitializeOnce()
+    {
+        if (_initialized) return;
+        _initialized = true;
+
+        _state ??= GameManager.Instance?.State;
+
+        if (Config == null)
+            GD.PushWarning($"LevelBase {Name}: Config is not assigned.");
+
+        SetupLevel();
+    }
+
+    private void SetupLevel()
     {
         if (Config != null && Config.MusicTrack != null)
             MusicManager.Instance?.Play(Config.MusicTrack);
@@ -43,7 +73,7 @@ public partial class LevelBase : Node2D
         if (HudScene != null)
         {
             var hud = HudScene.Instantiate<Hud>();
-            hud.Bind(Config);
+            hud.Bind(_state);
             AddChild(hud);
         }
     }

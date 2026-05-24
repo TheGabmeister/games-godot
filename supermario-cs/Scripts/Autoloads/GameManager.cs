@@ -1,6 +1,5 @@
 using Godot;
 using supermariocs.Level;
-using supermariocs.Player;
 using supermariocs.Resources;
 using supermariocs.Ui;
 
@@ -10,8 +9,8 @@ public partial class GameManager : Node
 {
     public static GameManager Instance { get; private set; }
 
-    public GameState State { get; private set; }
-    public LevelBase CurrentLevel { get; private set; }
+    public GameState State => _session?.State;
+    public LevelBase CurrentLevel => _session?.CurrentLevel;
 
     private const string MainMenuPath = "res://scenes/main_menu.tscn";
     private const string GameOverPath = "res://scenes/game_over.tscn";
@@ -20,7 +19,7 @@ public partial class GameManager : Node
     private PackedScene _mainMenuScene;
     private PackedScene _gameOverScene;
     private Campaign _campaign;
-    private int _currentLevelIndex;
+    private GameSession _session;
     private Node _levelRoot;
     private Node _currentChild;
 
@@ -53,64 +52,22 @@ public partial class GameManager : Node
         SwapChild(menu);
         if (menu is MainMenuController controller)
             controller.StartPressed += OnStartPressed;
-        CurrentLevel = null;
     }
 
     private void OnStartPressed() => StartGame();
 
     public void StartGame()
     {
-        State = new GameState();
-        _currentLevelIndex = 0;
         if (_campaign?.Levels == null || _campaign.Levels.Length == 0)
         {
             GD.PushError("Campaign has no levels.");
             return;
         }
-        LoadLevel(_campaign.Levels[0]);
-    }
 
-    public void LoadLevel(LevelDefinition def)
-    {
-        if (def == null || def.LevelScene == null)
-        {
-            GD.PushError("LevelDefinition missing LevelScene.");
-            return;
-        }
-        var level = def.LevelScene.Instantiate<LevelBase>();
-        level.Config = def;
-        level.LevelCompleted += () => OnLevelCompleted(def);
-        level.PlayerDied += () => OnPlayerDied(def);
-        SwapChild(level);
-        CurrentLevel = level;
-    }
-
-    public void OnLevelCompleted(LevelDefinition def)
-    {
-        _currentLevelIndex++;
-        if (_campaign?.Levels == null || _currentLevelIndex >= _campaign.Levels.Length)
-        {
-            LoadGameOver();
-            return;
-        }
-        LoadLevel(_campaign.Levels[_currentLevelIndex]);
-    }
-
-    private const float DeathPauseSeconds = 1.5f;
-
-    public void OnPlayerDied(LevelDefinition def)
-    {
-        if (State == null) return;
-        State.PowerState = PlayerPowerState.Small;
-        State.SetLives(State.Lives - 1);
-
-        var timer = GetTree().CreateTimer(DeathPauseSeconds);
-        timer.Timeout += () =>
-        {
-            if (State == null) return;
-            if (State.Lives <= 0) LoadGameOver();
-            else LoadLevel(def);
-        };
+        _session = new GameSession { Name = "GameSession" };
+        _session.SessionEnded += LoadGameOver;
+        SwapChild(_session);
+        _session.Start(_campaign);
     }
 
     private void LoadGameOver()
@@ -125,13 +82,15 @@ public partial class GameManager : Node
         SwapChild(over);
         if (over is GameOverController controller)
             controller.Continue += LoadMainMenu;
-        CurrentLevel = null;
+        _session = null;
     }
 
     private void SwapChild(Node next)
     {
         if (_currentChild != null)
         {
+            if (_currentChild == _session)
+                _session = null;
             _currentChild.QueueFree();
             _currentChild = null;
         }
