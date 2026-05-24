@@ -9,8 +9,6 @@ public partial class Hud : CanvasLayer
     [Export] public Label TimeLabel;
     [Export] public Label LivesLabel;
 
-    private float _timeRemaining;
-    private bool _timedOut;
     private GameState _gameState;
 
     public void Bind(GameState state)
@@ -19,7 +17,7 @@ public partial class Hud : CanvasLayer
         state.ScoreChanged += OnScoreChanged;
         state.LivesChanged += OnLivesChanged;
         state.LevelChanged += OnLevelChanged;
-        _timeRemaining = state.CurrentLevelTimeLimit;
+        state.TimeRemainingChanged += OnTimeRemainingChanged;
 
         RefreshLabels();
     }
@@ -36,30 +34,16 @@ public partial class Hud : CanvasLayer
         _gameState.ScoreChanged -= OnScoreChanged;
         _gameState.LivesChanged -= OnLivesChanged;
         _gameState.LevelChanged -= OnLevelChanged;
+        _gameState.TimeRemainingChanged -= OnTimeRemainingChanged;
         _gameState = null;
     }
 
     private void RefreshLabels()
     {
         WorldLabel.Text = _gameState.CurrentLevelName;
-        TimeLabel.Text = ((int)_timeRemaining).ToString();
         OnScoreChanged(_gameState.Score);
         OnLivesChanged(_gameState.Lives);
-    }
-
-    public override void _Process(double delta)
-    {
-        if (_gameState == null) return;
-        if (_timedOut) return;
-
-        _timeRemaining = Mathf.Max(0f, _timeRemaining - (float)delta);
-        TimeLabel.Text = ((int)_timeRemaining).ToString();
-        if (_timeRemaining <= 0f)
-        {
-            _timedOut = true;
-            var player = GetTree().GetFirstNodeInGroup("player");
-            ((PlayerController)player).KillPlayer();
-        }
+        OnTimeRemainingChanged(_gameState.TimeRemaining);
     }
 
     private void OnScoreChanged(int score)
@@ -72,11 +56,13 @@ public partial class Hud : CanvasLayer
         LivesLabel.Text = "x " + lives;
     }
 
-    private void OnLevelChanged(string name, float timeLimit)
+    private void OnLevelChanged(string name)
     {
-        _timeRemaining = timeLimit;
-        _timedOut = false;
         WorldLabel.Text = name;
-        TimeLabel.Text = ((int)_timeRemaining).ToString();
+    }
+
+    private void OnTimeRemainingChanged(float seconds)
+    {
+        TimeLabel.Text = ((int)seconds).ToString();
     }
 }

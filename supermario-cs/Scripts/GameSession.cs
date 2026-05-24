@@ -16,6 +16,7 @@ public partial class GameSession : Node
     private int _currentLevelIndex;
     private Hud _hud;
     private PackedScene _playerScene;
+    private PlayerController _currentPlayer;
 
     public void Start()
     {
@@ -48,6 +49,17 @@ public partial class GameSession : Node
         player.GlobalPosition = level.PlayerStart.GlobalPosition;
         level.AddChild(player);
         player.Died += OnPlayerDied;
+        _currentPlayer = player;
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_currentPlayer == null) return;
+        if (State.TimeRemaining <= 0f) return;
+
+        State.SetTimeRemaining(State.TimeRemaining - (float)delta);
+        if (State.TimeRemaining <= 0f)
+            _currentPlayer.KillPlayer();
     }
 
     private void OnLevelCompleted()
@@ -64,6 +76,7 @@ public partial class GameSession : Node
 
     private void OnPlayerDied()
     {
+        _currentPlayer = null;
         State.PowerState = PlayerPowerState.Small;
         State.SetLives(State.Lives - 1);
 
