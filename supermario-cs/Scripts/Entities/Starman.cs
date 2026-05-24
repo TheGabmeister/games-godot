@@ -17,8 +17,7 @@ public partial class Starman : CharacterBody2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        GameManager.Instance.State.AddScore(Constants.StarmanPickupScore);
-        ScorePopup.Spawn(GameManager.Instance.CurrentLevel, GlobalPosition, Constants.StarmanPickupScore);
+        GameSession.Current.Events.EmitScoreEarnedAt(Constants.StarmanPickupScore, GlobalPosition);
         player.ApplyStarman();
         QueueFree();
     }

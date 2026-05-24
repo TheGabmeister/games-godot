@@ -15,7 +15,7 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
         if (_used) return;
         _used = true;
         Visual.Color = UsedColor;
-        GameManager.Instance.State.AddScore(Constants.CoinValue);
+        GameSession.Current.Events.EmitScoreEarned(Constants.CoinValue);
         Bumpable.Bump();
     }
 }

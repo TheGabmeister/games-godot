@@ -17,8 +17,7 @@ public partial class Mushroom : CharacterBody2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        GameManager.Instance.State.AddScore(Constants.MushroomScore);
-        ScorePopup.Spawn(GameManager.Instance.CurrentLevel, GlobalPosition, Constants.MushroomScore);
+        GameSession.Current.Events.EmitScoreEarnedAt(Constants.MushroomScore, GlobalPosition);
         player.ApplyMushroom();
         QueueFree();
     }

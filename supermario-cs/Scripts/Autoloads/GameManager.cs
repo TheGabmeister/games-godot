@@ -6,9 +6,6 @@ public partial class GameManager : Node
 {
     public static GameManager Instance { get; private set; }
 
-    public GameState State => _session.State;
-    public LevelBase CurrentLevel => _session.CurrentLevel;
-
     private PackedScene _mainMenuScene;
     private PackedScene _gameOverScene;
     private GameSession _session;

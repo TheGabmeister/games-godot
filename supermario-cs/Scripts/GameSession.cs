@@ -5,11 +5,14 @@ namespace SuperMario;
 
 public partial class GameSession : Node
 {
+    public static GameSession Current { get; private set; }
+
     public event Action SessionEnded;
 
     private const float DeathPauseSeconds = 1.5f;
 
     public GameState State { get; } = new();
+    public GameEvents Events { get; } = new();
     public LevelBase CurrentLevel { get; private set; }
 
     private Campaign _campaign;
@@ -18,11 +21,26 @@ public partial class GameSession : Node
     private PackedScene _playerScene;
     private PlayerController _currentPlayer;
 
+    public override void _EnterTree()
+    {
+        Current = this;
+    }
+
+    public override void _ExitTree()
+    {
+        if (Current == this) Current = null;
+    }
+
     public void Start()
     {
         _campaign = GD.Load<Campaign>(Config.CampaignPath);
         _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
         _currentLevelIndex = 0;
+
+        Events.ScoreEarned += OnScoreEarned;
+        Events.ScoreEarnedAt += OnScoreEarnedAt;
+        Events.OneUpAwarded += OnOneUpAwarded;
+        Events.PlayerPowerStateChanged += OnPlayerPowerStateChanged;
 
         var hudScene = GD.Load<PackedScene>(Config.HudScenePath);
         _hud = hudScene.Instantiate<Hud>();
@@ -30,6 +48,27 @@ public partial class GameSession : Node
         _hud.Bind(State);
 
         LoadCurrentLevel();
+    }
+
+    private void OnScoreEarned(int points)
+    {
+        State.AddScore(points);
+    }
+
+    private void OnScoreEarnedAt(int points, Vector2 worldPosition)
+    {
+        State.AddScore(points);
+        ScorePopup.Spawn(CurrentLevel, worldPosition, points);
+    }
+
+    private void OnOneUpAwarded()
+    {
+        State.SetLives(State.Lives + 1);
+    }
+
+    private void OnPlayerPowerStateChanged(PlayerPowerState newState)
+    {
+        State.PowerState = newState;
     }
 
     private void LoadCurrentLevel()
