@@ -6,16 +6,12 @@ namespace SuperMario;
 public class GameEvents
 {
     public event Action<int> ScoreEarned;
-    public event Action<int, Vector2> ScoreEarnedAt;
+    public event Action<string, Vector2> TextPopupRequested;
     public event Action OneUpAwarded;
     public event Action<PlayerPowerState> PlayerPowerStateChanged;
 
     public void EmitScoreEarned(int points) => ScoreEarned?.Invoke(points);
-    public void EmitScoreEarnedAt(int points, Vector2 worldPosition)
-    {
-        ScoreEarned?.Invoke(points);
-        ScoreEarnedAt?.Invoke(points, worldPosition);
-    }
+    public void EmitTextPopupRequested(string text, Vector2 worldPosition) => TextPopupRequested?.Invoke(text, worldPosition);
     public void EmitOneUpAwarded() => OneUpAwarded?.Invoke();
     public void EmitPlayerPowerStateChanged(PlayerPowerState state) => PlayerPowerStateChanged?.Invoke(state);
 }

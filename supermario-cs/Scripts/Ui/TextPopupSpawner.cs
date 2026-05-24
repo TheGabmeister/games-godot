@@ -13,18 +13,18 @@ public partial class TextPopupSpawner : Node
         _events = events;
         _getPopupRoot = getPopupRoot;
 
-        _events.ScoreEarnedAt += OnScoreEarnedAt;
+        _events.TextPopupRequested += OnTextPopupRequested;
     }
 
     public override void _ExitTree()
     {
         if (_events != null)
-            _events.ScoreEarnedAt -= OnScoreEarnedAt;
+            _events.TextPopupRequested -= OnTextPopupRequested;
     }
 
-    private void OnScoreEarnedAt(int points, Vector2 worldPosition)
+    private void OnTextPopupRequested(string text, Vector2 worldPosition)
     {
-        Spawn("+" + points, worldPosition);
+        Spawn(text, worldPosition);
     }
 
     private void Spawn(string text, Vector2 worldPosition)
