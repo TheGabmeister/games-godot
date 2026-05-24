@@ -66,17 +66,17 @@ GameManager (autoload) → LevelRoot → one of:
 
 `Scripts/Resources/Campaign.cs` holds the ordered `LevelDefinition[]`. `resources/campaign.tres` is the single instance; `GameSession` loads it from `Config.CampaignPath` when a run starts.
 
-**Important — no cycles in `.tscn`/`.tres`:** `LevelDefinition.tres` references its `LevelScene` (PackedScene). The level `.tscn` does **not** reference the `.tres` back — `GameSession` calls `level.Initialize(def)` programmatically after instantiation. This avoids a circular ext_resource parse error on import.
+**Important — no cycles in `.tscn`/`.tres`:** `LevelDefinition.tres` references its `LevelScene` (PackedScene). The level `.tscn` does **not** reference the `.tres` back — `GameSession` reads the `LevelDefinition` itself (name, time limit, music) and uses the instantiated level only as a holder of scene references. This avoids a circular ext_resource parse error on import.
 
 ### `LevelBase` and inherited level scenes
 
 `scenes/level_base.tscn` is the template, with required children:
 
-- `PlayerStart` (`Marker2D`) — required; `LevelBase` instantiates the player here
+- `PlayerStart` (`Marker2D`) — spawn location, exposed by `LevelBase` as an `[Export]`
 - `CleanupVolume` (`Area2D`) — broad mask, kills/frees anything that falls in
-- `GoalTrigger` (`Area2D`) — emits `Reached` on player overlap
+- `GoalTrigger` (`Area2D`) — emits `Reached` on player overlap, exposed by `LevelBase` as an `[Export]`
 
-Each `scenes/levels/world_X_Y.tscn` inherits from `level_base.tscn` and adds level content (terrain, blocks, enemies, pickups). `LevelBase` owns scene-coupled setup only: spawn the player at `PlayerStart`, wire `GoalTrigger`, and re-emit player/goal signals. Session-scoped concerns (music, HUD, lives, scene transitions) live in `GameSession`.
+Each `scenes/levels/world_X_Y.tscn` inherits from `level_base.tscn` and adds level content (terrain, blocks, enemies, pickups). `LevelBase` itself has **no behavior** — it is a passive holder of `[Export]` references (`PlayerStart`, `GoalTrigger`) so `GameSession` can spawn the player and wire the goal without reaching into the scene by node-name. All session-scoped concerns (music, HUD, lives, scene transitions, player spawn, goal wiring) live in `GameSession`.
 
 ### Combat interfaces
 

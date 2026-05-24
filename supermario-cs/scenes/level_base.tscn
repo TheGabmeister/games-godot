@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://cr75qnkiioj5i"]
 
 [ext_resource type="Script" path="res://Scripts/Level/LevelBase.cs" id="1_base"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="Script" path="res://Scripts/Level/CleanupVolume.cs" id="4_clean"]
 [ext_resource type="Script" path="res://Scripts/Level/GoalTrigger.cs" id="5_goal"]
 
@@ -13,7 +12,8 @@ size = Vector2(16, 256)
 
 [node name="LevelBase" type="Node2D"]
 script = ExtResource("1_base")
-PlayerScene = ExtResource("3_player")
+PlayerStart = NodePath("PlayerStart")
+GoalTrigger = NodePath("GoalTrigger")
 
 [node name="PlayerStart" type="Marker2D" parent="."]
 position = Vector2(64, 256)

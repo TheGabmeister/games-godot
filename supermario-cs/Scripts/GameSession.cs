@@ -14,10 +14,12 @@ public partial class GameSession : Node
     private Campaign _campaign;
     private int _currentLevelIndex;
     private Hud _hud;
+    private PackedScene _playerScene;
 
     public void Start()
     {
         _campaign = GD.Load<Campaign>(Config.CampaignPath);
+        _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
         _currentLevelIndex = 0;
 
         var hudScene = GD.Load<PackedScene>(Config.HudScenePath);
@@ -37,10 +39,14 @@ public partial class GameSession : Node
             MusicManager.Instance?.Play(def.MusicTrack);
 
         var level = def.LevelScene.Instantiate<LevelBase>();
-        level.Initialize(def);
-        level.LevelCompleted += OnLevelCompleted;
-        level.PlayerDied += OnPlayerDied;
+        
         SwapLevel(level);
+        level.GoalTrigger.Reached += OnLevelCompleted;
+
+        var player = _playerScene.Instantiate<PlayerController>();
+        player.GlobalPosition = level.PlayerStart.GlobalPosition;
+        level.AddChild(player);
+        player.Died += OnPlayerDied;
     }
 
     private void OnLevelCompleted()
