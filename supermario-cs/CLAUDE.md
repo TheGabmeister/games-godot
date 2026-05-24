@@ -66,7 +66,7 @@ GameManager (autoload) → LevelRoot → one of:
 
 `Scripts/Resources/Campaign.cs` holds the ordered `LevelDefinition[]`. `resources/campaign.tres` is the single instance; `GameSession` loads it from `Config.CampaignPath` when a run starts.
 
-**Important — no cycles in `.tscn`/`.tres`:** `LevelDefinition.tres` references its `LevelScene` (PackedScene). The level `.tscn` does **not** reference the `.tres` back — `GameSession` calls `level.Initialize(def, State)` programmatically after instantiation. This avoids a circular ext_resource parse error on import.
+**Important — no cycles in `.tscn`/`.tres`:** `LevelDefinition.tres` references its `LevelScene` (PackedScene). The level `.tscn` does **not** reference the `.tres` back — `GameSession` calls `level.Initialize(def)` programmatically after instantiation. This avoids a circular ext_resource parse error on import.
 
 ### `LevelBase` and inherited level scenes
 
@@ -76,7 +76,7 @@ GameManager (autoload) → LevelRoot → one of:
 - `CleanupVolume` (`Area2D`) — broad mask, kills/frees anything that falls in
 - `GoalTrigger` (`Area2D`) — emits `Reached` on player overlap
 
-Each `scenes/levels/world_X_Y.tscn` inherits from `level_base.tscn` and adds level content (terrain, blocks, enemies, pickups). `LevelBase` owns level-local setup only: play optional level music, spawn the player at `PlayerStart`, instantiate the HUD, wire `GoalTrigger`, and re-emit player/goal signals. It does not own campaign progress or persistent run state.
+Each `scenes/levels/world_X_Y.tscn` inherits from `level_base.tscn` and adds level content (terrain, blocks, enemies, pickups). `LevelBase` owns scene-coupled setup only: spawn the player at `PlayerStart`, wire `GoalTrigger`, and re-emit player/goal signals. Session-scoped concerns (music, HUD, lives, scene transitions) live in `GameSession`.
 
 ### Combat interfaces
 

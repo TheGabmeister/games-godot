@@ -13,11 +13,18 @@ public partial class GameSession : Node
 
     private Campaign _campaign;
     private int _currentLevelIndex;
+    private Hud _hud;
 
     public void Start()
     {
         _campaign = GD.Load<Campaign>(Config.CampaignPath);
         _currentLevelIndex = 0;
+
+        var hudScene = GD.Load<PackedScene>(Config.HudScenePath);
+        _hud = hudScene.Instantiate<Hud>();
+        _hud.Bind(State);
+        AddChild(_hud);
+
         LoadCurrentLevel();
     }
 
@@ -26,8 +33,11 @@ public partial class GameSession : Node
         var def = GetCurrentLevelDefinition();
         State.SetLevel(def.Name, def.TimeLimit);
 
+        if (def.MusicTrack != null)
+            MusicManager.Instance?.Play(def.MusicTrack);
+
         var level = def.LevelScene.Instantiate<LevelBase>();
-        level.Initialize(def, State);
+        level.Initialize(def);
         level.LevelCompleted += OnLevelCompleted;
         level.PlayerDied += OnPlayerDied;
         SwapLevel(level);
