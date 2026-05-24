@@ -187,6 +187,10 @@ Layer flags live in the static `Layers` class (`Layers.Player`, etc.) — keep b
 
 ## Working Rules
 
+- Respect user-stated constraints exactly. If the user rejects an approach, do not keep re-suggesting variants of it.
+- Do not recommend hard-coded node-name lookups such as `GetNode<T>("ChildName")` when the user has asked for inspector-wired references. In that case, use explicit exported references or exported `NodePath`s, and validate that required references are assigned.
+- Be careful with Godot C# export and scene-serialization issues. Before changing `.tscn` exported properties by hand, inspect the current scene files, explain the tradeoff, and prefer the smallest change that preserves the user's chosen wiring style.
+- If a Godot editor/runtime cache issue is plausible, say so plainly and try rebuild/reload validation before redesigning code or scene wiring.
 - Avoid hand-editing generated Godot files under `.godot/`, `*.uid`, or `*.import`.
 - Keep new code aligned with [PLAN.md](PLAN.md) instead of inventing parallel architecture.
 - If the plan and implementation disagree, resolve the contradiction explicitly instead of silently picking one.
