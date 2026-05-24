@@ -25,8 +25,8 @@ public partial class GameSession : Node
 
         var hudScene = GD.Load<PackedScene>(Config.HudScenePath);
         _hud = hudScene.Instantiate<Hud>();
-        _hud.Bind(State);
         AddChild(_hud);
+        _hud.Bind(State);
 
         LoadCurrentLevel();
     }
