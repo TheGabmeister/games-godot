@@ -11,12 +11,12 @@ public partial class Bumpable : Node
 
     public override void _Ready()
     {
-        if (Visual != null) _basePosition = Visual.Position;
+        _basePosition = Visual.Position;
     }
 
     public void Bump()
     {
-        if (_bumping || Visual == null) return;
+        if (_bumping) return;
         _bumping = true;
         var tween = Visual.CreateTween();
         var up = _basePosition + new Vector2(0, -Constants.BlockBumpDistance);

@@ -12,7 +12,6 @@ public partial class Blinker : Node
 
     public override void _Process(double delta)
     {
-        if (Target == null) return;
         if (_remaining <= 0f)
         {
             if (!Target.Visible) Target.Visible = true;

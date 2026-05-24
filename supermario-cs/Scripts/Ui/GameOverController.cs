@@ -8,10 +8,7 @@ public partial class GameOverController : Control
 
     public override void _Ready()
     {
-        var btn = GetNodeOrNull<Button>("CenterContainer/VBoxContainer/ContinueButton");
-        if (btn != null)
-            btn.Pressed += () => EmitSignal(SignalName.Continue);
-        else
-            GD.PushError("GameOverController: ContinueButton not found.");
+        var btn = GetNode<Button>("CenterContainer/VBoxContainer/ContinueButton");
+        btn.Pressed += () => EmitSignal(SignalName.Continue);
     }
 }

@@ -5,7 +5,7 @@ namespace SuperMario;
 
 public partial class PlayerController : CharacterBody2D
 {
-    public event Action Died;
+    public event Action Died = delegate { };
 
     [Export] public PackedScene FireballScene;
     [Export] public ColorRect Visual;
@@ -37,8 +37,7 @@ public partial class PlayerController : CharacterBody2D
         CollisionLayer = Layers.Player;
         CollisionMask = Layers.Environment | Layers.PickupTrigger | Layers.LevelTrigger;
 
-        if (GameManager.Instance?.State != null)
-            _state = GameManager.Instance.State.PowerState;
+        _state = GameManager.Instance.State.PowerState;
         ApplyStateVisuals();
     }
 
@@ -63,7 +62,7 @@ public partial class PlayerController : CharacterBody2D
         }
 
         if (Input.IsActionJustPressed(InputFire) && _state == PlayerPowerState.Fire
-            && _activeFireballs < Constants.MaxFireballs && FireballScene != null)
+            && _activeFireballs < Constants.MaxFireballs)
         {
             SpawnFireball();
         }
@@ -92,9 +91,9 @@ public partial class PlayerController : CharacterBody2D
     private void SpawnFireball()
     {
         var fb = FireballScene.Instantiate<Fireball>();
-        var pos = Muzzle != null ? Muzzle.GlobalPosition : GlobalPosition;
+        var pos = Muzzle.GlobalPosition;
         fb.Init(pos, _facing, this);
-        var parent = (Node)GameManager.Instance?.CurrentLevel ?? GetTree().CurrentScene;
+        var parent = (Node)GameManager.Instance.CurrentLevel;
         parent.AddChild(fb);
         _activeFireballs++;
     }
@@ -133,14 +132,14 @@ public partial class PlayerController : CharacterBody2D
 
         SetState(PlayerPowerState.Small);
         _invulnTimer = Constants.PlayerInvulnDuration;
-        Blinker?.Start(Constants.PlayerInvulnDuration);
+        Blinker.Start(Constants.PlayerInvulnDuration);
     }
 
     public void KillPlayer()
     {
         if (_dead) return;
         _dead = true;
-        Died?.Invoke();
+        Died();
         QueueFree();
     }
 
@@ -155,8 +154,7 @@ public partial class PlayerController : CharacterBody2D
     private void SetState(PlayerPowerState newState)
     {
         _state = newState;
-        if (GameManager.Instance?.State != null)
-            GameManager.Instance.State.PowerState = newState;
+        GameManager.Instance.State.PowerState = newState;
         ApplyStateVisuals();
     }
 
@@ -171,17 +169,12 @@ public partial class PlayerController : CharacterBody2D
             default:                    w = Constants.PlayerSmallWidth; h = Constants.PlayerSmallHeight; color = new Color(0.85f, 0.10f, 0.10f); break;
         }
 
-        if (Visual != null)
-        {
-            Visual.Size = new Vector2(w, h);
-            Visual.Position = new Vector2(-w / 2f, -h);
-            Visual.Color = color;
-        }
+        Visual.Size = new Vector2(w, h);
+        Visual.Position = new Vector2(-w / 2f, -h);
+        Visual.Color = color;
 
-        if (Shape?.Shape is RectangleShape2D rect)
-        {
-            rect.Size = new Vector2(w, h);
-            Shape.Position = new Vector2(0, -h / 2f);
-        }
+        var rect = (RectangleShape2D)Shape.Shape;
+        rect.Size = new Vector2(w, h);
+        Shape.Position = new Vector2(0, -h / 2f);
     }
 }

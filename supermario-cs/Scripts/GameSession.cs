@@ -74,10 +74,7 @@ public partial class GameSession : Node
             CurrentLevel = null;
         }
 
-        if (next != null)
-        {
-            AddChild(next);
-            CurrentLevel = next;
-        }
+        AddChild(next);
+        CurrentLevel = next;
     }
 }

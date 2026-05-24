@@ -10,8 +10,7 @@ public partial class KoopaTroopa : CharacterBody2D, IStompable, IFireballHittabl
 
     public override void _Ready()
     {
-        if (Walker != null)
-            Walker.TurnAtCliffs = Color == KoopaColor.Red;
+        Walker.TurnAtCliffs = Color == KoopaColor.Red;
     }
 
     public void OnStomped(PlayerController _)
@@ -26,10 +25,9 @@ public partial class KoopaTroopa : CharacterBody2D, IStompable, IFireballHittabl
 
     private void SpawnShell()
     {
-        if (ShellScene == null) return;
         var shell = ShellScene.Instantiate<Node2D>();
         shell.GlobalPosition = GlobalPosition;
-        var parent = (Node)GameManager.Instance?.CurrentLevel ?? GetParent();
+        var parent = (Node)GameManager.Instance.CurrentLevel;
         parent.AddChild(shell);
     }
 }

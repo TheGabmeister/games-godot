@@ -10,26 +10,26 @@ public class GameState
     public string CurrentLevelName { get; private set; } = "";
     public float CurrentLevelTimeLimit { get; private set; }
 
-    public event Action<int> ScoreChanged;
-    public event Action<int> LivesChanged;
-    public event Action<string, float> LevelChanged;
+    public event Action<int> ScoreChanged = delegate { };
+    public event Action<int> LivesChanged = delegate { };
+    public event Action<string, float> LevelChanged = delegate { };
 
     public void AddScore(int points)
     {
         Score += points;
-        ScoreChanged?.Invoke(Score);
+        ScoreChanged(Score);
     }
 
     public void SetLives(int lives)
     {
         Lives = lives;
-        LivesChanged?.Invoke(Lives);
+        LivesChanged(Lives);
     }
 
     public void SetLevel(string name, float timeLimit)
     {
-        CurrentLevelName = name ?? "";
+        CurrentLevelName = name;
         CurrentLevelTimeLimit = timeLimit;
-        LevelChanged?.Invoke(CurrentLevelName, CurrentLevelTimeLimit);
+        LevelChanged(CurrentLevelName, CurrentLevelTimeLimit);
     }
 }

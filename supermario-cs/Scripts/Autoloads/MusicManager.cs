@@ -18,7 +18,6 @@ public partial class MusicManager : Node
 
     public void Play(AudioStream stream)
     {
-        if (stream == null) return;
         if (stream == _current && _player.Playing) return;
         _current = stream;
         _player.Stream = stream;

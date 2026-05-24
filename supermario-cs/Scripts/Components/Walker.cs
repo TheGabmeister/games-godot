@@ -14,7 +14,6 @@ public partial class Walker : Node
 
     public override void _PhysicsProcess(double delta)
     {
-        if (Body == null) return;
         float dt = (float)delta;
 
         var v = Body.Velocity;

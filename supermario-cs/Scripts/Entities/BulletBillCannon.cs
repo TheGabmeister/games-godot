@@ -20,10 +20,9 @@ public partial class BulletBillCannon : Node2D
 
     private void Fire()
     {
-        if (BulletBillScene == null) return;
         var bb = BulletBillScene.Instantiate<BulletBill>();
         bb.Init(GlobalPosition, Mathf.Sign(Facing) == 0 ? -1 : (int)Mathf.Sign(Facing));
-        var parent = (Node)GameManager.Instance?.CurrentLevel ?? GetParent();
+        var parent = (Node)GameManager.Instance.CurrentLevel;
         parent.AddChild(bb);
     }
 }

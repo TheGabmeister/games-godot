@@ -10,7 +10,6 @@ public partial class ScorePopup : Node2D
 
     public static void Spawn(Node levelRoot, Vector2 position, int points)
     {
-        if (levelRoot == null) return;
         var popup = new ScorePopup();
         popup.GlobalPosition = position;
         var label = new Label

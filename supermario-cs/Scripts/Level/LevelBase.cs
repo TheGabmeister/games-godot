@@ -33,11 +33,6 @@ public partial class LevelBase : Node2D
         if (_initialized) return;
         _initialized = true;
 
-        _state ??= GameManager.Instance?.State;
-
-        if (Config == null)
-            GD.PushWarning($"LevelBase {Name}: Config is not assigned.");
-
         SetupLevel();
     }
 
@@ -46,31 +41,17 @@ public partial class LevelBase : Node2D
         if (Config != null && Config.MusicTrack != null)
             MusicManager.Instance?.Play(Config.MusicTrack);
 
-        var start = GetNodeOrNull<Marker2D>("PlayerStart");
-        if (PlayerScene != null)
-        {
-            if (start == null)
-            {
-                GD.PushError($"LevelBase {Name}: PlayerStart marker is required.");
-            }
-            else
-            {
-                var player = PlayerScene.Instantiate<PlayerController>();
-                player.GlobalPosition = start.GlobalPosition;
-                AddChild(player);
-                player.Died += () => EmitSignal(SignalName.PlayerDied);
-            }
-        }
+        var start = GetNode<Marker2D>("PlayerStart");
+        var player = PlayerScene.Instantiate<PlayerController>();
+        player.GlobalPosition = start.GlobalPosition;
+        AddChild(player);
+        player.Died += () => EmitSignal(SignalName.PlayerDied);
 
-        var goal = GetNodeOrNull<GoalTrigger>("GoalTrigger");
-        if (goal != null)
-            goal.Reached += () => EmitSignal(SignalName.LevelCompleted);
+        var goal = GetNode<GoalTrigger>("GoalTrigger");
+        goal.Reached += () => EmitSignal(SignalName.LevelCompleted);
 
-        if (HudScene != null)
-        {
-            var hud = HudScene.Instantiate<Hud>();
-            hud.Bind(_state);
-            AddChild(hud);
-        }
+        var hud = HudScene.Instantiate<Hud>();
+        hud.Bind(_state);
+        AddChild(hud);
     }
 }

@@ -12,8 +12,7 @@ public partial class Lifetime : Node
         timer.Timeout += () =>
         {
             var parent = GetParent();
-            if (parent != null && IsInstanceValid(parent))
-                parent.QueueFree();
+            parent.QueueFree();
         };
     }
 }

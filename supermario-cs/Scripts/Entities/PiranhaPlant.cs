@@ -19,18 +19,13 @@ public partial class PiranhaPlant : Node2D, IFireballHittable, IStarHittable
 
     public override void _Ready()
     {
-        if (Visual != null)
-        {
-            _basePos = Visual.Position;
-            _hiddenPos = _basePos;
-            _emergedPos = _basePos - new Vector2(0, EmergeHeight);
-            Visual.Position = _hiddenPos;
-        }
-        if (Hitbox != null)
-        {
-            Hitbox.BodyEntered += OnBodyEntered;
-            Hitbox.Monitoring = false;
-        }
+        _basePos = Visual.Position;
+        _hiddenPos = _basePos;
+        _emergedPos = _basePos - new Vector2(0, EmergeHeight);
+        Visual.Position = _hiddenPos;
+
+        Hitbox.BodyEntered += OnBodyEntered;
+        Hitbox.Monitoring = false;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -42,23 +37,21 @@ public partial class PiranhaPlant : Node2D, IFireballHittable, IStarHittable
             if (PlayerNearby()) return;
             _hidden = false;
             _t = 0f;
-            if (Hitbox != null) Hitbox.Monitoring = true;
+            Hitbox.Monitoring = true;
         }
         else
         {
             if (_t < EmergeDuration) return;
             _hidden = true;
             _t = 0f;
-            if (Hitbox != null) Hitbox.Monitoring = false;
+            Hitbox.Monitoring = false;
         }
-        if (Visual != null)
-            Visual.Position = _hidden ? _hiddenPos : _emergedPos;
+        Visual.Position = _hidden ? _hiddenPos : _emergedPos;
     }
 
     private bool PlayerNearby()
     {
-        var p = GetTree().GetFirstNodeInGroup("player") as Node2D;
-        if (p == null) return false;
+        var p = (Node2D)GetTree().GetFirstNodeInGroup("player");
         return p.GlobalPosition.DistanceTo(GlobalPosition) < ProximityRadius;
     }
 

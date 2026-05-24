@@ -51,12 +51,11 @@ public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable,
 
     private void ThrowHammer()
     {
-        if (HammerScene == null) return;
-        var player = GetTree().GetFirstNodeInGroup("player") as Node2D;
-        int facing = (player != null && player.GlobalPosition.X < GlobalPosition.X) ? -1 : 1;
+        var player = (Node2D)GetTree().GetFirstNodeInGroup("player");
+        int facing = player.GlobalPosition.X < GlobalPosition.X ? -1 : 1;
         var hammer = HammerScene.Instantiate<Hammer>();
         hammer.Init(GlobalPosition + new Vector2(0, -32), facing);
-        var parent = (Node)GameManager.Instance?.CurrentLevel ?? GetParent();
+        var parent = (Node)GameManager.Instance.CurrentLevel;
         parent.AddChild(hammer);
     }
 

@@ -11,12 +11,11 @@ public partial class KoopaShell : CharacterBody2D, IStompable, IStarHittable
 
     public override void _Ready()
     {
-        if (Walker != null) Walker.Speed = 0f;
+        Walker.Speed = 0f;
     }
 
     public void OnStomped(PlayerController player)
     {
-        if (Walker == null) return;
         if (_moving)
         {
             Walker.Speed = 0f;

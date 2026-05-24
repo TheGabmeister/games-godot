@@ -14,7 +14,6 @@ public partial class Hitbox : Area2D
     private void OnBodyEntered(Node2D body)
     {
         if (body is not PlayerController player) return;
-        if (OwnerNode == null) return;
 
         if (player.IsStarInvincible)
         {
@@ -35,8 +34,7 @@ public partial class Hitbox : Area2D
 
     private bool IsPlayerStomping(PlayerController player)
     {
-        var ownerNode2D = OwnerNode as Node2D;
-        if (ownerNode2D == null) return false;
+        var ownerNode2D = (Node2D)OwnerNode;
         if (player.Velocity.Y <= 0f) return false;
         return player.GlobalPosition.Y < ownerNode2D.GlobalPosition.Y - Constants.StompTopTolerance / 2f;
     }

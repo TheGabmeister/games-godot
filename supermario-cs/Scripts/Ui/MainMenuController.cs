@@ -8,10 +8,7 @@ public partial class MainMenuController : Control
 
     public override void _Ready()
     {
-        var btn = GetNodeOrNull<Button>("CenterContainer/VBoxContainer/StartButton");
-        if (btn != null)
-            btn.Pressed += () => EmitSignal(SignalName.StartPressed);
-        else
-            GD.PushError("MainMenuController: StartButton not found.");
+        var btn = GetNode<Button>("CenterContainer/VBoxContainer/StartButton");
+        btn.Pressed += () => EmitSignal(SignalName.StartPressed);
     }
 }

@@ -21,8 +21,7 @@ public partial class Fireball : CharacterBody2D
 
     public override void _Ready()
     {
-        if (HitArea != null)
-            HitArea.BodyEntered += OnHit;
+        HitArea.BodyEntered += OnHit;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -73,7 +72,7 @@ public partial class Fireball : CharacterBody2D
     {
         if (_destroyed) return;
         _destroyed = true;
-        _owner?.NotifyFireballDestroyed();
+        _owner.NotifyFireballDestroyed();
         QueueFree();
     }
 
@@ -82,7 +81,7 @@ public partial class Fireball : CharacterBody2D
         if (!_destroyed)
         {
             _destroyed = true;
-            _owner?.NotifyFireballDestroyed();
+            _owner.NotifyFireballDestroyed();
         }
     }
 }

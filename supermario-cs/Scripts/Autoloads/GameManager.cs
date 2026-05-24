@@ -6,8 +6,8 @@ public partial class GameManager : Node
 {
     public static GameManager Instance { get; private set; }
 
-    public GameState State => _session?.State;
-    public LevelBase CurrentLevel => _session?.CurrentLevel;
+    public GameState State => _session.State;
+    public LevelBase CurrentLevel => _session.CurrentLevel;
 
     private PackedScene _mainMenuScene;
     private PackedScene _gameOverScene;
@@ -21,21 +21,14 @@ public partial class GameManager : Node
         _levelRoot = new Node { Name = "LevelRoot" };
         AddChild(_levelRoot);
 
-        if (ResourceLoader.Exists(Config.MainMenuScenePath))
-            _mainMenuScene = GD.Load<PackedScene>(Config.MainMenuScenePath);
-        if (ResourceLoader.Exists(Config.GameOverScenePath))
-            _gameOverScene = GD.Load<PackedScene>(Config.GameOverScenePath);
+        _mainMenuScene = GD.Load<PackedScene>(Config.MainMenuScenePath);
+        _gameOverScene = GD.Load<PackedScene>(Config.GameOverScenePath);
 
         LoadMainMenu();
     }
 
     public void LoadMainMenu()
     {
-        if (_mainMenuScene == null)
-        {
-            GD.PushWarning("_mainMenuScene not assigned on GameManager autoload.");
-            return;
-        }
         var menu = _mainMenuScene.Instantiate<MainMenuController>();
         menu.StartPressed += OnStartPressed;
         SetActiveNode(menu);
@@ -53,12 +46,6 @@ public partial class GameManager : Node
 
     private void LoadGameOver()
     {
-        if (_gameOverScene == null)
-        {
-            GD.PushWarning("_gameOverScene not assigned on GameManager autoload.");
-            LoadMainMenu();
-            return;
-        }
         var over = _gameOverScene.Instantiate<GameOverController>();
         over.Continue += LoadMainMenu;
         SetActiveNode(over);
@@ -74,10 +61,7 @@ public partial class GameManager : Node
             _currentChild.QueueFree();
             _currentChild = null;
         }
-        if (next != null)
-        {
-            _levelRoot.AddChild(next);
-            _currentChild = next;
-        }
+        _levelRoot.AddChild(next);
+        _currentChild = next;
     }
 }

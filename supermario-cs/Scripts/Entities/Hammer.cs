@@ -28,7 +28,7 @@ public partial class Hammer : Area2D
         _velocity.Y += Constants.HammerGravity * dt;
         GlobalPosition += _velocity * dt;
         _spinT += dt * Constants.HammerSpinSpeed;
-        if (Visual != null) Visual.Rotation = _spinT;
+        Visual.Rotation = _spinT;
     }
 
     private void OnBodyEntered(Node2D body)

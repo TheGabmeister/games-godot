@@ -36,10 +36,9 @@ public partial class KoopaParatroopa : CharacterBody2D, IStompable, IFireballHit
 
     private void SpawnGroundKoopa()
     {
-        if (GroundKoopaScene == null) return;
         var koopa = GroundKoopaScene.Instantiate<Node2D>();
         koopa.GlobalPosition = GlobalPosition;
-        var parent = (Node)GameManager.Instance?.CurrentLevel ?? GetParent();
+        var parent = (Node)GameManager.Instance.CurrentLevel;
         parent.AddChild(koopa);
     }
 }

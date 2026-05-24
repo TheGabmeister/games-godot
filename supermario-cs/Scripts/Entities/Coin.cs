@@ -15,8 +15,8 @@ public partial class Coin : Area2D
     {
         if (_collected || body is not PlayerController) return;
         _collected = true;
-        GameManager.Instance?.State?.AddScore(Constants.CoinValue);
-        ScorePopup.Spawn(GameManager.Instance?.CurrentLevel, GlobalPosition, Constants.CoinValue);
+        GameManager.Instance.State.AddScore(Constants.CoinValue);
+        ScorePopup.Spawn(GameManager.Instance.CurrentLevel, GlobalPosition, Constants.CoinValue);
         QueueFree();
     }
 }

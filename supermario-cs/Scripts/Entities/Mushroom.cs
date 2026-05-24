@@ -10,16 +10,15 @@ public partial class Mushroom : CharacterBody2D
 
     public override void _Ready()
     {
-        if (PickupTrigger != null)
-            PickupTrigger.BodyEntered += OnPickedUp;
+        PickupTrigger.BodyEntered += OnPickedUp;
     }
 
     private void OnPickedUp(Node2D body)
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        GameManager.Instance?.State?.AddScore(Constants.MushroomScore);
-        ScorePopup.Spawn(GameManager.Instance?.CurrentLevel, GlobalPosition, Constants.MushroomScore);
+        GameManager.Instance.State.AddScore(Constants.MushroomScore);
+        ScorePopup.Spawn(GameManager.Instance.CurrentLevel, GlobalPosition, Constants.MushroomScore);
         player.ApplyMushroom();
         QueueFree();
     }

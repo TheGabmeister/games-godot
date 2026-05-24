@@ -10,10 +10,10 @@ public partial class BrickBlock : StaticBody2D, IBumpable
     {
         if (player.CanBreakBricks)
         {
-            GameManager.Instance?.State?.AddScore(Constants.BrickBreakScore);
+            GameManager.Instance.State.AddScore(Constants.BrickBreakScore);
             QueueFree();
             return;
         }
-        Bumpable?.Bump();
+        Bumpable.Bump();
     }
 }
