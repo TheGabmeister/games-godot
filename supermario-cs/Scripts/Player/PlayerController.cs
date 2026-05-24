@@ -8,16 +8,16 @@ public partial class PlayerController : CharacterBody2D
     public event Action Died;
 
     [Export] public PackedScene FireballScene;
-    [Export] public ColorRect Visual;
-    [Export] public CollisionShape2D Shape;
-    [Export] public Blinker Blinker;
-    [Export] public Marker2D Muzzle;
 
     private static readonly StringName InputLeft = "move_left";
     private static readonly StringName InputRight = "move_right";
     private static readonly StringName InputJump = "jump";
     private static readonly StringName InputFire = "run"; // X / J → fire when Fire power
 
+    private ColorRect _visual;
+    private CollisionShape2D _shape;
+    private Blinker _blinker;
+    private Marker2D _muzzle;
     private Vector2 _velocity;
     private int _facing = 1;
     private int _activeFireballs;
@@ -36,6 +36,12 @@ public partial class PlayerController : CharacterBody2D
         AddToGroup("player");
         CollisionLayer = Layers.Player;
         CollisionMask = Layers.Environment | Layers.PickupTrigger | Layers.LevelTrigger;
+
+        _visual = GetNode<ColorRect>("Visual");
+        _shape = GetNode<CollisionShape2D>("CollisionShape2D");
+        _blinker = GetNode<Blinker>("Blinker");
+        _blinker.Target = _visual;
+        _muzzle = GetNode<Marker2D>("Muzzle");
 
         _state = GameManager.Instance.State.PowerState;
         ApplyStateVisuals();
@@ -91,7 +97,7 @@ public partial class PlayerController : CharacterBody2D
     private void SpawnFireball()
     {
         var fb = FireballScene.Instantiate<Fireball>();
-        var pos = Muzzle.GlobalPosition;
+        var pos = _muzzle.GlobalPosition;
         fb.Init(pos, _facing, this);
         var parent = (Node)GameManager.Instance.CurrentLevel;
         parent.AddChild(fb);
@@ -132,7 +138,7 @@ public partial class PlayerController : CharacterBody2D
 
         SetState(PlayerPowerState.Small);
         _invulnTimer = Constants.PlayerInvulnDuration;
-        Blinker.Start(Constants.PlayerInvulnDuration);
+        _blinker.Start(Constants.PlayerInvulnDuration);
     }
 
     public void KillPlayer()
@@ -169,12 +175,12 @@ public partial class PlayerController : CharacterBody2D
             default:                    w = Constants.PlayerSmallWidth; h = Constants.PlayerSmallHeight; color = new Color(0.85f, 0.10f, 0.10f); break;
         }
 
-        Visual.Size = new Vector2(w, h);
-        Visual.Position = new Vector2(-w / 2f, -h);
-        Visual.Color = color;
+        _visual.Size = new Vector2(w, h);
+        _visual.Position = new Vector2(-w / 2f, -h);
+        _visual.Color = color;
 
-        var rect = (RectangleShape2D)Shape.Shape;
+        var rect = (RectangleShape2D)_shape.Shape;
         rect.Size = new Vector2(w, h);
-        Shape.Position = new Vector2(0, -h / 2f);
+        _shape.Position = new Vector2(0, -h / 2f);
     }
 }

@@ -20,6 +20,13 @@ godot --headless --path . --quit
 godot --path .
 ```
 
+If `godot` is not on PATH, use the local Windows executable:
+
+```powershell
+D:\Godot\Godot_v4.6.2-stable_mono_win64.exe --headless --path . --quit
+D:\Godot\Godot_v4.6.2-stable_mono_win64.exe --path .
+```
+
 Notes:
 
 - Run `dotnet build` before `godot --headless`; the headless check validates the Godot project structure, not C# syntax.

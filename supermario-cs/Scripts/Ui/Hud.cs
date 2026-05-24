@@ -15,16 +15,13 @@ public partial class Hud : CanvasLayer
 
     public override void _Ready()
     {
-        _scoreLabel = GetNode<Label>("Root/Top/Score/Value");
-        _worldLabel = GetNode<Label>("Root/Top/World/Value");
-        _timeLabel = GetNode<Label>("Root/Top/Time/Value");
-        _livesLabel = GetNode<Label>("Root/Top/Lives/Value");
-
+        CacheLabels();
         RefreshLabels();
     }
 
     public void Bind(GameState state)
     {
+        CacheLabels();
         _boundState = state;
         state.ScoreChanged += OnScoreChanged;
         state.LivesChanged += OnLivesChanged;
@@ -41,14 +38,26 @@ public partial class Hud : CanvasLayer
 
     private void UnbindState()
     {
+        if (_boundState == null) return;
+
         _boundState.ScoreChanged -= OnScoreChanged;
         _boundState.LivesChanged -= OnLivesChanged;
         _boundState.LevelChanged -= OnLevelChanged;
         _boundState = null;
     }
 
+    private void CacheLabels()
+    {
+        _scoreLabel ??= GetNode<Label>("Root/Top/Score/Value");
+        _worldLabel ??= GetNode<Label>("Root/Top/World/Value");
+        _timeLabel ??= GetNode<Label>("Root/Top/Time/Value");
+        _livesLabel ??= GetNode<Label>("Root/Top/Lives/Value");
+    }
+
     private void RefreshLabels()
     {
+        if (_boundState == null) return;
+
         _worldLabel.Text = _boundState.CurrentLevelName;
         _timeLabel.Text = ((int)_timeRemaining).ToString();
         OnScoreChanged(_boundState.Score);
@@ -57,7 +66,9 @@ public partial class Hud : CanvasLayer
 
     public override void _Process(double delta)
     {
+        if (_boundState == null) return;
         if (_timedOut) return;
+
         _timeRemaining = Mathf.Max(0f, _timeRemaining - (float)delta);
         _timeLabel.Text = ((int)_timeRemaining).ToString();
         if (_timeRemaining <= 0f)

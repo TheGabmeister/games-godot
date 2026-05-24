@@ -4,7 +4,7 @@ namespace SuperMario;
 
 public partial class Blinker : Node
 {
-    [Export] public Node2D Target;
+    [Export] public CanvasItem Target;
     [Export] public float Interval = 0.06f;
 
     private float _remaining;
