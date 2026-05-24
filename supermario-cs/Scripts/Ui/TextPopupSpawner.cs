@@ -3,33 +3,21 @@ using Godot;
 
 namespace SuperMario;
 
-public partial class TextPopupSpawner : Node
+public static class TextPopupSpawner
 {
-    private GameEvents _events;
-    private Func<Node> _getPopupRoot;
+    public static event Action<string, Vector2> TextPopupRequested;
 
-    public void Initialize(GameEvents events, Func<Node> getPopupRoot)
+    static TextPopupSpawner()
     {
-        _events = events;
-        _getPopupRoot = getPopupRoot;
-
-        _events.TextPopupRequested += OnTextPopupRequested;
+        TextPopupRequested += Spawn;
     }
 
-    public override void _ExitTree()
-    {
-        if (_events != null)
-            _events.TextPopupRequested -= OnTextPopupRequested;
-    }
+    public static void EmitTextPopupRequested(string text, Vector2 worldPosition) =>
+        TextPopupRequested?.Invoke(text, worldPosition);
 
-    private void OnTextPopupRequested(string text, Vector2 worldPosition)
+    private static void Spawn(string text, Vector2 worldPosition)
     {
-        Spawn(text, worldPosition);
-    }
-
-    private void Spawn(string text, Vector2 worldPosition)
-    {
-        var root = _getPopupRoot();
+        var root = GameSession.Instance.CurrentLevel;
         var popup = new TextPopup();
 
         popup.Initialize(text);

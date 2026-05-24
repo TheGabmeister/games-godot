@@ -8,11 +8,13 @@ public partial class GameSession : Node
     public static GameSession Current { get; private set; }
 
     public event Action SessionEnded;
+    public event Action<int> ScoreEarned;
+    public event Action OneUpAwarded;
+    public event Action<PlayerPowerState> PlayerPowerStateChanged;
 
     private const float DeathPauseSeconds = 1.5f;
 
     public GameState State { get; } = new();
-    public GameEvents Events { get; } = new();
     public LevelBase CurrentLevel { get; private set; }
 
     private Campaign _campaign;
@@ -37,21 +39,21 @@ public partial class GameSession : Node
         _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
         _currentLevelIndex = 0;
 
-        Events.ScoreEarned += OnScoreEarned;
-        Events.OneUpAwarded += OnOneUpAwarded;
-        Events.PlayerPowerStateChanged += OnPlayerPowerStateChanged;
+        ScoreEarned += OnScoreEarned;
+        OneUpAwarded += OnOneUpAwarded;
+        PlayerPowerStateChanged += OnPlayerPowerStateChanged;
 
         var hudScene = GD.Load<PackedScene>(Config.HudScenePath);
         _hud = hudScene.Instantiate<Hud>();
         AddChild(_hud);
         _hud.Bind(State);
 
-        var textPopupSpawner = new TextPopupSpawner { Name = "TextPopupSpawner" };
-        AddChild(textPopupSpawner);
-        textPopupSpawner.Initialize(Events, () => CurrentLevel);
-
         LoadCurrentLevel();
     }
+
+    public void EmitScoreEarned(int points) => ScoreEarned?.Invoke(points);
+    public void EmitOneUpAwarded() => OneUpAwarded?.Invoke();
+    public void EmitPlayerPowerStateChanged(PlayerPowerState state) => PlayerPowerStateChanged?.Invoke(state);
 
     private void OnScoreEarned(int points)
     {

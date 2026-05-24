@@ -15,8 +15,8 @@ public partial class FireFlower : Area2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        GameSession.Current.Events.EmitScoreEarned(Constants.MushroomScore);
-        GameSession.Current.Events.EmitTextPopupRequested("+" + Constants.MushroomScore, GlobalPosition);
+        GameSession.Instance.EmitScoreEarned(Constants.MushroomScore);
+        TextPopupSpawner.EmitTextPopupRequested("+" + Constants.MushroomScore, GlobalPosition);
         player.ApplyFireFlower();
         QueueFree();
     }

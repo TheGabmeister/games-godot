@@ -50,7 +50,7 @@ GameManager (autoload) → LevelRoot → one of:
 
 | Autoload | Responsibility |
 |----------|----------------|
-| **GameManager** | App shell. Swaps top-level screens (`main_menu`, `GameSession`, `game_over`) under `LevelRoot`. Lifecycle-only — gameplay entities do **not** consult `GameManager.Instance`; they go through `GameSession.Current` instead. |
+| **GameManager** | App shell. Swaps top-level screens (`main_menu`, `GameSession`, `game_over`) under `LevelRoot`. Lifecycle-only — gameplay entities do **not** consult `GameManager.Instance`; they go through `GameSession.Instance` instead. |
 | **MusicManager** | Single `AudioStreamPlayer`. `Play(stream)` is **idempotent by reference** — re-playing the same `AudioStream` is a no-op so same-level reloads don't restart music. |
 | **SfxManager** | Pool of 10 `AudioStreamPlayer`s. Fire-and-forget; drops requests when pool exhausted. |
 
@@ -106,12 +106,12 @@ Four allowed coupling patterns. Anything else is a smell.
 
 1. **Vertical ownership (parent ↔ child): call down, signal up.** Parent instantiates child, holds reference, calls methods directly. Child emits signals; parent connects. Child never reaches up — `GetParent()`, `GetNode("../...")` are forbidden.
 2. **Global services (autoloads): direct calls allowed.** Any node may call `MusicManager.Instance`, `SfxManager.Instance` directly. `GameManager.Instance` is reserved for top-level lifecycle (`StartGame`, `LoadMainMenu`, `LoadGameOver`) and is not consulted by gameplay entities.
-3. **Session-scoped event bus: `GameSession.Current.Events`.** Gameplay entities (pickups, blocks, the player) announce facts ("I was collected for N points at position P", "player power state is now Fire") by emitting on `GameEvents`; `GameSession` is the sole subscriber that mutates `GameState`. Entities never call `State.X` setters directly.
+3. **Session-scoped events on `GameSession`.** Gameplay entities (pickups, blocks, the player) announce facts ("I was collected for N points", "player power state is now Fire") by calling `GameSession.Instance.Emit...` methods; `GameSession` owns the corresponding events and is the sole writer to `GameState`. Entities never call `State.X` setters directly.
 4. **Sibling interactions: direct calls via interfaces.** Combat (`IFireballHittable`/`IStompable`/`IStarHittable`/`IBumpable`), `Hitbox` → `PlayerController.TakeDamage`, `KillVolume` → `PlayerController.KillPlayer`.
 
-**Concrete consequence — pickups emit events, never mutate state.** Coin's `BodyEntered` calls `GameSession.Current.Events.EmitScoreEarned(points)` and `GameSession.Current.Events.EmitTextPopupRequested(text, GlobalPosition)`. `GameSession` listens to score events for state updates; `TextPopupSpawner` listens to text-popup events and spawns floating text. Pickups don't know about `GameState` or popup construction.
+**Concrete consequence — pickups emit events, never mutate state.** Coin's `BodyEntered` calls `GameSession.Instance.EmitScoreEarned(points)` and `TextPopupSpawner.EmitTextPopupRequested(text, GlobalPosition)`. `GameSession` listens to score events for state updates; the static `TextPopupSpawner` owns `TextPopupRequested` and spawns floating text. Pickups don't know about `GameState` or popup construction.
 
-**Concrete consequence — `GameSession.Current` is the entity-facing locator.** Static accessor set in `_EnterTree`/cleared in `_ExitTree`. Exposes `Events` (the bus), `State` (reads only — writes go through `Events`), and `CurrentLevel` (parent for runtime-spawned children like projectiles). Lifetime is session-scoped: null between sessions, non-null whenever any gameplay entity is alive.
+**Concrete consequence — `GameSession.Instance` is the entity-facing locator.** Static accessor set in `_EnterTree`/cleared in `_ExitTree`. Exposes `Events` (the bus), `State` (reads only — writes go through `Events`), and `CurrentLevel` (parent for runtime-spawned children like projectiles). Lifetime is session-scoped: null between sessions, non-null whenever any gameplay entity is alive.
 
 **Concrete consequence — components reference their owner via `[Export]`** set in the inspector at scene-author time. Never `GetParent()`.
 
@@ -123,13 +123,13 @@ One `.cs` + one `.tscn` per entity type. No base classes for enemies / pickups /
 - **Static pickups (Coin, FireFlower):** root `Area2D` + visual + shape.
 - **Dynamic pickups (Mushroom, OneUp, Starman):** root `CharacterBody2D` + visual + body shape + (optional) `Walker` + child `PickupTrigger: Area2D`. The `PickupBody`/`PickupTrigger` layer split lets Mario walk through pickups while still triggering them.
 - **Blocks (Brick, Question, Used):** root `StaticBody2D` + `Visual` + shape + (optional) `Bumpable`.
-- **Projectiles (Fireball, Hammer, BulletBill):** root `CharacterBody2D` or `Area2D` + visual + shape + child `HitArea: Area2D` + `Lifetime`. Spawned at runtime by their spawner via `GameSession.Current.CurrentLevel.AddChild(...)`.
+- **Projectiles (Fireball, Hammer, BulletBill):** root `CharacterBody2D` or `Area2D` + visual + shape + child `HitArea: Area2D` + `Lifetime`. Spawned at runtime by their spawner via `GameSession.Instance.CurrentLevel.AddChild(...)`.
 
 ### Player
 
 `scenes/player.tscn` — `CharacterBody2D` with flat physics methods. **No state machine, no drawer.** Joins the `"player"` group in `_Ready` so AI-querying enemies can find it via `GetTree().GetFirstNodeInGroup("player")`.
 
-Power state is owned by `GameState.PowerState`. The player reads it on `_Ready` (via `GameSession.Current.State.PowerState`) and writes through by emitting `GameSession.Current.Events.EmitPlayerPowerStateChanged(newState)` on transitions; `GameSession` is the sole writer to `GameState`.
+Power state is owned by `GameState.PowerState`. The player reads it on `_Ready` (via `GameSession.Instance.State.PowerState`) and writes through by emitting `GameSession.Instance.EmitPlayerPowerStateChanged(newState)` on transitions; `GameSession` is the sole writer to `GameState`.
 
 Head-bump detection: after `MoveAndSlide`, iterate `GetSlideCollisionCount()`; on a collision with normal `Y > 0.9`, if the collider implements `IBumpable`, dispatch `OnBumped(this)`. (The general rule: whoever holds the contextual data owns the detection. Block-bumps need the player's velocity / collision normal, so the player owns them.)
 

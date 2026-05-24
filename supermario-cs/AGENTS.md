@@ -63,7 +63,7 @@ GameManager (autoload) → LevelRoot → one of:
 
 Registered in `project.godot` in this order:
 
-- `GameManager`: owns app-level screen swaps (`main_menu`, `GameSession`, `game_over`). Lifecycle-only; gameplay entities do not consult `GameManager.Instance`, they go through `GameSession.Current` instead.
+- `GameManager`: owns app-level screen swaps (`main_menu`, `GameSession`, `game_over`). Lifecycle-only; gameplay entities do not consult `GameManager.Instance`, they go through `GameSession.Instance` instead.
 - `MusicManager`: single `AudioStreamPlayer`. `Play(stream)` is idempotent by reference (re-playing the same stream is a no-op).
 - `SfxManager`: pool of 10 `AudioStreamPlayer`s. Fire-and-forget; drops requests when pool exhausted.
 
@@ -119,12 +119,12 @@ Four allowed coupling patterns:
 
 1. Vertical ownership (parent ↔ child): call down, signal up. Child never reaches up.
 2. Global services (autoloads): direct calls allowed for `MusicManager.Instance` / `SfxManager.Instance`. `GameManager.Instance` is reserved for top-level lifecycle (`StartGame`, `LoadMainMenu`, `LoadGameOver`) and is not consulted by gameplay entities.
-3. Session-scoped event bus: gameplay entities announce facts through `GameSession.Current.Events`; `GameSession` is the sole subscriber that mutates `GameState`.
+3. Session-scoped events: gameplay entities announce state changes through `GameSession.Instance.Emit...` methods; `GameSession` owns the corresponding events and is the sole writer to `GameState`.
 4. Sibling interactions: direct calls via combat interfaces; `Hitbox` → `PlayerController.TakeDamage`; `KillVolume` → `PlayerController.KillPlayer`.
 
-Pickups emit events, never mutate state. For example, `Coin` calls `GameSession.Current.Events.EmitScoreEarned(points)` and `GameSession.Current.Events.EmitTextPopupRequested(text, GlobalPosition)`. `GameSession` listens to score events for state updates; `TextPopupSpawner` listens to text-popup events and spawns floating text.
+Pickups emit events, never mutate state. For example, `Coin` calls `GameSession.Instance.EmitScoreEarned(points)` and `TextPopupSpawner.EmitTextPopupRequested(text, GlobalPosition)`. `GameSession` listens to score events for state updates; the static `TextPopupSpawner` owns `TextPopupRequested` and spawns floating text.
 
-`GameSession.Current` is the entity-facing locator. It exposes `Events`, `State` for reads, and `CurrentLevel` as the parent for runtime-spawned children like projectiles. Writes to `GameState` go through `Events`, with `GameSession` as the sole writer.
+`GameSession.Instance` is the entity-facing locator. It exposes `State` for reads, `CurrentLevel` as the parent for runtime-spawned children like projectiles, and `Emit...` methods for session-scoped events. Writes to `GameState` go through `GameSession`, with `GameSession` as the sole writer.
 
 ### Entity authoring
 
@@ -134,13 +134,13 @@ One `.cs` + one `.tscn` per entity. No base classes for enemies / pickups / proj
 - Static pickups (Coin, FireFlower): root `Area2D` + visual + shape.
 - Dynamic pickups (Mushroom, OneUp, Starman): root `CharacterBody2D` + visual + body shape + (optional) `Walker` + child `PickupTrigger: Area2D`. The `PickupBody`/`PickupTrigger` layer split lets Mario walk through pickups while still triggering them.
 - Blocks: root `StaticBody2D` + visual + shape + (optional) `Bumpable`.
-- Projectiles: root `CharacterBody2D` or `Area2D` + visual + shape + child `HitArea: Area2D` + `Lifetime`. Spawned at runtime via `GameSession.Current.CurrentLevel.AddChild(...)`.
+- Projectiles: root `CharacterBody2D` or `Area2D` + visual + shape + child `HitArea: Area2D` + `Lifetime`. Spawned at runtime via `GameSession.Instance.CurrentLevel.AddChild(...)`.
 
 ### Player
 
 `scenes/player.tscn` — `CharacterBody2D` with flat physics methods. No state machine, no drawer. Joins the `"player"` group in `_Ready` so AI-querying enemies can find it.
 
-Power state is owned by `GameState.PowerState`. The player reads it on `_Ready` via `GameSession.Current.State.PowerState` and writes through `GameSession.Current.Events.EmitPlayerPowerStateChanged(newState)` on transitions; `GameSession` is the sole writer to `GameState`.
+Power state is owned by `GameState.PowerState`. The player reads it on `_Ready` via `GameSession.Instance.State.PowerState` and writes through `GameSession.Instance.EmitPlayerPowerStateChanged(newState)` on transitions; `GameSession` is the sole writer to `GameState`.
 
 Head-bump detection lives on the player: after `MoveAndSlide`, iterate `GetSlideCollisionCount()`; on collision normal `Y > 0.9`, dispatch `IBumpable.OnBumped`.
 

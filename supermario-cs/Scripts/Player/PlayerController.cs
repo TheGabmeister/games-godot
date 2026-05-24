@@ -43,7 +43,7 @@ public partial class PlayerController : CharacterBody2D
         _blinker.Target = _visual;
         _muzzle = GetNode<Marker2D>("Muzzle");
 
-        _state = GameSession.Current.State.PowerState;
+        _state = GameSession.Instance.State.PowerState;
         ApplyStateVisuals();
     }
 
@@ -99,7 +99,7 @@ public partial class PlayerController : CharacterBody2D
         var fb = FireballScene.Instantiate<Fireball>();
         var pos = _muzzle.GlobalPosition;
         fb.Init(pos, _facing, this);
-        var parent = (Node)GameSession.Current.CurrentLevel;
+        var parent = (Node)GameSession.Instance.CurrentLevel;
         parent.AddChild(fb);
         _activeFireballs++;
     }
@@ -160,7 +160,7 @@ public partial class PlayerController : CharacterBody2D
     private void SetState(PlayerPowerState newState)
     {
         _state = newState;
-        GameSession.Current.Events.EmitPlayerPowerStateChanged(newState);
+        GameSession.Instance.EmitPlayerPowerStateChanged(newState);
         ApplyStateVisuals();
     }
 
