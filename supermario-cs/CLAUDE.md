@@ -109,7 +109,7 @@ Four allowed coupling patterns. Anything else is a smell.
 3. **Session-scoped event bus: `GameSession.Current.Events`.** Gameplay entities (pickups, blocks, the player) announce facts ("I was collected for N points at position P", "player power state is now Fire") by emitting on `GameEvents`; `GameSession` is the sole subscriber that mutates `GameState`. Entities never call `State.X` setters directly.
 4. **Sibling interactions: direct calls via interfaces.** Combat (`IFireballHittable`/`IStompable`/`IStarHittable`/`IBumpable`), `Hitbox` → `PlayerController.TakeDamage`, `KillVolume` → `PlayerController.KillPlayer`.
 
-**Concrete consequence — pickups emit events, never mutate state.** Coin's `BodyEntered` calls `GameSession.Current.Events.EmitScoreEarnedAt(points, GlobalPosition)`. `GameSession` listens, applies the score, and spawns the `ScorePopup`. Pickups don't know about `GameState`, `ScorePopup`, or score values beyond their own constant.
+**Concrete consequence — pickups emit events, never mutate state.** Coin's `BodyEntered` calls `GameSession.Current.Events.EmitScoreEarnedAt(points, GlobalPosition)`. `GameEvents` also emits `ScoreEarned` for state updates; `TextPopupSpawner` listens to `ScoreEarnedAt` and spawns the floating text. Pickups don't know about `GameState`, text popups, or score values beyond their own constant.
 
 **Concrete consequence — `GameSession.Current` is the entity-facing locator.** Static accessor set in `_EnterTree`/cleared in `_ExitTree`. Exposes `Events` (the bus), `State` (reads only — writes go through `Events`), and `CurrentLevel` (parent for runtime-spawned children like projectiles). Lifetime is session-scoped: null between sessions, non-null whenever any gameplay entity is alive.
 

@@ -11,7 +11,11 @@ public class GameEvents
     public event Action<PlayerPowerState> PlayerPowerStateChanged;
 
     public void EmitScoreEarned(int points) => ScoreEarned?.Invoke(points);
-    public void EmitScoreEarnedAt(int points, Vector2 worldPosition) => ScoreEarnedAt?.Invoke(points, worldPosition);
+    public void EmitScoreEarnedAt(int points, Vector2 worldPosition)
+    {
+        ScoreEarned?.Invoke(points);
+        ScoreEarnedAt?.Invoke(points, worldPosition);
+    }
     public void EmitOneUpAwarded() => OneUpAwarded?.Invoke();
     public void EmitPlayerPowerStateChanged(PlayerPowerState state) => PlayerPowerStateChanged?.Invoke(state);
 }

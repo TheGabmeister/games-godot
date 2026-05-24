@@ -38,7 +38,6 @@ public partial class GameSession : Node
         _currentLevelIndex = 0;
 
         Events.ScoreEarned += OnScoreEarned;
-        Events.ScoreEarnedAt += OnScoreEarnedAt;
         Events.OneUpAwarded += OnOneUpAwarded;
         Events.PlayerPowerStateChanged += OnPlayerPowerStateChanged;
 
@@ -47,18 +46,16 @@ public partial class GameSession : Node
         AddChild(_hud);
         _hud.Bind(State);
 
+        var textPopupSpawner = new TextPopupSpawner { Name = "TextPopupSpawner" };
+        AddChild(textPopupSpawner);
+        textPopupSpawner.Initialize(Events, () => CurrentLevel);
+
         LoadCurrentLevel();
     }
 
     private void OnScoreEarned(int points)
     {
         State.AddScore(points);
-    }
-
-    private void OnScoreEarnedAt(int points, Vector2 worldPosition)
-    {
-        State.AddScore(points);
-        ScorePopup.Spawn(CurrentLevel, worldPosition, points);
     }
 
     private void OnOneUpAwarded()

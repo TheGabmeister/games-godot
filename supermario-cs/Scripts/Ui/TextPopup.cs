@@ -2,25 +2,24 @@ using Godot;
 
 namespace SuperMario;
 
-public partial class ScorePopup : Node2D
+public partial class TextPopup : Node2D
 {
-    [Export] public Label Label;
-    [Export] public float RiseDistance = 32f;
-    [Export] public float Duration = 0.8f;
+    private const float RiseDistance = 32f;
+    private const float Duration = 0.8f;
 
-    public static void Spawn(Node levelRoot, Vector2 position, int points)
+    public void Initialize(string text)
     {
-        var popup = new ScorePopup();
-        popup.GlobalPosition = position;
         var label = new Label
         {
-            Text = "+" + points,
+            Text = text,
             Position = new Vector2(-24, -16)
         };
-        popup.Label = label;
-        popup.AddChild(label);
-        levelRoot.AddChild(popup);
-        popup.Animate();
+        AddChild(label);
+    }
+
+    public void Play()
+    {
+        Animate();
     }
 
     private void Animate()
