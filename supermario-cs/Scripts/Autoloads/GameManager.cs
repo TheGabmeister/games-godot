@@ -9,13 +9,8 @@ public partial class GameManager : Node
     public GameState State => _session?.State;
     public LevelBase CurrentLevel => _session?.CurrentLevel;
 
-    private const string MainMenuPath = "res://scenes/main_menu.tscn";
-    private const string GameOverPath = "res://scenes/game_over.tscn";
-    private const string CampaignPath = "res://resources/campaign.tres";
-
     private PackedScene _mainMenuScene;
     private PackedScene _gameOverScene;
-    private Campaign _campaign;
     private GameSession _session;
     private Node _levelRoot;
     private Node _currentChild;
@@ -26,14 +21,10 @@ public partial class GameManager : Node
         _levelRoot = new Node { Name = "LevelRoot" };
         AddChild(_levelRoot);
 
-        if (ResourceLoader.Exists(MainMenuPath))
-            _mainMenuScene = GD.Load<PackedScene>(MainMenuPath);
-        if (ResourceLoader.Exists(GameOverPath))
-            _gameOverScene = GD.Load<PackedScene>(GameOverPath);
-        if (ResourceLoader.Exists(CampaignPath))
-            _campaign = GD.Load<Campaign>(CampaignPath);
-        else
-            GD.PushWarning($"Campaign not found at {CampaignPath}");
+        if (ResourceLoader.Exists(Config.MainMenuScenePath))
+            _mainMenuScene = GD.Load<PackedScene>(Config.MainMenuScenePath);
+        if (ResourceLoader.Exists(Config.GameOverScenePath))
+            _gameOverScene = GD.Load<PackedScene>(Config.GameOverScenePath);
 
         LoadMainMenu();
     }
@@ -55,16 +46,11 @@ public partial class GameManager : Node
 
     public void StartGame()
     {
-        if (_campaign?.Levels == null || _campaign.Levels.Length == 0)
-        {
-            GD.PushError("Campaign has no levels.");
-            return;
-        }
-
         _session = new GameSession { Name = "GameSession" };
         _session.SessionEnded += LoadGameOver;
         SwapChild(_session);
-        _session.Start(_campaign);
+        if (!_session.Start())
+            LoadMainMenu();
     }
 
     private void LoadGameOver()

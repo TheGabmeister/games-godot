@@ -14,19 +14,23 @@ public partial class GameSession : Node
     private Campaign _campaign;
     private int _currentLevelIndex;
 
-    public void Start(Campaign campaign)
+    public bool Start()
     {
-        _campaign = campaign;
+        if (ResourceLoader.Exists(Config.CampaignPath))
+            _campaign = GD.Load<Campaign>(Config.CampaignPath);
+        else
+            GD.PushWarning($"Campaign not found at {Config.CampaignPath}");
+
         _currentLevelIndex = 0;
 
         if (_campaign?.Levels == null || _campaign.Levels.Length == 0)
         {
             GD.PushError("Campaign has no levels.");
-            EmitSignal(SignalName.SessionEnded);
-            return;
+            return false;
         }
 
         LoadCurrentLevel();
+        return true;
     }
 
     private void LoadCurrentLevel()
