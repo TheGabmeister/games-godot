@@ -6,6 +6,7 @@ public partial class GameManager : Node
 {
     public static GameManager Instance { get; private set; }
 
+    public GameMode Mode { get; private set; } = GameMode.None;
     public GameState State => _session?.State;
     public LevelBase CurrentLevel => _session?.CurrentLevel;
 
@@ -26,10 +27,12 @@ public partial class GameManager : Node
         if (ResourceLoader.Exists(Config.GameOverScenePath))
             _gameOverScene = GD.Load<PackedScene>(Config.GameOverScenePath);
 
-        LoadMainMenu();
+        SetMode(GameMode.MainMenu);
     }
 
-    public void LoadMainMenu()
+    public void LoadMainMenu() => SetMode(GameMode.MainMenu);
+
+    private void ShowMainMenu()
     {
         if (_mainMenuScene == null)
         {
@@ -38,21 +41,25 @@ public partial class GameManager : Node
         }
         var menu = _mainMenuScene.Instantiate<MainMenuController>();
         menu.StartPressed += OnStartPressed;
-        SwapChild(menu);
+        SetActiveNode(menu);
     }
 
     private void OnStartPressed() => StartGame();
 
-    public void StartGame()
+    public void StartGame() => SetMode(GameMode.Playing);
+
+    private void StartSession()
     {
         _session = new GameSession { Name = "GameSession" };
-        _session.SessionEnded += LoadGameOver;
-        SwapChild(_session);
+        _session.SessionEnded += OnSessionEnded;
+        SetActiveNode(_session);
         if (!_session.Start())
-            LoadMainMenu();
+            SetMode(GameMode.MainMenu);
     }
 
-    private void LoadGameOver()
+    private void OnSessionEnded() => SetMode(GameMode.GameOver);
+
+    private void ShowGameOver()
     {
         if (_gameOverScene == null)
         {
@@ -62,11 +69,33 @@ public partial class GameManager : Node
         }
         var over = _gameOverScene.Instantiate<GameOverController>();
         over.Continue += LoadMainMenu;
-        SwapChild(over);
+        SetActiveNode(over);
         _session = null;
     }
 
-    private void SwapChild(Node next)
+    private void SetMode(GameMode mode)
+    {
+        if (Mode == mode) return;
+
+        Mode = mode;
+        switch (Mode)
+        {
+            case GameMode.MainMenu:
+                ShowMainMenu();
+                break;
+            case GameMode.Playing:
+                StartSession();
+                break;
+            case GameMode.GameOver:
+                ShowGameOver();
+                break;
+            default:
+                SetActiveNode(null);
+                break;
+        }
+    }
+
+    private void SetActiveNode(Node next)
     {
         if (_currentChild != null)
         {
