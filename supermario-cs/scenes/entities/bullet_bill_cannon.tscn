@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://bmd4jqx0i3saa"]
+
+[ext_resource type="Script" path="res://Scripts/Entities/BulletBillCannon.cs" id="1_c"]
+[ext_resource type="PackedScene" path="res://scenes/entities/bullet_bill.tscn" id="2_bb"]
+
+[node name="BulletBillCannon" type="Node2D"]
+script = ExtResource("1_c")
+BulletBillScene = ExtResource("2_bb")
+Facing = -1
+FireInterval = 4.0
+
+[node name="Visual" type="ColorRect" parent="."]
+offset_left = -16.0
+offset_top = -32.0
+offset_right = 16.0
+offset_bottom = 0.0
+color = Color(0.15, 0.15, 0.15, 1)

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="LevelDefinition" format=3 uid="uid://ctfhde65bui6k"]
+
+[ext_resource type="Script" path="res://Scripts/Resources/LevelDefinition.cs" id="1_lvldef"]
+[ext_resource type="PackedScene" path="res://scenes/levels/world_1_1.tscn" id="2_scn"]
+
+[resource]
+script = ExtResource("1_lvldef")
+Name = "World 1-1"
+LevelScene = ExtResource("2_scn")
+MusicTrack = null
+TimeLimit = 400.0

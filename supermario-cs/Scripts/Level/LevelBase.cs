@@ -1,27 +1,50 @@
 using Godot;
+using supermariocs.Autoloads;
+using supermariocs.Player;
+using supermariocs.Resources;
+using supermariocs.Ui;
 
-namespace supermariocs;
+namespace supermariocs.Level;
 
 public partial class LevelBase : Node2D
 {
-	[Export] public LevelConfig Config;
+    [Export] public LevelDefinition Config;
+    [Export] public PackedScene PlayerScene;
+    [Export] public PackedScene HudScene;
 
-	[ExportGroup("Camera Bounds")]
-	[Export] public int CameraLimitLeft = 0;
-	[Export] public int CameraLimitRight = 3392;
-	[Export] public int CameraLimitTop = 0;
-	[Export] public int CameraLimitBottom = 448;
+    [Signal] public delegate void LevelCompletedEventHandler();
+    [Signal] public delegate void PlayerDiedEventHandler();
 
-	public override void _Ready()
-	{
-		if (Config == null)
-		{
-			GD.PrintErr($"[LevelBase] {Name}: Config not assigned");
-		}
-		BuildTerrain();
-		BuildBackground();
-	}
+    public override void _Ready()
+    {
+        if (Config != null && Config.MusicTrack != null)
+            MusicManager.Instance?.Play(Config.MusicTrack);
 
-	protected virtual void BuildTerrain() { }
-	protected virtual void BuildBackground() { }
+        var start = GetNodeOrNull<Marker2D>("PlayerStart");
+        if (PlayerScene != null)
+        {
+            if (start == null)
+            {
+                GD.PushError($"LevelBase {Name}: PlayerStart marker is required.");
+            }
+            else
+            {
+                var player = PlayerScene.Instantiate<PlayerController>();
+                player.GlobalPosition = start.GlobalPosition;
+                AddChild(player);
+                player.Died += () => EmitSignal(SignalName.PlayerDied);
+            }
+        }
+
+        var goal = GetNodeOrNull<GoalTrigger>("GoalTrigger");
+        if (goal != null)
+            goal.Reached += () => EmitSignal(SignalName.LevelCompleted);
+
+        if (HudScene != null)
+        {
+            var hud = HudScene.Instantiate<Hud>();
+            hud.Bind(Config);
+            AddChild(hud);
+        }
+    }
 }

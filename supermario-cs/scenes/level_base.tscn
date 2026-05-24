@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://cr75qnkiioj5i"]
+
+[ext_resource type="Script" path="res://Scripts/Level/LevelBase.cs" id="1_base"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://Scripts/Level/CleanupVolume.cs" id="4_clean"]
+[ext_resource type="Script" path="res://Scripts/Level/GoalTrigger.cs" id="5_goal"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_clean"]
+size = Vector2(4096, 64)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_goal"]
+size = Vector2(16, 256)
+
+[node name="LevelBase" type="Node2D"]
+script = ExtResource("1_base")
+PlayerScene = ExtResource("3_player")
+HudScene = ExtResource("2_hud")
+
+[node name="PlayerStart" type="Marker2D" parent="."]
+position = Vector2(64, 256)
+
+[node name="CleanupVolume" type="Area2D" parent="."]
+position = Vector2(2048, 800)
+collision_layer = 128
+collision_mask = 55
+script = ExtResource("4_clean")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CleanupVolume"]
+shape = SubResource("RectangleShape2D_clean")
+
+[node name="GoalTrigger" type="Area2D" parent="."]
+position = Vector2(3840, 256)
+collision_layer = 128
+collision_mask = 1
+script = ExtResource("5_goal")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GoalTrigger"]
+shape = SubResource("RectangleShape2D_goal")

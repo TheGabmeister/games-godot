@@ -1,20 +1,20 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://dgjd5jy3x5gat"]
 
-[ext_resource type="Script" uid="uid://t4ra5w2s5qxd" path="res://Scripts/Main.cs" id="1_main"]
+[ext_resource type="Script" path="res://Scripts/Main.cs" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
-[ext_resource type="Script" uid="uid://cps26l1sotnr0" path="res://Scripts/Ui/Hud.cs" id="3_hud"]
+[ext_resource type="Script" uid="uid://bthi3s7b43vmk" path="res://Scripts/Ui/Hud.cs" id="3_hud"]
 
-[node name="Main" type="Node"]
+[node name="Main" type="Node" unique_id=1225077398]
 script = ExtResource("1_main")
 
-[node name="SceneRoot" type="Node" parent="."]
+[node name="SceneRoot" type="Node" parent="." unique_id=719748924]
 
-[node name="Player" parent="." instance=ExtResource("2_player")]
+[node name="Player" parent="." unique_id=824403328 instance=ExtResource("2_player")]
 position = Vector2(56, 192)
 
-[node name="HUD" type="CanvasLayer" parent="."]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1838346216]
 script = ExtResource("3_hud")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=474908179]
 
-[node name="DebugRoot" type="Node" parent="."]
+[node name="DebugRoot" type="Node" parent="." unique_id=1279669347]

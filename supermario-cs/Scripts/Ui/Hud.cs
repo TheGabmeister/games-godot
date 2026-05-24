@@ -1,106 +1,68 @@
 using Godot;
+using supermariocs.Autoloads;
+using supermariocs.Resources;
 
-namespace supermariocs;
+namespace supermariocs.Ui;
 
 public partial class Hud : CanvasLayer
 {
-	private Label _scoreLabel;
-	private Label _coinLabel;
-	private Label _worldLabel;
-	private Label _timeLabel;
-	private LabelSettings _labelSettings;
-	private EventBus _bus;
-	private GameManager _gm;
+    [Export] private Label _scoreLabel;
+    [Export] private Label _worldLabel;
+    [Export] private Label _timeLabel;
+    [Export] private Label _livesLabel;
 
-	public override void _Ready()
-	{
-		Layer = 100;
-		BuildLayout();
-		_bus = GetNode<EventBus>("/root/EventBus");
-		_gm = GetNode<GameManager>("/root/GameManager");
-		_bus.ScoreChanged += OnScoreChanged;
-		_bus.CoinsChanged += OnCoinsChanged;
-		_bus.LivesChanged += OnLivesChanged;
-		_bus.TimeTick += OnTimeTick;
-		_bus.LevelStarted += OnLevelStarted;
-		Refresh();
-	}
+    private LevelDefinition _config;
+    private float _timeRemaining;
+    private bool _timedOut;
 
-	public override void _ExitTree()
-	{
-		if (_bus == null) return;
-		_bus.ScoreChanged -= OnScoreChanged;
-		_bus.CoinsChanged -= OnCoinsChanged;
-		_bus.LivesChanged -= OnLivesChanged;
-		_bus.TimeTick -= OnTimeTick;
-		_bus.LevelStarted -= OnLevelStarted;
-	}
+    public void Bind(LevelDefinition config)
+    {
+        _config = config;
+        _timeRemaining = config?.TimeLimit ?? 0f;
+        if (_worldLabel != null) _worldLabel.Text = config?.Name ?? "";
 
-	private void BuildLayout()
-	{
-		_labelSettings = new LabelSettings
-		{
-			FontColor = P.White,
-			FontSize = 12,
-			ShadowColor = P.Black,
-			ShadowSize = 1,
-			ShadowOffset = new Vector2(1, 1),
-		};
+        var state = GameManager.Instance?.State;
+        if (state != null)
+        {
+            OnScoreChanged(state.Score);
+            OnLivesChanged(state.Lives);
+            state.ScoreChanged += OnScoreChanged;
+            state.LivesChanged += OnLivesChanged;
+        }
+    }
 
-		var margin = new MarginContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
-		margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopWide);
-		margin.AddThemeConstantOverride("margin_left", 16);
-		margin.AddThemeConstantOverride("margin_right", 16);
-		margin.AddThemeConstantOverride("margin_top", 8);
-		AddChild(margin);
+    public override void _ExitTree()
+    {
+        var state = GameManager.Instance?.State;
+        if (state != null)
+        {
+            state.ScoreChanged -= OnScoreChanged;
+            state.LivesChanged -= OnLivesChanged;
+        }
+    }
 
-		var hbox = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
-		hbox.AddThemeConstantOverride("separation", 32);
-		margin.AddChild(hbox);
+    public override void _Process(double delta)
+    {
+        if (_timedOut) return;
+        _timeRemaining = Mathf.Max(0f, _timeRemaining - (float)delta);
+        if (_timeLabel != null)
+            _timeLabel.Text = ((int)_timeRemaining).ToString();
+        if (_timeRemaining <= 0f)
+        {
+            _timedOut = true;
+            var player = GetTree().GetFirstNodeInGroup("player");
+            if (player is Player.PlayerController pc)
+                pc.KillPlayer();
+        }
+    }
 
-		_scoreLabel = MakeLabel("MARIO\n000000");
-		_coinLabel = MakeLabel("$x00");
-		_worldLabel = MakeLabel("WORLD\n1-1");
-		_timeLabel = MakeLabel("TIME\n400");
-		hbox.AddChild(_scoreLabel);
-		hbox.AddChild(_coinLabel);
-		hbox.AddChild(_worldLabel);
-		hbox.AddChild(_timeLabel);
-	}
+    private void OnScoreChanged(int score)
+    {
+        if (_scoreLabel != null) _scoreLabel.Text = score.ToString("D6");
+    }
 
-	private Label MakeLabel(string text)
-	{
-		return new Label
-		{
-			Text = text,
-			LabelSettings = _labelSettings,
-			HorizontalAlignment = HorizontalAlignment.Center,
-			MouseFilter = Control.MouseFilterEnum.Ignore,
-		};
-	}
-
-	private void Refresh()
-	{
-		OnScoreChanged(_gm.Score);
-		OnCoinsChanged(_gm.Coins);
-		OnTimeTick(_gm.TimeRemaining);
-		OnLevelStarted(_gm.CurrentWorld, _gm.CurrentLevel);
-	}
-
-	private void OnScoreChanged(int newScore) =>
-		_scoreLabel.Text = $"MARIO\n{newScore:D6}";
-
-	private void OnCoinsChanged(int newCount) =>
-		_coinLabel.Text = $"$x{newCount:D2}";
-
-	private void OnLivesChanged(int newLives) { /* future: lives indicator */ }
-
-	private void OnTimeTick(int timeRemaining)
-	{
-		_timeLabel.Text = $"TIME\n{timeRemaining:D3}";
-		_timeLabel.LabelSettings.FontColor = timeRemaining < 100 ? P.MarioRed : P.White;
-	}
-
-	private void OnLevelStarted(int world, int level) =>
-		_worldLabel.Text = $"WORLD\n{world}-{level}";
+    private void OnLivesChanged(int lives)
+    {
+        if (_livesLabel != null) _livesLabel.Text = "x " + lives;
+    }
 }

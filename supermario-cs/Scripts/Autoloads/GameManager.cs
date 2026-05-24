@@ -1,133 +1,144 @@
 using Godot;
+using supermariocs.Level;
+using supermariocs.Player;
+using supermariocs.Resources;
+using supermariocs.Ui;
 
-namespace supermariocs;
+namespace supermariocs.Autoloads;
 
 public partial class GameManager : Node
 {
-	public enum PowerState { Small, Big, Fire }
-	public enum GameState { Title, Playing, Paused, GameOver, LevelComplete, Transitioning }
+    public static GameManager Instance { get; private set; }
 
-	private const int CoinsPerExtraLife = 100;
+    public GameState State { get; private set; }
+    public LevelBase CurrentLevel { get; private set; }
 
-	public int Score { get; private set; } = 0;
-	public int Coins { get; private set; } = 0;
-	public int Lives { get; private set; } = 3;
-	public int TimeRemaining { get; private set; } = 400;
-	public int CurrentWorld { get; private set; } = 1;
-	public int CurrentLevel { get; private set; } = 1;
-	public PowerState CurrentPowerState { get; private set; } = PowerState.Small;
-	public GameState CurrentGameState { get; private set; } = GameState.Title;
+    private const string MainMenuPath = "res://scenes/main_menu.tscn";
+    private const string GameOverPath = "res://scenes/game_over.tscn";
+    private const string CampaignPath = "res://resources/campaign.tres";
 
-	private EventBus _bus;
-	private float _timerAccumulator;
+    private PackedScene _mainMenuScene;
+    private PackedScene _gameOverScene;
+    private Campaign _campaign;
+    private int _currentLevelIndex;
+    private Node _levelRoot;
+    private Node _currentChild;
 
-	public override void _Ready()
-	{
-		_bus = GetNode<EventBus>("/root/EventBus");
-		GD.Print($"[GameManager] ready (state={CurrentGameState})");
-	}
+    public override void _Ready()
+    {
+        Instance = this;
+        _levelRoot = new Node { Name = "LevelRoot" };
+        AddChild(_levelRoot);
 
-	public override void _Process(double delta)
-	{
-		if (CurrentGameState != GameState.Playing) return;
-		if (TimeRemaining <= 0) return;
+        if (ResourceLoader.Exists(MainMenuPath))
+            _mainMenuScene = GD.Load<PackedScene>(MainMenuPath);
+        if (ResourceLoader.Exists(GameOverPath))
+            _gameOverScene = GD.Load<PackedScene>(GameOverPath);
+        if (ResourceLoader.Exists(CampaignPath))
+            _campaign = GD.Load<Campaign>(CampaignPath);
+        else
+            GD.PushWarning($"Campaign not found at {CampaignPath}");
 
-		_timerAccumulator += (float)delta;
-		while (_timerAccumulator >= 1.0f)
-		{
-			_timerAccumulator -= 1.0f;
-			TimeRemaining = Mathf.Max(0, TimeRemaining - 1);
-			_bus.EmitSignal(EventBus.SignalName.TimeTick, TimeRemaining);
-			if (TimeRemaining == 0)
-			{
-				LoseLife();
-				return;
-			}
-		}
-	}
+        LoadMainMenu();
+    }
 
-	public void StartNewGame()
-	{
-		Score = 0;
-		Coins = 0;
-		Lives = 3;
-		CurrentWorld = 1;
-		CurrentLevel = 1;
-		CurrentPowerState = PowerState.Small;
-		_bus.EmitSignal(EventBus.SignalName.ScoreChanged, Score);
-		_bus.EmitSignal(EventBus.SignalName.CoinsChanged, Coins);
-		_bus.EmitSignal(EventBus.SignalName.LivesChanged, Lives);
-		SetGameState(GameState.Playing);
-	}
+    public void LoadMainMenu()
+    {
+        if (_mainMenuScene == null)
+        {
+            GD.PushWarning("_mainMenuScene not assigned on GameManager autoload.");
+            return;
+        }
+        var menu = _mainMenuScene.Instantiate();
+        SwapChild(menu);
+        if (menu is MainMenuController controller)
+            controller.StartPressed += OnStartPressed;
+        CurrentLevel = null;
+    }
 
-	public void StartLevel(LevelConfig config)
-	{
-		if (config == null) return;
-		CurrentWorld = config.World;
-		CurrentLevel = config.Level;
-		TimeRemaining = (int)config.TimeLimit;
-		_timerAccumulator = 0;
-		SetGameState(GameState.Playing);
-		_bus.EmitSignal(EventBus.SignalName.LevelStarted, CurrentWorld, CurrentLevel);
-		_bus.EmitSignal(EventBus.SignalName.TimeTick, TimeRemaining);
-	}
+    private void OnStartPressed() => StartGame();
 
-	public void AddScore(int points, Vector2 position = default)
-	{
-		Score += points;
-		_bus.EmitSignal(EventBus.SignalName.ScoreAwarded, points, position);
-		_bus.EmitSignal(EventBus.SignalName.ScoreChanged, Score);
-	}
+    public void StartGame()
+    {
+        State = new GameState();
+        _currentLevelIndex = 0;
+        if (_campaign?.Levels == null || _campaign.Levels.Length == 0)
+        {
+            GD.PushError("Campaign has no levels.");
+            return;
+        }
+        LoadLevel(_campaign.Levels[0]);
+    }
 
-	public void AddCoin(Vector2 position = default)
-	{
-		Coins++;
-		_bus.EmitSignal(EventBus.SignalName.CoinCollected, position);
-		_bus.EmitSignal(EventBus.SignalName.CoinsChanged, Coins);
-		AddScore(200, position);
-		if (Coins >= CoinsPerExtraLife)
-		{
-			Coins -= CoinsPerExtraLife;
-			GrantOneUp();
-			_bus.EmitSignal(EventBus.SignalName.CoinsChanged, Coins);
-		}
-	}
+    public void LoadLevel(LevelDefinition def)
+    {
+        if (def == null || def.LevelScene == null)
+        {
+            GD.PushError("LevelDefinition missing LevelScene.");
+            return;
+        }
+        var level = def.LevelScene.Instantiate<LevelBase>();
+        level.Config = def;
+        level.LevelCompleted += () => OnLevelCompleted(def);
+        level.PlayerDied += () => OnPlayerDied(def);
+        SwapChild(level);
+        CurrentLevel = level;
+    }
 
-	public void GrantOneUp()
-	{
-		Lives++;
-		_bus.EmitSignal(EventBus.SignalName.OneUpEarned);
-		_bus.EmitSignal(EventBus.SignalName.LivesChanged, Lives);
-	}
+    public void OnLevelCompleted(LevelDefinition def)
+    {
+        _currentLevelIndex++;
+        if (_campaign?.Levels == null || _currentLevelIndex >= _campaign.Levels.Length)
+        {
+            LoadGameOver();
+            return;
+        }
+        LoadLevel(_campaign.Levels[_currentLevelIndex]);
+    }
 
-	public void LoseLife()
-	{
-		Lives--;
-		CurrentPowerState = PowerState.Small;
-		_bus.EmitSignal(EventBus.SignalName.LivesChanged, Lives);
-		_bus.EmitSignal(EventBus.SignalName.PlayerDied);
-		if (Lives <= 0)
-		{
-			SetGameState(GameState.GameOver);
-			_bus.EmitSignal(EventBus.SignalName.GameOver);
-		}
-	}
+    private const float DeathPauseSeconds = 1.5f;
 
-	public void SetPowerState(PowerState state)
-	{
-		var previous = CurrentPowerState;
-		if (previous == state) return;
-		CurrentPowerState = state;
-		_bus.EmitSignal(EventBus.SignalName.PlayerPowerStateChanged, (int)previous, (int)state);
-	}
+    public void OnPlayerDied(LevelDefinition def)
+    {
+        if (State == null) return;
+        State.PowerState = PlayerPowerState.Small;
+        State.SetLives(State.Lives - 1);
 
-	public void SetGameState(GameState state)
-	{
-		if (CurrentGameState == state) return;
-		var previous = CurrentGameState;
-		CurrentGameState = state;
-		GD.Print($"[GameManager] state {previous} -> {state}");
-		if (state == GameState.Paused) _bus.EmitSignal(EventBus.SignalName.GamePaused);
-		else if (previous == GameState.Paused) _bus.EmitSignal(EventBus.SignalName.GameResumed);
-	}
+        var timer = GetTree().CreateTimer(DeathPauseSeconds);
+        timer.Timeout += () =>
+        {
+            if (State == null) return;
+            if (State.Lives <= 0) LoadGameOver();
+            else LoadLevel(def);
+        };
+    }
+
+    private void LoadGameOver()
+    {
+        if (_gameOverScene == null)
+        {
+            GD.PushWarning("_gameOverScene not assigned on GameManager autoload.");
+            LoadMainMenu();
+            return;
+        }
+        var over = _gameOverScene.Instantiate();
+        SwapChild(over);
+        if (over is GameOverController controller)
+            controller.Continue += LoadMainMenu;
+        CurrentLevel = null;
+    }
+
+    private void SwapChild(Node next)
+    {
+        if (_currentChild != null)
+        {
+            _currentChild.QueueFree();
+            _currentChild = null;
+        }
+        if (next != null)
+        {
+            _levelRoot.AddChild(next);
+            _currentChild = next;
+        }
+    }
 }

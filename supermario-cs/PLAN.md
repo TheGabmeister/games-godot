@@ -322,14 +322,14 @@ Plain C# class. Owned by `GameManager`. Not an autoload itself.
 
 ```csharp
 public class GameState {
-    public int Score { get; private set; }
-    public int Lives { get; set; } = Constants.StartingLives;
-    public PlayerPowerState PowerState { get; set; } = PlayerPowerState.Small;
+	public int Score { get; private set; }
+	public int Lives { get; set; } = Constants.StartingLives;
+	public PlayerPowerState PowerState { get; set; } = PlayerPowerState.Small;
 
-    public event Action<int> ScoreChanged;
-    public event Action<int> LivesChanged;
+	public event Action<int> ScoreChanged;
+	public event Action<int> LivesChanged;
 
-    public void AddScore(int points) { /* clamp + raise ScoreChanged */ }
+	public void AddScore(int points) { /* clamp + raise ScoreChanged */ }
 }
 ```
 
@@ -345,7 +345,7 @@ Constructed in `GameManager.StartGame()`. Lives clamps at `MaxLives = 99` (mirro
 public interface IStompable     { void OnStomped(PlayerController p); }
 public interface IStarHittable  { void OnHitByStar(PlayerController p); }
 public interface IFireballHittable {
-    FireballReaction OnHitByFireball();
+	FireballReaction OnHitByFireball();
 }
 public interface IBumpable      { void OnBumped(PlayerController p); }
 
@@ -377,12 +377,12 @@ Gravity + horizontal walk + turn-at-wall + optional turn-at-cliff + optional bou
 
 ```csharp
 public partial class Walker : Node {
-    [Export] private CharacterBody2D _body;
-    [Export] public float Speed = 80f;
-    [Export] public bool TurnAtCliffs = false;
-    [Export] public float BounceForce = 0f;  // 0 = no bounce (default); negative = upward bounce on landing
-    public int Direction = -1;
-    // _PhysicsProcess: apply gravity, set velocity from Speed*Direction, MoveAndSlide, flip on wall/cliff, bounce if grounded and BounceForce!=0
+	[Export] private CharacterBody2D _body;
+	[Export] public float Speed = 80f;
+	[Export] public bool TurnAtCliffs = false;
+	[Export] public float BounceForce = 0f;  // 0 = no bounce (default); negative = upward bounce on landing
+	public int Direction = -1;
+	// _PhysicsProcess: apply gravity, set velocity from Speed*Direction, MoveAndSlide, flip on wall/cliff, bounce if grounded and BounceForce!=0
 }
 ```
 
@@ -608,11 +608,11 @@ goomba.tscn (root: CharacterBody2D, script: Goomba.cs)
 
 ```csharp
 public partial class Goomba : CharacterBody2D,
-    IFireballHittable, IStompable, IStarHittable
+	IFireballHittable, IStompable, IStarHittable
 {
-    public void OnStomped(PlayerController _) => QueueFree();
-    public FireballReaction OnHitByFireball() { QueueFree(); return FireballReaction.Defeated; }
-    public void OnHitByStar(PlayerController _) => QueueFree();
+	public void OnStomped(PlayerController _) => QueueFree();
+	public FireballReaction OnHitByFireball() { QueueFree(); return FireballReaction.Defeated; }
+	public void OnHitByStar(PlayerController _) => QueueFree();
 }
 ```
 
@@ -902,9 +902,9 @@ GameManager._Ready()
 [user presses Start]
   → MainMenuController emits StartPressed
   → GameManager.StartGame():
-       State = new GameState()
-       _currentLevelIndex = 0
-       LoadLevel(Campaign.Levels[0])
+	   State = new GameState()
+	   _currentLevelIndex = 0
+	   LoadLevel(Campaign.Levels[0])
 
 GameManager.LoadLevel(def):
   → free old child of LevelRoot (if any)
@@ -925,19 +925,19 @@ LevelBase._Ready():
   → PlayerController emits Died
   → LevelBase emits PlayerDied
   → GameManager.OnPlayerDied(def):
-       State.PowerState = Small
-       State.Lives--
-       if Lives <= 0: LoadGameOver()
-       else: LoadLevel(def)                          // fresh level, fresh player
+	   State.PowerState = Small
+	   State.Lives--
+	   if Lives <= 0: LoadGameOver()
+	   else: LoadLevel(def)                          // fresh level, fresh player
   → MusicManager.Play(def.MusicTrack) → no-op (same track)
 
 [player touches GoalTrigger]:
   → GoalTrigger emits Reached
   → LevelBase emits LevelCompleted
   → GameManager.OnLevelCompleted(def):
-       _currentLevelIndex++
-       if index >= Levels.Length: LoadGameOver()
-       else: LoadLevel(Campaign.Levels[_currentLevelIndex])
+	   _currentLevelIndex++
+	   if index >= Levels.Length: LoadGameOver()
+	   else: LoadLevel(Campaign.Levels[_currentLevelIndex])
 ```
 
 The level scene is the **unit of teardown**. Freeing it cascades cleanup to player, HUD, enemies, pickups, projectiles, signal connections. No manual `QueueFree` of level internals.

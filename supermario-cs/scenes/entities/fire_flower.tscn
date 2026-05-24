@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://b2eonn62eme7y"]
+
+[ext_resource type="Script" path="res://Scripts/Entities/FireFlower.cs" id="1_f"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_f"]
+size = Vector2(32, 32)
+
+[node name="FireFlower" type="Area2D"]
+collision_layer = 64
+collision_mask = 1
+script = ExtResource("1_f")
+
+[node name="Visual" type="ColorRect" parent="."]
+offset_left = -16.0
+offset_top = -32.0
+offset_right = 16.0
+offset_bottom = 0.0
+color = Color(1.0, 0.55, 0.10, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -16)
+shape = SubResource("RectangleShape2D_f")
