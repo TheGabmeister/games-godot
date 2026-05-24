@@ -5,7 +5,7 @@
 
 [node name="World13" unique_id=923809917 instance=ExtResource("1_base")]
 
-[node name="GoalTrigger" parent="." index="2"]
+[node name="GoalTrigger" parent="." index="2" unique_id=55338925]
 position = Vector2(287, 256)
 
 [node name="Platform" parent="." index="3" unique_id=328389302 instance=ExtResource("2_c33ey")]
