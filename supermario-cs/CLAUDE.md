@@ -27,42 +27,46 @@ No test framework is configured. Validation is `dotnet build` + manual playtest 
 
 - **Engine:** Godot 4.6, Forward Plus renderer
 - **SDK:** Godot.NET.Sdk 4.6.2, targeting .NET 8.0 (.NET 9.0 for Android)
-- **Root namespace:** `supermariocs`
+- **Root namespace:** `SuperMario`
 - **Viewport:** 512x448 px, window 1024x896 (2x scale, `canvas_items` stretch)
-- **Main scene:** `res://scenes/boot.tscn` (one-shot bootstrap — `GameManager` autoload swaps real scenes under its `LevelRoot` child)
+- **Main scene:** `res://scenes/boot.tscn` (one-shot bootstrap — `GameManager` autoload swaps top-level screens under its `LevelRoot` child)
 
 ## Architecture
 
 ### Scene flow
 
-There is **no persistent main shell**. `GameManager` is an autoload that owns a `LevelRoot: Node` child; the active scene (main menu / level / game over) is the single child of `LevelRoot` and is freed on every swap.
+`GameManager` is an autoload app shell that owns a `LevelRoot: Node` child. The active top-level screen (main menu / game session / game over) is the single child of `LevelRoot` and is freed on every swap.
 
 ```
 GameManager (autoload) → LevelRoot → one of:
   scenes/main_menu.tscn
-  scenes/levels/world_X_Y.tscn   (inherits scenes/level_base.tscn)
+  GameSession → scenes/levels/world_X_Y.tscn   (inherits scenes/level_base.tscn)
   scenes/game_over.tscn
 ```
 
-The player is **re-spawned per level load**, not persisted. Matches MonoGame's clean-slate reload.
+`GameSession` exists only during a playthrough. It owns `GameState`, campaign progress, and the active level. The player is **re-spawned per level load**, not persisted. Matches MonoGame's clean-slate reload.
 
 ### Autoloads (3, in this order)
 
 | Autoload | Responsibility |
 |----------|----------------|
-| **GameManager** | Owns `GameState`, the `Campaign` cursor, and `CurrentLevel`. Drives all scene swaps. Hands `LevelDefinition` to `LevelBase` via `level.Config = def` after instantiation. |
+| **GameManager** | App shell. Swaps top-level screens (`main_menu`, `GameSession`, `game_over`) under `LevelRoot`. Exposes pass-through `State` / `CurrentLevel` for gameplay code. |
 | **MusicManager** | Single `AudioStreamPlayer`. `Play(stream)` is **idempotent by reference** — re-playing the same `AudioStream` is a no-op so same-level reloads don't restart music. |
-| **SfxManager** | Pool of 10 `AudioStreamPlayer`s. Fire-and-forget; drops requests when pool exhausted. Safe no-op on null. |
+| **SfxManager** | Pool of 10 `AudioStreamPlayer`s. Fire-and-forget; drops requests when pool exhausted. |
 
-**Dependency direction is one-way.** Scenes report what happened (signals); `GameManager` decides what to do next. `GameManager` never gets called by a scene asking for a transition.
+**Dependency direction is one-way.** Scenes report what happened (signals); `GameManager` decides top-level app transitions, and `GameSession` decides level transitions inside a playthrough.
+
+### Configuration
+
+`Scripts/Config.cs` is a plain static class containing hard-coded project paths such as main menu, game over, and campaign. Do not scatter `res://...` paths through gameplay code; add shared paths to `Config`.
 
 ### Per-Level Parameters
 
 `Scripts/Resources/LevelDefinition.cs` is a `[GlobalClass] Resource` exporting `Name`, `LevelScene`, `MusicTrack`, `TimeLimit`. One `.tres` per level under `resources/levels/`.
 
-`Scripts/Resources/Campaign.cs` holds the ordered `LevelDefinition[]`. `resources/campaign.tres` is the single instance; `GameManager` loads it in `_Ready`.
+`Scripts/Resources/Campaign.cs` holds the ordered `LevelDefinition[]`. `resources/campaign.tres` is the single instance; `GameSession` loads it from `Config.CampaignPath` when a run starts.
 
-**Important — no cycles in `.tscn`/`.tres`:** `LevelDefinition.tres` references its `LevelScene` (PackedScene). The level `.tscn` does **not** reference the `.tres` back — `GameManager.LoadLevel(def)` sets `level.Config = def` programmatically after instantiation. This avoids a circular ext_resource parse error on import.
+**Important — no cycles in `.tscn`/`.tres`:** `LevelDefinition.tres` references its `LevelScene` (PackedScene). The level `.tscn` does **not** reference the `.tres` back — `GameSession` calls `level.Initialize(def, State)` programmatically after instantiation. This avoids a circular ext_resource parse error on import.
 
 ### `LevelBase` and inherited level scenes
 
@@ -72,7 +76,7 @@ The player is **re-spawned per level load**, not persisted. Matches MonoGame's c
 - `CleanupVolume` (`Area2D`) — broad mask, kills/frees anything that falls in
 - `GoalTrigger` (`Area2D`) — emits `Reached` on player overlap
 
-Each `scenes/levels/world_X_Y.tscn` inherits from `level_base.tscn` and adds level content (terrain, blocks, enemies, pickups). `LevelBase._Ready()` plays music, spawns the player at `PlayerStart`, instantiates the HUD, and re-emits player/goal signals.
+Each `scenes/levels/world_X_Y.tscn` inherits from `level_base.tscn` and adds level content (terrain, blocks, enemies, pickups). `LevelBase` owns level-local setup only: play optional level music, spawn the player at `PlayerStart`, instantiate the HUD, wire `GoalTrigger`, and re-emit player/goal signals. It does not own campaign progress or persistent run state.
 
 ### Combat interfaces
 
@@ -106,6 +110,8 @@ Three allowed coupling patterns. Anything else is a smell.
 
 **Concrete consequence — pickups mutate `GameState` directly.** Coin's `BodyEntered` calls `GameManager.Instance.State.AddScore(Points)`. Don't route pickup score through signals.
 
+`GameState` is owned by `GameSession`. Gameplay code accesses it through `GameManager.Instance.State`.
+
 **Concrete consequence — components reference their owner via `[Export]`** set in the inspector at scene-author time. Never `GetParent()`.
 
 ### Entity authoring
@@ -126,7 +132,7 @@ Power state is owned by `GameState.PowerState`. The player reads it on `_Ready` 
 
 Head-bump detection: after `MoveAndSlide`, iterate `GetSlideCollisionCount()`; on a collision with normal `Y > 0.9`, if the collider implements `IBumpable`, dispatch `OnBumped(this)`. (The general rule: whoever holds the contextual data owns the detection. Block-bumps need the player's velocity / collision normal, so the player owns them.)
 
-Fireballs are capped at `Constants.MaxFireballs = 2`. Spawned ones decrement the counter via `_owner?.NotifyFireballDestroyed()` in `Destroy` and `_ExitTree`.
+Fireballs are capped at `Constants.MaxFireballs = 2`. Spawned ones decrement the counter via `NotifyFireballDestroyed()` in `Destroy` and `_ExitTree`.
 
 ## Physics layers (8, named in `project.godot`)
 
@@ -154,6 +160,8 @@ Fireballs are capped at `Constants.MaxFireballs = 2`. Spawned ones decrement the
 - Use `StringName` for frequently-used keys (input actions, signal names, registry keys)
 - `Vector2` is a struct — can't assign to `.X`/`.Y` directly; use `new Vector2(x, Scale.Y)` pattern
 - Typed-Node `[Export]` fields are unreliable when set via `NodePath` in `.tscn`. Prefer `GetNode<T>("...")` in `_Ready()` for child-node references, or set the export through the inspector. The pattern that bit us: `[Export] private Button _btn` + `_btn = NodePath("...")` in `.tscn` → `_btn` stayed null.
+- All scripts use the single namespace `SuperMario`.
+- Required scene wiring should fail loudly. Prefer `GetNode<T>()`, typed `PackedScene.Instantiate<T>()`, direct required exports, and direct singleton access over defensive null checks. Keep checks only for real gameplay/lifecycle state such as `_dead`, `_collected`, "is this body the player?", "is there an old node to free?", or optional data like `LevelDefinition.MusicTrack`.
 
 ## Forbidden
 

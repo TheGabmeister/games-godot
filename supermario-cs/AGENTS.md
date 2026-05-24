@@ -31,7 +31,7 @@ Notes:
 - Renderer: Forward Plus
 - SDK: Godot.NET.Sdk 4.6.2
 - Target framework: .NET 8.0 (.NET 9.0 for Android)
-- Root namespace: `supermariocs`
+- Root namespace: `SuperMario`
 - Viewport: `512x448`
 - Window: `1024x896`
 - Stretch mode: `canvas_items`
@@ -41,33 +41,38 @@ Notes:
 
 ### Scene flow
 
-There is no persistent main shell. `GameManager` is an autoload that owns a `LevelRoot: Node` child; the active scene is the single child of `LevelRoot` and is freed on every swap.
+`GameManager` is an autoload app shell that owns a `LevelRoot: Node` child. The active top-level screen is the single child of `LevelRoot` and is freed on every swap.
 
 ```
 GameManager (autoload) → LevelRoot → one of:
   scenes/main_menu.tscn
-  scenes/levels/world_X_Y.tscn   (inherits scenes/level_base.tscn)
+  GameSession → scenes/levels/world_X_Y.tscn   (inherits scenes/level_base.tscn)
   scenes/game_over.tscn
 ```
 
-The player is re-spawned per level load, not persisted.
+`GameSession` exists only during a playthrough. It owns `GameState`, the `Campaign` cursor, and the active `LevelBase`. The player is re-spawned per level load, not persisted.
 
 ### Autoloads (3)
 
 Registered in `project.godot` in this order:
 
-- `GameManager`: owns `GameState`, the `Campaign` cursor, and `CurrentLevel`. Drives all scene swaps.
+- `GameManager`: owns app-level screen swaps (`main_menu`, `GameSession`, `game_over`) and exposes pass-through `State` / `CurrentLevel` properties for gameplay code.
 - `MusicManager`: single `AudioStreamPlayer`. `Play(stream)` is idempotent by reference (re-playing the same stream is a no-op).
 - `SfxManager`: pool of 10 `AudioStreamPlayer`s. Fire-and-forget; drops requests when pool exhausted.
 
-`GameManager` decides scene transitions. Scenes report what happened via signals; they never advance themselves.
+`GameManager` decides top-level app transitions. `GameSession` decides level transitions inside a playthrough. Scenes report what happened via signals; they never advance themselves.
+
+### Configuration
+
+- `Config` (`Scripts/Config.cs`): plain static class containing hard-coded project paths such as main menu, game over, and campaign.
+- Do not scatter `res://...` paths through gameplay code. Add shared paths to `Config`.
 
 ### Per-Level Parameters
 
 - `LevelDefinition` (`Scripts/Resources/LevelDefinition.cs`): `[GlobalClass] Resource` with `Name`, `LevelScene`, `MusicTrack`, `TimeLimit`. One `.tres` per level under `resources/levels/`.
 - `Campaign` (`Scripts/Resources/Campaign.cs`): ordered `LevelDefinition[]`. Single instance at `resources/campaign.tres`.
 
-Important — no cycles in `.tscn`/`.tres`: `LevelDefinition.tres` references its `LevelScene`. The level `.tscn` does not reference the `.tres` back — `GameManager.LoadLevel(def)` sets `level.Config = def` programmatically after instantiation.
+Important — no cycles in `.tscn`/`.tres`: `LevelDefinition.tres` references its `LevelScene`. The level `.tscn` does not reference the `.tres` back — `GameSession` calls `level.Initialize(def, State)` programmatically after instantiation.
 
 ### LevelBase and inherited level scenes
 
@@ -78,6 +83,8 @@ Important — no cycles in `.tscn`/`.tres`: `LevelDefinition.tres` references it
 - `GoalTrigger` (`Area2D`) — emits `Reached` on player overlap
 
 Each `scenes/levels/world_X_Y.tscn` inherits from `level_base.tscn` and adds level content.
+
+`LevelBase` owns level-local setup only: play optional level music, spawn the player at `PlayerStart`, wire `GoalTrigger`, spawn the HUD, and re-emit `PlayerDied` / `LevelCompleted`. It does not own campaign progress or persistent run state.
 
 ### Combat interfaces
 
@@ -108,6 +115,8 @@ Three allowed coupling patterns:
 3. Sibling interactions: direct calls via combat interfaces; `Hitbox` → `PlayerController.TakeDamage`; `KillVolume` → `PlayerController.KillPlayer`.
 
 Pickups mutate `GameState` directly — `GameManager.Instance.State.AddScore(...)`. Don't route pickup score through signals.
+
+`GameState` is owned by `GameSession`. Access it through `GameManager.Instance.State` from gameplay code.
 
 ### Entity authoring
 
@@ -157,6 +166,8 @@ Layer flags live in the static `Layers` class (`Layers.Player`, etc.) — keep b
 - Use `StringName` for repeated keys (input actions, signal names).
 - `Vector2` is a struct — can't assign to `.X`/`.Y` directly.
 - Typed-Node `[Export]` fields are unreliable when set via `NodePath` in `.tscn`. Prefer `GetNode<T>("...")` in `_Ready()` for child-node references, or set the export through the inspector.
+- All scripts use the single namespace `SuperMario`.
+- Required scene wiring should fail loudly. Prefer `GetNode<T>()`, typed `PackedScene.Instantiate<T>()`, direct required exports, and direct singleton access over defensive null checks. Keep checks only for real gameplay/lifecycle state such as `_dead`, `_collected`, "is this body the player?", "is there an old node to free?", or optional data like `LevelDefinition.MusicTrack`.
 
 ## Forbidden
 
