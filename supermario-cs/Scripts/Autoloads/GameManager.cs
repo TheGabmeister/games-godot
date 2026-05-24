@@ -36,10 +36,9 @@ public partial class GameManager : Node
             GD.PushWarning("_mainMenuScene not assigned on GameManager autoload.");
             return;
         }
-        var menu = _mainMenuScene.Instantiate();
+        var menu = _mainMenuScene.Instantiate<MainMenuController>();
+        menu.StartPressed += OnStartPressed;
         SwapChild(menu);
-        if (menu is MainMenuController controller)
-            controller.StartPressed += OnStartPressed;
     }
 
     private void OnStartPressed() => StartGame();
@@ -61,10 +60,9 @@ public partial class GameManager : Node
             LoadMainMenu();
             return;
         }
-        var over = _gameOverScene.Instantiate();
+        var over = _gameOverScene.Instantiate<GameOverController>();
+        over.Continue += LoadMainMenu;
         SwapChild(over);
-        if (over is GameOverController controller)
-            controller.Continue += LoadMainMenu;
         _session = null;
     }
 
