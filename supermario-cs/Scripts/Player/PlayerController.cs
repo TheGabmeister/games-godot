@@ -5,7 +5,7 @@ namespace SuperMario;
 
 public partial class PlayerController : CharacterBody2D
 {
-    public event Action Died = delegate { };
+    public event Action Died;
 
     [Export] public PackedScene FireballScene;
     [Export] public ColorRect Visual;
@@ -139,7 +139,7 @@ public partial class PlayerController : CharacterBody2D
     {
         if (_dead) return;
         _dead = true;
-        Died();
+        Died?.Invoke();
         QueueFree();
     }
 
