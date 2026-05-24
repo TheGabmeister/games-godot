@@ -1,9 +1,6 @@
 using Godot;
-using supermariocs.Level;
-using supermariocs.Resources;
-using supermariocs.Ui;
 
-namespace supermariocs.Autoloads;
+namespace SuperMario;
 
 public partial class GameManager : Node
 {

@@ -1,6 +1,6 @@
-namespace supermariocs.Interfaces;
+namespace SuperMario;
 
 public interface IStarHittable
 {
-    void OnHitByStar(Player.PlayerController player);
+    void OnHitByStar(PlayerController player);
 }

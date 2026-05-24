@@ -1,9 +1,7 @@
 using System;
 using Godot;
-using supermariocs.Autoloads;
-using supermariocs.Interfaces;
 
-namespace supermariocs.Player;
+namespace SuperMario;
 
 public partial class PlayerController : CharacterBody2D
 {
@@ -93,7 +91,7 @@ public partial class PlayerController : CharacterBody2D
 
     private void SpawnFireball()
     {
-        var fb = FireballScene.Instantiate<Entities.Fireball>();
+        var fb = FireballScene.Instantiate<Fireball>();
         var pos = Muzzle != null ? Muzzle.GlobalPosition : GlobalPosition;
         fb.Init(pos, _facing, this);
         var parent = (Node)GameManager.Instance?.CurrentLevel ?? GetTree().CurrentScene;

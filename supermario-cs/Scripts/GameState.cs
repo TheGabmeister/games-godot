@@ -1,7 +1,6 @@
 using System;
-using supermariocs.Player;
 
-namespace supermariocs;
+namespace SuperMario;
 
 public class GameState
 {

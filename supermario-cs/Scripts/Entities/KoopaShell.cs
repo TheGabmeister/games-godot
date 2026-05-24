@@ -1,9 +1,6 @@
 using Godot;
-using supermariocs.Components;
-using supermariocs.Interfaces;
-using supermariocs.Player;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class KoopaShell : CharacterBody2D, IStompable, IStarHittable
 {

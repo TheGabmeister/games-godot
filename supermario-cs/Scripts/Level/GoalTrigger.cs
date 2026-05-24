@@ -1,6 +1,6 @@
 using Godot;
 
-namespace supermariocs.Level;
+namespace SuperMario;
 
 public partial class GoalTrigger : Area2D
 {
@@ -16,7 +16,7 @@ public partial class GoalTrigger : Area2D
     private void OnBodyEntered(Node2D body)
     {
         if (_triggered) return;
-        if (body is not Player.PlayerController) return;
+        if (body is not PlayerController) return;
         _triggered = true;
         CallDeferred(MethodName.EmitReached);
     }

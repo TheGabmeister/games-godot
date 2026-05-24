@@ -1,6 +1,6 @@
 using Godot;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class UsedBlock : StaticBody2D
 {

@@ -1,10 +1,6 @@
 using Godot;
-using supermariocs.Autoloads;
-using supermariocs.Components;
-using supermariocs.Interfaces;
-using supermariocs.Player;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class BrickBlock : StaticBody2D, IBumpable
 {

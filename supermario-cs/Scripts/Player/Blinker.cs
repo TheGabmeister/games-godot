@@ -1,6 +1,6 @@
 using Godot;
 
-namespace supermariocs.Player;
+namespace SuperMario;
 
 public partial class Blinker : Node
 {

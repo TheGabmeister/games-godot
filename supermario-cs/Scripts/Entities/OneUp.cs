@@ -1,8 +1,6 @@
 using Godot;
-using supermariocs.Autoloads;
-using supermariocs.Player;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class OneUp : CharacterBody2D
 {

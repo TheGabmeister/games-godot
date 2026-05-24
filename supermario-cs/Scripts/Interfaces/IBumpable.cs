@@ -1,6 +1,6 @@
-namespace supermariocs.Interfaces;
+namespace SuperMario;
 
 public interface IBumpable
 {
-    void OnBumped(Player.PlayerController player);
+    void OnBumped(PlayerController player);
 }

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace supermariocs.Level;
+namespace SuperMario;
 
 public partial class CleanupVolume : Area2D
 {
@@ -11,7 +11,7 @@ public partial class CleanupVolume : Area2D
 
     private void OnBodyEntered(Node2D body)
     {
-        if (body is Player.PlayerController player)
+        if (body is PlayerController player)
         {
             player.KillPlayer();
             return;

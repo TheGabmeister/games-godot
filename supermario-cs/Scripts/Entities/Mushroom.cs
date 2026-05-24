@@ -1,8 +1,6 @@
 using Godot;
-using supermariocs.Autoloads;
-using supermariocs.Player;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class Mushroom : CharacterBody2D
 {
@@ -21,7 +19,7 @@ public partial class Mushroom : CharacterBody2D
         if (_collected || body is not PlayerController player) return;
         _collected = true;
         GameManager.Instance?.State?.AddScore(Constants.MushroomScore);
-        Ui.ScorePopup.Spawn(GameManager.Instance?.CurrentLevel, GlobalPosition, Constants.MushroomScore);
+        ScorePopup.Spawn(GameManager.Instance?.CurrentLevel, GlobalPosition, Constants.MushroomScore);
         player.ApplyMushroom();
         QueueFree();
     }

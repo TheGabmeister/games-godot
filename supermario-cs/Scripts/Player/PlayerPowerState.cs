@@ -1,4 +1,4 @@
-namespace supermariocs.Player;
+namespace SuperMario;
 
 public enum PlayerPowerState
 {

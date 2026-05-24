@@ -1,6 +1,6 @@
-namespace supermariocs.Interfaces;
+namespace SuperMario;
 
 public interface IStompable
 {
-    void OnStomped(Player.PlayerController player);
+    void OnStomped(PlayerController player);
 }

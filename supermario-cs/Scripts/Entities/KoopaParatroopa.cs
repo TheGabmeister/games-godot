@@ -1,10 +1,6 @@
 using Godot;
-using supermariocs.Autoloads;
-using supermariocs.Enums;
-using supermariocs.Interfaces;
-using supermariocs.Player;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class KoopaParatroopa : CharacterBody2D, IStompable, IFireballHittable, IStarHittable
 {

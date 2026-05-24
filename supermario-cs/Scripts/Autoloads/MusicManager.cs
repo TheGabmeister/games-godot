@@ -1,6 +1,6 @@
 using Godot;
 
-namespace supermariocs.Autoloads;
+namespace SuperMario;
 
 public partial class MusicManager : Node
 {

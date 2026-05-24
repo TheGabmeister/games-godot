@@ -1,8 +1,6 @@
 using Godot;
-using supermariocs.Autoloads;
-using supermariocs.Player;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class Starman : CharacterBody2D
 {
@@ -21,7 +19,7 @@ public partial class Starman : CharacterBody2D
         if (_collected || body is not PlayerController player) return;
         _collected = true;
         GameManager.Instance?.State?.AddScore(Constants.StarmanPickupScore);
-        Ui.ScorePopup.Spawn(GameManager.Instance?.CurrentLevel, GlobalPosition, Constants.StarmanPickupScore);
+        ScorePopup.Spawn(GameManager.Instance?.CurrentLevel, GlobalPosition, Constants.StarmanPickupScore);
         player.ApplyStarman();
         QueueFree();
     }

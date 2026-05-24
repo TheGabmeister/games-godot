@@ -1,9 +1,6 @@
 using Godot;
-using supermariocs.Autoloads;
-using supermariocs.Player;
-using supermariocs.Ui;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class Coin : Area2D
 {

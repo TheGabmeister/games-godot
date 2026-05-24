@@ -1,9 +1,6 @@
 using Godot;
-using supermariocs.Autoloads;
-using supermariocs.Interfaces;
-using supermariocs.Player;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable, IStarHittable
 {

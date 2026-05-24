@@ -1,6 +1,6 @@
 using Godot;
 
-namespace supermariocs.Ui;
+namespace SuperMario;
 
 public partial class ScorePopup : Node2D
 {

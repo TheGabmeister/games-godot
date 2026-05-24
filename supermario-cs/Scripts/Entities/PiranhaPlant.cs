@@ -1,8 +1,6 @@
 using Godot;
-using supermariocs.Interfaces;
-using supermariocs.Player;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class PiranhaPlant : Node2D, IFireballHittable, IStarHittable
 {

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace supermariocs.Ui;
+namespace SuperMario;
 
 public partial class Hud : CanvasLayer
 {
@@ -78,7 +78,7 @@ public partial class Hud : CanvasLayer
         {
             _timedOut = true;
             var player = GetTree().GetFirstNodeInGroup("player");
-            if (player is Player.PlayerController pc)
+            if (player is PlayerController pc)
                 pc.KillPlayer();
         }
     }

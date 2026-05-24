@@ -1,4 +1,4 @@
-namespace supermariocs;
+namespace SuperMario;
 
 public static class Layers
 {

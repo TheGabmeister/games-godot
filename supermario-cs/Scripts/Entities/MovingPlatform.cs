@@ -1,7 +1,6 @@
 using Godot;
-using supermariocs.Enums;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class MovingPlatform : AnimatableBody2D
 {

@@ -1,8 +1,6 @@
 using Godot;
-using supermariocs.Interfaces;
-using supermariocs.Player;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class BulletBill : Area2D, IStompable, IFireballHittable, IStarHittable
 {

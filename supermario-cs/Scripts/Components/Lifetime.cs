@@ -1,6 +1,6 @@
 using Godot;
 
-namespace supermariocs.Components;
+namespace SuperMario;
 
 public partial class Lifetime : Node
 {

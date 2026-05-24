@@ -1,8 +1,6 @@
 using Godot;
-using supermariocs.Interfaces;
-using supermariocs.Player;
 
-namespace supermariocs.Components;
+namespace SuperMario;
 
 public partial class Hitbox : Area2D
 {

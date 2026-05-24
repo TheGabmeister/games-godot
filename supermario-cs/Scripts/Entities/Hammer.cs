@@ -1,7 +1,6 @@
 using Godot;
-using supermariocs.Player;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class Hammer : Area2D
 {

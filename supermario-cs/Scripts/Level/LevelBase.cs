@@ -1,10 +1,6 @@
 using Godot;
-using supermariocs.Autoloads;
-using supermariocs.Player;
-using supermariocs.Resources;
-using supermariocs.Ui;
 
-namespace supermariocs.Level;
+namespace SuperMario;
 
 public partial class LevelBase : Node2D
 {

@@ -1,9 +1,6 @@
 using Godot;
-using supermariocs.Level;
-using supermariocs.Player;
-using supermariocs.Resources;
 
-namespace supermariocs;
+namespace SuperMario;
 
 public partial class GameSession : Node
 {

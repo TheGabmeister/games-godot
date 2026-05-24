@@ -1,4 +1,4 @@
-namespace supermariocs.Enums;
+namespace SuperMario;
 
 public enum MovingPlatformAxis
 {

@@ -1,4 +1,4 @@
-namespace supermariocs.Interfaces;
+namespace SuperMario;
 
 public enum FireballReaction
 {

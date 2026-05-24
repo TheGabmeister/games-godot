@@ -1,7 +1,6 @@
 using Godot;
-using supermariocs.Autoloads;
 
-namespace supermariocs.Entities;
+namespace SuperMario;
 
 public partial class BulletBillCannon : Node2D
 {
