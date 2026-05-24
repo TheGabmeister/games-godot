@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://cr75qnkiioj5i"]
 
-[ext_resource type="Script" path="res://Scripts/Level/LevelBase.cs" id="1_base"]
-[ext_resource type="Script" path="res://Scripts/Level/CleanupVolume.cs" id="4_clean"]
-[ext_resource type="Script" path="res://Scripts/Level/GoalTrigger.cs" id="5_goal"]
+[ext_resource type="Script" uid="uid://4lxp7qyyhwua" path="res://Scripts/Level/LevelBase.cs" id="1_base"]
+[ext_resource type="Script" uid="uid://ysjqgup4hr3h" path="res://Scripts/Level/CleanupVolume.cs" id="4_clean"]
+[ext_resource type="Script" uid="uid://bpgfny3koeblq" path="res://Scripts/Level/GoalTrigger.cs" id="5_goal"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_clean"]
 size = Vector2(4096, 64)
@@ -10,28 +10,27 @@ size = Vector2(4096, 64)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_goal"]
 size = Vector2(16, 256)
 
-[node name="LevelBase" type="Node2D"]
+[node name="LevelBase" type="Node2D" unique_id=1343455599 node_paths=PackedStringArray("PlayerStart", "GoalTrigger")]
 script = ExtResource("1_base")
 PlayerStart = NodePath("PlayerStart")
 GoalTrigger = NodePath("GoalTrigger")
 
-[node name="PlayerStart" type="Marker2D" parent="."]
+[node name="PlayerStart" type="Marker2D" parent="." unique_id=1751259620]
 position = Vector2(64, 256)
 
-[node name="CleanupVolume" type="Area2D" parent="."]
+[node name="CleanupVolume" type="Area2D" parent="." unique_id=982757258]
 position = Vector2(2048, 800)
 collision_layer = 128
 collision_mask = 55
 script = ExtResource("4_clean")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CleanupVolume"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CleanupVolume" unique_id=1343478233]
 shape = SubResource("RectangleShape2D_clean")
 
-[node name="GoalTrigger" type="Area2D" parent="."]
+[node name="GoalTrigger" type="Area2D" parent="." unique_id=55338925]
 position = Vector2(3840, 256)
 collision_layer = 128
-collision_mask = 1
 script = ExtResource("5_goal")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GoalTrigger"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GoalTrigger" unique_id=818635006]
 shape = SubResource("RectangleShape2D_goal")

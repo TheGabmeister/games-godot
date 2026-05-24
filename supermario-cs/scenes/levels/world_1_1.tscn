@@ -4,8 +4,10 @@
 [ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://scenes/entities/platform.tscn" id="2_plat"]
 
 [node name="World11" unique_id=144288357 instance=ExtResource("1_base")]
+_playerStartPath = NodePath("PlayerStart")
+_goalTriggerPath = NodePath("GoalTrigger")
 
-[node name="GoalTrigger" parent="." index="2"]
+[node name="GoalTrigger" parent="." index="2" unique_id=55338925]
 position = Vector2(293, 256)
 
 [node name="Platform" parent="." index="3" unique_id=1106055088 instance=ExtResource("2_plat")]
