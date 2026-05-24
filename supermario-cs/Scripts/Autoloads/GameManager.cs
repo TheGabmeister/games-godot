@@ -6,7 +6,6 @@ public partial class GameManager : Node
 {
     public static GameManager Instance { get; private set; }
 
-    public GameMode Mode { get; private set; } = GameMode.None;
     public GameState State => _session?.State;
     public LevelBase CurrentLevel => _session?.CurrentLevel;
 
@@ -27,12 +26,10 @@ public partial class GameManager : Node
         if (ResourceLoader.Exists(Config.GameOverScenePath))
             _gameOverScene = GD.Load<PackedScene>(Config.GameOverScenePath);
 
-        SetMode(GameMode.MainMenu);
+        LoadMainMenu();
     }
 
-    public void LoadMainMenu() => SetMode(GameMode.MainMenu);
-
-    private void ShowMainMenu()
+    public void LoadMainMenu()
     {
         if (_mainMenuScene == null)
         {
@@ -46,20 +43,16 @@ public partial class GameManager : Node
 
     private void OnStartPressed() => StartGame();
 
-    public void StartGame() => SetMode(GameMode.Playing);
-
-    private void StartSession()
+    public void StartGame()
     {
         _session = new GameSession { Name = "GameSession" };
-        _session.SessionEnded += OnSessionEnded;
+        _session.SessionEnded += LoadGameOver;
         SetActiveNode(_session);
         if (!_session.Start())
-            SetMode(GameMode.MainMenu);
+            LoadMainMenu();
     }
 
-    private void OnSessionEnded() => SetMode(GameMode.GameOver);
-
-    private void ShowGameOver()
+    private void LoadGameOver()
     {
         if (_gameOverScene == null)
         {
@@ -71,28 +64,6 @@ public partial class GameManager : Node
         over.Continue += LoadMainMenu;
         SetActiveNode(over);
         _session = null;
-    }
-
-    private void SetMode(GameMode mode)
-    {
-        if (Mode == mode) return;
-
-        Mode = mode;
-        switch (Mode)
-        {
-            case GameMode.MainMenu:
-                ShowMainMenu();
-                break;
-            case GameMode.Playing:
-                StartSession();
-                break;
-            case GameMode.GameOver:
-                ShowGameOver();
-                break;
-            default:
-                SetActiveNode(null);
-                break;
-        }
     }
 
     private void SetActiveNode(Node next)
