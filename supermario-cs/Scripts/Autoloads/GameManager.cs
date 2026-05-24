@@ -48,8 +48,7 @@ public partial class GameManager : Node
         _session = new GameSession { Name = "GameSession" };
         _session.SessionEnded += LoadGameOver;
         SetActiveNode(_session);
-        if (!_session.Start())
-            LoadMainMenu();
+        _session.Start();
     }
 
     private void LoadGameOver()

@@ -14,35 +14,16 @@ public partial class GameSession : Node
     private Campaign _campaign;
     private int _currentLevelIndex;
 
-    public bool Start()
+    public void Start()
     {
-        if (ResourceLoader.Exists(Config.CampaignPath))
-            _campaign = GD.Load<Campaign>(Config.CampaignPath);
-        else
-            GD.PushWarning($"Campaign not found at {Config.CampaignPath}");
-
+        _campaign = GD.Load<Campaign>(Config.CampaignPath);
         _currentLevelIndex = 0;
-
-        if (_campaign?.Levels == null || _campaign.Levels.Length == 0)
-        {
-            GD.PushError("Campaign has no levels.");
-            return false;
-        }
-
         LoadCurrentLevel();
-        return true;
     }
 
     private void LoadCurrentLevel()
     {
         var def = GetCurrentLevelDefinition();
-        if (def == null || def.LevelScene == null)
-        {
-            GD.PushError("LevelDefinition missing LevelScene.");
-            EmitSignal(SignalName.SessionEnded);
-            return;
-        }
-
         State.SetLevel(def.Name, def.TimeLimit);
 
         var level = def.LevelScene.Instantiate<LevelBase>();
@@ -54,15 +35,13 @@ public partial class GameSession : Node
 
     private LevelDefinition GetCurrentLevelDefinition()
     {
-        if (_campaign?.Levels == null) return null;
-        if (_currentLevelIndex < 0 || _currentLevelIndex >= _campaign.Levels.Length) return null;
         return _campaign.Levels[_currentLevelIndex];
     }
 
     private void OnLevelCompleted()
     {
         _currentLevelIndex++;
-        if (_campaign?.Levels == null || _currentLevelIndex >= _campaign.Levels.Length)
+        if (_currentLevelIndex >= _campaign.Levels.Length)
         {
             EmitSignal(SignalName.SessionEnded);
             return;
