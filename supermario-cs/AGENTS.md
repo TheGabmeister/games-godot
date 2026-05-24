@@ -4,7 +4,7 @@ Guidance for coding agents working in this repository.
 
 ## Project Overview
 
-A 2D Super Mario Bros inspired platformer built in Godot 4.6 with C#. Ported from a working MonoGame/Nez project at `c:\dev\games-monogame\SuperMario`.
+A 2D Super Mario Bros inspired platformer built in Godot 4.6 with C#. Ported from a working MonoGame/Nez project at `c:\dev\games-monogame\SuperMario`; mirror gameplay constants and behaviors from there rather than re-tuning.
 
 - Visuals are currently placeholder `ColorRect` primitives. No sprite assets yet.
 - Implementation specification: [PLAN.md](PLAN.md).
@@ -63,7 +63,7 @@ GameManager (autoload) → LevelRoot → one of:
 
 Registered in `project.godot` in this order:
 
-- `GameManager`: owns app-level screen swaps (`main_menu`, `GameSession`, `game_over`) and exposes pass-through `State` / `CurrentLevel` properties for gameplay code.
+- `GameManager`: owns app-level screen swaps (`main_menu`, `GameSession`, `game_over`). Lifecycle-only; gameplay entities do not consult `GameManager.Instance`, they go through `GameSession.Current` instead.
 - `MusicManager`: single `AudioStreamPlayer`. `Play(stream)` is idempotent by reference (re-playing the same stream is a no-op).
 - `SfxManager`: pool of 10 `AudioStreamPlayer`s. Fire-and-forget; drops requests when pool exhausted.
 
@@ -79,19 +79,19 @@ Registered in `project.godot` in this order:
 - `LevelDefinition` (`Scripts/Resources/LevelDefinition.cs`): `[GlobalClass] Resource` with `Name`, `LevelScene`, `MusicTrack`, `TimeLimit`. One `.tres` per level under `resources/levels/`.
 - `Campaign` (`Scripts/Resources/Campaign.cs`): ordered `LevelDefinition[]`. Single instance at `resources/campaign.tres`.
 
-Important — no cycles in `.tscn`/`.tres`: `LevelDefinition.tres` references its `LevelScene`. The level `.tscn` does not reference the `.tres` back — `GameSession` calls `level.Initialize(def, State)` programmatically after instantiation.
+Important — no cycles in `.tscn`/`.tres`: `LevelDefinition.tres` references its `LevelScene`. The level `.tscn` does not reference the `.tres` back — `GameSession` reads the `LevelDefinition` itself and uses the instantiated level only as a holder of scene references.
 
 ### LevelBase and inherited level scenes
 
 `scenes/level_base.tscn` is the template, with required children:
 
-- `PlayerStart` (`Marker2D`) — required; `LevelBase` instantiates the player here
+- `PlayerStart` (`Marker2D`) — required spawn location, exposed by `LevelBase` as an `[Export]`
 - `CleanupVolume` (`Area2D`) — broad mask, kills/frees anything that falls in
-- `GoalTrigger` (`Area2D`) — emits `Reached` on player overlap
+- `GoalTrigger` (`Area2D`) — emits `Reached` on player overlap, exposed by `LevelBase` as an `[Export]`
 
 Each `scenes/levels/world_X_Y.tscn` inherits from `level_base.tscn` and adds level content.
 
-`LevelBase` owns level-local setup only: play optional level music, spawn the player at `PlayerStart`, wire `GoalTrigger`, spawn the HUD, and re-emit `PlayerDied` / `LevelCompleted`. It does not own campaign progress or persistent run state.
+`LevelBase` is a passive holder of required `[Export]` references (`PlayerStart`, `GoalTrigger`) so `GameSession` can spawn the player and wire the goal without reaching into the scene by node name. Required exports are validated in `_Ready()`. All session-scoped concerns (music, HUD, lives, scene transitions, player spawn, goal wiring) live in `GameSession`.
 
 ### Combat interfaces
 
@@ -115,15 +115,16 @@ Child-node scripts under `Scripts/Components/`. Each references its owner via `[
 
 ### Wiring rules
 
-Three allowed coupling patterns:
+Four allowed coupling patterns:
 
 1. Vertical ownership (parent ↔ child): call down, signal up. Child never reaches up.
-2. Global services (autoloads): direct calls allowed. Any node may call `GameManager.Instance` / `MusicManager.Instance` / `SfxManager.Instance`.
-3. Sibling interactions: direct calls via combat interfaces; `Hitbox` → `PlayerController.TakeDamage`; `KillVolume` → `PlayerController.KillPlayer`.
+2. Global services (autoloads): direct calls allowed for `MusicManager.Instance` / `SfxManager.Instance`. `GameManager.Instance` is reserved for top-level lifecycle (`StartGame`, `LoadMainMenu`, `LoadGameOver`) and is not consulted by gameplay entities.
+3. Session-scoped event bus: gameplay entities announce facts through `GameSession.Current.Events`; `GameSession` is the sole subscriber that mutates `GameState`.
+4. Sibling interactions: direct calls via combat interfaces; `Hitbox` → `PlayerController.TakeDamage`; `KillVolume` → `PlayerController.KillPlayer`.
 
-Pickups mutate `GameState` directly — `GameManager.Instance.State.AddScore(...)`. Don't route pickup score through signals.
+Pickups emit events, never mutate state. For example, `Coin` calls `GameSession.Current.Events.EmitScoreEarnedAt(points, GlobalPosition)`; `GameSession` applies the score and spawns the `ScorePopup`.
 
-`GameState` is owned by `GameSession`. Access it through `GameManager.Instance.State` from gameplay code.
+`GameSession.Current` is the entity-facing locator. It exposes `Events`, `State` for reads, and `CurrentLevel` as the parent for runtime-spawned children like projectiles. Writes to `GameState` go through `Events`, with `GameSession` as the sole writer.
 
 ### Entity authoring
 
@@ -133,13 +134,13 @@ One `.cs` + one `.tscn` per entity. No base classes for enemies / pickups / proj
 - Static pickups (Coin, FireFlower): root `Area2D` + visual + shape.
 - Dynamic pickups (Mushroom, OneUp, Starman): root `CharacterBody2D` + visual + body shape + (optional) `Walker` + child `PickupTrigger: Area2D`. The `PickupBody`/`PickupTrigger` layer split lets Mario walk through pickups while still triggering them.
 - Blocks: root `StaticBody2D` + visual + shape + (optional) `Bumpable`.
-- Projectiles: root `CharacterBody2D` or `Area2D` + visual + shape + child `HitArea: Area2D` + `Lifetime`. Spawned at runtime via `GameManager.Instance.CurrentLevel.AddChild(...)`.
+- Projectiles: root `CharacterBody2D` or `Area2D` + visual + shape + child `HitArea: Area2D` + `Lifetime`. Spawned at runtime via `GameSession.Current.CurrentLevel.AddChild(...)`.
 
 ### Player
 
 `scenes/player.tscn` — `CharacterBody2D` with flat physics methods. No state machine, no drawer. Joins the `"player"` group in `_Ready` so AI-querying enemies can find it.
 
-Power state is owned by `GameState.PowerState`. The player reads it on `_Ready` and writes through `GameManager.Instance.State.PowerState` on transitions.
+Power state is owned by `GameState.PowerState`. The player reads it on `_Ready` via `GameSession.Current.State.PowerState` and writes through `GameSession.Current.Events.EmitPlayerPowerStateChanged(newState)` on transitions; `GameSession` is the sole writer to `GameState`.
 
 Head-bump detection lives on the player: after `MoveAndSlide`, iterate `GetSlideCollisionCount()`; on collision normal `Y > 0.9`, dispatch `IBumpable.OnBumped`.
 
@@ -172,7 +173,7 @@ Layer flags live in the static `Layers` class (`Layers.Player`, etc.) — keep b
 - `PascalCase` for script directories.
 - Use `StringName` for repeated keys (input actions, signal names).
 - `Vector2` is a struct — can't assign to `.X`/`.Y` directly.
-- Typed-Node `[Export]` fields are unreliable when set via `NodePath` in `.tscn`. Prefer `GetNode<T>("...")` in `_Ready()` for child-node references, or set the export through the inspector.
+- Typed-node `[Export]` fields require the `node_paths=PackedStringArray("Field1", "Field2", ...)` directive on the owning node's `[node ...]` line in the `.tscn`. The editor adds this automatically when you wire the field through the inspector. Hand-editing only `Field = NodePath("...")` leaves the typed reference null at runtime.
 - All scripts use the single namespace `SuperMario`.
 - Required scene wiring should fail loudly. Prefer `GetNode<T>()`, typed `PackedScene.Instantiate<T>()`, direct required exports, and direct singleton access over defensive null checks. Keep checks only for real gameplay/lifecycle state such as `_dead`, `_collected`, "is this body the player?", "is there an old node to free?", or optional data like `LevelDefinition.MusicTrack`.
 
@@ -181,7 +182,7 @@ Layer flags live in the static `Layers` class (`Layers.Player`, etc.) — keep b
 - `GetParent()`, `GetNode("../...")` — components reach their owner via `[Export]`.
 - Base classes for enemies / pickups / projectiles — flat per-entity scripts implementing the combat interfaces they care about.
 - EntityFactory-style registries — drag entity `.tscn`s into level scenes at edit time.
-- Persistent player across levels — player is re-spawned by `LevelBase` on each load.
+- Persistent player across levels — player is re-spawned by `GameSession` on each load.
 - Autoload-owned scene transitions other than `GameManager`.
 - Cycles in `.tscn` ↔ `.tres` ext_resource references.
 

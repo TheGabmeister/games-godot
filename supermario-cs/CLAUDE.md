@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A 2D Super Mario Bros inspired platformer built in **Godot 4.6 with C#**. Ported from a working MonoGame/Nez project at `c:\dev\games-monogame\SuperMario`. The implementation specification lives in [PLAN.md](PLAN.md).
+A 2D Super Mario Bros inspired platformer built in **Godot 4.6 with C#**. Ported from a working MonoGame/Nez project at `c:\dev\games-monogame\SuperMario` — mirror gameplay constants and behaviors from there rather than re-tuning.
 
 Visuals are currently placeholder `ColorRect` primitives. Real sprite art is not yet sourced.
 
@@ -50,7 +50,7 @@ GameManager (autoload) → LevelRoot → one of:
 
 | Autoload | Responsibility |
 |----------|----------------|
-| **GameManager** | App shell. Swaps top-level screens (`main_menu`, `GameSession`, `game_over`) under `LevelRoot`. Exposes pass-through `State` / `CurrentLevel` for gameplay code. |
+| **GameManager** | App shell. Swaps top-level screens (`main_menu`, `GameSession`, `game_over`) under `LevelRoot`. Lifecycle-only — gameplay entities do **not** consult `GameManager.Instance`; they go through `GameSession.Current` instead. |
 | **MusicManager** | Single `AudioStreamPlayer`. `Play(stream)` is **idempotent by reference** — re-playing the same `AudioStream` is a no-op so same-level reloads don't restart music. |
 | **SfxManager** | Pool of 10 `AudioStreamPlayer`s. Fire-and-forget; drops requests when pool exhausted. |
 
@@ -160,7 +160,7 @@ Fireballs are capped at `Constants.MaxFireballs = 2`. Spawned ones decrement the
 - Directory naming: `PascalCase` for script directories (e.g., `Scripts/Player/`)
 - Use `StringName` for frequently-used keys (input actions, signal names, registry keys)
 - `Vector2` is a struct — can't assign to `.X`/`.Y` directly; use `new Vector2(x, Scale.Y)` pattern
-- Typed-Node `[Export]` fields are unreliable when set via `NodePath` in `.tscn`. Prefer `GetNode<T>("...")` in `_Ready()` for child-node references, or set the export through the inspector. The pattern that bit us: `[Export] private Button _btn` + `_btn = NodePath("...")` in `.tscn` → `_btn` stayed null.
+- Typed-Node `[Export]` fields require the `node_paths=PackedStringArray("Field1", "Field2", ...)` directive on the owning node's `[node ...]` line in the `.tscn`. The editor adds this automatically when you wire the field via the inspector. Hand-editing the `.tscn` with only `Field = NodePath("...")` (no `node_paths=`) leaves the field as a raw `NodePath` and the typed reference stays null at runtime. Working examples: [scenes/level_base.tscn](scenes/level_base.tscn) (`PlayerStart`, `GoalTrigger`), [scenes/hud.tscn](scenes/hud.tscn) (the four `Label` fields). When in doubt, set the export through the editor inspector so Godot writes the directive correctly.
 - All scripts use the single namespace `SuperMario`.
 - Required scene wiring should fail loudly. Prefer `GetNode<T>()`, typed `PackedScene.Instantiate<T>()`, direct required exports, and direct singleton access over defensive null checks. Keep checks only for real gameplay/lifecycle state such as `_dead`, `_collected`, "is this body the player?", "is there an old node to free?", or optional data like `LevelDefinition.MusicTrack`.
 
@@ -169,7 +169,7 @@ Fireballs are capped at `Constants.MaxFireballs = 2`. Spawned ones decrement the
 - `GetParent()`, `GetNode("../...")` — components reach their owner via `[Export]`
 - Base classes for enemies / pickups / projectiles — flat per-entity scripts implementing the combat interfaces they care about
 - EntityFactory-style registries — drag entity `.tscn`s into level scenes at edit time
-- Persistent player across levels — player is re-spawned by `LevelBase` on each load
+- Persistent player across levels — player is re-spawned by `GameSession` on each load
 - Autoload-owned scene transitions other than `GameManager`
 - Cycles in `.tscn` ↔ `.tres` ext_resource references
 
