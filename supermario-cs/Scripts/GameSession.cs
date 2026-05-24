@@ -5,7 +5,7 @@ namespace SuperMario;
 
 public partial class GameSession : Node
 {
-    public static GameSession Current { get; private set; }
+    public static GameSession Instance { get; private set; }
 
     public event Action SessionEnded;
     public event Action<int> ScoreEarned;
@@ -25,12 +25,12 @@ public partial class GameSession : Node
 
     public override void _EnterTree()
     {
-        Current = this;
+        Instance = this;
     }
 
     public override void _ExitTree()
     {
-        if (Current == this) Current = null;
+        if (Instance == this) Instance = null;
     }
 
     public void Start()
