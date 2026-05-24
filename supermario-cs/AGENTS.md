@@ -4,11 +4,11 @@ Guidance for coding agents working in this repository.
 
 ## Project Overview
 
-A 2D Super Mario Bros inspired platformer built in Godot 4.6 with C#.
+A 2D Super Mario Bros inspired platformer built in Godot 4.6 with C#. Ported from a working MonoGame/Nez project at `c:\dev\games-monogame\SuperMario`.
 
-- Visuals are procedural primitive shapes only.
-- The design source of truth is [SPEC.md](SPEC.md).
-- Repo-specific implementation guidance also exists in [CLAUDE.md](CLAUDE.md).
+- Visuals are currently placeholder `ColorRect` primitives. No sprite assets yet.
+- Implementation specification: [PLAN.md](PLAN.md).
+- Repo-specific implementation guidance: [CLAUDE.md](CLAUDE.md).
 
 ## Build and Validation
 
@@ -23,104 +23,152 @@ godot --path .
 Notes:
 
 - Run `dotnet build` before `godot --headless`; the headless check validates the Godot project structure, not C# syntax.
-- No dedicated automated test framework is configured yet.
+- No automated test framework is configured. Validation is build + manual playtest.
 
 ## Project Configuration
 
 - Engine: Godot 4.6
 - Renderer: Forward Plus
 - SDK: Godot.NET.Sdk 4.6.2
-- Target framework: .NET 8.0
+- Target framework: .NET 8.0 (.NET 9.0 for Android)
 - Root namespace: `supermariocs`
 - Viewport: `512x448`
 - Window: `1024x896`
 - Stretch mode: `canvas_items`
-- Tile grid: `16x16`
-- Main scene: `res://scenes/main.tscn`
+- Main scene: `res://scenes/boot.tscn` (one-shot bootstrap)
 
 ## Architecture
 
-### Scene Ownership Model
+### Scene flow
 
-`main.tscn` is the persistent shell and should not be unloaded.
+There is no persistent main shell. `GameManager` is an autoload that owns a `LevelRoot: Node` child; the active scene is the single child of `LevelRoot` and is freed on every swap.
 
-Persistent under `Main`:
+```
+GameManager (autoload) → LevelRoot → one of:
+  scenes/main_menu.tscn
+  scenes/levels/world_X_Y.tscn   (inherits scenes/level_base.tscn)
+  scenes/game_over.tscn
+```
 
-- Player
-- HUD
-- `WorldEnvironment`
-- overlay / transition UI
+The player is re-spawned per level load, not persisted.
 
-Loaded per level into `SceneRoot`:
+### Autoloads (3)
 
-- terrain
-- blocks
-- enemies
-- pipes
-- kill zones
-- spawn markers
-- camera bounds
-- background decoration
+Registered in `project.godot` in this order:
 
-Rules:
+- `GameManager`: owns `GameState`, the `Campaign` cursor, and `CurrentLevel`. Drives all scene swaps.
+- `MusicManager`: single `AudioStreamPlayer`. `Play(stream)` is idempotent by reference (re-playing the same stream is a no-op).
+- `SfxManager`: pool of 10 `AudioStreamPlayer`s. Fire-and-forget; drops requests when pool exhausted.
 
-- `SceneManager` loads and swaps level scenes under `SceneRoot`.
-- On level load, move the existing player to the level's `PlayerSpawn` marker.
-- On death/respawn, reposition the player instead of instantiating a new one.
+`GameManager` decides scene transitions. Scenes report what happened via signals; they never advance themselves.
 
-### Autoloads
+### Per-Level Parameters
 
-The project expects these `Node`-based singletons:
+- `LevelDefinition` (`Scripts/Resources/LevelDefinition.cs`): `[GlobalClass] Resource` with `Name`, `LevelScene`, `MusicTrack`, `TimeLimit`. One `.tres` per level under `resources/levels/`.
+- `Campaign` (`Scripts/Resources/Campaign.cs`): ordered `LevelDefinition[]`. Single instance at `resources/campaign.tres`.
 
-- `EventBus`: cross-system signals
-- `GameManager`: score, coins, lives, timer, power state, game state
-- `AudioManager`: music and SFX
-- `SceneManager`: transitions, scene loading, level intro flow
-- `CameraEffects`: shake and freeze-frame behavior on the active camera
+Important — no cycles in `.tscn`/`.tres`: `LevelDefinition.tres` references its `LevelScene`. The level `.tscn` does not reference the `.tres` back — `GameManager.LoadLevel(def)` sets `level.Config = def` programmatically after instantiation.
 
-### State Ownership
+### LevelBase and inherited level scenes
 
-- `GameManager.CurrentPowerState` is the single source of truth for Mario's power form.
-- Player states must update power via `GameManager.SetPowerState(...)`.
-- Respawn should restore the player from `GameManager`, not from a duplicate local copy.
+`scenes/level_base.tscn` is the template, with required children:
 
-## Gameplay Patterns
+- `PlayerStart` (`Marker2D`) — required; `LevelBase` instantiates the player here
+- `CleanupVolume` (`Area2D`) — broad mask, kills/frees anything that falls in
+- `GoalTrigger` (`Area2D`) — emits `Reached` on player overlap
 
-- Use `CharacterBody2D` for the player and enemy actors that need deterministic movement.
-- Keep gameplay logic separate from rendering with the drawer pattern:
-  gameplay on the main node, visuals in a child `*Drawer` node using `_Draw()`.
-- Prefer EventBus signals for non-local communication such as HUD, scoring, audio, and effects.
-- Terrain belongs in `TileMapLayer`; interactive blocks and objects should remain separate scene instances.
-- Pipe warp destinations should be modeled as `WarpScenePath` plus `WarpSpawnMarker`, not a raw `NodePath`.
-- Hidden blocks need a separate detection mechanism; do not rely on a fully non-colliding block somehow being hit.
+Each `scenes/levels/world_X_Y.tscn` inherits from `level_base.tscn` and adds level content.
+
+### Combat interfaces
+
+Defender decides its own reaction; attacker invokes the interface on the defender.
+
+```
+IStompable.OnStomped(PlayerController)
+IFireballHittable.OnHitByFireball() → FireballReaction (Defeated | Blocked)
+IStarHittable.OnHitByStar(PlayerController)
+IBumpable.OnBumped(PlayerController)
+```
+
+### Reusable components
+
+Child-node scripts under `Scripts/Components/`. Each references its owner via `[Export]` — never `GetParent()`.
+
+- `Hitbox` (Area2D): universal damage volume; branches on star-invincible → stomp → damage.
+- `Walker` (Node): gravity + horizontal walk + turn-at-wall + optional turn-at-cliff + optional bounce-on-landing.
+- `Bumpable` (Node): sine half-arc bump animation for blocks; animates a target `Node2D` (the visual), not the collision body.
+- `Lifetime` (Node): `QueueFree`s its parent after `Duration` seconds.
+
+### Wiring rules
+
+Three allowed coupling patterns:
+
+1. Vertical ownership (parent ↔ child): call down, signal up. Child never reaches up.
+2. Global services (autoloads): direct calls allowed. Any node may call `GameManager.Instance` / `MusicManager.Instance` / `SfxManager.Instance`.
+3. Sibling interactions: direct calls via combat interfaces; `Hitbox` → `PlayerController.TakeDamage`; `KillVolume` → `PlayerController.KillPlayer`.
+
+Pickups mutate `GameState` directly — `GameManager.Instance.State.AddScore(...)`. Don't route pickup score through signals.
+
+### Entity authoring
+
+One `.cs` + one `.tscn` per entity. No base classes for enemies / pickups / projectiles. Variants are `[Export]` enums on the leaf script.
+
+- Enemies: root `CharacterBody2D` + visual + body shape + child `Hitbox: Area2D` + (optional) `Walker`.
+- Static pickups (Coin, FireFlower): root `Area2D` + visual + shape.
+- Dynamic pickups (Mushroom, OneUp, Starman): root `CharacterBody2D` + visual + body shape + (optional) `Walker` + child `PickupTrigger: Area2D`. The `PickupBody`/`PickupTrigger` layer split lets Mario walk through pickups while still triggering them.
+- Blocks: root `StaticBody2D` + visual + shape + (optional) `Bumpable`.
+- Projectiles: root `CharacterBody2D` or `Area2D` + visual + shape + child `HitArea: Area2D` + `Lifetime`. Spawned at runtime via `GameManager.Instance.CurrentLevel.AddChild(...)`.
+
+### Player
+
+`scenes/player.tscn` — `CharacterBody2D` with flat physics methods. No state machine, no drawer. Joins the `"player"` group in `_Ready` so AI-querying enemies can find it.
+
+Power state is owned by `GameState.PowerState`. The player reads it on `_Ready` and writes through `GameManager.Instance.State.PowerState` on transitions.
+
+Head-bump detection lives on the player: after `MoveAndSlide`, iterate `GetSlideCollisionCount()`; on collision normal `Y > 0.9`, dispatch `IBumpable.OnBumped`.
+
+Fireballs are capped at `Constants.MaxFireballs = 2`.
+
+## Physics layers (8, named in `project.godot`)
+
+| # | Name |
+|---|------|
+| 1 | `Player` |
+| 2 | `Enemy` |
+| 3 | `PickupBody` |
+| 4 | `Environment` |
+| 5 | `Projectile` |
+| 6 | `EnemyProjectile` |
+| 7 | `PickupTrigger` |
+| 8 | `LevelTrigger` |
+
+Critical invariant: the Player body's mask does not include `PickupBody`. Mario walks through pickups while triggering them via `PickupTrigger`.
+
+Layer flags live in the static `Layers` class (`Layers.Player`, etc.) — keep bit positions in sync with the 2D physics layer names in `project.godot`.
 
 ## Conventions
 
 - Use `public partial class` for Godot C# scripts.
-- Use `_Ready()`, `_Process(double delta)`, and `_PhysicsProcess(double delta)`.
-- Use `PascalCase.cs` for script filenames.
-- Use `snake_case.tscn` for scenes.
-- Use `PascalCase` for script directories.
-- Use `StringName` for repeated keys like actions, signal names, and registries.
-- Keep color constants in a shared palette class, typically `P`.
+- Use `_Ready()`, `_Process(double delta)`, and `_PhysicsProcess(double delta)`. `delta` is `double`, not `float`.
+- Gameplay constants live in `Scripts/Constants.cs`; mirror values from MonoGame's `Constants.cs` rather than re-tuning.
+- `PascalCase.cs` for script filenames.
+- `snake_case.tscn` for scenes.
+- `PascalCase` for script directories.
+- Use `StringName` for repeated keys (input actions, signal names).
+- `Vector2` is a struct — can't assign to `.X`/`.Y` directly.
+- Typed-Node `[Export]` fields are unreliable when set via `NodePath` in `.tscn`. Prefer `GetNode<T>("...")` in `_Ready()` for child-node references, or set the export through the inspector.
 
-## Collision Layers
+## Forbidden
 
-| Layer | Name |
-|-------|------|
-| 1 | Terrain |
-| 2 | Player |
-| 3 | Enemies |
-| 4 | PlayerHitbox |
-| 5 | EnemyHitbox |
-| 6 | Items |
-| 7 | Fireballs |
-| 8 | KoopaShell |
-| 9 | KillZone |
-| 10 | Interactable |
+- `GetParent()`, `GetNode("../...")` — components reach their owner via `[Export]`.
+- Base classes for enemies / pickups / projectiles — flat per-entity scripts implementing the combat interfaces they care about.
+- EntityFactory-style registries — drag entity `.tscn`s into level scenes at edit time.
+- Persistent player across levels — player is re-spawned by `LevelBase` on each load.
+- Autoload-owned scene transitions other than `GameManager`.
+- Cycles in `.tscn` ↔ `.tres` ext_resource references.
 
 ## Working Rules
 
 - Avoid hand-editing generated Godot files under `.godot/`, `*.uid`, or `*.import`.
-- Keep new code aligned with the current spec instead of inventing parallel architecture.
-- If the spec and implementation disagree, resolve the contradiction explicitly instead of silently picking one.
+- Keep new code aligned with [PLAN.md](PLAN.md) instead of inventing parallel architecture.
+- If the plan and implementation disagree, resolve the contradiction explicitly instead of silently picking one.
