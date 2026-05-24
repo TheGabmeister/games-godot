@@ -1,15 +1,18 @@
-[gd_scene load_steps=3 format=3 uid="uid://b00world11000001"]
+[gd_scene format=3 uid="uid://chvqq8kyf2wu7"]
 
-[ext_resource type="PackedScene" path="res://scenes/level_base.tscn" id="1_base"]
-[ext_resource type="PackedScene" path="res://scenes/entities/platform.tscn" id="2_plat"]
+[ext_resource type="PackedScene" uid="uid://cr75qnkiioj5i" path="res://scenes/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://scenes/entities/platform.tscn" id="2_plat"]
 
-[node name="World11" instance=ExtResource("1_base")]
+[node name="World11" unique_id=144288357 instance=ExtResource("1_base")]
 
-[node name="Platform" parent="." instance=ExtResource("2_plat")]
-position = Vector2(256, 320)
+[node name="GoalTrigger" parent="." index="2"]
+position = Vector2(293, 256)
 
-[node name="Platform2" parent="." instance=ExtResource("2_plat")]
-position = Vector2(512, 320)
+[node name="Platform" parent="." index="3" unique_id=1106055088 instance=ExtResource("2_plat")]
+position = Vector2(66, 320)
 
-[node name="Platform3" parent="." instance=ExtResource("2_plat")]
-position = Vector2(768, 320)
+[node name="Platform2" parent="." index="4" unique_id=1907707047 instance=ExtResource("2_plat")]
+position = Vector2(172, 320)
+
+[node name="Platform3" parent="." index="5" unique_id=905141241 instance=ExtResource("2_plat")]
+position = Vector2(291, 321)

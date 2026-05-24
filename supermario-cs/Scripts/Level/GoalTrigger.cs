@@ -18,6 +18,11 @@ public partial class GoalTrigger : Area2D
         if (_triggered) return;
         if (body is not Player.PlayerController) return;
         _triggered = true;
+        CallDeferred(MethodName.EmitReached);
+    }
+
+    private void EmitReached()
+    {
         EmitSignal(SignalName.Reached);
     }
 }

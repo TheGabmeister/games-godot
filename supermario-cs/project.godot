@@ -33,6 +33,10 @@ window/stretch/mode="canvas_items"
 
 project/assembly_name="supermario-cs"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/copy_all_errors/plugin.cfg")
+
 [input]
 
 move_left={
@@ -91,4 +95,3 @@ pause={
 [rendering]
 
 rendering_device/driver.windows="d3d12"
-environment/defaults/default_clear_color=Color(0.35, 0.65, 0.95, 1)

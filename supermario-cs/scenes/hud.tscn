@@ -4,10 +4,6 @@
 
 [node name="Hud" type="CanvasLayer"]
 script = ExtResource("1_hud")
-_scoreLabel = NodePath("Root/Top/Score/Value")
-_worldLabel = NodePath("Root/Top/World/Value")
-_timeLabel = NodePath("Root/Top/Time/Value")
-_livesLabel = NodePath("Root/Top/Lives/Value")
 
 [node name="Root" type="Control" parent="."]
 layout_mode = 3

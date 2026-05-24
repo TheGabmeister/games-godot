@@ -6,38 +6,68 @@ namespace supermariocs.Ui;
 
 public partial class Hud : CanvasLayer
 {
-    [Export] private Label _scoreLabel;
-    [Export] private Label _worldLabel;
-    [Export] private Label _timeLabel;
-    [Export] private Label _livesLabel;
+    private Label _scoreLabel;
+    private Label _worldLabel;
+    private Label _timeLabel;
+    private Label _livesLabel;
 
     private LevelDefinition _config;
     private float _timeRemaining;
     private bool _timedOut;
+    private GameState _boundState;
+
+    public override void _Ready()
+    {
+        _scoreLabel = GetNodeOrNull<Label>("Root/Top/Score/Value");
+        _worldLabel = GetNodeOrNull<Label>("Root/Top/World/Value");
+        _timeLabel = GetNodeOrNull<Label>("Root/Top/Time/Value");
+        _livesLabel = GetNodeOrNull<Label>("Root/Top/Lives/Value");
+
+        RefreshLabels();
+    }
 
     public void Bind(LevelDefinition config)
     {
         _config = config;
         _timeRemaining = config?.TimeLimit ?? 0f;
-        if (_worldLabel != null) _worldLabel.Text = config?.Name ?? "";
 
         var state = GameManager.Instance?.State;
-        if (state != null)
+        if (state != null && state != _boundState)
         {
-            OnScoreChanged(state.Score);
-            OnLivesChanged(state.Lives);
+            UnbindState();
+            _boundState = state;
             state.ScoreChanged += OnScoreChanged;
             state.LivesChanged += OnLivesChanged;
         }
+
+        RefreshLabels();
     }
 
     public override void _ExitTree()
     {
-        var state = GameManager.Instance?.State;
-        if (state != null)
+        UnbindState();
+    }
+
+    private void UnbindState()
+    {
+        if (_boundState != null)
         {
-            state.ScoreChanged -= OnScoreChanged;
-            state.LivesChanged -= OnLivesChanged;
+            _boundState.ScoreChanged -= OnScoreChanged;
+            _boundState.LivesChanged -= OnLivesChanged;
+            _boundState = null;
+        }
+    }
+
+    private void RefreshLabels()
+    {
+        if (_worldLabel != null)
+            _worldLabel.Text = _config?.Name ?? "";
+        if (_timeLabel != null)
+            _timeLabel.Text = ((int)_timeRemaining).ToString();
+        if (_boundState != null)
+        {
+            OnScoreChanged(_boundState.Score);
+            OnLivesChanged(_boundState.Lives);
         }
     }
 
