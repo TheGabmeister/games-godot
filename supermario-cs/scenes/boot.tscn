@@ -1,3 +1,6 @@
-[gd_scene format=3 uid="uid://suc4sium3bn1"]
+[gd_scene load_steps=2 format=3 uid="uid://suc4sium3bn1"]
 
-[node name="Boot" type="Node2D"]
+[ext_resource type="Script" uid="uid://de1q0qgde6dul" path="res://Scripts/GameInstance.cs" id="1_gameinstance"]
+
+[node name="GameInstance" type="Node"]
+script = ExtResource("1_gameinstance")

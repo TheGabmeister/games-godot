@@ -15,6 +15,10 @@ public partial class GameInstance : Node
     public override void _Ready()
     {
         Instance = this;
+
+        AddChild(new MusicManager { Name = "MusicManager" });
+        AddChild(new SfxManager { Name = "SfxManager" });
+
         _levelRoot = new Node { Name = "LevelRoot" };
         AddChild(_levelRoot);
 
