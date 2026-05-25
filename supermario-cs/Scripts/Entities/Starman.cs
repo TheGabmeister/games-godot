@@ -3,7 +3,7 @@ using Godot;
 
 namespace SuperMario;
 
-public partial class Starman : CharacterBody2D, IScoreEventSource, ITextPopupEventSource
+public partial class Starman : CharacterBody2D, IScoreEventSource
 {
     public event Action<int> ScoreEarned;
     public event Action<string, Vector2> TextPopupRequested;
@@ -22,7 +22,7 @@ public partial class Starman : CharacterBody2D, IScoreEventSource, ITextPopupEve
         if (_collected || body is not PlayerController player) return;
         _collected = true;
         ScoreEarned?.Invoke(Constants.StarmanPickupScore);
-        TextPopupRequested?.Invoke("+" + Constants.StarmanPickupScore, GlobalPosition);
+        TextPopupSpawner.Spawn(this, Constants.StarmanPickupScore.ToString(), GlobalPosition);
         player.ApplyStarman();
         QueueFree();
     }

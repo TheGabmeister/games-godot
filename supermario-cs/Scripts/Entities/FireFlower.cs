@@ -3,7 +3,7 @@ using Godot;
 
 namespace SuperMario;
 
-public partial class FireFlower : Area2D, IScoreEventSource, ITextPopupEventSource
+public partial class FireFlower : Area2D, IScoreEventSource
 {
     public event Action<int> ScoreEarned;
     public event Action<string, Vector2> TextPopupRequested;
@@ -20,7 +20,7 @@ public partial class FireFlower : Area2D, IScoreEventSource, ITextPopupEventSour
         if (_collected || body is not PlayerController player) return;
         _collected = true;
         ScoreEarned?.Invoke(Constants.MushroomScore);
-        TextPopupRequested?.Invoke("+" + Constants.MushroomScore, GlobalPosition);
+        TextPopupSpawner.Spawn(this, Constants.MushroomScore.ToString(), GlobalPosition);
         player.ApplyFireFlower();
         QueueFree();
     }

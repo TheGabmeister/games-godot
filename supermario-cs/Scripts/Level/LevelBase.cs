@@ -72,10 +72,6 @@ public partial class LevelBase : Node2D
         if (root is ICoinEventSource coinSource)
             coinSource.CoinCollected += coins => CoinsCollected?.Invoke(coins);
 
-        if (root is ITextPopupEventSource textPopupSource)
-            textPopupSource.TextPopupRequested += (text, worldPosition) =>
-                TextPopupRequested?.Invoke(text, worldPosition);
-
         foreach (var child in root.GetChildren())
             WireEventSources(child);
     }
