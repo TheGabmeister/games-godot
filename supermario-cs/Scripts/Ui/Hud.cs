@@ -5,19 +5,21 @@ namespace SuperMario;
 public partial class Hud : CanvasLayer
 {
     [Export] public Label ScoreLabel;
+    [Export] public Label CoinLabel;
     [Export] public Label WorldLabel;
     [Export] public Label TimeLabel;
     [Export] public Label LivesLabel;
 
-    private GameState _gameState;
+    private GameSession _session;
 
-    public void Bind(GameState state)
+    public void Bind(GameSession session)
     {
-        _gameState = state;
-        state.ScoreChanged += OnScoreChanged;
-        state.LivesChanged += OnLivesChanged;
-        state.LevelChanged += OnLevelChanged;
-        state.TimeRemainingChanged += OnTimeRemainingChanged;
+        _session = session;
+        session.ScoreChanged += OnScoreChanged;
+        session.CoinsChanged += OnCoinsChanged;
+        session.LivesChanged += OnLivesChanged;
+        session.LevelChanged += OnLevelChanged;
+        session.TimeRemainingChanged += OnTimeRemainingChanged;
 
         RefreshLabels();
     }
@@ -29,26 +31,34 @@ public partial class Hud : CanvasLayer
 
     private void UnbindState()
     {
-        if (_gameState == null) return;
+        if (_session == null) return;
 
-        _gameState.ScoreChanged -= OnScoreChanged;
-        _gameState.LivesChanged -= OnLivesChanged;
-        _gameState.LevelChanged -= OnLevelChanged;
-        _gameState.TimeRemainingChanged -= OnTimeRemainingChanged;
-        _gameState = null;
+        _session.ScoreChanged -= OnScoreChanged;
+        _session.CoinsChanged -= OnCoinsChanged;
+        _session.LivesChanged -= OnLivesChanged;
+        _session.LevelChanged -= OnLevelChanged;
+        _session.TimeRemainingChanged -= OnTimeRemainingChanged;
+        _session = null;
     }
 
     private void RefreshLabels()
     {
-        WorldLabel.Text = _gameState.CurrentLevelName;
-        OnScoreChanged(_gameState.Score);
-        OnLivesChanged(_gameState.Lives);
-        OnTimeRemainingChanged(_gameState.TimeRemaining);
+        var saveData = _session.SaveData;
+        WorldLabel.Text = saveData.CurrentLevelName;
+        OnScoreChanged(saveData.Score);
+        OnCoinsChanged(saveData.Coins);
+        OnLivesChanged(saveData.Lives);
+        OnTimeRemainingChanged(saveData.TimeRemaining);
     }
 
     private void OnScoreChanged(int score)
     {
         ScoreLabel.Text = score.ToString("D6");
+    }
+
+    private void OnCoinsChanged(int coins)
+    {
+        CoinLabel.Text = "x" + coins.ToString("D2");
     }
 
     private void OnLivesChanged(int lives)

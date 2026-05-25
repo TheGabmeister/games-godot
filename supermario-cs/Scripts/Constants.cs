@@ -41,6 +41,7 @@ public static class Constants
 
     // Coins / pickups
     public const int CoinValue = 200;
+    public const int CoinsPerLife = 100;
     public const int MushroomScore = 1000;
     public const int StarmanPickupScore = 1000;
 

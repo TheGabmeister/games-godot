@@ -7,6 +7,7 @@ namespace SuperMario;
 public partial class LevelBase : Node2D
 {
     public event Action<int> ScoreEarned;
+    public event Action<int> CoinsCollected;
     public event Action<string, Vector2> TextPopupRequested;
 
     [Export] public Marker2D PlayerStart;
@@ -67,6 +68,9 @@ public partial class LevelBase : Node2D
 
         if (root is IScoreEventSource scoreSource)
             scoreSource.ScoreEarned += points => ScoreEarned?.Invoke(points);
+
+        if (root is ICoinEventSource coinSource)
+            coinSource.CoinsCollected += coins => CoinsCollected?.Invoke(coins);
 
         if (root is ITextPopupEventSource textPopupSource)
             textPopupSource.TextPopupRequested += (text, worldPosition) =>

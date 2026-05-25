@@ -3,9 +3,10 @@ using Godot;
 
 namespace SuperMario;
 
-public partial class Coin : Area2D, IScoreEventSource, ITextPopupEventSource
+public partial class Coin : Area2D, IScoreEventSource, ICoinEventSource, ITextPopupEventSource
 {
     public event Action<int> ScoreEarned;
+    public event Action<int> CoinsCollected;
     public event Action<string, Vector2> TextPopupRequested;
 
     private bool _collected;
@@ -49,6 +50,7 @@ public partial class Coin : Area2D, IScoreEventSource, ITextPopupEventSource
         if (_collected || body is not PlayerController) return;
         _collected = true;
         ScoreEarned?.Invoke(Constants.CoinValue);
+        CoinsCollected?.Invoke(1);
         TextPopupRequested?.Invoke("+" + Constants.CoinValue, GlobalPosition);
         QueueFree();
     }
