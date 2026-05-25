@@ -21,7 +21,7 @@ public partial class Starman : CharacterBody2D, IScoreEventSource
         if (_collected || body is not PlayerController player) return;
         _collected = true;
         ScoreEarned?.Invoke(Constants.StarmanPickupScore);
-        TextPopupSpawner.Spawn(Constants.StarmanPickupScore.ToString(), GlobalPosition);
+        TextSpawner.Spawn(Constants.StarmanPickupScore.ToString(), GlobalPosition);
         player.ApplyStarman();
         QueueFree();
     }

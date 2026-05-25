@@ -19,7 +19,7 @@ public partial class FireFlower : Area2D, IScoreEventSource
         if (_collected || body is not PlayerController player) return;
         _collected = true;
         ScoreEarned?.Invoke(Constants.MushroomScore);
-        TextPopupSpawner.Spawn(Constants.MushroomScore.ToString(), GlobalPosition);
+        TextSpawner.Spawn(Constants.MushroomScore.ToString(), GlobalPosition);
         player.ApplyFireFlower();
         QueueFree();
     }

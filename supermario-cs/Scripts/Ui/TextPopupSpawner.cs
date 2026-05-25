@@ -2,9 +2,9 @@ using Godot;
 
 namespace SuperMario;
 
-public partial class TextPopupSpawner : Node2D
+public partial class TextSpawner : Node2D
 {
-    public static TextPopupSpawner Instance { get; private set; }
+    public static TextSpawner Instance { get; private set; }
 
     public override void _EnterTree()
     {
@@ -19,7 +19,7 @@ public partial class TextPopupSpawner : Node2D
     public static void Spawn(string text, Vector2 worldPosition)
     {
         if (Instance == null)
-            throw new System.InvalidOperationException($"{nameof(TextPopupSpawner)} requires an active instance.");
+            throw new System.InvalidOperationException($"{nameof(TextSpawner)} requires an active instance.");
 
         Instance.SpawnPopup(text, worldPosition);
     }

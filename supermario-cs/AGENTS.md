@@ -122,7 +122,7 @@ Four allowed coupling patterns:
 3. Session-scoped events: gameplay entities announce state changes through `GameSession.Instance.Emit...` methods; `GameSession` owns the corresponding events and is the sole writer to `GameState`.
 4. Sibling interactions: direct calls via combat interfaces; `Hitbox` → `PlayerController.TakeDamage`; `KillVolume` → `PlayerController.KillPlayer`.
 
-Pickups emit events, never mutate state. For example, `Coin` calls `GameSession.Instance.EmitScoreEarned(points)` and `TextPopupSpawner.EmitTextPopupRequested(text, GlobalPosition)`. `GameSession` listens to score events for state updates; the static `TextPopupSpawner` owns `TextPopupRequested` and spawns floating text.
+Pickups emit events, never mutate state. For example, `Coin` calls `GameSession.Instance.EmitScoreEarned(points)` and `TextSpawner.EmitTextPopupRequested(text, GlobalPosition)`. `GameSession` listens to score events for state updates; the static `TextSpawner` owns `TextPopupRequested` and spawns floating text.
 
 `GameSession.Instance` is the entity-facing locator. It exposes `State` for reads, `CurrentLevel` as the parent for runtime-spawned children like projectiles, and `Emit...` methods for session-scoped events. Writes to `GameState` go through `GameSession`, with `GameSession` as the sole writer.
 

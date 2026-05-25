@@ -50,7 +50,7 @@ public partial class Coin : Area2D, IScoreEventSource, ICoinEventSource
         _collected = true;
         ScoreEarned?.Invoke(Constants.CoinValue);
         CoinCollected?.Invoke(1);
-        TextPopupSpawner.Spawn(Constants.CoinValue.ToString(), GlobalPosition);
+        TextSpawner.Spawn(Constants.CoinValue.ToString(), GlobalPosition);
         QueueFree();
     }
 }

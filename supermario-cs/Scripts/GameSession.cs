@@ -51,7 +51,7 @@ public partial class GameSession : Node
         AddChild(_hud);
         _hud.Bind(this);
 
-        AddChild(new TextPopupSpawner());
+        AddChild(new TextSpawner());
 
         LoadCurrentLevel();
     }
