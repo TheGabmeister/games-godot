@@ -6,7 +6,7 @@ namespace SuperMario;
 public partial class Coin : Area2D, IScoreEventSource, ICoinEventSource, ITextPopupEventSource
 {
     public event Action<int> ScoreEarned;
-    public event Action<int> CoinsCollected;
+    public event Action<int> CoinCollected;
     public event Action<string, Vector2> TextPopupRequested;
 
     private bool _collected;
@@ -50,7 +50,7 @@ public partial class Coin : Area2D, IScoreEventSource, ICoinEventSource, ITextPo
         if (_collected || body is not PlayerController) return;
         _collected = true;
         ScoreEarned?.Invoke(Constants.CoinValue);
-        CoinsCollected?.Invoke(1);
+        CoinCollected?.Invoke(1);
         TextPopupRequested?.Invoke("+" + Constants.CoinValue, GlobalPosition);
         QueueFree();
     }

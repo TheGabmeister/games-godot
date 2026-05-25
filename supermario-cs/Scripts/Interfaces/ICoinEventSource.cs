@@ -4,5 +4,5 @@ namespace SuperMario;
 
 public interface ICoinEventSource
 {
-    event Action<int> CoinsCollected;
+    event Action<int> CoinCollected;
 }
