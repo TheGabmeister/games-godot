@@ -22,7 +22,7 @@ public partial class BulletBillCannon : Node2D
     {
         var bb = BulletBillScene.Instantiate<BulletBill>();
         bb.Init(GlobalPosition, Mathf.Sign(Facing) == 0 ? -1 : (int)Mathf.Sign(Facing));
-        var parent = (Node)GameSession.Instance.CurrentLevel;
+        var parent = (Node)GameMode.Instance.CurrentLevel;
         parent.AddChild(bb);
     }
 }

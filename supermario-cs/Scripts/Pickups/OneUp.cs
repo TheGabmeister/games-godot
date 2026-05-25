@@ -17,7 +17,7 @@ public partial class OneUp : CharacterBody2D
     {
         if (_collected || body is not PlayerController) return;
         _collected = true;
-        GameSession.Instance.EmitOneUpAwarded();
+        GameMode.Instance.EmitOneUpAwarded();
         QueueFree();
     }
 }

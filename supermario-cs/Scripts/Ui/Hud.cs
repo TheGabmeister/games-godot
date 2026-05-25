@@ -10,9 +10,9 @@ public partial class Hud : CanvasLayer
     [Export] public Label TimeLabel;
     [Export] public Label LivesLabel;
 
-    private GameSession _session;
+    private GameMode _session;
 
-    public void Bind(GameSession session)
+    public void Bind(GameMode session)
     {
         _session = session;
         session.ScoreChanged += OnScoreChanged;

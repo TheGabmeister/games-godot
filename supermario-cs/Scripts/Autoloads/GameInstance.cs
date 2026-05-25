@@ -2,13 +2,13 @@ using Godot;
 
 namespace SuperMario;
 
-public partial class GameManager : Node
+public partial class GameInstance : Node
 {
-    public static GameManager Instance { get; private set; }
+    public static GameInstance Instance { get; private set; }
 
     private PackedScene _mainMenuScene;
     private PackedScene _gameOverScene;
-    private GameSession _session;
+    private GameMode _session;
     private Node _levelRoot;
     private Node _currentChild;
 
@@ -35,7 +35,7 @@ public partial class GameManager : Node
 
     public void StartGame()
     {
-        _session = new GameSession { Name = "GameSession" };
+        _session = new GameMode { Name = "GameMode" };
         _session.SessionEnded += LoadGameOver;
         SetActiveNode(_session);
         _session.Start();

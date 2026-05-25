@@ -3,9 +3,9 @@ using Godot;
 
 namespace SuperMario;
 
-public partial class GameSession : Node
+public partial class GameMode : Node
 {
-    public static GameSession Instance { get; private set; }
+    public static GameMode Instance { get; private set; }
 
     public event Action SessionEnded;
     public event Action OneUpAwarded;
