@@ -6,8 +6,8 @@ namespace SuperMario;
 public partial class PlayerController : CharacterBody2D
 {
     public event Action Died;
-
-    [Export] public PackedScene FireballScene;
+    public event Action<PlayerPowerState> PowerStateChanged;
+    public event Action<Vector2, int, PlayerController> FireballRequested;
 
     private static readonly StringName InputLeft = "move_left";
     private static readonly StringName InputRight = "move_right";
@@ -43,8 +43,12 @@ public partial class PlayerController : CharacterBody2D
         _blinker.Target = _visual;
         _muzzle = GetNode<Marker2D>("Muzzle");
 
-        _state = GameSession.Instance.State.PowerState;
         ApplyStateVisuals();
+    }
+
+    public void Initialize(PlayerPowerState initialState)
+    {
+        _state = initialState;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -96,11 +100,7 @@ public partial class PlayerController : CharacterBody2D
 
     private void SpawnFireball()
     {
-        var fb = FireballScene.Instantiate<Fireball>();
-        var pos = _muzzle.GlobalPosition;
-        fb.Init(pos, _facing, this);
-        var parent = (Node)GameSession.Instance.CurrentLevel;
-        parent.AddChild(fb);
+        FireballRequested?.Invoke(_muzzle.GlobalPosition, _facing, this);
         _activeFireballs++;
     }
 
@@ -160,7 +160,7 @@ public partial class PlayerController : CharacterBody2D
     private void SetState(PlayerPowerState newState)
     {
         _state = newState;
-        GameSession.Instance.EmitPlayerPowerStateChanged(newState);
+        PowerStateChanged?.Invoke(newState);
         ApplyStateVisuals();
     }
 

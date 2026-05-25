@@ -1,9 +1,13 @@
+using System;
 using Godot;
 
 namespace SuperMario;
 
-public partial class Mushroom : CharacterBody2D
+public partial class Mushroom : CharacterBody2D, IScoreEventSource, ITextPopupEventSource
 {
+    public event Action<int> ScoreEarned;
+    public event Action<string, Vector2> TextPopupRequested;
+
     [Export] public Area2D PickupTrigger;
 
     private bool _collected;
@@ -17,8 +21,8 @@ public partial class Mushroom : CharacterBody2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        GameSession.Instance.EmitScoreEarned(Constants.MushroomScore);
-        TextPopupSpawner.EmitTextPopupRequested("+" + Constants.MushroomScore, GlobalPosition);
+        ScoreEarned?.Invoke(Constants.MushroomScore);
+        TextPopupRequested?.Invoke("+" + Constants.MushroomScore, GlobalPosition);
         player.ApplyMushroom();
         QueueFree();
     }

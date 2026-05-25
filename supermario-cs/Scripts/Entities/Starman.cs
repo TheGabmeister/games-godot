@@ -1,9 +1,13 @@
+using System;
 using Godot;
 
 namespace SuperMario;
 
-public partial class Starman : CharacterBody2D
+public partial class Starman : CharacterBody2D, IScoreEventSource, ITextPopupEventSource
 {
+    public event Action<int> ScoreEarned;
+    public event Action<string, Vector2> TextPopupRequested;
+
     [Export] public Area2D PickupTrigger;
 
     private bool _collected;
@@ -17,8 +21,8 @@ public partial class Starman : CharacterBody2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        GameSession.Instance.EmitScoreEarned(Constants.StarmanPickupScore);
-        TextPopupSpawner.EmitTextPopupRequested("+" + Constants.StarmanPickupScore, GlobalPosition);
+        ScoreEarned?.Invoke(Constants.StarmanPickupScore);
+        TextPopupRequested?.Invoke("+" + Constants.StarmanPickupScore, GlobalPosition);
         player.ApplyStarman();
         QueueFree();
     }

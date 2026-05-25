@@ -1,9 +1,13 @@
+using System;
 using Godot;
 
 namespace SuperMario;
 
-public partial class Coin : Area2D
+public partial class Coin : Area2D, IScoreEventSource, ITextPopupEventSource
 {
+    public event Action<int> ScoreEarned;
+    public event Action<string, Vector2> TextPopupRequested;
+
     private bool _collected;
 
     public override void _Ready()
@@ -15,8 +19,8 @@ public partial class Coin : Area2D
     {
         if (_collected || body is not PlayerController) return;
         _collected = true;
-        GameSession.Instance.EmitScoreEarned(Constants.CoinValue);
-        TextPopupSpawner.EmitTextPopupRequested("+" + Constants.CoinValue, GlobalPosition);
+        ScoreEarned?.Invoke(Constants.CoinValue);
+        TextPopupRequested?.Invoke("+" + Constants.CoinValue, GlobalPosition);
         QueueFree();
     }
 }
