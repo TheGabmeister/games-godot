@@ -6,7 +6,6 @@ namespace SuperMario;
 public partial class Starman : CharacterBody2D, IScoreEventSource
 {
     public event Action<int> ScoreEarned;
-    public event Action<string, Vector2> TextPopupRequested;
 
     [Export] public Area2D PickupTrigger;
 
@@ -22,7 +21,7 @@ public partial class Starman : CharacterBody2D, IScoreEventSource
         if (_collected || body is not PlayerController player) return;
         _collected = true;
         ScoreEarned?.Invoke(Constants.StarmanPickupScore);
-        TextPopupSpawner.Spawn(this, Constants.StarmanPickupScore.ToString(), GlobalPosition);
+        TextPopupSpawner.Spawn(Constants.StarmanPickupScore.ToString(), GlobalPosition);
         player.ApplyStarman();
         QueueFree();
     }

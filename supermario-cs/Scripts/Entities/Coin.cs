@@ -7,7 +7,6 @@ public partial class Coin : Area2D, IScoreEventSource, ICoinEventSource
 {
     public event Action<int> ScoreEarned;
     public event Action<int> CoinCollected;
-    public event Action<string, Vector2> TextPopupRequested;
 
     private bool _collected;
 
@@ -51,7 +50,7 @@ public partial class Coin : Area2D, IScoreEventSource, ICoinEventSource
         _collected = true;
         ScoreEarned?.Invoke(Constants.CoinValue);
         CoinCollected?.Invoke(1);
-        TextPopupSpawner.Spawn(this, Constants.CoinValue.ToString(), GlobalPosition);
+        TextPopupSpawner.Spawn(Constants.CoinValue.ToString(), GlobalPosition);
         QueueFree();
     }
 }

@@ -8,7 +8,6 @@ public partial class LevelBase : Node2D
 {
     public event Action<int> ScoreEarned;
     public event Action<int> CoinsCollected;
-    public event Action<string, Vector2> TextPopupRequested;
 
     [Export] public Marker2D PlayerStart;
     [Export] public GoalTrigger GoalTrigger;
