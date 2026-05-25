@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://cr75qnkiioj5i" path="res://scenes/level_base.tscn" id="1_base"]
 [ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://scenes/entities/platform.tscn" id="2_plat"]
+[ext_resource type="Script" path="res://Scripts/Level/CoinMarker.cs" id="3_coin_marker"]
 
 [node name="World11" unique_id=144288357 instance=ExtResource("1_base")]
 
@@ -16,3 +17,15 @@ position = Vector2(172, 320)
 
 [node name="Platform3" parent="." index="5" unique_id=905141241 instance=ExtResource("2_plat")]
 position = Vector2(291, 321)
+
+[node name="CoinMarker" type="Marker2D" parent="." index="6"]
+position = Vector2(128, 280)
+script = ExtResource("3_coin_marker")
+
+[node name="CoinMarker2" type="Marker2D" parent="." index="7"]
+position = Vector2(160, 280)
+script = ExtResource("3_coin_marker")
+
+[node name="CoinMarker3" type="Marker2D" parent="." index="8"]
+position = Vector2(192, 280)
+script = ExtResource("3_coin_marker")

@@ -23,6 +23,36 @@ public partial class LevelBase : Node2D
             throw new InvalidOperationException($"{nameof(LevelBase)} requires {nameof(GoalTrigger)} to be assigned in the editor.");
 
         WireEventSources(this);
+        SpawnCoinMarkers();
+    }
+
+    private void SpawnCoinMarkers()
+    {
+        var markers = new List<CoinMarker>();
+        CollectCoinMarkers(this, markers);
+
+        foreach (var marker in markers)
+        {
+            var coin = Coin.Create(marker.GlobalPosition);
+            AddRuntimeEntity(coin);
+        }
+    }
+
+    private static void CollectCoinMarkers(Node root, List<CoinMarker> markers)
+    {
+        foreach (var child in root.GetChildren())
+        {
+            if (child is CoinMarker marker)
+                markers.Add(marker);
+
+            CollectCoinMarkers(child, markers);
+        }
+    }
+
+    private void AddRuntimeEntity(Node entity)
+    {
+        AddChild(entity);
+        WireEventSources(entity);
     }
 
     private void OnChildEnteredTree(Node child)
