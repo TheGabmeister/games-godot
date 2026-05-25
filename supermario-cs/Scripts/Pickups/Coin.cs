@@ -1,23 +1,21 @@
-using System;
 using Godot;
 
 namespace SuperMario;
 
-public partial class Coin : Area2D, IScoreEventSource, ICoinEventSource
+public partial class Coin : Area2D
 {
-    public event Action<int> ScoreEarned;
-    public event Action<int> CoinCollected;
-
+    private GameEvents _events;
     private bool _collected;
 
-    public static Coin Create(Vector2 globalPosition)
+    public static Coin Create(Vector2 globalPosition, GameEvents events)
     {
         var coin = new Coin
         {
             Name = "Coin",
             GlobalPosition = globalPosition,
             CollisionLayer = Layers.PickupTrigger,
-            CollisionMask = Layers.Player
+            CollisionMask = Layers.Player,
+            _events = events
         };
 
         var visual = new ColorRect
@@ -48,8 +46,8 @@ public partial class Coin : Area2D, IScoreEventSource, ICoinEventSource
     {
         if (_collected || body is not PlayerController) return;
         _collected = true;
-        ScoreEarned?.Invoke(Constants.CoinValue);
-        CoinCollected?.Invoke(1);
+        _events.EmitScoreEarned(Constants.CoinValue);
+        _events.EmitCoinsCollected(1);
         TextSpawner.Spawn(Constants.CoinValue.ToString(), GlobalPosition);
         QueueFree();
     }

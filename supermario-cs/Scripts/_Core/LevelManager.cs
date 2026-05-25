@@ -13,6 +13,8 @@ public partial class LevelManager : Node2D
     [Export] public GoalTrigger GoalTrigger;
     [Export] private Node _markerRoot;
 
+    public GameEvents Events;
+
     private readonly HashSet<Node> _wiredEventSources = new();
 
     public override void _Ready()
@@ -37,7 +39,7 @@ public partial class LevelManager : Node2D
             switch (child)
             {
                 case CoinMarker coinMarker:
-                    AddRuntimeEntity(Coin.Create(coinMarker.GlobalPosition));
+                    AddRuntimeEntity(Coin.Create(coinMarker.GlobalPosition, Events));
                     break;
             }
         }

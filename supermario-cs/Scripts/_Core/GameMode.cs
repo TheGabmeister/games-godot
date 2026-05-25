@@ -20,6 +20,7 @@ public partial class GameMode : Node
     public SaveData SaveData { get; } = new();
     public LevelManager CurrentLevel { get; private set; }
 
+    private readonly GameEvents _events = new();
     private Campaign _campaign;
     private int _currentLevelIndex;
     private Hud _hud;
@@ -39,6 +40,9 @@ public partial class GameMode : Node
 
     public void Start(int startLevelIndex = 0)
     {
+        _events.ScoreEarned += OnScoreEarned;
+        _events.CoinsCollected += OnCoinCollected;
+
         _campaign = GD.Load<Campaign>(Config.CampaignPath);
         _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
         _fireballScene = GD.Load<PackedScene>(Config.FireballScenePath);
@@ -94,7 +98,8 @@ public partial class GameMode : Node
             MusicManager.Instance?.Play(def.MusicTrack);
 
         var level = def.LevelScene.Instantiate<LevelManager>();
-        
+        level.Events = _events;
+
         SwapLevel(level);
         level.GoalTrigger.Reached += OnLevelCompleted;
         level.ScoreEarned += OnScoreEarned;
