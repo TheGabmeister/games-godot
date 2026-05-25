@@ -23,6 +23,10 @@ window/size/window_width_override=1024
 window/size/window_height_override=896
 window/stretch/mode="canvas_items"
 
+[autoload]
+
+GameInstance="*res://Scripts/GameInstance.cs"
+
 [dotnet]
 
 project/assembly_name="supermario-cs"

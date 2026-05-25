@@ -6,6 +6,7 @@ public partial class GameInstance : Node
 {
     public static GameInstance Instance { get; private set; }
 
+
     private PackedScene _mainMenuScene;
     private PackedScene _gameOverScene;
     private GameMode _session;
@@ -25,7 +26,44 @@ public partial class GameInstance : Node
         _mainMenuScene = GD.Load<PackedScene>(Config.MainMenuScenePath);
         _gameOverScene = GD.Load<PackedScene>(Config.GameOverScenePath);
 
-        LoadMainMenu();
+        CallDeferred(MethodName.PostBoot);
+    }
+
+    private void PostBoot()
+    {
+        var current = GetTree().CurrentScene;
+
+        if (current == null || current.SceneFilePath == Config.BootScenePath)
+        {
+            LoadMainMenu();
+            return;
+        }
+
+        if (OS.HasFeature("editor") && current is LevelManager level)
+        {
+            var index = LookupCampaignIndex(level.SceneFilePath);
+            if (index >= 0)
+            {
+                GetTree().UnloadCurrentScene();
+                StartGame(index);
+                return;
+            }
+            GD.PushWarning($"GameInstance: F6'd level '{level.SceneFilePath}' is not in the campaign; leaving scene as-is.");
+            return;
+        }
+
+        // Sandbox scene — services are available, no session is started.
+    }
+
+    private static int LookupCampaignIndex(string scenePath)
+    {
+        var campaign = GD.Load<Campaign>(Config.CampaignPath);
+        for (int i = 0; i < campaign.Levels.Length; i++)
+        {
+            if (campaign.Levels[i].LevelScene?.ResourcePath == scenePath)
+                return i;
+        }
+        return -1;
     }
 
     public void LoadMainMenu()
@@ -37,12 +75,12 @@ public partial class GameInstance : Node
 
     private void OnStartPressed() => StartGame();
 
-    public void StartGame()
+    public void StartGame(int startLevelIndex = 0)
     {
         _session = new GameMode { Name = "GameMode" };
         _session.SessionEnded += LoadGameOver;
         SetActiveNode(_session);
-        _session.Start();
+        _session.Start(startLevelIndex);
     }
 
     private void LoadGameOver()

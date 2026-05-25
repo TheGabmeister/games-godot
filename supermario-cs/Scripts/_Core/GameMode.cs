@@ -37,12 +37,12 @@ public partial class GameMode : Node
         if (Instance == this) Instance = null;
     }
 
-    public void Start()
+    public void Start(int startLevelIndex = 0)
     {
         _campaign = GD.Load<Campaign>(Config.CampaignPath);
         _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
         _fireballScene = GD.Load<PackedScene>(Config.FireballScenePath);
-        _currentLevelIndex = 0;
+        _currentLevelIndex = startLevelIndex;
 
         OneUpAwarded += OnOneUpAwarded;
 
