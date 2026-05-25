@@ -1,13 +1,20 @@
-using System;
 using Godot;
 
 namespace SuperMario;
 
-public partial class FireFlower : Area2D, IScoreEventSource
+public partial class FireFlower : Area2D
 {
-    public event Action<int> ScoreEarned;
-
+    private GameEvents _events;
     private bool _collected;
+
+    public static FireFlower Create(Vector2 globalPosition, GameEvents events)
+    {
+        var scene = GD.Load<PackedScene>(Config.FireFlowerScenePath);
+        var f = scene.Instantiate<FireFlower>();
+        f.GlobalPosition = globalPosition;
+        f._events = events;
+        return f;
+    }
 
     public override void _Ready()
     {
@@ -18,7 +25,7 @@ public partial class FireFlower : Area2D, IScoreEventSource
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        ScoreEarned?.Invoke(Constants.MushroomScore);
+        _events.EmitScoreEarned(Constants.MushroomScore);
         TextSpawner.Spawn(Constants.MushroomScore.ToString(), GlobalPosition);
         player.ApplyFireFlower();
         QueueFree();

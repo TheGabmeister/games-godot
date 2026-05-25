@@ -1,26 +1,32 @@
-using System;
 using Godot;
 
 namespace SuperMario;
 
-public partial class QuestionBlock : StaticBody2D, IBumpable, IScoreEventSource, ICoinEventSource
+public partial class QuestionBlock : StaticBody2D, IBumpable
 {
-    public event Action<int> ScoreEarned;
-    public event Action<int> CoinCollected;
-
     [Export] public Bumpable Bumpable;
     [Export] public ColorRect Visual;
     [Export] public Color UsedColor = new Color(0.55f, 0.35f, 0.10f);
 
+    private GameEvents _events;
     private bool _used;
+
+    public static QuestionBlock Create(Vector2 globalPosition, GameEvents events)
+    {
+        var scene = GD.Load<PackedScene>(Config.QuestionBlockScenePath);
+        var qb = scene.Instantiate<QuestionBlock>();
+        qb.GlobalPosition = globalPosition;
+        qb._events = events;
+        return qb;
+    }
 
     public void OnBumped(PlayerController player)
     {
         if (_used) return;
         _used = true;
         Visual.Color = UsedColor;
-        ScoreEarned?.Invoke(Constants.CoinValue);
-        CoinCollected?.Invoke(1);
+        _events.EmitScoreEarned(Constants.CoinValue);
+        _events.EmitCoinsCollected(1);
         Bumpable.Bump();
     }
 }

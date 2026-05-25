@@ -6,7 +6,7 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_m"]
 size = Vector2(32, 32)
 
-[node name="Mushroom" type="CharacterBody2D"]
+[node name="Mushroom" type="CharacterBody2D" node_paths=PackedStringArray("PickupTrigger")]
 collision_layer = 4
 collision_mask = 8
 script = ExtResource("1_m")

@@ -1,15 +1,22 @@
-using System;
 using Godot;
 
 namespace SuperMario;
 
-public partial class Starman : CharacterBody2D, IScoreEventSource
+public partial class Starman : CharacterBody2D
 {
-    public event Action<int> ScoreEarned;
-
     [Export] public Area2D PickupTrigger;
 
+    private GameEvents _events;
     private bool _collected;
+
+    public static Starman Create(Vector2 globalPosition, GameEvents events)
+    {
+        var scene = GD.Load<PackedScene>(Config.StarmanScenePath);
+        var s = scene.Instantiate<Starman>();
+        s.GlobalPosition = globalPosition;
+        s._events = events;
+        return s;
+    }
 
     public override void _Ready()
     {
@@ -20,7 +27,7 @@ public partial class Starman : CharacterBody2D, IScoreEventSource
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        ScoreEarned?.Invoke(Constants.StarmanPickupScore);
+        _events.EmitScoreEarned(Constants.StarmanPickupScore);
         TextSpawner.Spawn(Constants.StarmanPickupScore.ToString(), GlobalPosition);
         player.ApplyStarman();
         QueueFree();

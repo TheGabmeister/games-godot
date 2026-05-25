@@ -102,8 +102,6 @@ public partial class GameMode : Node
 
         SwapLevel(level);
         level.GoalTrigger.Reached += OnLevelCompleted;
-        level.ScoreEarned += OnScoreEarned;
-        level.CoinsCollected += OnCoinCollected;
 
         var player = _playerScene.Instantiate<PlayerController>();
         player.Initialize(SaveData.PowerState);

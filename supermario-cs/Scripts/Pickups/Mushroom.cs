@@ -1,15 +1,22 @@
-using System;
 using Godot;
 
 namespace SuperMario;
 
-public partial class Mushroom : CharacterBody2D, IScoreEventSource
+public partial class Mushroom : CharacterBody2D
 {
-    public event Action<int> ScoreEarned;
-
     [Export] public Area2D PickupTrigger;
 
+    private GameEvents _events;
     private bool _collected;
+
+    public static Mushroom Create(Vector2 globalPosition, GameEvents events)
+    {
+        var scene = GD.Load<PackedScene>(Config.MushroomScenePath);
+        var m = scene.Instantiate<Mushroom>();
+        m.GlobalPosition = globalPosition;
+        m._events = events;
+        return m;
+    }
 
     public override void _Ready()
     {
@@ -20,7 +27,7 @@ public partial class Mushroom : CharacterBody2D, IScoreEventSource
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        ScoreEarned?.Invoke(Constants.MushroomScore);
+        _events.EmitScoreEarned(Constants.MushroomScore);
         TextSpawner.Spawn(Constants.MushroomScore.ToString(), GlobalPosition);
         player.ApplyMushroom();
         QueueFree();
