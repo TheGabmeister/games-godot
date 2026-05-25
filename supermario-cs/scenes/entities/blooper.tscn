@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://ekkinwvmyyxy"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/Blooper.cs" id="1_bl"]
-[ext_resource type="Script" path="res://Scripts/Components/Hitbox.cs" id="2_h"]
+[ext_resource type="Script" uid="uid://be815ntp2xfof" path="res://Scripts/Enemies/Blooper.cs" id="1_bl"]
+[ext_resource type="Script" uid="uid://c1nnlv03sy2w" path="res://Scripts/Components/Hitbox.cs" id="2_h"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bl"]
 size = Vector2(32, 32)

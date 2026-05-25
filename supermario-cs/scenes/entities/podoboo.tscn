@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dod38niadmirw"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/Podoboo.cs" id="1_p"]
+[ext_resource type="Script" uid="uid://dxau0ell8l8g1" path="res://Scripts/Enemies/Podoboo.cs" id="1_p"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_p"]
 radius = 12.0

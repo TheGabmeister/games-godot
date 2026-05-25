@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://vntvrpvknbn1"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/BrickBlock.cs" id="1_brick"]
-[ext_resource type="Script" path="res://Scripts/Components/Bumpable.cs" id="2_bump"]
+[ext_resource type="Script" uid="uid://cw7rec11xctqm" path="res://Scripts/Level/BrickBlock.cs" id="1_brick"]
+[ext_resource type="Script" uid="uid://cx2v8in11742e" path="res://Scripts/Components/Bumpable.cs" id="2_bump"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_brick"]
 size = Vector2(32, 32)

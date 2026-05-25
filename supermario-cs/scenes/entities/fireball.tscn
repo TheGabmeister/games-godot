@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b2ekckveeaw7y"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/Fireball.cs" id="1_fb"]
-[ext_resource type="Script" path="res://Scripts/Components/Lifetime.cs" id="2_lf"]
+[ext_resource type="Script" uid="uid://bisjmvnf0kqxu" path="res://Scripts/Projectiles/Fireball.cs" id="1_fb"]
+[ext_resource type="Script" uid="uid://dte2bnpt13dk5" path="res://Scripts/Components/Lifetime.cs" id="2_lf"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_fb"]
 radius = 8.0

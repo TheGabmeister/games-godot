@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://uyhey6bwhiya"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/Mushroom.cs" id="1_m"]
-[ext_resource type="Script" path="res://Scripts/Components/Walker.cs" id="2_w"]
+[ext_resource type="Script" uid="uid://d0ae0fchk347a" path="res://Scripts/Pickups/Mushroom.cs" id="1_m"]
+[ext_resource type="Script" uid="uid://cdgor4njij6ve" path="res://Scripts/Components/Walker.cs" id="2_w"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_m"]
 size = Vector2(32, 32)

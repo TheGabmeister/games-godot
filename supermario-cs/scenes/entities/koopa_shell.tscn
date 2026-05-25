@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://d2debwbwsi04k"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/KoopaShell.cs" id="1_ks"]
-[ext_resource type="Script" path="res://Scripts/Components/Walker.cs" id="2_w"]
-[ext_resource type="Script" path="res://Scripts/Components/Hitbox.cs" id="3_h"]
+[ext_resource type="Script" uid="uid://d112jmhag0t4v" path="res://Scripts/Enemies/KoopaShell.cs" id="1_ks"]
+[ext_resource type="Script" uid="uid://cdgor4njij6ve" path="res://Scripts/Components/Walker.cs" id="2_w"]
+[ext_resource type="Script" uid="uid://c1nnlv03sy2w" path="res://Scripts/Components/Hitbox.cs" id="3_h"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ks"]
 size = Vector2(28, 28)

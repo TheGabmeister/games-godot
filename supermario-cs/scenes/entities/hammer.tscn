@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dxilyuakolaui"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/Hammer.cs" id="1_h"]
-[ext_resource type="Script" path="res://Scripts/Components/Lifetime.cs" id="2_lf"]
+[ext_resource type="Script" uid="uid://cw5pteqihs5h7" path="res://Scripts/Projectiles/Hammer.cs" id="1_h"]
+[ext_resource type="Script" uid="uid://dte2bnpt13dk5" path="res://Scripts/Components/Lifetime.cs" id="2_lf"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h"]
 size = Vector2(16, 16)

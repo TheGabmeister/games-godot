@@ -57,7 +57,7 @@ GameManager (autoload) → LevelRoot → one of:
   scenes/game_over.tscn
 ```
 
-`GameSession` exists only during a playthrough. It owns `GameState`, the `Campaign` cursor, and the active `LevelBase`. The player is re-spawned per level load, not persisted.
+`GameSession` exists only during a playthrough. It owns `GameState`, the `Campaign` cursor, and the active `LevelManager`. The player is re-spawned per level load, not persisted.
 
 ### Autoloads (3)
 
@@ -81,17 +81,17 @@ Registered in `project.godot` in this order:
 
 Important — no cycles in `.tscn`/`.tres`: `LevelDefinition.tres` references its `LevelScene`. The level `.tscn` does not reference the `.tres` back — `GameSession` reads the `LevelDefinition` itself and uses the instantiated level only as a holder of scene references.
 
-### LevelBase and inherited level scenes
+### LevelManager and inherited level scenes
 
 `scenes/level_base.tscn` is the template, with required children:
 
-- `PlayerStart` (`Marker2D`) — required spawn location, exposed by `LevelBase` as an `[Export]`
+- `PlayerStart` (`Marker2D`) — required spawn location, exposed by `LevelManager` as an `[Export]`
 - `CleanupVolume` (`Area2D`) — broad mask, kills/frees anything that falls in
-- `GoalTrigger` (`Area2D`) — emits `Reached` on player overlap, exposed by `LevelBase` as an `[Export]`
+- `GoalTrigger` (`Area2D`) — emits `Reached` on player overlap, exposed by `LevelManager` as an `[Export]`
 
 Each `scenes/levels/world_X_Y.tscn` inherits from `level_base.tscn` and adds level content.
 
-`LevelBase` is a passive holder of required `[Export]` references (`PlayerStart`, `GoalTrigger`) so `GameSession` can spawn the player and wire the goal without reaching into the scene by node name. Required exports are validated in `_Ready()`. All session-scoped concerns (music, HUD, lives, scene transitions, player spawn, goal wiring) live in `GameSession`.
+`LevelManager` is a passive holder of required `[Export]` references (`PlayerStart`, `GoalTrigger`) so `GameSession` can spawn the player and wire the goal without reaching into the scene by node name. Required exports are validated in `_Ready()`. All session-scoped concerns (music, HUD, lives, scene transitions, player spawn, goal wiring) live in `GameSession`.
 
 ### Combat interfaces
 

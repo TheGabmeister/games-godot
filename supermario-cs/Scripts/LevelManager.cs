@@ -4,7 +4,7 @@ using Godot;
 
 namespace SuperMario;
 
-public partial class LevelBase : Node2D
+public partial class LevelManager : Node2D
 {
     public event Action<int> ScoreEarned;
     public event Action<int> CoinsCollected;
@@ -17,10 +17,10 @@ public partial class LevelBase : Node2D
     public override void _Ready()
     {
         if (PlayerStart == null)
-            throw new InvalidOperationException($"{nameof(LevelBase)} requires {nameof(PlayerStart)} to be assigned in the editor.");
+            throw new InvalidOperationException($"{nameof(LevelManager)} requires {nameof(PlayerStart)} to be assigned in the editor.");
 
         if (GoalTrigger == null)
-            throw new InvalidOperationException($"{nameof(LevelBase)} requires {nameof(GoalTrigger)} to be assigned in the editor.");
+            throw new InvalidOperationException($"{nameof(LevelManager)} requires {nameof(GoalTrigger)} to be assigned in the editor.");
 
         WireEventSources(this);
         SpawnCoinMarkers();

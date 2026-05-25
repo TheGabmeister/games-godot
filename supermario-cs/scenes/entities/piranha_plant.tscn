@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bxecma326g7jo"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/PiranhaPlant.cs" id="1_pp"]
+[ext_resource type="Script" uid="uid://bhvd44k232e2e" path="res://Scripts/Enemies/PiranhaPlant.cs" id="1_pp"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pp"]
 size = Vector2(32, 48)

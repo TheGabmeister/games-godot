@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://by22753kahfhg"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/BuzzyBeetle.cs" id="1_b"]
-[ext_resource type="Script" path="res://Scripts/Components/Walker.cs" id="2_w"]
-[ext_resource type="Script" path="res://Scripts/Components/Hitbox.cs" id="3_h"]
+[ext_resource type="Script" uid="uid://cci4yf3picr7b" path="res://Scripts/Enemies/BuzzyBeetle.cs" id="1_b"]
+[ext_resource type="Script" uid="uid://cdgor4njij6ve" path="res://Scripts/Components/Walker.cs" id="2_w"]
+[ext_resource type="Script" uid="uid://c1nnlv03sy2w" path="res://Scripts/Components/Hitbox.cs" id="3_h"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_b"]
 size = Vector2(32, 32)

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bkniq27ca3fhg"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/BulletBill.cs" id="1_bb"]
-[ext_resource type="Script" path="res://Scripts/Components/Lifetime.cs" id="2_lf"]
+[ext_resource type="Script" uid="uid://d362rpviuli11" path="res://Scripts/Enemies/BulletBill.cs" id="1_bb"]
+[ext_resource type="Script" uid="uid://dte2bnpt13dk5" path="res://Scripts/Components/Lifetime.cs" id="2_lf"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bb"]
 size = Vector2(24, 16)

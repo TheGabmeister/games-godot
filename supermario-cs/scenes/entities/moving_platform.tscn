@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cos3c4x2uvahs"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/MovingPlatform.cs" id="1_mp"]
+[ext_resource type="Script" uid="uid://ddggb24i3qriy" path="res://Scripts/Level/MovingPlatform.cs" id="1_mp"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_mp"]
 size = Vector2(96, 16)

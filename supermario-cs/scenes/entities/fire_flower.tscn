@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b2eonn62eme7y"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/FireFlower.cs" id="1_f"]
+[ext_resource type="Script" uid="uid://dmypkd73j8o36" path="res://Scripts/Pickups/FireFlower.cs" id="1_f"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_f"]
 size = Vector2(32, 32)

@@ -18,7 +18,7 @@ public partial class GameSession : Node
     private const float DeathPauseSeconds = 1.5f;
 
     public SaveData SaveData { get; } = new();
-    public LevelBase CurrentLevel { get; private set; }
+    public LevelManager CurrentLevel { get; private set; }
 
     private Campaign _campaign;
     private int _currentLevelIndex;
@@ -93,7 +93,7 @@ public partial class GameSession : Node
         if (def.MusicTrack != null)
             MusicManager.Instance?.Play(def.MusicTrack);
 
-        var level = def.LevelScene.Instantiate<LevelBase>();
+        var level = def.LevelScene.Instantiate<LevelManager>();
         
         SwapLevel(level);
         level.GoalTrigger.Reached += OnLevelCompleted;
@@ -187,7 +187,7 @@ public partial class GameSession : Node
         TimeRemainingChanged?.Invoke(SaveData.TimeRemaining);
     }
 
-    private void SwapLevel(LevelBase next)
+    private void SwapLevel(LevelManager next)
     {
         if (CurrentLevel != null)
         {

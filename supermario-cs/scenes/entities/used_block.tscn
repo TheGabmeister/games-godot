@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://droxl3ghxi4oi"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/UsedBlock.cs" id="1_u"]
+[ext_resource type="Script" uid="uid://tuvauikcmx64" path="res://Scripts/Level/UsedBlock.cs" id="1_u"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u"]
 size = Vector2(32, 32)

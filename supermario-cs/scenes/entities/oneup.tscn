@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b6crbcehkhoeq"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/OneUp.cs" id="1_o"]
-[ext_resource type="Script" path="res://Scripts/Components/Walker.cs" id="2_w"]
+[ext_resource type="Script" uid="uid://c8cdda01dva4s" path="res://Scripts/Pickups/OneUp.cs" id="1_o"]
+[ext_resource type="Script" uid="uid://cdgor4njij6ve" path="res://Scripts/Components/Walker.cs" id="2_w"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_o"]
 size = Vector2(32, 32)

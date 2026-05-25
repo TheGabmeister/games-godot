@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://602k00rp160i"]
 
-[ext_resource type="Script" path="res://Scripts/Entities/QuestionBlock.cs" id="1_q"]
-[ext_resource type="Script" path="res://Scripts/Components/Bumpable.cs" id="2_bump"]
+[ext_resource type="Script" uid="uid://cjp7cgpsjiwjm" path="res://Scripts/Level/QuestionBlock.cs" id="1_q"]
+[ext_resource type="Script" uid="uid://cx2v8in11742e" path="res://Scripts/Components/Bumpable.cs" id="2_bump"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_q"]
 size = Vector2(32, 32)
