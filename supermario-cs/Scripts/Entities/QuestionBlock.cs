@@ -6,7 +6,7 @@ namespace SuperMario;
 public partial class QuestionBlock : StaticBody2D, IBumpable, IScoreEventSource, ICoinEventSource
 {
     public event Action<int> ScoreEarned;
-    public event Action<int> CoinsCollected;
+    public event Action<int> CoinCollected;
 
     [Export] public Bumpable Bumpable;
     [Export] public ColorRect Visual;
@@ -20,7 +20,7 @@ public partial class QuestionBlock : StaticBody2D, IBumpable, IScoreEventSource,
         _used = true;
         Visual.Color = UsedColor;
         ScoreEarned?.Invoke(Constants.CoinValue);
-        CoinsCollected?.Invoke(1);
+        CoinCollected?.Invoke(1);
         Bumpable.Bump();
     }
 }

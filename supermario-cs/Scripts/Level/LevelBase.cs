@@ -70,7 +70,7 @@ public partial class LevelBase : Node2D
             scoreSource.ScoreEarned += points => ScoreEarned?.Invoke(points);
 
         if (root is ICoinEventSource coinSource)
-            coinSource.CoinsCollected += coins => CoinsCollected?.Invoke(coins);
+            coinSource.CoinCollected += coins => CoinsCollected?.Invoke(coins);
 
         if (root is ITextPopupEventSource textPopupSource)
             textPopupSource.TextPopupRequested += (text, worldPosition) =>
