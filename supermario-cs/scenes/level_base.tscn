@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cr75qnkiioj5i"]
 
-[ext_resource type="Script" uid="uid://4lxp7qyyhwua" path="res://Scripts/LevelManager.cs" id="1_base"]
+[ext_resource type="Script" uid="uid://4lxp7qyyhwua" path="res://Scripts/_Core/LevelManager.cs" id="1_base"]
 [ext_resource type="Script" uid="uid://ysjqgup4hr3h" path="res://Scripts/Level/CleanupVolume.cs" id="4_clean"]
 [ext_resource type="Script" uid="uid://bpgfny3koeblq" path="res://Scripts/Level/GoalTrigger.cs" id="5_goal"]
 
