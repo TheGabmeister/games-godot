@@ -18,14 +18,14 @@ position = Vector2(172, 320)
 [node name="Platform3" parent="." index="5" unique_id=905141241 instance=ExtResource("2_plat")]
 position = Vector2(291, 321)
 
-[node name="CoinMarker" type="Marker2D" parent="." index="6" unique_id=1158060375]
+[node name="CoinMarker" type="Marker2D" parent="Markers" parent_id_path=PackedInt32Array(326710066) index="0" unique_id=1158060375]
 position = Vector2(128, 280)
 script = ExtResource("3_coin_marker")
 
-[node name="CoinMarker2" type="Marker2D" parent="." index="7" unique_id=1255589448]
+[node name="CoinMarker2" type="Marker2D" parent="Markers" parent_id_path=PackedInt32Array(326710066) index="1" unique_id=1255589448]
 position = Vector2(160, 280)
 script = ExtResource("3_coin_marker")
 
-[node name="CoinMarker3" type="Marker2D" parent="." index="8" unique_id=895617369]
+[node name="CoinMarker3" type="Marker2D" parent="Markers" parent_id_path=PackedInt32Array(326710066) index="2" unique_id=895617369]
 position = Vector2(192, 280)
 script = ExtResource("3_coin_marker")

@@ -11,6 +11,7 @@ public partial class LevelManager : Node2D
 
     [Export] public Marker2D PlayerStart;
     [Export] public GoalTrigger GoalTrigger;
+    [Export] private Node _markerRoot;
 
     private readonly HashSet<Node> _wiredEventSources = new();
 
@@ -22,30 +23,23 @@ public partial class LevelManager : Node2D
         if (GoalTrigger == null)
             throw new InvalidOperationException($"{nameof(LevelManager)} requires {nameof(GoalTrigger)} to be assigned in the editor.");
 
+        if (_markerRoot == null)
+            throw new InvalidOperationException($"{nameof(LevelManager)} requires {nameof(_markerRoot)} to be assigned in the editor.");
+
         WireEventSources(this);
-        SpawnCoinMarkers();
+        SpawnMarkers();
     }
 
-    private void SpawnCoinMarkers()
+    private void SpawnMarkers()
     {
-        var markers = new List<CoinMarker>();
-        CollectCoinMarkers(this, markers);
-
-        foreach (var marker in markers)
+        foreach (var child in _markerRoot.GetChildren())
         {
-            var coin = Coin.Create(marker.GlobalPosition);
-            AddRuntimeEntity(coin);
-        }
-    }
-
-    private static void CollectCoinMarkers(Node root, List<CoinMarker> markers)
-    {
-        foreach (var child in root.GetChildren())
-        {
-            if (child is CoinMarker marker)
-                markers.Add(marker);
-
-            CollectCoinMarkers(child, markers);
+            switch (child)
+            {
+                case CoinMarker coinMarker:
+                    AddRuntimeEntity(Coin.Create(coinMarker.GlobalPosition));
+                    break;
+            }
         }
     }
 

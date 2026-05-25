@@ -34,3 +34,5 @@ script = ExtResource("5_goal")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GoalTrigger" unique_id=818635006]
 shape = SubResource("RectangleShape2D_goal")
+
+[node name="Markers" type="Node" parent="." unique_id=326710066]
