@@ -15,6 +15,10 @@ run/main_scene="res://scenes/boot.tscn"
 config/features=PackedStringArray("4.6", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GameInstance="*res://Scripts/GameInstance.cs"
+
 [display]
 
 window/size/viewport_width=512
@@ -22,10 +26,6 @@ window/size/viewport_height=448
 window/size/window_width_override=1024
 window/size/window_height_override=896
 window/stretch/mode="canvas_items"
-
-[autoload]
-
-GameInstance="*res://Scripts/GameInstance.cs"
 
 [dotnet]
 

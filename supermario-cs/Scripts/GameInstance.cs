@@ -4,8 +4,10 @@ namespace SuperMario;
 
 public partial class GameInstance : Node
 {
-    public static GameInstance Instance { get; private set; }
-
+    public MusicManager Music { get; private set; }
+    public SfxManager Sfx { get; private set; }
+    public GameMode CurrentSession => _session;
+    public Node LevelRoot => _levelRoot;
 
     private PackedScene _mainMenuScene;
     private PackedScene _gameOverScene;
@@ -15,10 +17,11 @@ public partial class GameInstance : Node
 
     public override void _Ready()
     {
-        Instance = this;
+        Music = new MusicManager { Name = "MusicManager" };
+        AddChild(Music);
 
-        AddChild(new MusicManager { Name = "MusicManager" });
-        AddChild(new SfxManager { Name = "SfxManager" });
+        Sfx = new SfxManager { Name = "SfxManager" };
+        AddChild(Sfx);
 
         _levelRoot = new Node { Name = "LevelRoot" };
         AddChild(_levelRoot);
