@@ -31,8 +31,8 @@ Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) live 
 | Accessor | Scope | Set in |
 |---|---|---|
 | `MusicManager.Instance`, `SfxManager.Instance` | App | `_Ready` |
-| `GameMode.Instance` | Session | `_EnterTree` / cleared in `_ExitTree` |
-| `TextSpawner.Instance` | Level | `_EnterTree` / cleared in `_ExitTree` |
+| `this.GetGameMode()` | Session | `GameInstance.StartGame` / cleared on game over |
+| `GameMode.TextSpawner` | Level/session UI | `GameMode.Start` |
 
 ### `GameEvents` — injected, not static
 
@@ -72,9 +72,9 @@ Entities without event emission (most enemies, decorations) are placed in the le
 ### Allowed coupling
 
 1. **Vertical ownership.** Parent calls down, child signals up. Components reach their owner via `[Export]`. Never `GetParent()` / `GetNode("../...")`.
-2. **App services.** Direct static access to `MusicManager.Instance`, `SfxManager.Instance` remains allowed. `GameInstance` is available through `this.GetGameInstance()` for top-level lifecycle and service-locator access.
+2. **App services.** Direct static access to `MusicManager.Instance`, `SfxManager.Instance` remains allowed. `GameInstance` is available through `this.GetGameInstance()` for top-level lifecycle and service-locator access. `NodeExtensions` also provides `GetGameMode()`, `GetGameEvents()`, `SpawnText(...)`, `PlaySfx(...)`, and `PlayMusic(...)`.
 3. **Score/coin events.** Inject `GameEvents` via the `Create(pos, events)` factory. No static event bus, no interface scanner.
-4. **Scoped statics (legacy access).** `GameMode.Instance.CurrentLevel` for runtime projectile/enemy spawn parents; `TextSpawner.Spawn(...)` for floating text; `GameMode.Instance.EmitOneUpAwarded()` from `OneUp`. Prefer injection for new code.
+4. **Session service locator access.** Use `this.GetGameMode()` for runtime projectile/enemy spawn parents and one-up awards. Use `this.SpawnText(...)` for floating text where injection has not yet reached.
 5. **Sibling interactions.** Direct calls via combat interfaces.
 
 ### Forbidden

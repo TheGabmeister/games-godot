@@ -27,7 +27,7 @@ public partial class KoopaTroopa : CharacterBody2D, IStompable, IFireballHittabl
     {
         var shell = ShellScene.Instantiate<Node2D>();
         shell.GlobalPosition = GlobalPosition;
-        var parent = (Node)GameMode.Instance.CurrentLevel;
+        var parent = (Node)this.GetGameMode().CurrentLevel;
         parent.AddChild(shell);
     }
 }

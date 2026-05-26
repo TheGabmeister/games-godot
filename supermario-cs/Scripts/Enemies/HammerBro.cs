@@ -55,7 +55,7 @@ public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable,
         int facing = player.GlobalPosition.X < GlobalPosition.X ? -1 : 1;
         var hammer = HammerScene.Instantiate<Hammer>();
         hammer.Init(GlobalPosition + new Vector2(0, -32), facing);
-        var parent = (Node)GameMode.Instance.CurrentLevel;
+        var parent = (Node)this.GetGameMode().CurrentLevel;
         parent.AddChild(hammer);
     }
 

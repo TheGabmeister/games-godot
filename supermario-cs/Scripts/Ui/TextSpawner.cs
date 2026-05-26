@@ -4,27 +4,7 @@ namespace SuperMario;
 
 public partial class TextSpawner : Node2D
 {
-    public static TextSpawner Instance { get; private set; }
-
-    public override void _EnterTree()
-    {
-        Instance = this;
-    }
-
-    public override void _ExitTree()
-    {
-        if (Instance == this) Instance = null;
-    }
-
-    public static void Spawn(string text, Vector2 worldPosition)
-    {
-        if (Instance == null)
-            throw new System.InvalidOperationException($"{nameof(TextSpawner)} requires an active instance.");
-
-        Instance.SpawnPopup(text, worldPosition);
-    }
-
-    private void SpawnPopup(string text, Vector2 worldPosition)
+    public void SpawnText(string text, Vector2 worldPosition)
     {
         var popup = new TextPopup();
 

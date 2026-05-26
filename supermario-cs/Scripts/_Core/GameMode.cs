@@ -5,8 +5,6 @@ namespace SuperMario;
 
 public partial class GameMode : Node
 {
-    public static GameMode Instance { get; private set; }
-
     public event Action SessionEnded;
     public event Action OneUpAwarded;
     public event Action<int> ScoreChanged;
@@ -19,6 +17,8 @@ public partial class GameMode : Node
 
     public SaveData SaveData { get; } = new();
     public LevelManager CurrentLevel { get; private set; }
+    public TextSpawner TextSpawner { get; private set; }
+    public GameEvents Events => _events;
 
     private readonly GameEvents _events = new();
     private Campaign _campaign;
@@ -27,16 +27,6 @@ public partial class GameMode : Node
     private PackedScene _playerScene;
     private PackedScene _fireballScene;
     private PlayerController _currentPlayer;
-
-    public override void _EnterTree()
-    {
-        Instance = this;
-    }
-
-    public override void _ExitTree()
-    {
-        if (Instance == this) Instance = null;
-    }
 
     public void Start(int startLevelIndex = 0)
     {
@@ -55,7 +45,8 @@ public partial class GameMode : Node
         AddChild(_hud);
         _hud.Bind(this);
 
-        AddChild(new TextSpawner());
+        TextSpawner = new TextSpawner { Name = "TextSpawner" };
+        AddChild(TextSpawner);
 
         LoadCurrentLevel();
     }
@@ -95,10 +86,10 @@ public partial class GameMode : Node
         SetLevel(def.Name, def.TimeLimit);
 
         if (def.MusicTrack != null)
-            MusicManager.Instance?.Play(def.MusicTrack);
+            this.PlayMusic(def.MusicTrack);
 
         var level = def.LevelScene.Instantiate<LevelManager>();
-        level.Events = _events;
+        level.Events = Events;
 
         SwapLevel(level);
         level.GoalTrigger.Reached += OnLevelCompleted;

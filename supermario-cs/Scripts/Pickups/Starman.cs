@@ -28,7 +28,7 @@ public partial class Starman : CharacterBody2D
         if (_collected || body is not PlayerController player) return;
         _collected = true;
         _events.EmitScoreEarned(Constants.StarmanPickupScore);
-        TextSpawner.Spawn(Constants.StarmanPickupScore.ToString(), GlobalPosition);
+        this.SpawnText(Constants.StarmanPickupScore.ToString(), GlobalPosition);
         player.ApplyStarman();
         QueueFree();
     }

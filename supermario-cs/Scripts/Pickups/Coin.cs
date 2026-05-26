@@ -48,7 +48,7 @@ public partial class Coin : Area2D
         _collected = true;
         _events.EmitScoreEarned(Constants.CoinValue);
         _events.EmitCoinsCollected(1);
-        TextSpawner.Spawn(Constants.CoinValue.ToString(), GlobalPosition);
+        this.SpawnText(Constants.CoinValue.ToString(), GlobalPosition);
         QueueFree();
     }
 }
