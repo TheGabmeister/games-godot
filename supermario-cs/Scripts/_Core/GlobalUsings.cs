@@ -1,1 +1,1 @@
-global using static SMB.Services;
+global using static SMB.GameServices;

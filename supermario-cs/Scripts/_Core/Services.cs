@@ -3,7 +3,7 @@ using Godot;
 
 namespace SMB;
 
-public static class Services
+public static class GameServices
 {
     public static GameInstance GetGameInstance()
     {

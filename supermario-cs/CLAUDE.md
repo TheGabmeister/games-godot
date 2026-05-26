@@ -18,7 +18,7 @@ If `godot` is not on PATH: `D:\Godot\Godot_v4.6.2-stable_mono_win64.exe`. Always
 
 ## Architecture
 
-**One autoload: `GameInstance`.** Entry point and app-lifetime service locator. Access it via `Services.GetGameInstance()` or the globally imported `GetGameInstance()` helper; it does not expose a static `Instance` property. `boot.tscn` is an empty marker scene; the real flow is in `GameInstance.PostBoot`, which defers one frame after `_Ready`, reads `GetTree().CurrentScene`, and branches:
+**One autoload: `GameInstance`.** Entry point and app-lifetime service locator. Access it via `GameServices.GetGameInstance()` or the globally imported `GetGameInstance()` helper; it does not expose a static `Instance` property. `boot.tscn` is an empty marker scene; the real flow is in `GameInstance.PostBoot`, which defers one frame after `_Ready`, reads `GetTree().CurrentScene`, and branches:
 
 - **Path is `boot.tscn`** → `LoadMainMenu()` (normal launch).
 - **A `LevelManager` and `OS.HasFeature("editor")`** → look up the scene's index in `Campaign.tres`, `UnloadCurrentScene()`, `StartGame(index)` (F6 skip-to-level workflow).
@@ -72,7 +72,7 @@ Entities without event emission (most enemies, decorations) are placed in the le
 ### Allowed coupling
 
 1. **Vertical ownership.** Parent calls down, child signals up. Components reach their owner via `[Export]`. Never `GetParent()` / `GetNode("../...")`.
-2. **App services.** Direct static access to `MusicManager.Instance`, `SfxManager.Instance` remains allowed. `GameInstance` is available through `GetGameInstance()` for top-level lifecycle and service-locator access. `Services` also provides `GetGameMode()`, `GetGameEvents()`, `SpawnText(...)`, `PlaySfx(...)`, and `PlayMusic(...)`.
+2. **App services.** Direct static access to `MusicManager.Instance`, `SfxManager.Instance` remains allowed. `GameInstance` is available through `GetGameInstance()` for top-level lifecycle and service-locator access. `GameServices` also provides `GetGameMode()`, `GetGameEvents()`, `SpawnText(...)`, `PlaySfx(...)`, and `PlayMusic(...)`.
 3. **Score/coin events.** Inject `GameEvents` via the `Create(pos, events)` factory. No static event bus, no interface scanner.
 4. **Session service locator access.** Use `GetGameMode()` for runtime projectile/enemy spawn parents and one-up awards. Use `SpawnText(...)` for floating text where injection has not yet reached.
 5. **Sibling interactions.** Direct calls via combat interfaces.
