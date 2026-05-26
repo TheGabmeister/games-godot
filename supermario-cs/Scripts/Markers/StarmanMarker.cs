@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class StarmanMarker : Marker2D
 {

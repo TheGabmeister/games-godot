@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class OneUp : CharacterBody2D
 {
@@ -17,7 +17,7 @@ public partial class OneUp : CharacterBody2D
     {
         if (_collected || body is not PlayerController) return;
         _collected = true;
-        this.GetGameMode().EmitOneUpAwarded();
+        GetGameMode().EmitOneUpAwarded();
         QueueFree();
     }
 }

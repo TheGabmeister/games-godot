@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class GoalTrigger : Area2D
 {

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class SfxManager : Node
 {
@@ -32,6 +32,6 @@ public partial class SfxManager : Node
                 return;
             }
         }
-        // pool exhausted — drop request
+        // pool exhausted - drop request
     }
 }

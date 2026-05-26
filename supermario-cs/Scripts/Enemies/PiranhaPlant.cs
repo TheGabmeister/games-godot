@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class PiranhaPlant : Node2D, IFireballHittable, IStarHittable
 {

@@ -1,6 +1,6 @@
 using System;
 
-namespace SuperMario;
+namespace SMB;
 
 public class GameEvents
 {

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class BulletBillCannon : Node2D
 {
@@ -22,7 +22,7 @@ public partial class BulletBillCannon : Node2D
     {
         var bb = BulletBillScene.Instantiate<BulletBill>();
         bb.Init(GlobalPosition, Mathf.Sign(Facing) == 0 ? -1 : (int)Mathf.Sign(Facing));
-        var parent = (Node)this.GetGameMode().CurrentLevel;
+        var parent = (Node)GetGameMode().CurrentLevel;
         parent.AddChild(bb);
     }
 }

@@ -1,4 +1,4 @@
-namespace SuperMario;
+namespace SMB;
 
 public interface IStompable
 {

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 [GlobalClass]
 public partial class Campaign : Godot.Resource

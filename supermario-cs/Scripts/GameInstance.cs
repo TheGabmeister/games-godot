@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class GameInstance : Node
 {
@@ -55,7 +55,7 @@ public partial class GameInstance : Node
             return;
         }
 
-        // Sandbox scene — services are available, no session is started.
+        // Sandbox scene - services are available, no session is started.
     }
 
     private static int LookupCampaignIndex(string scenePath)

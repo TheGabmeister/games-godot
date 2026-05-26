@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class Spiny : CharacterBody2D, IFireballHittable, IStarHittable
 {

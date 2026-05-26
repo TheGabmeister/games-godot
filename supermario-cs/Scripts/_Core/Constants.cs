@@ -1,4 +1,4 @@
-namespace SuperMario;
+namespace SMB;
 
 public static class Layers
 {
@@ -50,7 +50,7 @@ public static class Constants
     public const float StarmanBounceForce = -420f;
     public const float StarmanInvincibleDuration = 10f;
 
-    // Enemies — walking
+    // Enemies - walking
     public const float GoombaWalkSpeed = 80f;
     public const float GreenKoopaTroopaWalkSpeed = 80f;
     public const float RedKoopaTroopaWalkSpeed = 80f;

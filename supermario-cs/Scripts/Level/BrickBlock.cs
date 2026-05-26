@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class BrickBlock : StaticBody2D, IBumpable
 {

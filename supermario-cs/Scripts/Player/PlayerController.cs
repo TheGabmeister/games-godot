@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class PlayerController : CharacterBody2D
 {
@@ -12,7 +12,7 @@ public partial class PlayerController : CharacterBody2D
     private static readonly StringName InputLeft = "move_left";
     private static readonly StringName InputRight = "move_right";
     private static readonly StringName InputJump = "jump";
-    private static readonly StringName InputFire = "run"; // X / J → fire when Fire power
+    private static readonly StringName InputFire = "run"; // X / J -> fire when Fire power
 
     private ColorRect _visual;
     private CollisionShape2D _shape;

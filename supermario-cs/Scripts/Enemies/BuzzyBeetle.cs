@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class BuzzyBeetle : CharacterBody2D, IStompable, IStarHittable
 {

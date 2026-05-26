@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class FireFlower : Area2D
 {
@@ -26,7 +26,7 @@ public partial class FireFlower : Area2D
         if (_collected || body is not PlayerController player) return;
         _collected = true;
         _events.EmitScoreEarned(Constants.MushroomScore);
-        this.SpawnText(Constants.MushroomScore.ToString(), GlobalPosition);
+        SpawnText(Constants.MushroomScore.ToString(), GlobalPosition);
         player.ApplyFireFlower();
         QueueFree();
     }

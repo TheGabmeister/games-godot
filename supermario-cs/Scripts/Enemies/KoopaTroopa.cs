@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class KoopaTroopa : CharacterBody2D, IStompable, IFireballHittable, IStarHittable
 {
@@ -27,7 +27,7 @@ public partial class KoopaTroopa : CharacterBody2D, IStompable, IFireballHittabl
     {
         var shell = ShellScene.Instantiate<Node2D>();
         shell.GlobalPosition = GlobalPosition;
-        var parent = (Node)this.GetGameMode().CurrentLevel;
+        var parent = (Node)GetGameMode().CurrentLevel;
         parent.AddChild(shell);
     }
 }

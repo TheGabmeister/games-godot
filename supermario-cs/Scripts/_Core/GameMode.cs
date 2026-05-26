@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace SuperMario;
+namespace SMB;
 
 public partial class GameMode : Node
 {
@@ -86,7 +86,7 @@ public partial class GameMode : Node
         SetLevel(def.Name, def.TimeLimit);
 
         if (def.MusicTrack != null)
-            this.PlayMusic(def.MusicTrack);
+            PlayMusic(def.MusicTrack);
 
         var level = def.LevelScene.Instantiate<LevelManager>();
         level.Events = Events;
