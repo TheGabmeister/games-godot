@@ -22,11 +22,6 @@ public static class GameServices
         return gameMode;
     }
 
-    public static GameEvents GetGameEvents()
-    {
-        return GetGameMode().Events;
-    }
-
     public static void SpawnText(string text, Vector2 worldPosition)
     {
         GetGameMode().TextSpawner.SpawnText(text, worldPosition);

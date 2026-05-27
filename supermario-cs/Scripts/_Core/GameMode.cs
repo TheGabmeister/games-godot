@@ -3,7 +3,7 @@ using Godot;
 
 namespace SMB;
 
-public partial class GameMode : Node
+public partial class GameMode : Node, IScoreAwarder, ICoinCollector
 {
     public event Action SessionEnded;
     public event Action OneUpAwarded;
@@ -18,9 +18,7 @@ public partial class GameMode : Node
     public SaveData SaveData { get; } = new();
     public LevelManager CurrentLevel { get; private set; }
     public TextSpawner TextSpawner { get; private set; }
-    public GameEvents Events => _events;
 
-    private readonly GameEvents _events = new();
     private Campaign _campaign;
     private int _currentLevelIndex;
     private Hud _hud;
@@ -30,9 +28,6 @@ public partial class GameMode : Node
 
     public void Start(int startLevelIndex = 0)
     {
-        _events.ScoreEarned += OnScoreEarned;
-        _events.CoinsCollected += OnCoinCollected;
-
         _campaign = GD.Load<Campaign>(Config.CampaignPath);
         _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
         _fireballScene = GD.Load<PackedScene>(Config.FireballScenePath);
@@ -53,14 +48,14 @@ public partial class GameMode : Node
 
     public void EmitOneUpAwarded() => OneUpAwarded?.Invoke();
 
-    private void OnScoreEarned(in ScoreEarnedEvent evt)
+    public void AwardScore(int points)
     {
-        AddScore(evt.Points);
+        AddScore(points);
     }
 
-    private void OnCoinCollected(in CoinsCollectedEvent evt)
+    public void CollectCoins(int coins)
     {
-        AddCoins(evt.Coins);
+        AddCoins(coins);
     }
 
     private void OnOneUpAwarded()
@@ -89,6 +84,7 @@ public partial class GameMode : Node
             PlayMusic(def.MusicTrack);
 
         var level = def.LevelScene.Instantiate<LevelManager>();
+        level.Initialize(this, this);
         SwapLevel(level);
         level.GoalTrigger.Reached += OnLevelCompleted;
 

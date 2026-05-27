@@ -1,13 +1,15 @@
+using System;
 using Godot;
 
 namespace SMB;
 
 public partial class Coin : Area2D
 {
-    private GameEvents _events;
+    private IScoreAwarder _scoreAwarder;
+    private ICoinCollector _coinCollector;
     private bool _collected;
 
-    public static Coin Create(Vector2 globalPosition)
+    public static Coin Create(Vector2 globalPosition, IScoreAwarder scoreAwarder, ICoinCollector coinCollector)
     {
         var coin = new Coin
         {
@@ -33,12 +35,19 @@ public partial class Coin : Area2D
         };
         coin.AddChild(shape);
 
+        coin.Initialize(scoreAwarder, coinCollector);
         return coin;
+    }
+
+    public void Initialize(IScoreAwarder scoreAwarder, ICoinCollector coinCollector)
+    {
+        _scoreAwarder = scoreAwarder ?? throw new ArgumentNullException(nameof(scoreAwarder));
+        _coinCollector = coinCollector ?? throw new ArgumentNullException(nameof(coinCollector));
     }
 
     public override void _Ready()
     {
-        _events = GetGameEvents();
+        EnsureInitialized();
         BodyEntered += OnBodyEntered;
     }
 
@@ -46,9 +55,15 @@ public partial class Coin : Area2D
     {
         if (_collected || body is not PlayerController) return;
         _collected = true;
-        _events.EmitScoreEarned(Constants.CoinValue);
-        _events.EmitCoinsCollected(1);
+        _scoreAwarder.AwardScore(Constants.CoinValue);
+        _coinCollector.CollectCoins(1);
         SpawnText(Constants.CoinValue.ToString(), GlobalPosition);
         QueueFree();
+    }
+
+    private void EnsureInitialized()
+    {
+        if (_scoreAwarder == null || _coinCollector == null)
+            throw new InvalidOperationException($"{nameof(Coin)} requires score and coin services before it enters the tree.");
     }
 }

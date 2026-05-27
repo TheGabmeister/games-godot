@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 namespace SMB;
@@ -6,20 +7,26 @@ public partial class Starman : CharacterBody2D
 {
     [Export] public Area2D PickupTrigger;
 
-    private GameEvents _events;
+    private IScoreAwarder _scoreAwarder;
     private bool _collected;
 
-    public static Starman Create(Vector2 globalPosition)
+    public static Starman Create(Vector2 globalPosition, IScoreAwarder scoreAwarder)
     {
         var scene = GD.Load<PackedScene>(Config.StarmanScenePath);
         var s = scene.Instantiate<Starman>();
         s.GlobalPosition = globalPosition;
+        s.Initialize(scoreAwarder);
         return s;
+    }
+
+    public void Initialize(IScoreAwarder scoreAwarder)
+    {
+        _scoreAwarder = scoreAwarder ?? throw new ArgumentNullException(nameof(scoreAwarder));
     }
 
     public override void _Ready()
     {
-        _events = GetGameEvents();
+        EnsureInitialized();
         PickupTrigger.BodyEntered += OnPickedUp;
     }
 
@@ -27,9 +34,15 @@ public partial class Starman : CharacterBody2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        _events.EmitScoreEarned(Constants.StarmanPickupScore);
+        _scoreAwarder.AwardScore(Constants.StarmanPickupScore);
         SpawnText(Constants.StarmanPickupScore.ToString(), GlobalPosition);
         player.ApplyStarman();
         QueueFree();
+    }
+
+    private void EnsureInitialized()
+    {
+        if (_scoreAwarder == null)
+            throw new InvalidOperationException($"{nameof(Starman)} requires a score service before it enters the tree.");
     }
 }
