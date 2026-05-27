@@ -1,4 +1,3 @@
-using System;
 using Godot;
 
 namespace SMB;
@@ -35,19 +34,13 @@ public partial class Coin : Area2D
         };
         coin.AddChild(shape);
 
-        coin.Initialize(scoreAwarder, coinCollector);
+        coin._scoreAwarder = scoreAwarder;
+        coin._coinCollector = coinCollector;
         return coin;
-    }
-
-    public void Initialize(IScoreAwarder scoreAwarder, ICoinCollector coinCollector)
-    {
-        _scoreAwarder = scoreAwarder ?? throw new ArgumentNullException(nameof(scoreAwarder));
-        _coinCollector = coinCollector ?? throw new ArgumentNullException(nameof(coinCollector));
     }
 
     public override void _Ready()
     {
-        EnsureInitialized();
         BodyEntered += OnBodyEntered;
     }
 
@@ -59,11 +52,5 @@ public partial class Coin : Area2D
         _coinCollector.CollectCoins(1);
         SpawnText(Constants.CoinValue.ToString(), GlobalPosition);
         QueueFree();
-    }
-
-    private void EnsureInitialized()
-    {
-        if (_scoreAwarder == null || _coinCollector == null)
-            throw new InvalidOperationException($"{nameof(Coin)} requires score and coin services before it enters the tree.");
     }
 }

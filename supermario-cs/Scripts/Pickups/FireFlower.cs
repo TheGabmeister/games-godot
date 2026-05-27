@@ -1,4 +1,3 @@
-using System;
 using Godot;
 
 namespace SMB;
@@ -13,18 +12,12 @@ public partial class FireFlower : Area2D
         var scene = GD.Load<PackedScene>(Config.FireFlowerScenePath);
         var f = scene.Instantiate<FireFlower>();
         f.GlobalPosition = globalPosition;
-        f.Initialize(scoreAwarder);
+        f._scoreAwarder = scoreAwarder;
         return f;
-    }
-
-    public void Initialize(IScoreAwarder scoreAwarder)
-    {
-        _scoreAwarder = scoreAwarder ?? throw new ArgumentNullException(nameof(scoreAwarder));
     }
 
     public override void _Ready()
     {
-        EnsureInitialized();
         BodyEntered += OnBodyEntered;
     }
 
@@ -36,11 +29,5 @@ public partial class FireFlower : Area2D
         SpawnText(Constants.MushroomScore.ToString(), GlobalPosition);
         player.ApplyFireFlower();
         QueueFree();
-    }
-
-    private void EnsureInitialized()
-    {
-        if (_scoreAwarder == null)
-            throw new InvalidOperationException($"{nameof(FireFlower)} requires a score service before it enters the tree.");
     }
 }

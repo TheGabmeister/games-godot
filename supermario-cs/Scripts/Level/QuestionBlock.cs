@@ -1,4 +1,3 @@
-using System;
 using Godot;
 
 namespace SMB;
@@ -18,19 +17,13 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
         var scene = GD.Load<PackedScene>(Config.QuestionBlockScenePath);
         var qb = scene.Instantiate<QuestionBlock>();
         qb.GlobalPosition = globalPosition;
-        qb.Initialize(scoreAwarder, coinCollector);
+        qb._scoreAwarder = scoreAwarder;
+        qb._coinCollector = coinCollector;
         return qb;
-    }
-
-    public void Initialize(IScoreAwarder scoreAwarder, ICoinCollector coinCollector)
-    {
-        _scoreAwarder = scoreAwarder ?? throw new ArgumentNullException(nameof(scoreAwarder));
-        _coinCollector = coinCollector ?? throw new ArgumentNullException(nameof(coinCollector));
     }
 
     public override void _Ready()
     {
-        EnsureInitialized();
     }
 
     public void OnBumped(PlayerController player)
@@ -41,11 +34,5 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
         _scoreAwarder.AwardScore(Constants.CoinValue);
         _coinCollector.CollectCoins(1);
         Bumpable.Bump();
-    }
-
-    private void EnsureInitialized()
-    {
-        if (_scoreAwarder == null || _coinCollector == null)
-            throw new InvalidOperationException($"{nameof(QuestionBlock)} requires score and coin services before it enters the tree.");
     }
 }
