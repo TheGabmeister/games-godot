@@ -4,14 +4,11 @@ namespace SMB;
 
 public partial class SfxManager : Node
 {
-    public static SfxManager Instance { get; private set; }
-
     private const int PoolSize = 10;
     private AudioStreamPlayer[] _players;
 
     public override void _Ready()
     {
-        Instance = this;
         _players = new AudioStreamPlayer[PoolSize];
         for (int i = 0; i < PoolSize; i++)
         {

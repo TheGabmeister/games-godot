@@ -18,9 +18,7 @@ public partial class GameMode : Node
     public SaveData SaveData { get; } = new();
     public LevelManager CurrentLevel { get; private set; }
     public TextSpawner TextSpawner { get; private set; }
-    public GameEvents Events => _events;
 
-    private readonly GameEvents _events = new();
     private Campaign _campaign;
     private int _currentLevelIndex;
     private Hud _hud;
@@ -30,9 +28,6 @@ public partial class GameMode : Node
 
     public void Start(int startLevelIndex = 0)
     {
-        _events.ScoreEarned += OnScoreEarned;
-        _events.CoinsCollected += OnCoinCollected;
-
         _campaign = GD.Load<Campaign>(Config.CampaignPath);
         _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
         _fireballScene = GD.Load<PackedScene>(Config.FireballScenePath);
@@ -89,9 +84,8 @@ public partial class GameMode : Node
             PlayMusic(def.MusicTrack);
 
         var level = def.LevelScene.Instantiate<LevelManager>();
-        level.Events = Events;
-
         SwapLevel(level);
+        SpawnMarkers(level);
         level.GoalTrigger.Reached += OnLevelCompleted;
 
         var player = _playerScene.Instantiate<PlayerController>();
@@ -179,6 +173,60 @@ public partial class GameMode : Node
     {
         SaveData.TimeRemaining = seconds < 0f ? 0f : seconds;
         TimeRemainingChanged?.Invoke(SaveData.TimeRemaining);
+    }
+
+    private void SpawnMarkers(LevelManager level)
+    {
+        foreach (var marker in level.Markers)
+        {
+            switch (marker)
+            {
+                case CoinMarker m:
+                {
+                    var coin = Coin.Create(m.GlobalPosition, SfxManager.Instance);
+                    coin.ScoreEarned += OnScoreEarned;
+                    coin.CoinsCollected += OnCoinCollected;
+                    level.AddChild(coin);
+                    break;
+                }
+                case QuestionBlockMarker m:
+                {
+                    var qb = QuestionBlock.Create(m.GlobalPosition);
+                    qb.ScoreEarned += OnScoreEarned;
+                    qb.CoinsCollected += OnCoinCollected;
+                    level.AddChild(qb);
+                    break;
+                }
+                case BrickBlockMarker m:
+                {
+                    var bb = BrickBlock.Create(m.GlobalPosition);
+                    bb.ScoreEarned += OnScoreEarned;
+                    level.AddChild(bb);
+                    break;
+                }
+                case MushroomMarker m:
+                {
+                    var mush = Mushroom.Create(m.GlobalPosition);
+                    mush.ScoreEarned += OnScoreEarned;
+                    level.AddChild(mush);
+                    break;
+                }
+                case StarmanMarker m:
+                {
+                    var star = Starman.Create(m.GlobalPosition);
+                    star.ScoreEarned += OnScoreEarned;
+                    level.AddChild(star);
+                    break;
+                }
+                case FireFlowerMarker m:
+                {
+                    var ff = FireFlower.Create(m.GlobalPosition);
+                    ff.ScoreEarned += OnScoreEarned;
+                    level.AddChild(ff);
+                    break;
+                }
+            }
+        }
     }
 
     private void SwapLevel(LevelManager next)

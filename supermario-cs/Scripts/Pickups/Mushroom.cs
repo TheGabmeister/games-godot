@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 namespace SMB;
@@ -6,15 +7,15 @@ public partial class Mushroom : CharacterBody2D
 {
     [Export] public Area2D PickupTrigger;
 
-    private GameEvents _events;
+    public event Action<int> ScoreEarned;
+
     private bool _collected;
 
-    public static Mushroom Create(Vector2 globalPosition, GameEvents events)
+    public static Mushroom Create(Vector2 globalPosition)
     {
         var scene = GD.Load<PackedScene>(Config.MushroomScenePath);
         var m = scene.Instantiate<Mushroom>();
         m.GlobalPosition = globalPosition;
-        m._events = events;
         return m;
     }
 
@@ -27,7 +28,7 @@ public partial class Mushroom : CharacterBody2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        _events.EmitScoreEarned(Constants.MushroomScore);
+        ScoreEarned?.Invoke(Constants.MushroomScore);
         SpawnText(Constants.MushroomScore.ToString(), GlobalPosition);
         player.ApplyMushroom();
         QueueFree();
