@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://chvqq8kyf2wu7"]
 
-[ext_resource type="PackedScene" uid="uid://cr75qnkiioj5i" path="res://scenes/level_base.tscn" id="1_base"]
-[ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://scenes/entities/platform.tscn" id="2_plat"]
+[ext_resource type="PackedScene" uid="uid://cr75qnkiioj5i" path="res://Scenes/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://Scenes/Entities/platform.tscn" id="2_plat"]
 [ext_resource type="Script" uid="uid://cwhm5py6wdthg" path="res://Scripts/Markers/CoinMarker.cs" id="3_coin_marker"]
 
 [node name="World11" unique_id=144288357 instance=ExtResource("1_base")]

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dmhtcqlgv2uic" path="res://Scripts/Enemies/KoopaParatroopa.cs" id="1_kp"]
 [ext_resource type="Script" uid="uid://c1nnlv03sy2w" path="res://Scripts/Components/Hitbox.cs" id="2_h"]
-[ext_resource type="PackedScene" uid="uid://d2dec7l0vr04k" path="res://scenes/entities/koopa_troopa.tscn" id="3_ground"]
+[ext_resource type="PackedScene" uid="uid://d2dec7l0vr04k" path="res://Scenes/Entities/koopa_troopa.tscn" id="3_ground"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_kp"]
 size = Vector2(32, 48)
