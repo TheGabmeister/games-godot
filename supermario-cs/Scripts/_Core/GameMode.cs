@@ -19,12 +19,20 @@ public partial class GameMode : Node
     public LevelManager CurrentLevel { get; private set; }
     public TextSpawner TextSpawner { get; private set; }
 
+    private readonly SfxManager _sfx;
+    private readonly MusicManager _music;
     private Campaign _campaign;
     private int _currentLevelIndex;
     private Hud _hud;
     private PackedScene _playerScene;
     private PackedScene _fireballScene;
     private PlayerController _currentPlayer;
+
+    public GameMode(SfxManager sfx, MusicManager music)
+    {
+        _sfx = sfx;
+        _music = music;
+    }
 
     public void Start(int startLevelIndex = 0)
     {
@@ -81,7 +89,7 @@ public partial class GameMode : Node
         SetLevel(def.Name, def.TimeLimit);
 
         if (def.MusicTrack != null)
-            PlayMusic(def.MusicTrack);
+            _music.Play(def.MusicTrack);
 
         var level = def.LevelScene.Instantiate<LevelManager>();
         SwapLevel(level);
@@ -183,7 +191,7 @@ public partial class GameMode : Node
             {
                 case CoinMarker m:
                 {
-                    var coin = Coin.Create(m.GlobalPosition, SfxManager.Instance);
+                    var coin = Coin.Create(m.GlobalPosition, _sfx);
                     coin.ScoreEarned += OnScoreEarned;
                     coin.CoinsCollected += OnCoinCollected;
                     level.AddChild(coin);

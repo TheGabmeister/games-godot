@@ -80,7 +80,7 @@ public partial class GameInstance : Node
 
     public void StartGame(int startLevelIndex = 0)
     {
-        _session = new GameMode { Name = "GameMode" };
+        _session = new GameMode(Sfx, Music) { Name = "GameMode" };
         _session.SessionEnded += LoadGameOver;
         SetActiveNode(_session);
         _session.Start(startLevelIndex);
