@@ -1,17 +1,13 @@
-using System;
 using Godot;
 
 namespace SMB;
 
 public partial class Coin : Area2D
 {
-    public event Action<int> ScoreEarned;
-    public event Action<int> CoinsCollected;
-
-    private SfxManager _sfx;
+    private GameEvents _events;
     private bool _collected;
 
-    public static Coin Create(Vector2 globalPosition, SfxManager sfxManager)
+    public static Coin Create(Vector2 globalPosition, GameEvents events)
     {
         var coin = new Coin
         {
@@ -19,7 +15,7 @@ public partial class Coin : Area2D
             GlobalPosition = globalPosition,
             CollisionLayer = Layers.PickupTrigger,
             CollisionMask = Layers.Player,
-            _sfx = sfxManager
+            _events = events
         };
 
         var visual = new ColorRect
@@ -50,8 +46,8 @@ public partial class Coin : Area2D
     {
         if (_collected || body is not PlayerController) return;
         _collected = true;
-        ScoreEarned?.Invoke(Constants.CoinValue);
-        CoinsCollected?.Invoke(1);
+        _events.EmitScoreEarned(Constants.CoinValue);
+        _events.EmitCoinsCollected(1);
         SpawnText(Constants.CoinValue.ToString(), GlobalPosition);
         QueueFree();
     }

@@ -1,4 +1,3 @@
-using System;
 using Godot;
 
 namespace SMB;
@@ -7,15 +6,15 @@ public partial class Starman : CharacterBody2D
 {
     [Export] public Area2D PickupTrigger;
 
-    public event Action<int> ScoreEarned;
-
+    private GameEvents _events;
     private bool _collected;
 
-    public static Starman Create(Vector2 globalPosition)
+    public static Starman Create(Vector2 globalPosition, GameEvents events)
     {
         var scene = GD.Load<PackedScene>(Config.StarmanScenePath);
         var s = scene.Instantiate<Starman>();
         s.GlobalPosition = globalPosition;
+        s._events = events;
         return s;
     }
 
@@ -28,7 +27,7 @@ public partial class Starman : CharacterBody2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        ScoreEarned?.Invoke(Constants.StarmanPickupScore);
+        _events.EmitScoreEarned(Constants.StarmanPickupScore);
         SpawnText(Constants.StarmanPickupScore.ToString(), GlobalPosition);
         player.ApplyStarman();
         QueueFree();

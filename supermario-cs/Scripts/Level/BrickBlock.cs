@@ -1,4 +1,3 @@
-using System;
 using Godot;
 
 namespace SMB;
@@ -7,13 +6,14 @@ public partial class BrickBlock : StaticBody2D, IBumpable
 {
     [Export] public Bumpable Bumpable;
 
-    public event Action<int> ScoreEarned;
+    private GameEvents _events;
 
-    public static BrickBlock Create(Vector2 globalPosition)
+    public static BrickBlock Create(Vector2 globalPosition, GameEvents events)
     {
         var scene = GD.Load<PackedScene>(Config.BrickBlockScenePath);
         var bb = scene.Instantiate<BrickBlock>();
         bb.GlobalPosition = globalPosition;
+        bb._events = events;
         return bb;
     }
 
@@ -21,7 +21,7 @@ public partial class BrickBlock : StaticBody2D, IBumpable
     {
         if (player.CanBreakBricks)
         {
-            ScoreEarned?.Invoke(Constants.BrickBreakScore);
+            _events.EmitScoreEarned(Constants.BrickBreakScore);
             QueueFree();
             return;
         }

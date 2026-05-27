@@ -39,40 +39,38 @@ Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) live 
 
 | Accessor | Scope | Set in |
 |---|---|---|
-| `MusicManager.Instance`, `SfxManager.Instance` | App | `_Ready` |
 | `GetGameInstance()` | App | `GameInstance` autoload |
 | `GetGameMode()` | Session | `GameInstance.StartGame` / cleared on game over |
 | `GameMode.TextSpawner` | Level/session UI | `GameMode.Start` |
 
-`Scripts/_Core/GameServices.cs` is a static facade globally imported by `Scripts/_Core/GlobalUsings.cs`. It provides `GetGameInstance()`, `GetGameMode()`, `SpawnText(...)`, `PlaySfx(...)`, and `PlayMusic(...)`. The returned `GameInstance`, `GameMode`, and `TextSpawner` objects are normal instances, not static singletons.
+`Scripts/_Core/GameServices.cs` is a static facade globally imported by `Scripts/_Core/GlobalUsings.cs`. It provides `GetGameInstance()`, `GetGameMode()`, `GetGameEvents()`, `SpawnText(...)`, `PlaySfx(...)`, and `PlayMusic(...)`. The returned `GameInstance`, `GameMode`, `GameEvents`, and `TextSpawner` objects are normal instances, not static singletons. `MusicManager` and `SfxManager` are not statics either — reach them through `GameInstance.Music` / `GameInstance.Sfx` (or, more commonly, via `PlayMusic(...)` / `PlaySfx(...)`).
 
-### Per-Entity Score/Coin Events
+### `GameEvents` - Injected, Not Static
 
-Score- and coin-emitting entities expose their own C# events (`event Action<int> ScoreEarned`, `event Action<int> CoinsCollected`). There is no shared `GameEvents` bus. `GameMode` subscribes to each instance at spawn time:
+`Scripts/_Core/GameEvents.cs` is a plain C# class with no static accessor. Owned by `GameMode` as `private readonly GameEvents _events = new()` and injected down the spawn chain:
 
-```csharp
-var coin = Coin.Create(m.GlobalPosition, SfxManager.Instance);
-coin.ScoreEarned += OnScoreEarned;
-coin.CoinsCollected += OnCoinCollected;
-level.AddChild(coin);
+```text
+GameMode._events
+   -> assigned to LevelManager.Events before AddChild
+LevelManager.Events
+   -> passed into Entity.Create(pos, events)
+Entity._events
 ```
 
-Subscribe *before* `AddChild` so no event can fire before the handler is attached. Entities are freed with the level, so explicit unsubscribe is not required.
+Emitters call `_events.EmitScoreEarned(...)`. `GameMode` subscribes once in `Start`. No interface-based discovery, no tree-walking event scanners.
 
 `GameMode`'s own events (`SessionEnded`, `ScoreChanged`, `LivesChanged`, etc.) are HUD-facing, not entity-facing. HUD subscribes via `_hud.Bind(this)`.
 
 ### Marker-Based Entity Spawning
 
-Pickups and blocks that emit events are runtime-spawned from markers, not placed in level scenes directly. Each level scene has a `Markers` node wired to `LevelManager._markerRoot`. `GameMode.SpawnMarkers` dispatches by C# pattern matching and adds each entity as a child of the `LevelManager`:
+Pickups and blocks that emit events are runtime-spawned from markers, not placed in level scenes directly. Each level scene has a `Markers` node wired to `LevelManager._markerRoot`. `LevelManager.SpawnMarkers` dispatches by C# pattern matching:
 
 ```csharp
-case CoinMarker m:           level.AddChild(Coin.Create(m.GlobalPosition, SfxManager.Instance)); break;
-case QuestionBlockMarker m:  level.AddChild(QuestionBlock.Create(m.GlobalPosition));             break;
+case CoinMarker m:           AddChild(Coin.Create(m.GlobalPosition, Events));         break;
+case QuestionBlockMarker m:  AddChild(QuestionBlock.Create(m.GlobalPosition, Events));break;
 ```
 
-`LevelManager` exposes `Markers => _markerRoot.GetChildren()` and does not spawn anything itself.
-
-One marker class per entity type, each a minimal `Marker2D` subclass (extending `LabeledMarker` for editor visibility). Per-instance config goes on the marker as `[Export]` fields. Each emitter entity has a static `Create(Vector2 pos, ...)` factory that loads its scene from `Config` (or builds programmatically, in `Coin`'s case), positions it, and returns. App-service dependencies (e.g. `SfxManager` for `Coin`) are injected through the factory rather than read from statics.
+One marker class per entity type, each a minimal `Marker2D` subclass (extending `LabeledMarker` for editor visibility). Per-instance config goes on the marker as `[Export]` fields. Each emitter entity has a static `Create(Vector2 pos, GameEvents events)` factory that loads its scene from `Config`, instantiates, sets position and events, and returns. `Coin` is the one exception: it builds its visual programmatically and has no `.tscn`. App-service access (sfx, music) goes through `GameServices` (`PlaySfx(...)`, `PlayMusic(...)`), not through factory parameters.
 
 Entities without event emission (most enemies, decorations) are placed in the level scene at edit time.
 
@@ -85,18 +83,19 @@ Entities without event emission (most enemies, decorations) are placed in the le
 ### Allowed Coupling
 
 1. **Vertical ownership.** Parent calls down, child signals up. Components reach their owner via `[Export]`. Never `GetParent()` / `GetNode("../...")`.
-2. **App services.** Direct static access to `MusicManager.Instance`, `SfxManager.Instance` remains allowed. `GameInstance` is available through `GetGameInstance()` for top-level lifecycle and service-locator access. New entity factories prefer DI of app services through `Create(...)` over reaching for the static `.Instance`.
-3. **Score/coin events.** Each emitter declares its own `event Action<int> ScoreEarned` / `CoinsCollected`. `GameMode` subscribes per-instance at spawn time. No shared event bus, no interface scanner.
-4. **Session service locator access.** Use `GetGameMode()` for runtime projectile/enemy spawn parents and one-up awards. Use `SpawnText(...)` for floating text where injection has not yet reached.
+2. **App services.** `MusicManager` and `SfxManager` are owned by `GameInstance` and reached through `GameServices` (`PlayMusic(...)`, `PlaySfx(...)`) or `GetGameInstance().Music` / `GetGameInstance().Sfx`. They are not statics — do not add an `Instance` accessor back.
+3. **Score/coin events.** Inject `GameEvents` via the `Create(pos, events)` factory. No static event bus, no interface scanner.
+4. **Session service locator access.** Use `GetGameMode()` for runtime projectile/enemy spawn parents and one-up awards. Use `SpawnText(...)` for floating text where injection has not yet reached. Use `PlaySfx(...)` / `PlayMusic(...)` for audio.
 5. **Sibling interactions.** Direct calls via combat interfaces.
 
 ### Forbidden
 
 - `GetParent()`, `GetNode("../...")`; use `[Export]`.
 - Base classes for enemies / pickups / projectiles. Flat per-entity scripts.
-- EntityFactory-style enum/string registries; `GameMode.SpawnMarkers` is the single dispatch point.
+- EntityFactory-style enum/string registries; `LevelManager.SpawnMarkers` is the single dispatch point.
 - Persistent player across levels; re-spawned per level.
-- Re-introducing a shared `GameEvents` bus, `IScoreEventSource` / `ICoinEventSource`, or tree-walking event scanners. Score/coin events live on the emitter.
+- Re-introducing `IScoreEventSource` / `ICoinEventSource` or tree-walking event scanners.
+- Re-adding `MusicManager.Instance` / `SfxManager.Instance` statics. Go through `GameInstance` or `GameServices`.
 - New autoloads beyond `GameInstance`.
 - Cycles in `.tscn` <-> `.tres` ext_resource references.
 

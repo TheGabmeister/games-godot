@@ -4,14 +4,11 @@ namespace SMB;
 
 public partial class MusicManager : Node
 {
-    public static MusicManager Instance { get; private set; }
-
     private AudioStreamPlayer _player;
     private AudioStream _current;
 
     public override void _Ready()
     {
-        Instance = this;
         _player = new AudioStreamPlayer { Bus = "Master" };
         AddChild(_player);
     }
