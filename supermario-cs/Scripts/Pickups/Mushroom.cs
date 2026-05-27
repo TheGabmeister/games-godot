@@ -28,7 +28,7 @@ public partial class Mushroom : CharacterBody2D
         if (_collected || body is not PlayerController player) return;
         _collected = true;
         _scoreAwarder.AwardScore(Constants.MushroomScore);
-        SpawnText(Constants.MushroomScore.ToString(), GlobalPosition);
+        Bus<EV_TextSpawn>.Emit(new EV_TextSpawn { text = Constants.MushroomScore.ToString(), position = GlobalPosition });
         player.ApplyMushroom();
         QueueFree();
     }

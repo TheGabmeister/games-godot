@@ -16,6 +16,18 @@ public partial class SfxManager : Node
             AddChild(p);
             _players[i] = p;
         }
+
+        Bus<EV_SfxPlay>.Sub(OnSfxPlay);
+    }
+
+    public override void _ExitTree()
+    {
+        Bus<EV_SfxPlay>.Unsub(OnSfxPlay);
+    }
+
+    private void OnSfxPlay(EV_SfxPlay ev)
+    {
+        Play(ev.value);
     }
 
     public void Play(AudioStream stream)

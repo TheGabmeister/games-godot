@@ -22,16 +22,6 @@ public static class GameServices
         return gameMode;
     }
 
-    public static void SpawnText(string text, Vector2 worldPosition)
-    {
-        GetGameMode().TextSpawner.SpawnText(text, worldPosition);
-    }
-
-    public static void PlaySfx(AudioStream sound)
-    {
-        GetGameInstance().Sfx.Play(sound);
-    }
-
     public static void PlayMusic(AudioStream sound)
     {
         GetGameInstance().Music.Play(sound);

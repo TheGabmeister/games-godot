@@ -10,22 +10,22 @@ public static class Bus<T> where T : struct, IEvent
 
     public static void Sub(Action<T> binding)
     {
-        BindingsWithArgs.Sub(binding);
+        BindingsWithArgs.Add(binding);
     }
 
     public static void Sub(Action binding)
     {
-        BindingsWithoutArgs.Sub(binding);
+        BindingsWithoutArgs.Add(binding);
     }
 
     public static void Unsub(Action<T> binding)
     {
-        BindingsWithArgs.Unsub(binding);
+        BindingsWithArgs.Remove(binding);
     }
 
     public static void Unsub(Action binding)
     {
-        BindingsWithoutArgs.Unsub(binding);
+        BindingsWithoutArgs.Remove(binding);
     }
 
     public static void Emit()
