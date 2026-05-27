@@ -47,7 +47,7 @@ Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) live 
 
 ### `GameEvents` - Owned by GameMode, Fetched via `GameServices`
 
-`Scripts/_Core/GameEvents.cs` is a plain C# class with no static accessor. Owned by `GameMode` as `private readonly GameEvents _events = new()` and exposed via `GameMode.Events` / `GameServices.GetGameEvents()`.
+`Scripts/_Core/GameEvents.cs` is a plain C# class with no static accessor. Event payloads are readonly structs passed by `in` to avoid per-emit heap allocation. Owned by `GameMode` as `private readonly GameEvents _events = new()` and exposed via `GameMode.Events` / `GameServices.GetGameEvents()`.
 
 Emitters fetch and cache the reference in `_Ready()`:
 

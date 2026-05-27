@@ -53,14 +53,14 @@ public partial class GameMode : Node
 
     public void EmitOneUpAwarded() => OneUpAwarded?.Invoke();
 
-    private void OnScoreEarned(int points)
+    private void OnScoreEarned(in ScoreEarnedEvent evt)
     {
-        AddScore(points);
+        AddScore(evt.Points);
     }
 
-    private void OnCoinCollected(int coins)
+    private void OnCoinCollected(in CoinsCollectedEvent evt)
     {
-        AddCoins(coins);
+        AddCoins(evt.Coins);
     }
 
     private void OnOneUpAwarded()
