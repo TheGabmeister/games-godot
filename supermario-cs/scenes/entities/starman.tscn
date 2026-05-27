@@ -29,6 +29,7 @@ Body = NodePath("..")
 Speed = 220.0
 TurnAtCliffs = false
 BounceForce = -420.0
+CliffProbeMask = 8
 
 [node name="PickupTrigger" type="Area2D" parent="."]
 collision_layer = 64

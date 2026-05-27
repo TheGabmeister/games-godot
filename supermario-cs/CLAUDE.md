@@ -107,7 +107,7 @@ Pickups, blocks, enemies, and decorations are placed directly in level scenes in
 - File naming: `PascalCase.cs`, `snake_case.tscn`. Directories: `PascalCase`.
 - `StringName` for repeated keys (input actions, signal names).
 - Gameplay constants in `Scripts/_Core/Constants.cs`; mirror values from the MonoGame port rather than re-tuning.
-- Layer bit positions in `Scripts/_Core/Layers.cs` must stay in sync with the named 2D physics layers in `project.godot`.
+- Collision layers and masks are editor-owned scene data. Do not reintroduce code-side layer bit constants for scene collision setup; use inspector layer/mask exports for component-specific queries such as Walker cliff probes.
 - **Required scene wiring should fail loudly.** Prefer typed exports and `PackedScene.Instantiate<T>()` over defensive null checks. Keep checks only for real gameplay/lifecycle state (`_dead`, `_collected`, "is this body the player?", optional resource fields).
 
 ### `node_paths` Directive Gotcha

@@ -15,7 +15,7 @@ public partial class Starman : CharacterBody2D
 
     private void OnPickedUp(Node2D body)
     {
-        if (_collected || !Layers.HasLayer(body, Layers.Player)) return;
+        if (_collected) return;
         _collected = true;
         Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = Constants.StarmanPickupScore });
         Bus<EV_Pickup_Starman>.Emit();

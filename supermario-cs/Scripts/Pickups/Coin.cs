@@ -13,7 +13,7 @@ public partial class Coin : Area2D
 
     private void OnBodyEntered(Node2D body)
     {
-        if (_collected || body is not PlayerController) return;
+        if (_collected) return;
         _collected = true;
         Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = Constants.CoinValue });
         Bus<EV_Pickup_Coin>.Emit(new EV_Pickup_Coin { value = 1 });

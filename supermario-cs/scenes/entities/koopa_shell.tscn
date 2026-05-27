@@ -31,6 +31,7 @@ Body = NodePath("..")
 Speed = 0.0
 TurnAtCliffs = false
 BounceForce = 0.0
+CliffProbeMask = 8
 
 [node name="Hitbox" type="Area2D" parent="."]
 collision_layer = 2

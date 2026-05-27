@@ -9,6 +9,7 @@ public partial class Walker : Node
     [Export] public bool TurnAtCliffs = false;
     [Export] public float BounceForce = 0f;
     [Export] public float CliffProbeOffsetY = 8f;
+    [Export(PropertyHint.Layers2DPhysics)] public uint CliffProbeMask = 0;
 
     public int Direction = -1;
 
@@ -37,7 +38,7 @@ public partial class Walker : Node
                 + new Vector2(Direction * 18f, CliffProbeOffsetY);
             var space = Body.GetWorld2D().DirectSpaceState;
             var q = PhysicsRayQueryParameters2D.Create(probe, probe + new Vector2(0, 24));
-            q.CollisionMask = Layers.Environment;
+            q.CollisionMask = CliffProbeMask;
             var hit = space.IntersectRay(q);
             if (hit.Count == 0)
                 Direction = -Direction;

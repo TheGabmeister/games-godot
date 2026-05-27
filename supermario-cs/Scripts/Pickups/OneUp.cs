@@ -15,7 +15,7 @@ public partial class OneUp : CharacterBody2D
 
     private void OnPickedUp(Node2D body)
     {
-        if (_collected || !Layers.HasLayer(body, Layers.Player)) return;
+        if (_collected) return;
         _collected = true;
         Bus<EV_Pickup_OneUp>.Emit();
         QueueFree();

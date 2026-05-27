@@ -13,7 +13,7 @@ public partial class FireFlower : Area2D
 
     private void OnBodyEntered(Node2D body)
     {
-        if (_collected || !Layers.HasLayer(body, Layers.Player)) return;
+        if (_collected) return;
         _collected = true;
         Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = Constants.MushroomScore });
         Bus<EV_Pickup_FireFlower>.Emit();

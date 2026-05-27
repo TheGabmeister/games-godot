@@ -34,8 +34,6 @@ public partial class PlayerController : CharacterBody2D
     public override void _Ready()
     {
         AddToGroup("player");
-        CollisionLayer = Layers.Player;
-        CollisionMask = Layers.Environment | Layers.PickupTrigger | Layers.LevelTrigger;
 
         _visual = GetNode<ColorRect>("Visual");
         _shape = GetNode<CollisionShape2D>("CollisionShape2D");
