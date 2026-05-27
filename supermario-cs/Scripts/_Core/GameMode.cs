@@ -3,10 +3,9 @@ using Godot;
 
 namespace SMB;
 
-public partial class GameMode : Node, IScoreAwarder, ICoinCollector
+public partial class GameMode : Node
 {
     public event Action SessionEnded;
-    public event Action OneUpAwarded;
     public event Action<int> ScoreChanged;
     public event Action<int> CoinsChanged;
     public event Action<int> LivesChanged;
@@ -33,7 +32,7 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
         _fireballScene = GD.Load<PackedScene>(Config.FireballScenePath);
         _currentLevelIndex = startLevelIndex;
 
-        OneUpAwarded += OnOneUpAwarded;
+        SubscribeEvents();
 
         var hudScene = GD.Load<PackedScene>(Config.HudScenePath);
         _hud = hudScene.Instantiate<Hud>();
@@ -46,19 +45,57 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
         LoadCurrentLevel();
     }
 
-    public void EmitOneUpAwarded() => OneUpAwarded?.Invoke();
-
-    public void AwardScore(int points)
+    public override void _ExitTree()
     {
-        AddScore(points);
+        UnsubscribeEvents();
     }
 
-    public void CollectCoins(int coins)
+    private void SubscribeEvents()
     {
-        AddCoins(coins);
+        Bus<EV_ScoreEarned>.Sub(OnScoreEarned);
+        Bus<EV_Pickup_Coin>.Sub(OnCoinPickedUp);
+        Bus<EV_Pickup_Mushroom>.Sub(OnMushroomPickedUp);
+        Bus<EV_Pickup_FireFlower>.Sub(OnFireFlowerPickedUp);
+        Bus<EV_Pickup_Starman>.Sub(OnStarmanPickedUp);
+        Bus<EV_Pickup_OneUp>.Sub(OnOneUpPickedUp);
     }
 
-    private void OnOneUpAwarded()
+    private void UnsubscribeEvents()
+    {
+        Bus<EV_ScoreEarned>.Unsub(OnScoreEarned);
+        Bus<EV_Pickup_Coin>.Unsub(OnCoinPickedUp);
+        Bus<EV_Pickup_Mushroom>.Unsub(OnMushroomPickedUp);
+        Bus<EV_Pickup_FireFlower>.Unsub(OnFireFlowerPickedUp);
+        Bus<EV_Pickup_Starman>.Unsub(OnStarmanPickedUp);
+        Bus<EV_Pickup_OneUp>.Unsub(OnOneUpPickedUp);
+    }
+
+    private void OnScoreEarned(EV_ScoreEarned ev)
+    {
+        AddScore(ev.value);
+    }
+
+    private void OnCoinPickedUp(EV_Pickup_Coin ev)
+    {
+        AddCoins(ev.value);
+    }
+
+    private void OnMushroomPickedUp(EV_Pickup_Mushroom ev)
+    {
+        ev.player.ApplyMushroom();
+    }
+
+    private void OnFireFlowerPickedUp(EV_Pickup_FireFlower ev)
+    {
+        ev.player.ApplyFireFlower();
+    }
+
+    private void OnStarmanPickedUp(EV_Pickup_Starman ev)
+    {
+        ev.player.ApplyStarman();
+    }
+
+    private void OnOneUpPickedUp()
     {
         SetLives(SaveData.Lives + 1);
     }
@@ -85,7 +122,6 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
 
         var level = def.LevelScene.Instantiate<LevelManager>();
         SwapLevel(level);
-        SpawnLevelObjects(level);
         level.GoalTrigger.Reached += OnLevelCompleted;
 
         var player = _playerScene.Instantiate<PlayerController>();
@@ -96,34 +132,6 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
         player.PowerStateChanged += OnPlayerPowerStateChanged;
         player.FireballRequested += OnFireballRequested;
         _currentPlayer = player;
-    }
-
-    private void SpawnLevelObjects(LevelManager level)
-    {
-        foreach (var marker in level.Markers)
-        {
-            switch (marker)
-            {
-                case CoinMarker m:
-                    level.AddChild(Coin.Create(m.GlobalPosition, this, this));
-                    break;
-                case QuestionBlockMarker m:
-                    level.AddChild(QuestionBlock.Create(m.GlobalPosition, this, this));
-                    break;
-                case BrickBlockMarker m:
-                    level.AddChild(BrickBlock.Create(m.GlobalPosition, this));
-                    break;
-                case MushroomMarker m:
-                    level.AddChild(Mushroom.Create(m.GlobalPosition, this));
-                    break;
-                case StarmanMarker m:
-                    level.AddChild(Starman.Create(m.GlobalPosition, this));
-                    break;
-                case FireFlowerMarker m:
-                    level.AddChild(FireFlower.Create(m.GlobalPosition, this));
-                    break;
-            }
-        }
     }
 
     public override void _Process(double delta)

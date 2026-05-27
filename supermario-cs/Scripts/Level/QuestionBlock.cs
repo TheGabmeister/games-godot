@@ -8,19 +8,7 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
     [Export] public ColorRect Visual;
     [Export] public Color UsedColor = new Color(0.55f, 0.35f, 0.10f);
 
-    private IScoreAwarder _scoreAwarder;
-    private ICoinCollector _coinCollector;
     private bool _used;
-
-    public static QuestionBlock Create(Vector2 globalPosition, IScoreAwarder scoreAwarder, ICoinCollector coinCollector)
-    {
-        var scene = GD.Load<PackedScene>(Config.QuestionBlockScenePath);
-        var qb = scene.Instantiate<QuestionBlock>();
-        qb.GlobalPosition = globalPosition;
-        qb._scoreAwarder = scoreAwarder;
-        qb._coinCollector = coinCollector;
-        return qb;
-    }
 
     public override void _Ready()
     {
@@ -31,8 +19,8 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
         if (_used) return;
         _used = true;
         Visual.Color = UsedColor;
-        _scoreAwarder.AwardScore(Constants.CoinValue);
-        _coinCollector.CollectCoins(1);
+        Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = Constants.CoinValue });
+        Bus<EV_Pickup_Coin>.Emit(new EV_Pickup_Coin { value = 1 });
         Bumpable.Bump();
     }
 }

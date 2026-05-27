@@ -4,17 +4,7 @@ namespace SMB;
 
 public partial class FireFlower : Area2D
 {
-    private IScoreAwarder _scoreAwarder;
     private bool _collected;
-
-    public static FireFlower Create(Vector2 globalPosition, IScoreAwarder scoreAwarder)
-    {
-        var scene = GD.Load<PackedScene>(Config.FireFlowerScenePath);
-        var f = scene.Instantiate<FireFlower>();
-        f.GlobalPosition = globalPosition;
-        f._scoreAwarder = scoreAwarder;
-        return f;
-    }
 
     public override void _Ready()
     {
@@ -25,9 +15,9 @@ public partial class FireFlower : Area2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        _scoreAwarder.AwardScore(Constants.MushroomScore);
+        Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = Constants.MushroomScore });
+        Bus<EV_Pickup_FireFlower>.Emit(new EV_Pickup_FireFlower { player = player });
         Bus<EV_TextSpawn>.Emit(new EV_TextSpawn { text = Constants.MushroomScore.ToString(), position = GlobalPosition });
-        player.ApplyFireFlower();
         QueueFree();
     }
 }

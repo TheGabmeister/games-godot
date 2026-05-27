@@ -6,17 +6,7 @@ public partial class Mushroom : CharacterBody2D
 {
     [Export] public Area2D PickupTrigger;
 
-    private IScoreAwarder _scoreAwarder;
     private bool _collected;
-
-    public static Mushroom Create(Vector2 globalPosition, IScoreAwarder scoreAwarder)
-    {
-        var scene = GD.Load<PackedScene>(Config.MushroomScenePath);
-        var m = scene.Instantiate<Mushroom>();
-        m.GlobalPosition = globalPosition;
-        m._scoreAwarder = scoreAwarder;
-        return m;
-    }
 
     public override void _Ready()
     {
@@ -27,9 +17,9 @@ public partial class Mushroom : CharacterBody2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        _scoreAwarder.AwardScore(Constants.MushroomScore);
+        Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = Constants.MushroomScore });
+        Bus<EV_Pickup_Mushroom>.Emit(new EV_Pickup_Mushroom { player = player });
         Bus<EV_TextSpawn>.Emit(new EV_TextSpawn { text = Constants.MushroomScore.ToString(), position = GlobalPosition });
-        player.ApplyMushroom();
         QueueFree();
     }
 }
