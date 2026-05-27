@@ -17,6 +17,8 @@ public partial class GameInstance : Node
 
     public override void _Ready()
     {
+        EventBusUtil.Initialize();
+
         Music = new MusicManager { Name = "MusicManager" };
         AddChild(Music);
 
@@ -30,6 +32,11 @@ public partial class GameInstance : Node
         _gameOverScene = GD.Load<PackedScene>(Config.GameOverScenePath);
 
         CallDeferred(MethodName.PostBoot);
+    }
+
+    public override void _ExitTree()
+    {
+        EventBusUtil.ClearAllBuses();
     }
 
     private void PostBoot()
