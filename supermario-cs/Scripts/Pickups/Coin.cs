@@ -7,7 +7,7 @@ public partial class Coin : Area2D
     private GameEvents _events;
     private bool _collected;
 
-    public static Coin Create(Vector2 globalPosition, GameEvents events)
+    public static Coin Create(Vector2 globalPosition)
     {
         var coin = new Coin
         {
@@ -15,7 +15,6 @@ public partial class Coin : Area2D
             GlobalPosition = globalPosition,
             CollisionLayer = Layers.PickupTrigger,
             CollisionMask = Layers.Player,
-            _events = events
         };
 
         var visual = new ColorRect
@@ -39,6 +38,7 @@ public partial class Coin : Area2D
 
     public override void _Ready()
     {
+        _events = GetGameEvents();
         BodyEntered += OnBodyEntered;
     }
 

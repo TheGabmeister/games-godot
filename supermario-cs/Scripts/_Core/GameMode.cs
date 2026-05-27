@@ -89,8 +89,6 @@ public partial class GameMode : Node
             PlayMusic(def.MusicTrack);
 
         var level = def.LevelScene.Instantiate<LevelManager>();
-        level.Events = Events;
-
         SwapLevel(level);
         level.GoalTrigger.Reached += OnLevelCompleted;
 

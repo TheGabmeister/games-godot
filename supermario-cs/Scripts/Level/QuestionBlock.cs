@@ -11,13 +11,17 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
     private GameEvents _events;
     private bool _used;
 
-    public static QuestionBlock Create(Vector2 globalPosition, GameEvents events)
+    public static QuestionBlock Create(Vector2 globalPosition)
     {
         var scene = GD.Load<PackedScene>(Config.QuestionBlockScenePath);
         var qb = scene.Instantiate<QuestionBlock>();
         qb.GlobalPosition = globalPosition;
-        qb._events = events;
         return qb;
+    }
+
+    public override void _Ready()
+    {
+        _events = GetGameEvents();
     }
 
     public void OnBumped(PlayerController player)

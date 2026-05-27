@@ -9,17 +9,17 @@ public partial class Starman : CharacterBody2D
     private GameEvents _events;
     private bool _collected;
 
-    public static Starman Create(Vector2 globalPosition, GameEvents events)
+    public static Starman Create(Vector2 globalPosition)
     {
         var scene = GD.Load<PackedScene>(Config.StarmanScenePath);
         var s = scene.Instantiate<Starman>();
         s.GlobalPosition = globalPosition;
-        s._events = events;
         return s;
     }
 
     public override void _Ready()
     {
+        _events = GetGameEvents();
         PickupTrigger.BodyEntered += OnPickedUp;
     }
 

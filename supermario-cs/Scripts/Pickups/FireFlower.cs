@@ -7,17 +7,17 @@ public partial class FireFlower : Area2D
     private GameEvents _events;
     private bool _collected;
 
-    public static FireFlower Create(Vector2 globalPosition, GameEvents events)
+    public static FireFlower Create(Vector2 globalPosition)
     {
         var scene = GD.Load<PackedScene>(Config.FireFlowerScenePath);
         var f = scene.Instantiate<FireFlower>();
         f.GlobalPosition = globalPosition;
-        f._events = events;
         return f;
     }
 
     public override void _Ready()
     {
+        _events = GetGameEvents();
         BodyEntered += OnBodyEntered;
     }
 

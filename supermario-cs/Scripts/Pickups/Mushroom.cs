@@ -9,17 +9,17 @@ public partial class Mushroom : CharacterBody2D
     private GameEvents _events;
     private bool _collected;
 
-    public static Mushroom Create(Vector2 globalPosition, GameEvents events)
+    public static Mushroom Create(Vector2 globalPosition)
     {
         var scene = GD.Load<PackedScene>(Config.MushroomScenePath);
         var m = scene.Instantiate<Mushroom>();
         m.GlobalPosition = globalPosition;
-        m._events = events;
         return m;
     }
 
     public override void _Ready()
     {
+        _events = GetGameEvents();
         PickupTrigger.BodyEntered += OnPickedUp;
     }
 

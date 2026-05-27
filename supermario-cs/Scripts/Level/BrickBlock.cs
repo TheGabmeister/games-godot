@@ -8,13 +8,17 @@ public partial class BrickBlock : StaticBody2D, IBumpable
 
     private GameEvents _events;
 
-    public static BrickBlock Create(Vector2 globalPosition, GameEvents events)
+    public static BrickBlock Create(Vector2 globalPosition)
     {
         var scene = GD.Load<PackedScene>(Config.BrickBlockScenePath);
         var bb = scene.Instantiate<BrickBlock>();
         bb.GlobalPosition = globalPosition;
-        bb._events = events;
         return bb;
+    }
+
+    public override void _Ready()
+    {
+        _events = GetGameEvents();
     }
 
     public void OnBumped(PlayerController player)

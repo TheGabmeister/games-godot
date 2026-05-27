@@ -9,8 +9,6 @@ public partial class LevelManager : Node2D
     [Export] public GoalTrigger GoalTrigger;
     [Export] private Node _markerRoot;
 
-    public GameEvents Events;
-
     public override void _Ready()
     {
         if (PlayerStart == null)
@@ -32,22 +30,22 @@ public partial class LevelManager : Node2D
             switch (child)
             {
                 case CoinMarker m:
-                    AddChild(Coin.Create(m.GlobalPosition, Events));
+                    AddChild(Coin.Create(m.GlobalPosition));
                     break;
                 case QuestionBlockMarker m:
-                    AddChild(QuestionBlock.Create(m.GlobalPosition, Events));
+                    AddChild(QuestionBlock.Create(m.GlobalPosition));
                     break;
                 case BrickBlockMarker m:
-                    AddChild(BrickBlock.Create(m.GlobalPosition, Events));
+                    AddChild(BrickBlock.Create(m.GlobalPosition));
                     break;
                 case MushroomMarker m:
-                    AddChild(Mushroom.Create(m.GlobalPosition, Events));
+                    AddChild(Mushroom.Create(m.GlobalPosition));
                     break;
                 case StarmanMarker m:
-                    AddChild(Starman.Create(m.GlobalPosition, Events));
+                    AddChild(Starman.Create(m.GlobalPosition));
                     break;
                 case FireFlowerMarker m:
-                    AddChild(FireFlower.Create(m.GlobalPosition, Events));
+                    AddChild(FireFlower.Create(m.GlobalPosition));
                     break;
             }
         }
