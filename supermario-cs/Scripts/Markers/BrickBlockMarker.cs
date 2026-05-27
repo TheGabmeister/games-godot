@@ -1,7 +1,5 @@
-using Godot;
-
 namespace SMB;
 
-public partial class BrickBlockMarker : Marker2D
+public partial class BrickBlockMarker : LabeledMarker
 {
 }

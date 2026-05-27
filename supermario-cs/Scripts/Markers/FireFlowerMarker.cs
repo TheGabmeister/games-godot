@@ -1,7 +1,5 @@
-using Godot;
-
 namespace SMB;
 
-public partial class FireFlowerMarker : Marker2D
+public partial class FireFlowerMarker : LabeledMarker
 {
 }
