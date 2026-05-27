@@ -1,27 +1,27 @@
 [gd_scene format=3 uid="uid://chvqq8myf2wu7"]
 
-[ext_resource type="PackedScene" uid="uid://cr75qnkiioj5i" path="res://Scenes/level_base.tscn" id="1_base"]
-[ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://Scenes/Entities/platform.tscn" id="2_c33ey"]
+[ext_resource type="PackedScene" uid="uid://cr75qnkiioj5i" path="res://Scenes/LevelBase.tscn" id="1_dhim8"]
+[ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://Scenes/Entities/Platform.tscn" id="2_08tn1"]
 
-[node name="World13" unique_id=923809917 instance=ExtResource("1_base")]
+[node name="World13" unique_id=923809917 instance=ExtResource("1_dhim8")]
 
 [node name="GoalTrigger" parent="." index="2" unique_id=55338925]
 position = Vector2(287, 256)
 
-[node name="Platform" parent="." index="3" unique_id=328389302 instance=ExtResource("2_c33ey")]
+[node name="Platform" parent="." index="3" unique_id=328389302 instance=ExtResource("2_08tn1")]
 position = Vector2(66, 320)
 
-[node name="Platform2" parent="." index="4" unique_id=1005880039 instance=ExtResource("2_c33ey")]
+[node name="Platform2" parent="." index="4" unique_id=1005880039 instance=ExtResource("2_08tn1")]
 position = Vector2(172, 320)
 
-[node name="Platform3" parent="." index="5" unique_id=44900885 instance=ExtResource("2_c33ey")]
+[node name="Platform3" parent="." index="5" unique_id=44900885 instance=ExtResource("2_08tn1")]
 position = Vector2(291, 321)
 
-[node name="Platform4" parent="." index="6" unique_id=1911421503 instance=ExtResource("2_c33ey")]
+[node name="Platform4" parent="." index="6" unique_id=1911421503 instance=ExtResource("2_08tn1")]
 position = Vector2(188, 157)
 
-[node name="Platform5" parent="." index="7" unique_id=313563162 instance=ExtResource("2_c33ey")]
+[node name="Platform5" parent="." index="7" unique_id=313563162 instance=ExtResource("2_08tn1")]
 position = Vector2(294, 157)
 
-[node name="Platform6" parent="." index="8" unique_id=794019474 instance=ExtResource("2_c33ey")]
+[node name="Platform6" parent="." index="8" unique_id=794019474 instance=ExtResource("2_08tn1")]
 position = Vector2(413, 158)

@@ -11,8 +11,8 @@ config_version=5
 [application]
 
 config/name="supermario-cs"
-run/main_scene="res://Scenes/boot.tscn"
-config/features=PackedStringArray("4.6", "C#", "Forward Plus")
+run/main_scene="uid://suc4sium3bn1"
+config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]

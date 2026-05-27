@@ -1,28 +1,28 @@
 [gd_scene format=3 uid="uid://chvqq8kyf2wu7"]
 
-[ext_resource type="PackedScene" uid="uid://cr75qnkiioj5i" path="res://Scenes/level_base.tscn" id="1_base"]
-[ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://Scenes/Entities/platform.tscn" id="2_plat"]
-[ext_resource type="PackedScene" uid="uid://dc3bj5h5lst1c" path="res://Scenes/Entities/coin.tscn" id="3_coin"]
+[ext_resource type="PackedScene" uid="uid://cr75qnkiioj5i" path="res://Scenes/LevelBase.tscn" id="1_qr3h5"]
+[ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://Scenes/Entities/Platform.tscn" id="2_6wrfs"]
+[ext_resource type="PackedScene" uid="uid://dc3bj5h5lst1c" path="res://Scenes/Pickups/Coin.tscn" id="3_414rj"]
 
-[node name="World11" unique_id=144288357 instance=ExtResource("1_base")]
+[node name="World11" unique_id=144288357 instance=ExtResource("1_qr3h5")]
 
 [node name="GoalTrigger" parent="." index="2" unique_id=55338925]
 position = Vector2(293, 256)
 
-[node name="Platform" parent="." index="3" unique_id=1106055088 instance=ExtResource("2_plat")]
+[node name="Platform" parent="." index="3" unique_id=1106055088 instance=ExtResource("2_6wrfs")]
 position = Vector2(66, 320)
 
-[node name="Platform2" parent="." index="4" unique_id=1907707047 instance=ExtResource("2_plat")]
+[node name="Platform2" parent="." index="4" unique_id=1907707047 instance=ExtResource("2_6wrfs")]
 position = Vector2(172, 320)
 
-[node name="Platform3" parent="." index="5" unique_id=905141241 instance=ExtResource("2_plat")]
+[node name="Platform3" parent="." index="5" unique_id=905141241 instance=ExtResource("2_6wrfs")]
 position = Vector2(291, 321)
 
-[node name="Coin" parent="." index="6" unique_id=1158060375 instance=ExtResource("3_coin")]
+[node name="Coin" parent="." index="6" unique_id=1158060375 instance=ExtResource("3_414rj")]
 position = Vector2(128, 280)
 
-[node name="Coin2" parent="." index="7" unique_id=1255589448 instance=ExtResource("3_coin")]
+[node name="Coin2" parent="." index="7" unique_id=1255589448 instance=ExtResource("3_414rj")]
 position = Vector2(160, 280)
 
-[node name="Coin3" parent="." index="8" unique_id=895617369 instance=ExtResource("3_coin")]
+[node name="Coin3" parent="." index="8" unique_id=895617369 instance=ExtResource("3_414rj")]
 position = Vector2(192, 280)

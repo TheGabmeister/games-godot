@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://fxqxucm5n03u" path="res://Scripts/Enemies/HammerBro.cs" id="1_hb"]
 [ext_resource type="Script" uid="uid://c1nnlv03sy2w" path="res://Scripts/Components/Hitbox.cs" id="2_h"]
-[ext_resource type="PackedScene" uid="uid://dxilyuakolaui" path="res://Scenes/Entities/hammer.tscn" id="3_hammer"]
+[ext_resource type="PackedScene" uid="uid://dxilyuakolaui" path="res://Scenes/Projectiles/Hammer.tscn" id="3_hammer"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hb"]
 size = Vector2(32, 48)

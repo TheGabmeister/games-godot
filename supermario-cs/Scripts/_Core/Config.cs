@@ -2,9 +2,9 @@ namespace SMB;
 
 public static class Config
 {
-    public const string BootScenePath = "res://scenes/boot.tscn";
-    public const string MainMenuScenePath = "res://scenes/main_menu.tscn";
-    public const string GameOverScenePath = "res://scenes/game_over.tscn";
+    public const string BootScenePath = "res://Scenes/Boot.tscn";
+    public const string MainMenuScenePath = "res://Scenes/MainMenu.tscn";
+    public const string GameOverScenePath = "res://Scenes/GameOver.tscn";
     public const string HudScenePath = "res://scenes/hud.tscn";
     public const string PlayerScenePath = "res://scenes/player.tscn";
     public const string FireballScenePath = "res://scenes/entities/fireball.tscn";
