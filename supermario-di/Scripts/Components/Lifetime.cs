@@ -1,0 +1,18 @@
+using Godot;
+
+namespace SMB;
+
+public partial class Lifetime : Node
+{
+    [Export] public float Duration = 3f;
+
+    public override void _Ready()
+    {
+        var timer = GetTree().CreateTimer(Duration);
+        timer.Timeout += () =>
+        {
+            var parent = GetParent();
+            parent.QueueFree();
+        };
+    }
+}

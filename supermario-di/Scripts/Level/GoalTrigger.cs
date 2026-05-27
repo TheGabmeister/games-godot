@@ -1,0 +1,29 @@
+using System;
+using Godot;
+
+namespace SMB;
+
+public partial class GoalTrigger : Area2D
+{
+    public event Action Reached;
+
+    private bool _triggered;
+
+    public override void _Ready()
+    {
+        BodyEntered += OnBodyEntered;
+    }
+
+    private void OnBodyEntered(Node2D body)
+    {
+        if (_triggered) return;
+        if (body is not PlayerController) return;
+        _triggered = true;
+        CallDeferred(MethodName.EmitReached);
+    }
+
+    private void EmitReached()
+    {
+        Reached?.Invoke();
+    }
+}

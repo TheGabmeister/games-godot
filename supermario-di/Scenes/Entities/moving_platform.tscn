@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://cos3c4x2uvahs"]
+
+[ext_resource type="Script" uid="uid://ddggb24i3qriy" path="res://Scripts/Level/MovingPlatform.cs" id="1_mp"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mp"]
+size = Vector2(96, 16)
+
+[node name="MovingPlatform" type="AnimatableBody2D"]
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("1_mp")
+Axis = 0
+Distance = 160.0
+Speed = 80.0
+
+[node name="Visual" type="ColorRect" parent="."]
+offset_left = -48.0
+offset_top = -8.0
+offset_right = 48.0
+offset_bottom = 8.0
+color = Color(0.85, 0.85, 0.85, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_mp")

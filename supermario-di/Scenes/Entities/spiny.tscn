@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://chdbngog35vca"]
+
+[ext_resource type="Script" uid="uid://dqp48udhuj02g" path="res://Scripts/Enemies/Spiny.cs" id="1_sp"]
+[ext_resource type="Script" uid="uid://cdgor4njij6ve" path="res://Scripts/Components/Walker.cs" id="2_w"]
+[ext_resource type="Script" uid="uid://c1nnlv03sy2w" path="res://Scripts/Components/Hitbox.cs" id="3_h"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sp"]
+size = Vector2(32, 32)
+
+[node name="Spiny" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 8
+script = ExtResource("1_sp")
+
+[node name="Visual" type="ColorRect" parent="."]
+offset_left = -16.0
+offset_top = -32.0
+offset_right = 16.0
+offset_bottom = 0.0
+color = Color(0.85, 0.25, 0.25, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -16)
+shape = SubResource("RectangleShape2D_sp")
+
+[node name="Walker" type="Node" parent="."]
+script = ExtResource("2_w")
+Body = NodePath("..")
+Speed = 80.0
+TurnAtCliffs = false
+BounceForce = 0.0
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("3_h")
+OwnerNode = NodePath("..")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+position = Vector2(0, -16)
+shape = SubResource("RectangleShape2D_sp")

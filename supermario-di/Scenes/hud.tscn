@@ -1,0 +1,93 @@
+[gd_scene format=3 uid="uid://c34f2sudovfwa"]
+
+[ext_resource type="Script" uid="uid://bthi3s7b43vmk" path="res://Scripts/UI/Hud.cs" id="1_hud"]
+
+[node name="Hud" type="CanvasLayer" node_paths=PackedStringArray("ScoreLabel", "CoinLabel", "WorldLabel", "TimeLabel", "LivesLabel")]
+script = ExtResource("1_hud")
+ScoreLabel = NodePath("Root/Top/Score/Value")
+CoinLabel = NodePath("Root/Top/Coins/Value")
+WorldLabel = NodePath("Root/Top/World/Value")
+TimeLabel = NodePath("Root/Top/Time/Value")
+LivesLabel = NodePath("Root/Top/Lives/Value")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Top" type="HBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 8.0
+offset_bottom = 32.0
+grow_horizontal = 2
+alignment = 1
+theme_override_constants/separation = 32
+
+[node name="Score" type="VBoxContainer" parent="Root/Top"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Top/Score"]
+layout_mode = 2
+text = "MARIO"
+horizontal_alignment = 1
+
+[node name="Value" type="Label" parent="Root/Top/Score"]
+layout_mode = 2
+text = "000000"
+horizontal_alignment = 1
+
+[node name="Coins" type="VBoxContainer" parent="Root/Top"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Top/Coins"]
+layout_mode = 2
+text = "COINS"
+horizontal_alignment = 1
+
+[node name="Value" type="Label" parent="Root/Top/Coins"]
+layout_mode = 2
+text = "x00"
+horizontal_alignment = 1
+
+[node name="World" type="VBoxContainer" parent="Root/Top"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Top/World"]
+layout_mode = 2
+text = "WORLD"
+horizontal_alignment = 1
+
+[node name="Value" type="Label" parent="Root/Top/World"]
+layout_mode = 2
+text = "1-1"
+horizontal_alignment = 1
+
+[node name="Time" type="VBoxContainer" parent="Root/Top"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Top/Time"]
+layout_mode = 2
+text = "TIME"
+horizontal_alignment = 1
+
+[node name="Value" type="Label" parent="Root/Top/Time"]
+layout_mode = 2
+text = "400"
+horizontal_alignment = 1
+
+[node name="Lives" type="VBoxContainer" parent="Root/Top"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Top/Lives"]
+layout_mode = 2
+text = "LIVES"
+horizontal_alignment = 1
+
+[node name="Value" type="Label" parent="Root/Top/Lives"]
+layout_mode = 2
+text = "x 3"
+horizontal_alignment = 1

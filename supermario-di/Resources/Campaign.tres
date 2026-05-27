@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="Campaign" format=3 uid="uid://ber7lyku83bn1"]
+
+[ext_resource type="Script" uid="uid://ds6wuw064kraq" path="res://Scripts/Resources/Campaign.cs" id="1_camp"]
+[ext_resource type="Resource" uid="uid://ctfhde65bui6k" path="res://Resources/Levels/world_1_1.tres" id="2_l11"]
+[ext_resource type="Resource" uid="uid://ctfhdf65bui6k" path="res://Resources/Levels/world_1_2.tres" id="3_l12"]
+[ext_resource type="Resource" uid="uid://ctfhdg65bui6k" path="res://Resources/Levels/world_1_3.tres" id="4_l13"]
+
+[resource]
+script = ExtResource("1_camp")
+Levels = Array[Resource]([ExtResource("2_l11"), ExtResource("3_l12"), ExtResource("4_l13")])

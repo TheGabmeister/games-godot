@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://c37pxx6yegoeq"]
+
+[ext_resource type="Script" uid="uid://c5rgniua4qq6q" path="res://Scripts/Level/Platform.cs" id="1_plat"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
+size = Vector2(64, 16)
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_plat"]
+size = Vector2(64, 16)
+
+[node name="Platform" type="StaticBody2D"]
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("1_plat")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = SubResource("PlaceholderTexture2D_plat")
+modulate = Color(0.55, 0.35, 0.15, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_plat")

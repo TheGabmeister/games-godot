@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://bkniq27ca3fhg"]
+
+[ext_resource type="Script" uid="uid://d362rpviuli11" path="res://Scripts/Enemies/BulletBill.cs" id="1_bb"]
+[ext_resource type="Script" uid="uid://dte2bnpt13dk5" path="res://Scripts/Components/Lifetime.cs" id="2_lf"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bb"]
+size = Vector2(24, 16)
+
+[node name="BulletBill" type="Area2D"]
+collision_layer = 32
+collision_mask = 1
+script = ExtResource("1_bb")
+
+[node name="Visual" type="ColorRect" parent="."]
+offset_left = -12.0
+offset_top = -8.0
+offset_right = 12.0
+offset_bottom = 8.0
+color = Color(0.1, 0.1, 0.1, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_bb")
+
+[node name="Lifetime" type="Node" parent="."]
+script = ExtResource("2_lf")
+Duration = 5.0

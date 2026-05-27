@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://chvqq8lyf2wu7"]
+
+[ext_resource type="PackedScene" uid="uid://cr75qnkiioj5i" path="res://Scenes/level_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://Scenes/Entities/platform.tscn" id="2_fdiim"]
+
+[node name="World12" unique_id=1054888230 instance=ExtResource("1_base")]
+
+[node name="GoalTrigger" parent="." index="2" unique_id=55338925]
+position = Vector2(286, 255)
+
+[node name="Platform" parent="." index="3" unique_id=1664415956 instance=ExtResource("2_fdiim")]
+position = Vector2(63, 329)
+
+[node name="Platform2" parent="." index="4" unique_id=1469712944 instance=ExtResource("2_fdiim")]
+position = Vector2(169, 329)
+
+[node name="Platform3" parent="." index="5" unique_id=2083423485 instance=ExtResource("2_fdiim")]
+position = Vector2(288, 330)
+
+[node name="Platform4" parent="." index="6" unique_id=1424991243 instance=ExtResource("2_fdiim")]
+position = Vector2(427, 330)

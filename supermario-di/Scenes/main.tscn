@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://dgjd5jy3x5gat"]
+
+[ext_resource type="PackedScene" uid="uid://c37ux25rw32eq" path="res://Scenes/player.tscn" id="2_player"]
+[ext_resource type="Script" uid="uid://bthi3s7b43vmk" path="res://Scripts/UI/Hud.cs" id="3_hud"]
+
+[node name="Main" type="Node" unique_id=1225077398]
+
+[node name="SceneRoot" type="Node" parent="." unique_id=719748924]
+
+[node name="Player" parent="." unique_id=824403328 instance=ExtResource("2_player")]
+position = Vector2(56, 192)
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1838346216]
+script = ExtResource("3_hud")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=474908179]
+
+[node name="DebugRoot" type="Node" parent="." unique_id=1279669347]
