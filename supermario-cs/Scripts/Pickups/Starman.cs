@@ -5,6 +5,7 @@ namespace SMB;
 public partial class Starman : CharacterBody2D
 {
     [Export] public Area2D PickupTrigger;
+    [Export] public int ScoreValue = 1000;
 
     private bool _collected;
 
@@ -17,9 +18,9 @@ public partial class Starman : CharacterBody2D
     {
         if (_collected) return;
         _collected = true;
-        Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = Constants.StarmanPickupScore });
+        Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = ScoreValue });
         Bus<EV_Pickup_Starman>.Emit();
-        Bus<EV_TextSpawn>.Emit(new EV_TextSpawn { text = Constants.StarmanPickupScore.ToString(), position = GlobalPosition });
+        Bus<EV_TextSpawn>.Emit(new EV_TextSpawn { text = ScoreValue.ToString(), position = GlobalPosition });
         QueueFree();
     }
 }

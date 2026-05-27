@@ -10,6 +10,18 @@ size = Vector2(32, 48)
 collision_layer = 1
 collision_mask = 200
 script = ExtResource("1_player")
+Speed = 280.0
+JumpForce = -680.0
+Gravity = 1200.0
+MaxFallSpeed = 600.0
+StompBounceForce = -420.0
+InvulnerableDuration = 2.0
+StarmanInvincibleDuration = 10.0
+MaxFireballs = 2
+SmallWidth = 32
+SmallHeight = 48
+BigWidth = 32
+BigHeight = 64
 
 [node name="Visual" type="ColorRect" parent="."]
 offset_left = -16.0

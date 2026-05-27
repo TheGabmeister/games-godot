@@ -29,6 +29,8 @@ Body = NodePath("..")
 Speed = 80.0
 TurnAtCliffs = false
 BounceForce = 0.0
+Gravity = 1200.0
+MaxFallSpeed = 600.0
 CliffProbeMask = 8
 
 [node name="PickupTrigger" type="Area2D" parent="."]

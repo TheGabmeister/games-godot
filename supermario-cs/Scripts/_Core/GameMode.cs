@@ -5,6 +5,8 @@ namespace SMB;
 
 public partial class GameMode : Node
 {
+    private const int CoinsPerLife = 100;
+
     public event Action SessionEnded;
     public event Action<int> ScoreChanged;
     public event Action<int> CoinsChanged;
@@ -182,10 +184,10 @@ public partial class GameMode : Node
     private void AddCoins(int coins)
     {
         SaveData.Coins += coins;
-        if (SaveData.Coins >= Constants.CoinsPerLife)
+        if (SaveData.Coins >= CoinsPerLife)
         {
-            var livesEarned = SaveData.Coins / Constants.CoinsPerLife;
-            SaveData.Coins %= Constants.CoinsPerLife;
+            var livesEarned = SaveData.Coins / CoinsPerLife;
+            SaveData.Coins %= CoinsPerLife;
             SetLives(SaveData.Lives + livesEarned);
         }
 

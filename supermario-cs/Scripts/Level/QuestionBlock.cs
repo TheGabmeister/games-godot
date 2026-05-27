@@ -7,6 +7,8 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
     [Export] public Bumpable Bumpable;
     [Export] public ColorRect Visual;
     [Export] public Color UsedColor = new Color(0.55f, 0.35f, 0.10f);
+    [Export] public int ScoreValue = 200;
+    [Export] public int CoinValue = 1;
 
     private bool _used;
 
@@ -19,8 +21,8 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
         if (_used) return;
         _used = true;
         Visual.Color = UsedColor;
-        Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = Constants.CoinValue });
-        Bus<EV_Pickup_Coin>.Emit(new EV_Pickup_Coin { value = 1 });
+        Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = ScoreValue });
+        Bus<EV_Pickup_Coin>.Emit(new EV_Pickup_Coin { value = CoinValue });
         Bumpable.Bump();
     }
 }

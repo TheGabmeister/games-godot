@@ -5,8 +5,8 @@ namespace SMB;
 public partial class MovingPlatform : AnimatableBody2D
 {
     [Export] public MovingPlatformAxis Axis = MovingPlatformAxis.Horizontal;
-    [Export] public float Distance = Constants.MovingPlatformDistance;
-    [Export] public float Speed = Constants.MovingPlatformSpeed;
+    [Export] public float Distance = 160f;
+    [Export] public float Speed = 80f;
 
     private Vector2 _origin;
     private int _direction = 1;

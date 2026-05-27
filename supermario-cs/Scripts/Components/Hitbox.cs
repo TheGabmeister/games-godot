@@ -5,6 +5,7 @@ namespace SMB;
 public partial class Hitbox : Area2D
 {
     [Export] public Node OwnerNode;
+    [Export] public float StompTopTolerance = 16f;
 
     public override void _Ready()
     {
@@ -36,6 +37,6 @@ public partial class Hitbox : Area2D
     {
         var ownerNode2D = (Node2D)OwnerNode;
         if (player.Velocity.Y <= 0f) return false;
-        return player.GlobalPosition.Y < ownerNode2D.GlobalPosition.Y - Constants.StompTopTolerance / 2f;
+        return player.GlobalPosition.Y < ownerNode2D.GlobalPosition.Y - StompTopTolerance / 2f;
     }
 }

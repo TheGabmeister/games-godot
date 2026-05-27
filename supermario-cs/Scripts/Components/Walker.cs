@@ -8,6 +8,8 @@ public partial class Walker : Node
     [Export] public float Speed = 80f;
     [Export] public bool TurnAtCliffs = false;
     [Export] public float BounceForce = 0f;
+    [Export] public float Gravity = 1200f;
+    [Export] public float MaxFallSpeed = 600f;
     [Export] public float CliffProbeOffsetY = 8f;
     [Export(PropertyHint.Layers2DPhysics)] public uint CliffProbeMask = 0;
 
@@ -18,8 +20,8 @@ public partial class Walker : Node
         float dt = (float)delta;
 
         var v = Body.Velocity;
-        v.Y += Constants.Gravity * dt;
-        if (v.Y > Constants.MaxFallSpeed) v.Y = Constants.MaxFallSpeed;
+        v.Y += Gravity * dt;
+        if (v.Y > MaxFallSpeed) v.Y = MaxFallSpeed;
         v.X = Direction * Speed;
 
         Body.Velocity = v;

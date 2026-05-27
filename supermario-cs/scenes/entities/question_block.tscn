@@ -13,6 +13,8 @@ script = ExtResource("1_q")
 Bumpable = NodePath("Bumpable")
 Visual = NodePath("Visual")
 UsedColor = Color(0.55, 0.35, 0.1, 1)
+ScoreValue = 200
+CoinValue = 1
 
 [node name="Visual" type="ColorRect" parent="."]
 offset_left = -16.0
@@ -27,3 +29,5 @@ shape = SubResource("RectangleShape2D_q")
 [node name="Bumpable" type="Node" parent="."]
 script = ExtResource("2_bump")
 Visual = NodePath("../Visual")
+Distance = 8.0
+Duration = 0.18

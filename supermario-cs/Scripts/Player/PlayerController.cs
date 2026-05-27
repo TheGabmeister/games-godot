@@ -5,6 +5,19 @@ namespace SMB;
 
 public partial class PlayerController : CharacterBody2D
 {
+    [Export] public float Speed = 280f;
+    [Export] public float JumpForce = -680f;
+    [Export] public float Gravity = 1200f;
+    [Export] public float MaxFallSpeed = 600f;
+    [Export] public float StompBounceForce = -420f;
+    [Export] public float InvulnerableDuration = 2f;
+    [Export] public float StarmanInvincibleDuration = 10f;
+    [Export] public int MaxFireballs = 2;
+    [Export] public int SmallWidth = 32;
+    [Export] public int SmallHeight = 48;
+    [Export] public int BigWidth = 32;
+    [Export] public int BigHeight = 64;
+
     public event Action Died;
     public event Action<PlayerPowerState> PowerStateChanged;
     public event Action<Vector2, int, PlayerController> FireballRequested;
@@ -61,23 +74,23 @@ public partial class PlayerController : CharacterBody2D
         if (Input.IsActionPressed(InputLeft)) axis -= 1f;
         if (Input.IsActionPressed(InputRight)) axis += 1f;
 
-        _velocity.X = axis * Constants.PlayerSpeed;
+        _velocity.X = axis * Speed;
         if (axis != 0f) _facing = axis > 0f ? 1 : -1;
 
         if (IsOnFloor() && Input.IsActionJustPressed(InputJump))
         {
-            _velocity.Y = Constants.JumpForce;
+            _velocity.Y = JumpForce;
         }
 
         if (Input.IsActionJustPressed(InputFire) && _state == PlayerPowerState.Fire
-            && _activeFireballs < Constants.MaxFireballs)
+            && _activeFireballs < MaxFireballs)
         {
             SpawnFireball();
         }
 
-        _velocity.Y += Constants.Gravity * dt;
-        if (_velocity.Y > Constants.MaxFallSpeed)
-            _velocity.Y = Constants.MaxFallSpeed;
+        _velocity.Y += Gravity * dt;
+        if (_velocity.Y > MaxFallSpeed)
+            _velocity.Y = MaxFallSpeed;
 
         Velocity = _velocity;
         MoveAndSlide();
@@ -121,7 +134,7 @@ public partial class PlayerController : CharacterBody2D
 
     public void ApplyStarman()
     {
-        _starTimer = Constants.StarmanInvincibleDuration;
+        _starTimer = StarmanInvincibleDuration;
     }
 
     public void TakeDamage()
@@ -135,8 +148,8 @@ public partial class PlayerController : CharacterBody2D
         }
 
         SetState(PlayerPowerState.Small);
-        _invulnTimer = Constants.PlayerInvulnDuration;
-        _blinker.Start(Constants.PlayerInvulnDuration);
+        _invulnTimer = InvulnerableDuration;
+        _blinker.Start(InvulnerableDuration);
     }
 
     public void KillPlayer()
@@ -150,7 +163,7 @@ public partial class PlayerController : CharacterBody2D
     public bool TryStomp(IStompable stompable)
     {
         if (_velocity.Y <= 0f) return false;
-        _velocity.Y = Constants.StompBounceForce;
+        _velocity.Y = StompBounceForce;
         stompable.OnStomped(this);
         return true;
     }
@@ -168,9 +181,9 @@ public partial class PlayerController : CharacterBody2D
         Color color;
         switch (_state)
         {
-            case PlayerPowerState.Big:  w = Constants.PlayerBigWidth;   h = Constants.PlayerBigHeight;   color = new Color(0.85f, 0.10f, 0.10f); break;
-            case PlayerPowerState.Fire: w = Constants.PlayerBigWidth;   h = Constants.PlayerBigHeight;   color = new Color(1.00f, 0.55f, 0.10f); break;
-            default:                    w = Constants.PlayerSmallWidth; h = Constants.PlayerSmallHeight; color = new Color(0.85f, 0.10f, 0.10f); break;
+            case PlayerPowerState.Big:  w = BigWidth;   h = BigHeight;   color = new Color(0.85f, 0.10f, 0.10f); break;
+            case PlayerPowerState.Fire: w = BigWidth;   h = BigHeight;   color = new Color(1.00f, 0.55f, 0.10f); break;
+            default:                    w = SmallWidth; h = SmallHeight; color = new Color(0.85f, 0.10f, 0.10f); break;
         }
 
         _visual.Size = new Vector2(w, h);
