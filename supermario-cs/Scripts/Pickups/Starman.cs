@@ -15,10 +15,10 @@ public partial class Starman : CharacterBody2D
 
     private void OnPickedUp(Node2D body)
     {
-        if (_collected || body is not PlayerController player) return;
+        if (_collected || !Layers.HasLayer(body, Layers.Player)) return;
         _collected = true;
         Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = Constants.StarmanPickupScore });
-        Bus<EV_Pickup_Starman>.Emit(new EV_Pickup_Starman { player = player });
+        Bus<EV_Pickup_Starman>.Emit();
         Bus<EV_TextSpawn>.Emit(new EV_TextSpawn { text = Constants.StarmanPickupScore.ToString(), position = GlobalPosition });
         QueueFree();
     }

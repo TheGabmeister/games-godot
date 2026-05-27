@@ -25,17 +25,14 @@ public struct EV_Pickup_Coin : IEvent
 
 public struct EV_Pickup_Mushroom : IEvent
 {
-    public PlayerController player;
 }
 
 public struct EV_Pickup_FireFlower : IEvent
 {
-    public PlayerController player;
 }
 
 public struct EV_Pickup_Starman : IEvent
 {
-    public PlayerController player;
 }
 
 public struct EV_Pickup_OneUp : IEvent

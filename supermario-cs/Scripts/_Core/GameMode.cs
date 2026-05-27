@@ -82,17 +82,17 @@ public partial class GameMode : Node
 
     private void OnMushroomPickedUp(EV_Pickup_Mushroom ev)
     {
-        ev.player.ApplyMushroom();
+        _currentPlayer?.ApplyMushroom();
     }
 
     private void OnFireFlowerPickedUp(EV_Pickup_FireFlower ev)
     {
-        ev.player.ApplyFireFlower();
+        _currentPlayer?.ApplyFireFlower();
     }
 
     private void OnStarmanPickedUp(EV_Pickup_Starman ev)
     {
-        ev.player.ApplyStarman();
+        _currentPlayer?.ApplyStarman();
     }
 
     private void OnOneUpPickedUp()
