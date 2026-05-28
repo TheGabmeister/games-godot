@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://qleevusiygdf"
-path="res://.godot/imported/game_over.wav-2a2d1f33b6256a49c36176e8719e1f1a.sample"
+uid="uid://dtglq8ex6cuje"
+path="res://.godot/imported/PlayerStomp.wav-b5d151b3d71eb6347e29635e65876a4a.sample"
 
 [deps]
 
-source_file="res://Sfx/game_over.wav"
-dest_files=["res://.godot/imported/game_over.wav-2a2d1f33b6256a49c36176e8719e1f1a.sample"]
+source_file="res://Sfx/PlayerStomp.wav"
+dest_files=["res://.godot/imported/PlayerStomp.wav-b5d151b3d71eb6347e29635e65876a4a.sample"]
 
 [params]
 
