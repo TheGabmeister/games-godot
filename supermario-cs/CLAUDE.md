@@ -23,13 +23,14 @@ If `godot` is not on PATH on Windows, use `D:\Godot\Godot_v4.6.2-stable_mono_win
 - Edit `.tscn` files with care. Before changing exported properties or scene wiring by hand, inspect the current `.tscn`, explain the tradeoff, and prefer the smallest change that preserves the user's chosen wiring style.
 - Suspect Godot editor/runtime cache issues before redesigning. If a cache issue is plausible, say so plainly and try rebuild/reload validation before changing code or scene wiring.
 - Do not hand-edit generated files under `.godot/`, `*.uid`, or `*.import`.
-- Score/coin gameplay state is handled by `GameMode` through struct events on `Bus<T>`. Do not reintroduce score/coin service interfaces, marker-based runtime spawning, or no-op/null-object handlers for required gameplay events.
+- Score/coin gameplay state is handled by `GameMode` through the static `Events` hub. Do not reintroduce score/coin service interfaces, marker-based runtime spawning, tree-walking event scanners, or no-op/null-object handlers for required gameplay events.
+- Keep `supermario-cs.csproj` tracked. Godot C# and VS Code navigation depend on it; if C# autoloads fail after cache cleanup, run `dotnet build supermario-cs.csproj` to regenerate `.godot/mono/temp`.
 
 ## Architecture
 
-**One autoload: `GameInstance`.** Entry point and app-lifetime service locator. Access it via `GameServices.GetGameInstance()` or the globally imported `GetGameInstance()` helper; it does not expose a static `Instance` property. `boot.tscn` is an empty marker scene; the real flow is in `GameInstance.PostBoot`, which defers one frame after `_Ready`, reads `GetTree().CurrentScene`, and branches:
+**One autoload: `GameInstance`.** Entry point and app-lifetime service locator. Access it via `GameServices.GetGameInstance()` or the globally imported `GetGameInstance()` helper; it does not expose a static `Instance` property. `Boot.tscn` is an empty marker scene; the real flow is in `GameInstance.PostBoot`, which defers one frame after `_Ready`, reads `GetTree().CurrentScene`, and branches:
 
-- **Path is `boot.tscn`** -> `LoadMainMenu()` (normal launch).
+- **Path is `Boot.tscn`** -> `LoadMainMenu()` (normal launch).
 - **A `LevelManager` and `OS.HasFeature("editor")`** -> look up the scene's index in `Campaign.tres`, `UnloadCurrentScene()`, `StartGame(index)` (F6 skip-to-level workflow).
 - **Anything else** -> sandbox; services available, no session started.
 
@@ -43,24 +44,30 @@ Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) live 
 | `GetGameMode()` | Session | `GameInstance.StartGame` / cleared on game over |
 | `GameMode.TextSpawner` | Level/session UI | `GameMode.Start` |
 
-`Scripts/_Core/GameServices.cs` is a static facade globally imported by `Scripts/_Core/GlobalUsings.cs`. It provides `GetGameInstance()`, `GetGameMode()`, and `PlayMusic(...)`. The returned `GameInstance` and `GameMode` objects are normal instances, not static singletons. `MusicManager` and `SfxManager` are not statics either; music is reached through `GameInstance.Music` / `PlayMusic(...)`, while one-shot SFX goes through `Bus<EV_SfxPlay>`.
+`Scripts/_Core/GameServices.cs` is a static facade globally imported by `Scripts/_Core/GlobalUsings.cs`. It provides `GetGameInstance()`, `GetGameMode()`, `PlayMusic(...)`, and `PlaySfx(...)`. The returned `GameInstance` and `GameMode` objects are normal instances, not static singletons. `MusicManager` and `SfxManager` are not statics either; music is reached through `GameInstance.Music` / `PlayMusic(...)`, while one-shot SFX should normally use `PlaySfx(...)`.
 
 ### Event Bus
 
-`Scripts/_Core/EventBus` contains the static generic event bus. Events are structs implementing `IEvent`, named with the `EV_` prefix, and raised with:
+`Scripts/EventBus/Events.cs` contains a simple static event hub. It uses explicit C# `event Action...` members plus matching `Emit...` helper methods. There is no generic `Bus<T>`, no `IEvent`, and no event type scanner.
+
+Events are raised with:
 
 ```csharp
-Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = points });
+Events.EmitScoreEarned(points);
+Events.EmitCoinPickedUp(scoreValue, coinValue, GlobalPosition);
+Events.EmitMushroomPickedUp(scoreValue, GlobalPosition);
 ```
 
 Subscribers use `_Ready()` / `_ExitTree()` or session start/exit pairs:
 
 ```csharp
-Bus<EV_TextSpawn>.Sub(OnTextSpawn);
-Bus<EV_TextSpawn>.Unsub(OnTextSpawn);
+Events.CoinPickedUp += OnCoinPickedUp;
+Events.CoinPickedUp -= OnCoinPickedUp;
 ```
 
-`GameMode` is the sole writer to score, coin, lives, and other `SaveData` state. Pickups and blocks emit events such as `EV_ScoreEarned`, `EV_Pickup_Coin`, `EV_Pickup_Mushroom`, `EV_Pickup_Starman`, and `EV_Pickup_OneUp`; `GameMode` subscribes and applies the state changes.
+`GameMode` is the sole writer to score, coin, lives, and other `SaveData` state. Pickups and blocks emit events such as `ScoreEarned`, `CoinPickedUp`, `MushroomPickedUp`, `FireFlowerPickedUp`, `StarmanPickedUp`, and `OneUpPickedUp`; `GameMode` subscribes and applies the state changes. `GameInstance._ExitTree()` calls `Events.Clear()` as a final static-event cleanup net, but normal subscribers should still unsubscribe at their own lifecycle boundary.
+
+`SfxManager` still listens to `Events.SfxPlay`, but regular gameplay scripts should prefer the globally imported `PlaySfx(audioStream)` helper. Optional exported audio clips may be null; `SfxManager.Play` ignores null streams.
 
 `GameMode`'s own events (`SessionEnded`, `ScoreChanged`, `LivesChanged`, etc.) are HUD-facing, not entity-facing. HUD subscribes via `_hud.Bind(this)`.
 
@@ -77,8 +84,8 @@ Pickups, blocks, enemies, and decorations are placed directly in level scenes in
 ### Allowed Coupling
 
 1. **Vertical ownership.** Parent calls down, child signals up. Components reach their owner via `[Export]`. Never `GetParent()` / `GetNode("../...")`.
-2. **App services.** `MusicManager` and `SfxManager` are owned by `GameInstance`. Music may use `PlayMusic(...)`; SFX should emit `EV_SfxPlay`. They are not statics; do not add an `Instance` accessor back.
-3. **Gameplay events.** Pickups and blocks emit struct events for score, coin, lives, text, and pickup effects. `GameMode`, `TextSpawner`, and `SfxManager` subscribe at their lifecycle boundaries.
+2. **App services.** `MusicManager` and `SfxManager` are owned by `GameInstance`. Music may use `PlayMusic(...)`; one-shot SFX may use `PlaySfx(...)`. They are not statics; do not add an `Instance` accessor back.
+3. **Gameplay events.** Pickups and blocks emit explicit static events through `Events.Emit...` for score, coin, lives, and pickup effects. `GameMode` subscribes at its session lifecycle boundary.
 4. **Session service locator access.** Use `GetGameMode()` for runtime projectile/enemy spawn parents when a direct owner is required.
 5. **Sibling interactions.** Direct calls via combat interfaces.
 
@@ -88,7 +95,7 @@ Pickups, blocks, enemies, and decorations are placed directly in level scenes in
 - Base classes for enemies / pickups / projectiles. Flat per-entity scripts.
 - EntityFactory-style enum/string registries and marker-based level entity spawning.
 - Persistent player across levels; re-spawned per level.
-- Re-introducing score/coin service interfaces, marker classes, or tree-walking event scanners.
+- Re-introducing score/coin service interfaces, marker classes, generic `Bus<T>` plumbing, struct `EV_` events, or tree-walking event scanners.
 - Re-adding `MusicManager.Instance` / `SfxManager.Instance` statics. Go through `GameInstance` or `GameServices`.
 - New autoloads beyond `GameInstance`.
 - Cycles in `.tscn` <-> `.tres` ext_resource references.
@@ -104,7 +111,7 @@ Pickups, blocks, enemies, and decorations are placed directly in level scenes in
 - `public partial class` for all Godot C# scripts. Gameplay classes and the static service helper use namespace `SMB`.
 - `delta` is `double` in `_Process` / `_PhysicsProcess`, not `float`.
 - `Vector2` is a struct; assign via `new Vector2(x, Scale.Y)`, not `Scale.X = x`.
-- File naming: `PascalCase.cs`, `snake_case.tscn`. Directories: `PascalCase`.
+- File naming: `PascalCase.cs`, `PascalCase.tscn` for top-level scenes currently in this repo, and existing lowercase scene names in subfolders only where already present. Directories: `PascalCase`.
 - `StringName` for repeated keys (input actions, signal names).
 - Gameplay tuning values live with their owning scripts and scene instances as exported properties; mirror values from the MonoGame port rather than re-tuning.
 - Collision layers and masks are editor-owned scene data. Do not reintroduce code-side layer bit constants for scene collision setup; use inspector layer/mask exports for component-specific queries such as Walker cliff probes.
