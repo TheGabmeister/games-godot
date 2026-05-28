@@ -2,6 +2,12 @@
 
 [ext_resource type="Script" path="res://Scripts/Player/PlayerController.cs" id="1_player"]
 [ext_resource type="Script" path="res://Scripts/Player/Blinker.cs" id="2_blinker"]
+[ext_resource type="AudioStreamWAV" path="res://Sfx/PlayerJump.wav" id="3_jump_sfx"]
+[ext_resource type="AudioStreamWAV" path="res://Sfx/PlayerJump_Big.wav" id="4_jump_big_sfx"]
+[ext_resource type="AudioStreamWAV" path="res://Sfx/Fireball.wav" id="5_fireball_sfx"]
+[ext_resource type="AudioStreamWAV" path="res://Sfx/PlayerStomp.wav" id="6_stomp_sfx"]
+[ext_resource type="AudioStreamWAV" path="res://Sfx/PlayerPower_Down.wav" id="7_power_down_sfx"]
+[ext_resource type="AudioStreamWAV" path="res://Sfx/PlayerDeath.wav" id="8_death_sfx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(32, 48)
@@ -22,6 +28,12 @@ SmallWidth = 32
 SmallHeight = 48
 BigWidth = 32
 BigHeight = 64
+_jumpClip = ExtResource("3_jump_sfx")
+_jumpBigClip = ExtResource("4_jump_big_sfx")
+_fireballClip = ExtResource("5_fireball_sfx")
+_stompClip = ExtResource("6_stomp_sfx")
+_powerDownClip = ExtResource("7_power_down_sfx")
+_deathClip = ExtResource("8_death_sfx")
 
 [node name="Visual" type="ColorRect" parent="."]
 offset_left = -16.0

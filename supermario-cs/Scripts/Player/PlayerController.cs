@@ -17,6 +17,12 @@ public partial class PlayerController : CharacterBody2D
     [Export] public int SmallHeight = 48;
     [Export] public int BigWidth = 32;
     [Export] public int BigHeight = 64;
+    [Export] private AudioStream _jumpClip;
+    [Export] private AudioStream _jumpBigClip;
+    [Export] private AudioStream _fireballClip;
+    [Export] private AudioStream _stompClip;
+    [Export] private AudioStream _powerDownClip;
+    [Export] private AudioStream _deathClip;
 
     public event Action Died;
     public event Action<PlayerPowerState> PowerStateChanged;
@@ -80,6 +86,7 @@ public partial class PlayerController : CharacterBody2D
         if (IsOnFloor() && Input.IsActionJustPressed(InputJump))
         {
             _velocity.Y = JumpForce;
+            PlaySfx(_state == PlayerPowerState.Small ? _jumpClip : _jumpBigClip);
         }
 
         if (Input.IsActionJustPressed(InputFire) && _state == PlayerPowerState.Fire
@@ -149,6 +156,7 @@ public partial class PlayerController : CharacterBody2D
         }
 
         SetState(PlayerPowerState.Small);
+        PlaySfx(_powerDownClip);
         _invulnTimer = InvulnerableDuration;
         _blinker.Start(InvulnerableDuration);
     }
@@ -157,6 +165,7 @@ public partial class PlayerController : CharacterBody2D
     {
         if (_dead) return;
         _dead = true;
+        PlaySfx(_deathClip);
         Died?.Invoke();
         QueueFree();
     }
@@ -165,6 +174,7 @@ public partial class PlayerController : CharacterBody2D
     {
         if (_velocity.Y <= 0f) return false;
         _velocity.Y = StompBounceForce;
+        PlaySfx(_stompClip);
         stompable.OnStomped(this);
         return true;
     }

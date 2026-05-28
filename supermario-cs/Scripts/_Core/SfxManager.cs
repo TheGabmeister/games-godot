@@ -32,6 +32,8 @@ public partial class SfxManager : Node
 
     public void Play(AudioStream stream)
     {
+        if (stream == null) return;
+
         for (int i = 0; i < _players.Length; i++)
         {
             if (!_players[i].Playing)

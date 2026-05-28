@@ -5,6 +5,7 @@ namespace SMB;
 public partial class FireFlower : Area2D
 {
     [Export] public int ScoreValue = 1000;
+    [Export] private AudioStream _clip;
 
     private bool _collected;
 

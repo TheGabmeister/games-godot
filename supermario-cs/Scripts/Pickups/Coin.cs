@@ -6,6 +6,7 @@ public partial class Coin : Area2D
 {
     [Export] public int ScoreValue = 200;
     [Export] public int CoinValue = 1;
+    [Export] private AudioStream _clip;
 
     private bool _collected;
 

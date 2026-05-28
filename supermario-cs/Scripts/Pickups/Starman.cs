@@ -6,6 +6,7 @@ public partial class Starman : CharacterBody2D
 {
     [Export] public Area2D PickupTrigger;
     [Export] public int ScoreValue = 1000;
+    [Export] private AudioStream _clip;
 
     private bool _collected;
 

@@ -5,6 +5,7 @@ namespace SMB;
 public partial class OneUp : CharacterBody2D
 {
     [Export] public Area2D PickupTrigger;
+    [Export] private AudioStream _clip;
 
     private bool _collected;
 
