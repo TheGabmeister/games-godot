@@ -26,4 +26,9 @@ public static class GameServices
     {
         GetGameInstance().Music.Play(sound);
     }
+
+    public static void PlaySfx(AudioStream sound)
+    {
+        GetGameInstance().Sfx.Play(sound);
+    }
 }

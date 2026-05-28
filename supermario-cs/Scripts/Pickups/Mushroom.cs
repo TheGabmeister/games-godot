@@ -6,6 +6,7 @@ public partial class Mushroom : CharacterBody2D
 {
     [Export] public Area2D PickupTrigger;
     [Export] public int ScoreValue = 1000;
+    [Export] private AudioStream _clip;
 
     private bool _collected;
 
@@ -18,7 +19,8 @@ public partial class Mushroom : CharacterBody2D
     {
         if (_collected) return;
         _collected = true;
-        Events.EmitGotMushroom(ScoreValue, GlobalPosition);
+        PlaySfx(_clip);
+        Events.EmitMushroomPickedUp(ScoreValue, GlobalPosition);
         QueueFree();
     }
 }

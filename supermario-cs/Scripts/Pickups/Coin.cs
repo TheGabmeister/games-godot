@@ -18,7 +18,8 @@ public partial class Coin : Area2D
     {
         if (_collected) return;
         _collected = true;
-        Events.EmitGotCoin(ScoreValue, CoinValue, GlobalPosition);
+        PlaySfx(_clip);
+        Events.EmitCoinPickedUp(ScoreValue, CoinValue, GlobalPosition);
         QueueFree();
     }
 }

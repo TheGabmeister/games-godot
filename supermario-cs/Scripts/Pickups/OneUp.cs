@@ -17,7 +17,8 @@ public partial class OneUp : CharacterBody2D
     {
         if (_collected) return;
         _collected = true;
-        Events.EmitGotOneUp();
+        PlaySfx(_clip);
+        Events.EmitOneUpPickedUp();
         QueueFree();
     }
 }

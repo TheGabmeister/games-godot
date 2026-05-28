@@ -111,6 +111,7 @@ public partial class PlayerController : CharacterBody2D
 
     private void SpawnFireball()
     {
+        PlaySfx(_fireballClip);
         FireballRequested?.Invoke(_muzzle.GlobalPosition, _facing, this);
         _activeFireballs++;
     }
