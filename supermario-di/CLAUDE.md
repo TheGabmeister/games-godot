@@ -111,17 +111,17 @@ Entities without event emission (most enemies, decorations) are placed in the le
 
 - The Player body's `CollisionMask` does **not** include `PickupBody`. Mario walks through pickups; triggering happens via `PickupTrigger`.
 - `GameMode` is the sole writer to `SaveData` and the owner of runtime object spawning from level markers.
-- A level scene must have `PlayerStart`, `GoalTrigger`, and `_markerRoot` exports wired; `LevelManager._Ready` throws otherwise.
+- A level scene must have `PlayerStart`, `GoalTrigger`, and `_markerRoot` exports wired; `LevelScope._Ready` throws otherwise.
 
 ## Conventions
 
-- `public partial class` for all Godot C# scripts. Gameplay classes and the static service helper use namespace `SMB`.
+- `public partial class` for all Godot C# scripts. Gameplay classes use namespace `SMB`.
 - `delta` is `double` in `_Process` / `_PhysicsProcess`, not `float`.
 - `Vector2` is a struct; assign via `new Vector2(x, Scale.Y)`, not `Scale.X = x`.
 - File naming: `PascalCase.cs`, `snake_case.tscn`. Directories: `PascalCase`.
 - `StringName` for repeated keys (input actions, signal names).
-- Gameplay constants in `Scripts/_Core/Constants.cs`; mirror values from the MonoGame port rather than re-tuning.
-- Layer bit positions in `Scripts/_Core/Layers.cs` must stay in sync with the named 2D physics layers in `project.godot`.
+- Collision bit positions in `Scripts/_Core/PhysicsLayers.cs` must stay in sync with the named 2D physics layers in `project.godot`.
+- Shared score/life rules live in `Resources/GameRules.tres`; shared player tuning lives in `Resources/PlayerTuning.tres`; prefab-local tuning belongs on exported scene properties.
 - **Required scene wiring should fail loudly.** Prefer typed exports and `PackedScene.Instantiate<T>()` over defensive null checks. Keep checks only for real gameplay/lifecycle state (`_dead`, `_collected`, "is this body the player?", optional resource fields).
 
 ### `node_paths` Directive Gotcha

@@ -6,10 +6,14 @@ namespace SMB;
 public partial class GameInstance : Node,
     IProvide<GameInstance>,
     IProvide<MusicManager>,
-    IProvide<SfxManager>
+    IProvide<SfxManager>,
+    IProvide<GameRules>,
+    IProvide<PlayerTuning>
 {
     public MusicManager Music { get; private set; }
     public SfxManager Sfx { get; private set; }
+    public GameRules Rules { get; private set; }
+    public PlayerTuning PlayerTuning { get; private set; }
     public GameMode CurrentSession => _session;
     public Node LevelRoot => _levelRoot;
 
@@ -24,6 +28,8 @@ public partial class GameInstance : Node,
     GameInstance IProvide<GameInstance>.Value() => this;
     MusicManager IProvide<MusicManager>.Value() => Music;
     SfxManager IProvide<SfxManager>.Value() => Sfx;
+    GameRules IProvide<GameRules>.Value() => Rules;
+    PlayerTuning IProvide<PlayerTuning>.Value() => PlayerTuning;
 
     public override void _Ready()
     {
@@ -38,6 +44,8 @@ public partial class GameInstance : Node,
 
         _mainMenuScene = GD.Load<PackedScene>(Config.MainMenuScenePath);
         _gameOverScene = GD.Load<PackedScene>(Config.GameOverScenePath);
+        Rules = GD.Load<GameRules>(Config.GameRulesPath);
+        PlayerTuning = GD.Load<PlayerTuning>(Config.PlayerTuningPath);
 
         this.Provide();
         CallDeferred(MethodName.PostBoot);

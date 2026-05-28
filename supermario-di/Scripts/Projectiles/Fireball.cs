@@ -6,6 +6,10 @@ namespace SMB;
 public partial class Fireball : CharacterBody2D
 {
     [Export] public Area2D HitArea;
+    [Export] public float Speed = 400f;
+    [Export] public float Gravity = 1400f;
+    [Export] public float BounceForce = -500f;
+    [Export] public float MaxFallSpeed = 700f;
 
     private PlayerController _owner;
     private int _facing = 1;
@@ -21,7 +25,7 @@ public partial class Fireball : CharacterBody2D
         GlobalPosition = position;
         _facing = facing;
         _owner = owner;
-        _velocity = new Vector2(_facing * Constants.FireballSpeed, 0f);
+        _velocity = new Vector2(_facing * Speed, 0f);
     }
 
     public override void _Ready()
@@ -33,10 +37,10 @@ public partial class Fireball : CharacterBody2D
     {
         if (_destroyed) return;
         float dt = (float)delta;
-        _velocity.Y += Constants.FireballGravity * dt;
-        if (_velocity.Y > Constants.FireballMaxFallSpeed)
-            _velocity.Y = Constants.FireballMaxFallSpeed;
-        _velocity.X = _facing * Constants.FireballSpeed;
+        _velocity.Y += Gravity * dt;
+        if (_velocity.Y > MaxFallSpeed)
+            _velocity.Y = MaxFallSpeed;
+        _velocity.X = _facing * Speed;
         Velocity = _velocity;
         MoveAndSlide();
         _velocity = Velocity;
@@ -47,7 +51,7 @@ public partial class Fireball : CharacterBody2D
             var n = col.GetNormal();
             if (n.Y < -0.9f)
             {
-                _velocity.Y = Constants.FireballBounceForce;
+                _velocity.Y = BounceForce;
             }
             else if (Mathf.Abs(n.X) > 0.9f)
             {

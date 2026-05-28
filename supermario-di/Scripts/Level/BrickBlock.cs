@@ -9,6 +9,7 @@ public partial class BrickBlock : StaticBody2D, IBumpable
 
     [Dependency] public IScoreAwarder ScoreAwarder => this.DependOn<IScoreAwarder>();
     [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+    [Dependency] public GameRules Rules => this.DependOn<GameRules>();
 
     public override void _Notification(int what) => this.Notify(what);
 
@@ -28,7 +29,7 @@ public partial class BrickBlock : StaticBody2D, IBumpable
     {
         if (player.CanBreakBricks)
         {
-            ScoreAwarder.AwardScore(Constants.BrickBreakScore);
+            ScoreAwarder.AwardScore(Rules.BrickBreakScore);
             Sfx.PlayBlockBreak();
             QueueFree();
             return;

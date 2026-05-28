@@ -33,14 +33,15 @@ public partial class PlayerController : CharacterBody2D
     public bool CanBreakBricks => _state != PlayerPowerState.Small;
 
     [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+    [Dependency] public PlayerTuning Tuning => this.DependOn<PlayerTuning>();
 
     public override void _Notification(int what) => this.Notify(what);
 
     public override void _Ready()
     {
         AddToGroup("player");
-        CollisionLayer = Layers.Player;
-        CollisionMask = Layers.Environment | Layers.PickupTrigger | Layers.LevelTrigger;
+        CollisionLayer = PhysicsLayers.Player;
+        CollisionMask = PhysicsLayers.Environment | PhysicsLayers.PickupTrigger | PhysicsLayers.LevelTrigger;
 
         _visual = GetNode<ColorRect>("Visual");
         _shape = GetNode<CollisionShape2D>("CollisionShape2D");
@@ -68,24 +69,24 @@ public partial class PlayerController : CharacterBody2D
         if (Input.IsActionPressed(InputLeft)) axis -= 1f;
         if (Input.IsActionPressed(InputRight)) axis += 1f;
 
-        _velocity.X = axis * Constants.PlayerSpeed;
+        _velocity.X = axis * Tuning.Speed;
         if (axis != 0f) _facing = axis > 0f ? 1 : -1;
 
         if (IsOnFloor() && Input.IsActionJustPressed(InputJump))
         {
-            _velocity.Y = Constants.JumpForce;
+            _velocity.Y = Tuning.JumpForce;
             Sfx.PlayPlayerJump(_state != PlayerPowerState.Small);
         }
 
         if (Input.IsActionJustPressed(InputFire) && _state == PlayerPowerState.Fire
-            && _activeFireballs < Constants.MaxFireballs)
+            && _activeFireballs < Tuning.MaxFireballs)
         {
             SpawnFireball();
         }
 
-        _velocity.Y += Constants.Gravity * dt;
-        if (_velocity.Y > Constants.MaxFallSpeed)
-            _velocity.Y = Constants.MaxFallSpeed;
+        _velocity.Y += Tuning.Gravity * dt;
+        if (_velocity.Y > Tuning.MaxFallSpeed)
+            _velocity.Y = Tuning.MaxFallSpeed;
 
         Velocity = _velocity;
         MoveAndSlide();
@@ -130,7 +131,7 @@ public partial class PlayerController : CharacterBody2D
 
     public void ApplyStarman()
     {
-        _starTimer = Constants.StarmanInvincibleDuration;
+        _starTimer = Tuning.StarmanInvincibleDuration;
     }
 
     public void TakeDamage()
@@ -145,8 +146,8 @@ public partial class PlayerController : CharacterBody2D
 
         SetState(PlayerPowerState.Small);
         Sfx.PlayPlayerPowerDown();
-        _invulnTimer = Constants.PlayerInvulnDuration;
-        _blinker.Start(Constants.PlayerInvulnDuration);
+        _invulnTimer = Tuning.InvulnerabilityDuration;
+        _blinker.Start(Tuning.InvulnerabilityDuration);
     }
 
     public void KillPlayer()
@@ -161,7 +162,7 @@ public partial class PlayerController : CharacterBody2D
     public bool TryStomp(IStompable stompable)
     {
         if (_velocity.Y <= 0f) return false;
-        _velocity.Y = Constants.StompBounceForce;
+        _velocity.Y = Tuning.StompBounceForce;
         stompable.OnStomped(this);
         Sfx.PlayPlayerStomp();
         return true;
@@ -180,9 +181,9 @@ public partial class PlayerController : CharacterBody2D
         Color color;
         switch (_state)
         {
-            case PlayerPowerState.Big:  w = Constants.PlayerBigWidth;   h = Constants.PlayerBigHeight;   color = new Color(0.85f, 0.10f, 0.10f); break;
-            case PlayerPowerState.Fire: w = Constants.PlayerBigWidth;   h = Constants.PlayerBigHeight;   color = new Color(1.00f, 0.55f, 0.10f); break;
-            default:                    w = Constants.PlayerSmallWidth; h = Constants.PlayerSmallHeight; color = new Color(0.85f, 0.10f, 0.10f); break;
+            case PlayerPowerState.Big:  w = Tuning.BigWidth;   h = Tuning.BigHeight;   color = new Color(0.85f, 0.10f, 0.10f); break;
+            case PlayerPowerState.Fire: w = Tuning.BigWidth;   h = Tuning.BigHeight;   color = new Color(1.00f, 0.55f, 0.10f); break;
+            default:                    w = Tuning.SmallWidth; h = Tuning.SmallHeight; color = new Color(0.85f, 0.10f, 0.10f); break;
         }
 
         _visual.Size = new Vector2(w, h);

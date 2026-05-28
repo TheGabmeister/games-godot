@@ -2,6 +2,7 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class Walker : Node
 {
     [Export] public CharacterBody2D Body;
@@ -12,13 +13,17 @@ public partial class Walker : Node
 
     public int Direction = -1;
 
+    [Dependency] public PlayerTuning Tuning => this.DependOn<PlayerTuning>();
+
+    public override void _Notification(int what) => this.Notify(what);
+
     public override void _PhysicsProcess(double delta)
     {
         float dt = (float)delta;
 
         var v = Body.Velocity;
-        v.Y += Constants.Gravity * dt;
-        if (v.Y > Constants.MaxFallSpeed) v.Y = Constants.MaxFallSpeed;
+        v.Y += Tuning.Gravity * dt;
+        if (v.Y > Tuning.MaxFallSpeed) v.Y = Tuning.MaxFallSpeed;
         v.X = Direction * Speed;
 
         Body.Velocity = v;
@@ -37,7 +42,7 @@ public partial class Walker : Node
                 + new Vector2(Direction * 18f, CliffProbeOffsetY);
             var space = Body.GetWorld2D().DirectSpaceState;
             var q = PhysicsRayQueryParameters2D.Create(probe, probe + new Vector2(0, 24));
-            q.CollisionMask = Layers.Environment;
+            q.CollisionMask = PhysicsLayers.Environment;
             var hit = space.IntersectRay(q);
             if (hit.Count == 0)
                 Direction = -Direction;

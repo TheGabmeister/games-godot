@@ -25,3 +25,5 @@ shape = SubResource("RectangleShape2D_brick")
 [node name="Bumpable" type="Node" parent="."]
 script = ExtResource("2_bump")
 Visual = NodePath("../Visual")
+Distance = 8.0
+Duration = 0.18

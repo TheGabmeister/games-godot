@@ -7,7 +7,7 @@ public partial class BulletBillCannon : Node2D
 {
     [Export] public PackedScene BulletBillScene;
     [Export] public int Facing = -1;
-    [Export] public float FireInterval = Constants.BulletBillCannonFireInterval;
+    [Export] public float FireInterval = 4f;
 
     private float _t;
 

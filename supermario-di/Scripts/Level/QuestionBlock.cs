@@ -14,6 +14,7 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
     [Dependency] public IScoreAwarder ScoreAwarder => this.DependOn<IScoreAwarder>();
     [Dependency] public ICoinCollector CoinCollector => this.DependOn<ICoinCollector>();
     [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+    [Dependency] public GameRules Rules => this.DependOn<GameRules>();
 
     public override void _Notification(int what) => this.Notify(what);
 
@@ -34,7 +35,7 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
         if (_used) return;
         _used = true;
         Visual.Color = UsedColor;
-        ScoreAwarder.AwardScore(Constants.CoinValue);
+        ScoreAwarder.AwardScore(Rules.CoinScore);
         CoinCollector.CollectCoins(1);
         Sfx.PlayCoin();
         Bumpable.Bump();

@@ -11,6 +11,7 @@ public partial class Coin : Area2D
     [Dependency] public ICoinCollector CoinCollector => this.DependOn<ICoinCollector>();
     [Dependency] public TextSpawner TextSpawner => this.DependOn<TextSpawner>();
     [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+    [Dependency] public GameRules Rules => this.DependOn<GameRules>();
 
     public override void _Notification(int what) => this.Notify(what);
 
@@ -20,8 +21,8 @@ public partial class Coin : Area2D
         {
             Name = "Coin",
             GlobalPosition = globalPosition,
-            CollisionLayer = Layers.PickupTrigger,
-            CollisionMask = Layers.Player,
+            CollisionLayer = PhysicsLayers.PickupTrigger,
+            CollisionMask = PhysicsLayers.Player,
         };
 
         var visual = new ColorRect
@@ -52,9 +53,9 @@ public partial class Coin : Area2D
     {
         if (_collected || body is not PlayerController) return;
         _collected = true;
-        ScoreAwarder.AwardScore(Constants.CoinValue);
+        ScoreAwarder.AwardScore(Rules.CoinScore);
         CoinCollector.CollectCoins(1);
-        TextSpawner.SpawnText(Constants.CoinValue.ToString(), GlobalPosition);
+        TextSpawner.SpawnText(Rules.CoinScore.ToString(), GlobalPosition);
         Sfx.PlayCoin();
         QueueFree();
     }

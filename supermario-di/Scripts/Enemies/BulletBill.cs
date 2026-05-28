@@ -4,6 +4,8 @@ namespace SMB;
 
 public partial class BulletBill : Area2D, IStompable, IFireballHittable, IStarHittable
 {
+    [Export] public float Speed = 180f;
+
     private int _facing = 1;
 
     public void Init(Vector2 position, int facing)
@@ -19,7 +21,7 @@ public partial class BulletBill : Area2D, IStompable, IFireballHittable, IStarHi
 
     public override void _PhysicsProcess(double delta)
     {
-        Position += new Vector2(_facing * Constants.BulletBillSpeed * (float)delta, 0f);
+        Position += new Vector2(_facing * Speed * (float)delta, 0f);
     }
 
     private void OnBodyEntered(Node2D body)

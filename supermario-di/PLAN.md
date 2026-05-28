@@ -17,13 +17,17 @@ The downloaded AutoInject repo had an empty `Chickensoft.AutoInject/src`, so the
 
 ## Executed So Far
 
-- `GameInstance` is now the root provider for `GameInstance`, `MusicManager`, and `SfxManager`.
+- `GameInstance` is now the root provider for `GameInstance`, `MusicManager`, `SfxManager`, `GameRules`, and `PlayerTuning`.
 - `GameMode` is now the session provider for `GameMode`, `SaveData`, `TextSpawner`, `IScoreAwarder`, and `ICoinCollector`.
 - `LevelManager` has been replaced by `LevelScope`. Keep the level root concept, but not the manager name.
 - `GameServices` and the static global service lookup were removed.
 - HUD, main menu, pickups, blocks, player, projectiles, and key enemy spawners now use AutoInject dependencies.
 - Factory methods for spawned pickups and blocks now only receive spawn position.
 - `SfxManager` now loads every WAV in `Sfx/` and exposes named methods for gameplay sounds.
+- The old `Constants` grab-bag has been removed. `PhysicsLayers` remains in code for named bit masks.
+- Combined score/game rules live in `Resources/GameRules.tres`.
+- Shared player movement/size tuning lives in `Resources/PlayerTuning.tres`.
+- Local prefab tuning lives on exported scene properties in the relevant `.tscn` files.
 
 ## Current Scope Model
 
@@ -31,6 +35,13 @@ The downloaded AutoInject repo had an empty `Chickensoft.AutoInject/src`, so the
 - `GameMode`: session scope. Owns campaign progress, save data, HUD, text popups, current level, and current player.
 - `LevelScope`: level scope. Owns level start/goal/marker references and provides the level boundary.
 - Entities, pickups, projectiles, and UI: dependents. They request the concrete services they need.
+
+## Tuning Sources
+
+- `Scripts/_Core/PhysicsLayers.cs`: named collision bit masks used by runtime-spawned nodes and physics queries.
+- `Resources/GameRules.tres`: starting lives, coins per life, score values.
+- `Resources/PlayerTuning.tres`: player speed, gravity, jump, sizes, invulnerability, stomp, and fireball limit.
+- Scene files: prefab-local tuning like Bullet Bill speed, Hammer Bro timing, fireball physics, block bump animation, and moving platform settings.
 
 ## AutoInject Pattern
 
@@ -99,7 +110,7 @@ If new gameplay events are added, inject `SfxManager` and call a named method in
   - `PlayerController`: `Visual`, `CollisionShape2D`, `Blinker`, `Muzzle`
   - `Hud`: label exports
   - `MainMenuController` and `GameOverController`: buttons
-- Consider replacing static `Config` scene paths with a `GameConfig : Resource` provided by `GameInstance`.
+- Consider replacing static `Config` scene/resource paths with a `GameConfig : Resource` provided by `GameInstance`.
 - Consider a dedicated spawn service if `GameMode` grows too much more level-spawning logic.
 - Keep gameplay interfaces like `IBumpable`, `IStompable`, `IFireballHittable`, and `IStarHittable`; they are behavior contracts, not DI scaffolding.
 

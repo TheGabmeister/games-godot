@@ -12,6 +12,7 @@ public partial class Starman : CharacterBody2D
     [Dependency] public IScoreAwarder ScoreAwarder => this.DependOn<IScoreAwarder>();
     [Dependency] public TextSpawner TextSpawner => this.DependOn<TextSpawner>();
     [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+    [Dependency] public GameRules Rules => this.DependOn<GameRules>();
 
     public override void _Notification(int what) => this.Notify(what);
 
@@ -32,8 +33,8 @@ public partial class Starman : CharacterBody2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        ScoreAwarder.AwardScore(Constants.StarmanPickupScore);
-        TextSpawner.SpawnText(Constants.StarmanPickupScore.ToString(), GlobalPosition);
+        ScoreAwarder.AwardScore(Rules.StarmanPickupScore);
+        TextSpawner.SpawnText(Rules.StarmanPickupScore.ToString(), GlobalPosition);
         Sfx.PlayPlayerPowerUp();
         player.ApplyStarman();
         QueueFree();

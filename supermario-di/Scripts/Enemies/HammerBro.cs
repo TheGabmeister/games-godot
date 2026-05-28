@@ -6,6 +6,11 @@ namespace SMB;
 public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable, IStarHittable
 {
     [Export] public PackedScene HammerScene;
+    [Export] public float ShuffleSpeed = 40f;
+    [Export] public float ShuffleInterval = 1.2f;
+    [Export] public float JumpForce = -520f;
+    [Export] public float JumpInterval = 3.5f;
+    [Export] public float ThrowInterval = 2.0f;
 
     private Vector2 _velocity;
     private float _shuffleT;
@@ -14,6 +19,7 @@ public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable,
     private int _direction = -1;
 
     [Dependency] public GameMode GameMode => this.DependOn<GameMode>();
+    [Dependency] public PlayerTuning Tuning => this.DependOn<PlayerTuning>();
 
     public override void _Notification(int what) => this.Notify(what);
 
@@ -21,29 +27,29 @@ public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable,
     {
         float dt = (float)delta;
 
-        _velocity.Y += Constants.Gravity * dt;
-        if (_velocity.Y > Constants.MaxFallSpeed) _velocity.Y = Constants.MaxFallSpeed;
+        _velocity.Y += Tuning.Gravity * dt;
+        if (_velocity.Y > Tuning.MaxFallSpeed) _velocity.Y = Tuning.MaxFallSpeed;
 
         _shuffleT += dt;
-        if (_shuffleT >= Constants.HammerBroShuffleInterval)
+        if (_shuffleT >= ShuffleInterval)
         {
             _shuffleT = 0f;
             _direction = -_direction;
         }
-        _velocity.X = _direction * Constants.HammerBroShuffleSpeed;
+        _velocity.X = _direction * ShuffleSpeed;
 
         if (IsOnFloor())
         {
             _jumpT += dt;
-            if (_jumpT >= Constants.HammerBroJumpInterval)
+            if (_jumpT >= JumpInterval)
             {
                 _jumpT = 0f;
-                _velocity.Y = Constants.HammerBroJumpForce;
+                _velocity.Y = JumpForce;
             }
         }
 
         _throwT += dt;
-        if (_throwT >= Constants.HammerBroThrowInterval)
+        if (_throwT >= ThrowInterval)
         {
             _throwT = 0f;
             ThrowHammer();

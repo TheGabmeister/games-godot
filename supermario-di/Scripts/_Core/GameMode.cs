@@ -30,6 +30,7 @@ public partial class GameMode : Node,
 
     [Dependency] public MusicManager Music => this.DependOn<MusicManager>();
     [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+    [Dependency] public GameRules Rules => this.DependOn<GameRules>();
 
     private Campaign _campaign;
     private int _currentLevelIndex;
@@ -52,6 +53,7 @@ public partial class GameMode : Node,
         _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
         _fireballScene = GD.Load<PackedScene>(Config.FireballScenePath);
         _currentLevelIndex = startLevelIndex;
+        SaveData.Lives = Rules.StartingLives;
 
         OneUpAwarded += OnOneUpAwarded;
 
@@ -196,10 +198,10 @@ public partial class GameMode : Node,
     private void AddCoins(int coins)
     {
         SaveData.Coins += coins;
-        if (SaveData.Coins >= Constants.CoinsPerLife)
+        if (SaveData.Coins >= Rules.CoinsPerLife)
         {
-            var livesEarned = SaveData.Coins / Constants.CoinsPerLife;
-            SaveData.Coins %= Constants.CoinsPerLife;
+            var livesEarned = SaveData.Coins / Rules.CoinsPerLife;
+            SaveData.Coins %= Rules.CoinsPerLife;
             SetLives(SaveData.Lives + livesEarned);
         }
 

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PlayerTuning" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/PlayerTuning.cs" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+Gravity = 1200.0
+JumpForce = -680.0
+MaxFallSpeed = 600.0
+Speed = 280.0
+StompBounceForce = -420.0
+StompTopTolerance = 16.0
+InvulnerabilityDuration = 2.0
+MaxFireballs = 2
+SmallWidth = 32
+SmallHeight = 48
+BigWidth = 32
+BigHeight = 64
+StarmanInvincibleDuration = 10.0

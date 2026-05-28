@@ -9,6 +9,9 @@ radius = 12.0
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1_p")
+JumpSpeed = 520.0
+FallGravity = 1200.0
+RestDuration = 1.0
 
 [node name="Visual" type="ColorRect" parent="."]
 offset_left = -12.0

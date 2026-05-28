@@ -4,6 +4,10 @@ namespace SMB;
 
 public partial class Podoboo : Area2D, IStarHittable
 {
+    [Export] public float JumpSpeed = 520f;
+    [Export] public float FallGravity = 1200f;
+    [Export] public float RestDuration = 1f;
+
     private float _t;
     private float _vy;
     private Vector2 _basePos;
@@ -21,16 +25,16 @@ public partial class Podoboo : Area2D, IStarHittable
         if (_resting)
         {
             _t += dt;
-            if (_t >= Constants.PodobooRestDuration)
+            if (_t >= RestDuration)
             {
                 _t = 0f;
                 _resting = false;
-                _vy = -Constants.PodobooJumpSpeed;
+                _vy = -JumpSpeed;
                 GlobalPosition = _basePos;
             }
             return;
         }
-        _vy += Constants.PodobooGravity * dt;
+        _vy += FallGravity * dt;
         GlobalPosition += new Vector2(0, _vy * dt);
         if (GlobalPosition.Y >= _basePos.Y && _vy > 0f)
         {
