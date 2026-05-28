@@ -18,7 +18,7 @@ public partial class Starman : CharacterBody2D
     {
         if (_collected) return;
         _collected = true;
-        Events.EmitStarmanPickedUp(ScoreValue, GlobalPosition);
+        Events.EmitGotStarman(ScoreValue, GlobalPosition);
         QueueFree();
     }
 }

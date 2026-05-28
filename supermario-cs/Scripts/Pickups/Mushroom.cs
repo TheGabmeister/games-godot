@@ -18,7 +18,7 @@ public partial class Mushroom : CharacterBody2D
     {
         if (_collected) return;
         _collected = true;
-        Events.EmitMushroomPickedUp(ScoreValue, GlobalPosition);
+        Events.EmitGotMushroom(ScoreValue, GlobalPosition);
         QueueFree();
     }
 }

@@ -17,7 +17,7 @@ public partial class FireFlower : Area2D
     {
         if (_collected) return;
         _collected = true;
-        Events.EmitFireFlowerPickedUp(ScoreValue, GlobalPosition);
+        Events.EmitGotFireFlower(ScoreValue, GlobalPosition);
         QueueFree();
     }
 }
