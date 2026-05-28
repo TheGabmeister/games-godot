@@ -2,7 +2,11 @@ using Godot;
 
 namespace SMB;
 
-public partial class GameInstance : Node
+[Meta(typeof(IAutoNode))]
+public partial class GameInstance : Node,
+    IProvide<GameInstance>,
+    IProvide<MusicManager>,
+    IProvide<SfxManager>
 {
     public MusicManager Music { get; private set; }
     public SfxManager Sfx { get; private set; }
@@ -14,6 +18,12 @@ public partial class GameInstance : Node
     private GameMode _session;
     private Node _levelRoot;
     private Node _currentChild;
+
+    public override void _Notification(int what) => this.Notify(what);
+
+    GameInstance IProvide<GameInstance>.Value() => this;
+    MusicManager IProvide<MusicManager>.Value() => Music;
+    SfxManager IProvide<SfxManager>.Value() => Sfx;
 
     public override void _Ready()
     {
@@ -29,6 +39,7 @@ public partial class GameInstance : Node
         _mainMenuScene = GD.Load<PackedScene>(Config.MainMenuScenePath);
         _gameOverScene = GD.Load<PackedScene>(Config.GameOverScenePath);
 
+        this.Provide();
         CallDeferred(MethodName.PostBoot);
     }
 
@@ -42,7 +53,7 @@ public partial class GameInstance : Node
             return;
         }
 
-        if (OS.HasFeature("editor") && current is LevelManager level)
+        if (OS.HasFeature("editor") && current is LevelScope level)
         {
             var index = LookupCampaignIndex(level.SceneFilePath);
             if (index >= 0)
@@ -88,6 +99,7 @@ public partial class GameInstance : Node
 
     private void LoadGameOver()
     {
+        Sfx.PlayGameOver();
         var over = _gameOverScene.Instantiate<GameOverController>();
         over.Continue += LoadMainMenu;
         SetActiveNode(over);

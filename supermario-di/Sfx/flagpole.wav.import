@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://c5ojak171g08c"
-path="res://.godot/imported/flagpole.wav-b2606f5eb6f3edcb6438f01c25483c17.sample"
+uid="uid://cil5lsptofcby"
+path="res://.godot/imported/Flagpole.wav-c243f102d0a5144e6e065b14da98de10.sample"
 
 [deps]
 
-source_file="res://Sfx/flagpole.wav"
-dest_files=["res://.godot/imported/flagpole.wav-b2606f5eb6f3edcb6438f01c25483c17.sample"]
+source_file="res://Sfx/Flagpole.wav"
+dest_files=["res://.godot/imported/Flagpole.wav-c243f102d0a5144e6e065b14da98de10.sample"]
 
 [params]
 

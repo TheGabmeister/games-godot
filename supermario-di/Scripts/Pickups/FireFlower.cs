@@ -2,17 +2,22 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class FireFlower : Area2D
 {
-    private IScoreAwarder _scoreAwarder;
     private bool _collected;
 
-    public static FireFlower Create(Vector2 globalPosition, IScoreAwarder scoreAwarder)
+    [Dependency] public IScoreAwarder ScoreAwarder => this.DependOn<IScoreAwarder>();
+    [Dependency] public TextSpawner TextSpawner => this.DependOn<TextSpawner>();
+    [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+
+    public override void _Notification(int what) => this.Notify(what);
+
+    public static FireFlower Create(Vector2 globalPosition)
     {
         var scene = GD.Load<PackedScene>(Config.FireFlowerScenePath);
         var f = scene.Instantiate<FireFlower>();
         f.GlobalPosition = globalPosition;
-        f._scoreAwarder = scoreAwarder;
         return f;
     }
 
@@ -25,8 +30,9 @@ public partial class FireFlower : Area2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        _scoreAwarder.AwardScore(Constants.MushroomScore);
-        SpawnText(Constants.MushroomScore.ToString(), GlobalPosition);
+        ScoreAwarder.AwardScore(Constants.MushroomScore);
+        TextSpawner.SpawnText(Constants.MushroomScore.ToString(), GlobalPosition);
+        Sfx.PlayPlayerPowerUp();
         player.ApplyFireFlower();
         QueueFree();
     }

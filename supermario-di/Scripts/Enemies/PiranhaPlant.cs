@@ -2,6 +2,7 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class PiranhaPlant : Node2D, IFireballHittable, IStarHittable
 {
     [Export] public Node2D Visual;
@@ -16,6 +17,10 @@ public partial class PiranhaPlant : Node2D, IFireballHittable, IStarHittable
     private Vector2 _basePos;
     private Vector2 _hiddenPos;
     private Vector2 _emergedPos;
+
+    [Dependency] public GameMode GameMode => this.DependOn<GameMode>();
+
+    public override void _Notification(int what) => this.Notify(what);
 
     public override void _Ready()
     {
@@ -51,7 +56,8 @@ public partial class PiranhaPlant : Node2D, IFireballHittable, IStarHittable
 
     private bool PlayerNearby()
     {
-        var p = (Node2D)GetTree().GetFirstNodeInGroup("player");
+        var p = GameMode.CurrentPlayer;
+        if (p == null) return false;
         return p.GlobalPosition.DistanceTo(GlobalPosition) < ProximityRadius;
     }
 

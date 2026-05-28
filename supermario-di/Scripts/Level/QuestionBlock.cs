@@ -2,23 +2,26 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class QuestionBlock : StaticBody2D, IBumpable
 {
     [Export] public Bumpable Bumpable;
     [Export] public ColorRect Visual;
     [Export] public Color UsedColor = new Color(0.55f, 0.35f, 0.10f);
 
-    private IScoreAwarder _scoreAwarder;
-    private ICoinCollector _coinCollector;
     private bool _used;
 
-    public static QuestionBlock Create(Vector2 globalPosition, IScoreAwarder scoreAwarder, ICoinCollector coinCollector)
+    [Dependency] public IScoreAwarder ScoreAwarder => this.DependOn<IScoreAwarder>();
+    [Dependency] public ICoinCollector CoinCollector => this.DependOn<ICoinCollector>();
+    [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+
+    public override void _Notification(int what) => this.Notify(what);
+
+    public static QuestionBlock Create(Vector2 globalPosition)
     {
         var scene = GD.Load<PackedScene>(Config.QuestionBlockScenePath);
         var qb = scene.Instantiate<QuestionBlock>();
         qb.GlobalPosition = globalPosition;
-        qb._scoreAwarder = scoreAwarder;
-        qb._coinCollector = coinCollector;
         return qb;
     }
 
@@ -31,8 +34,9 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
         if (_used) return;
         _used = true;
         Visual.Color = UsedColor;
-        _scoreAwarder.AwardScore(Constants.CoinValue);
-        _coinCollector.CollectCoins(1);
+        ScoreAwarder.AwardScore(Constants.CoinValue);
+        CoinCollector.CollectCoins(1);
+        Sfx.PlayCoin();
         Bumpable.Bump();
     }
 }

@@ -3,6 +3,7 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class PlayerController : CharacterBody2D
 {
     public event Action Died;
@@ -30,6 +31,10 @@ public partial class PlayerController : CharacterBody2D
     public bool IsStarInvincible => _starTimer > 0f;
     public bool IsInvulnerable => _invulnTimer > 0f;
     public bool CanBreakBricks => _state != PlayerPowerState.Small;
+
+    [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+
+    public override void _Notification(int what) => this.Notify(what);
 
     public override void _Ready()
     {
@@ -69,6 +74,7 @@ public partial class PlayerController : CharacterBody2D
         if (IsOnFloor() && Input.IsActionJustPressed(InputJump))
         {
             _velocity.Y = Constants.JumpForce;
+            Sfx.PlayPlayerJump(_state != PlayerPowerState.Small);
         }
 
         if (Input.IsActionJustPressed(InputFire) && _state == PlayerPowerState.Fire
@@ -102,6 +108,7 @@ public partial class PlayerController : CharacterBody2D
     {
         FireballRequested?.Invoke(_muzzle.GlobalPosition, _facing, this);
         _activeFireballs++;
+        Sfx.PlayFireball();
     }
 
     public void NotifyFireballDestroyed()
@@ -137,6 +144,7 @@ public partial class PlayerController : CharacterBody2D
         }
 
         SetState(PlayerPowerState.Small);
+        Sfx.PlayPlayerPowerDown();
         _invulnTimer = Constants.PlayerInvulnDuration;
         _blinker.Start(Constants.PlayerInvulnDuration);
     }
@@ -145,6 +153,7 @@ public partial class PlayerController : CharacterBody2D
     {
         if (_dead) return;
         _dead = true;
+        Sfx.PlayPlayerDeath();
         Died?.Invoke();
         QueueFree();
     }
@@ -154,6 +163,7 @@ public partial class PlayerController : CharacterBody2D
         if (_velocity.Y <= 0f) return false;
         _velocity.Y = Constants.StompBounceForce;
         stompable.OnStomped(this);
+        Sfx.PlayPlayerStomp();
         return true;
     }
 

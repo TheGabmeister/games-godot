@@ -2,6 +2,7 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class Fireball : CharacterBody2D
 {
     [Export] public Area2D HitArea;
@@ -10,6 +11,10 @@ public partial class Fireball : CharacterBody2D
     private int _facing = 1;
     private bool _destroyed;
     private Vector2 _velocity;
+
+    [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+
+    public override void _Notification(int what) => this.Notify(what);
 
     public virtual void Init(Vector2 position, int facing, PlayerController owner)
     {
@@ -68,10 +73,12 @@ public partial class Fireball : CharacterBody2D
         }
     }
 
-    private void Destroy(bool _playHitSfx)
+    private void Destroy(bool playHitSfx)
     {
         if (_destroyed) return;
         _destroyed = true;
+        if (playHitSfx)
+            Sfx.PlayBlockBump();
         _owner.NotifyFireballDestroyed();
         QueueFree();
     }

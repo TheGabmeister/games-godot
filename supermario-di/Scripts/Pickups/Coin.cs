@@ -2,13 +2,19 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class Coin : Area2D
 {
-    private IScoreAwarder _scoreAwarder;
-    private ICoinCollector _coinCollector;
     private bool _collected;
 
-    public static Coin Create(Vector2 globalPosition, IScoreAwarder scoreAwarder, ICoinCollector coinCollector)
+    [Dependency] public IScoreAwarder ScoreAwarder => this.DependOn<IScoreAwarder>();
+    [Dependency] public ICoinCollector CoinCollector => this.DependOn<ICoinCollector>();
+    [Dependency] public TextSpawner TextSpawner => this.DependOn<TextSpawner>();
+    [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+
+    public override void _Notification(int what) => this.Notify(what);
+
+    public static Coin Create(Vector2 globalPosition)
     {
         var coin = new Coin
         {
@@ -34,8 +40,6 @@ public partial class Coin : Area2D
         };
         coin.AddChild(shape);
 
-        coin._scoreAwarder = scoreAwarder;
-        coin._coinCollector = coinCollector;
         return coin;
     }
 
@@ -48,9 +52,10 @@ public partial class Coin : Area2D
     {
         if (_collected || body is not PlayerController) return;
         _collected = true;
-        _scoreAwarder.AwardScore(Constants.CoinValue);
-        _coinCollector.CollectCoins(1);
-        SpawnText(Constants.CoinValue.ToString(), GlobalPosition);
+        ScoreAwarder.AwardScore(Constants.CoinValue);
+        CoinCollector.CollectCoins(1);
+        TextSpawner.SpawnText(Constants.CoinValue.ToString(), GlobalPosition);
+        Sfx.PlayCoin();
         QueueFree();
     }
 }

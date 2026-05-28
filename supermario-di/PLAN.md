@@ -2,29 +2,41 @@
 
 ## Goal
 
-Move this project away from static service lookup and manual dependency wiring, using AutoInject providers and dependents instead. Keep it simple: no unit tests, no mock-first interfaces, and concrete classes are fine when they make the code easier to follow.
+Use AutoInject as the main dependency boundary for the game. Keep the code simple: no unit tests required, no interface-only ceremony, and concrete dependencies are fine when they are clearer.
 
-## Current Install
+## Installed
 
 - AutoInject runtime source is installed at `Addons/AutoInject/src`.
 - AutoInject docs, license, and icon are installed at `Addons/AutoInject`.
-- `supermario-cs.csproj` references AutoInject's required packages:
+- `supermario-cs.csproj` references:
   - `Chickensoft.GodotNodeInterfaces` 3.0.10
   - `Chickensoft.Introspection` 3.0.2
   - `Chickensoft.Introspection.Generator` 3.0.2
 
-AutoInject source in the downloaded folder was empty under `Chickensoft.AutoInject/src`, so the runtime source was copied from the local repo's `Chickensoft.AutoInject.Tests/src` folder, where the actual `Chickensoft.AutoInject` namespace files are present.
+The downloaded AutoInject repo had an empty `Chickensoft.AutoInject/src`, so the runtime source was copied from its `Chickensoft.AutoInject.Tests/src` folder. `Chickensoft.GodotNodeInterfaces` 3.0.10 is used because it matches this project's `Godot.NET.Sdk/4.6.2`.
 
-`Chickensoft.GodotNodeInterfaces` 3.0.10 is used because it targets `GodotSharp >= 4.6.2`, matching this project's `Godot.NET.Sdk/4.6.2`.
+## Executed So Far
 
-## Basic Pattern
+- `GameInstance` is now the root provider for `GameInstance`, `MusicManager`, and `SfxManager`.
+- `GameMode` is now the session provider for `GameMode`, `SaveData`, `TextSpawner`, `IScoreAwarder`, and `ICoinCollector`.
+- `LevelManager` has been replaced by `LevelScope`. Keep the level root concept, but not the manager name.
+- `GameServices` and the static global service lookup were removed.
+- HUD, main menu, pickups, blocks, player, projectiles, and key enemy spawners now use AutoInject dependencies.
+- Factory methods for spawned pickups and blocks now only receive spawn position.
+- `SfxManager` now loads every WAV in `Sfx/` and exposes named methods for gameplay sounds.
 
-Every AutoInject node should:
+## Current Scope Model
+
+- `GameInstance`: app/root scope. Owns long-lived audio services and scene boot flow.
+- `GameMode`: session scope. Owns campaign progress, save data, HUD, text popups, current level, and current player.
+- `LevelScope`: level scope. Owns level start/goal/marker references and provides the level boundary.
+- Entities, pickups, projectiles, and UI: dependents. They request the concrete services they need.
+
+## AutoInject Pattern
+
+Every AutoInject node should have metadata and notification forwarding:
 
 ```csharp
-using Chickensoft.AutoInject;
-using Chickensoft.Introspection;
-
 [Meta(typeof(IAutoNode))]
 public partial class SomeNode : Node
 {
@@ -32,136 +44,75 @@ public partial class SomeNode : Node
 }
 ```
 
-Provider nodes implement `IProvide<T>` and call `this.Provide()` once their values are ready:
+Providers implement `IProvide<T>` and call `this.Provide()` once their values are ready:
 
 ```csharp
 [Meta(typeof(IAutoNode))]
-public partial class GameMode : Node, IProvide<GameMode>
+public partial class LevelScope : Node2D, IProvide<LevelScope>
 {
     public override void _Notification(int what) => this.Notify(what);
 
-    GameMode IProvide<GameMode>.Value() => this;
+    LevelScope IProvide<LevelScope>.Value() => this;
 
-    public void OnReady()
+    public override void _Ready()
     {
         this.Provide();
     }
 }
 ```
 
-Dependent nodes use `[Dependency]` properties and read them after `OnResolved()`:
+Dependents use `[Dependency]`:
 
 ```csharp
-[Dependency] public GameMode GameMode => this.DependOn<GameMode>();
-
-public void OnResolved()
-{
-    GameMode.AwardScore(Constants.CoinValue);
-}
+[Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
 ```
 
-## Phase 1: Make Root Services Providers
+## SFX Coverage
 
-Convert `GameInstance` first because it owns the long-lived services.
+`SfxManager` should remain the only place that knows direct `res://Sfx/*.wav` paths.
 
-- Add `[Meta(typeof(IAutoNode))]` and `_Notification`.
-- Implement providers for:
-  - `GameInstance`
-  - `MusicManager`
-  - `SfxManager`
-- Move `_Ready()` body to `OnReady()` or call `this.Provide()` at the end of `_Ready()`.
-- Keep the autoload as-is in `project.godot`.
+Current named sounds:
 
-Suggested provider list:
+- `Block_Break.wav`
+- `Block_Bump.wav`
+- `Coin.wav`
+- `Fireball.wav`
+- `Flagpole.wav`
+- `GameOver.wav`
+- `Kick.wav`
+- `OneUp.wav`
+- `Pipe.wav`
+- `PlayerDeath.wav`
+- `PlayerJump.wav`
+- `PlayerJump_Big.wav`
+- `PlayerPower_Down.wav`
+- `PlayerPower_Up.wav`
+- `PlayerStomp.wav`
+- `StageClear.wav`
+- `Warning.wav`
 
-```csharp
-public partial class GameInstance : Node,
-    IProvide<GameInstance>,
-    IProvide<MusicManager>,
-    IProvide<SfxManager>
-```
+If new gameplay events are added, inject `SfxManager` and call a named method instead of loading audio streams in the gameplay class.
 
-## Phase 2: Make Session Services Providers
+## Remaining Cleanup
 
-Convert `GameMode` next because it owns the current session, level, HUD, text spawner, score, coins, lives, and level loading.
-
-- Add `[Meta(typeof(IAutoNode))]` and `_Notification`.
-- Implement providers for:
-  - `GameMode`
-  - `SaveData`
-  - `TextSpawner`
-  - `IScoreAwarder` or concrete `GameMode`
-  - `ICoinCollector` or concrete `GameMode`
-- Call `this.Provide()` after `TextSpawner` and the first level are created.
-- Prefer concrete `GameMode` dependencies unless an existing interface is already cleaner.
-
-This lets coins, blocks, pickups, enemies, projectiles, and UI ask for the session directly instead of reaching through `GameServices`.
-
-## Phase 3: Replace `GameServices` Calls
-
-Replace static helpers gradually.
-
-- Replace `PlayMusic(sound)` with a dependency on `MusicManager` or `GameInstance`.
-- Replace `PlaySfx(sound)` with a dependency on `SfxManager` or `GameInstance`.
-- Replace `GetGameMode()` with `[Dependency] public GameMode GameMode => this.DependOn<GameMode>();`.
-- Replace `SpawnText(...)` with `[Dependency] public TextSpawner TextSpawner => this.DependOn<TextSpawner>();`.
-
-Start with the small files that only call one helper:
-
-- `Coin`
-- `Mushroom`
-- `FireFlower`
-- `Starman`
-- `OneUp`
-- `BulletBillCannon`
-- `KoopaTroopa`
-- `KoopaParatroopa`
-- `HammerBro`
-
-After these are converted, remove `global using static SMB.GameServices;` from `Scripts/_Core/GlobalUsings.cs`.
-
-## Phase 4: Stop Passing Dependencies Through Factory Methods
-
-Several spawned objects currently receive dependencies in `Create(...)` methods. Convert those to dependency lookup.
-
-- `Coin.Create(globalPosition, scoreAwarder, coinCollector)` becomes `Coin.Create(globalPosition)`.
-- `QuestionBlock.Create(globalPosition, scoreAwarder, coinCollector)` becomes `QuestionBlock.Create(globalPosition)`.
-- `BrickBlock.Create(globalPosition, scoreAwarder)` becomes `BrickBlock.Create(globalPosition)`.
-- `Mushroom.Create(globalPosition, scoreAwarder)` becomes `Mushroom.Create(globalPosition)`.
-- `Starman.Create(globalPosition, scoreAwarder)` becomes `Starman.Create(globalPosition)`.
-- `FireFlower.Create(globalPosition, scoreAwarder)` becomes `FireFlower.Create(globalPosition)`.
-
-The spawned node must be added under `GameMode` or `LevelManager` so it has a provider ancestor before it resolves dependencies.
-
-## Phase 5: Use AutoConnect For Node References
-
-After dependency injection is working, replace simple `GetNode` calls with `[Node]`.
-
-Good first candidates:
-
-- `PlayerController` fields: `Visual`, `CollisionShape2D`, `Blinker`, `Muzzle`
-- `GameOverController` continue button
-- `MainMenuController` start button
-- `LevelManager` assigned child nodes, if the scene paths are stable
-
-Keep exported fields where designer assignment is clearer than path-based lookup.
-
-## Phase 6: Cleanup
-
-Once the conversion builds and the game flow still works:
-
-- Delete `Scripts/_Core/GameServices.cs`.
-- Delete `global using static SMB.GameServices;`.
-- Remove constructor/factory parameters that only existed to pass services around.
-- Keep existing gameplay interfaces like `IBumpable`, `IStompable`, and `IFireballHittable`; they describe gameplay behavior, not dependency wiring.
+- Convert simple child-node wiring to AutoConnect where it improves clarity:
+  - `PlayerController`: `Visual`, `CollisionShape2D`, `Blinker`, `Muzzle`
+  - `Hud`: label exports
+  - `MainMenuController` and `GameOverController`: buttons
+- Consider replacing static `Config` scene paths with a `GameConfig : Resource` provided by `GameInstance`.
+- Consider a dedicated spawn service if `GameMode` grows too much more level-spawning logic.
+- Keep gameplay interfaces like `IBumpable`, `IStompable`, `IFireballHittable`, and `IStarHittable`; they are behavior contracts, not DI scaffolding.
 
 ## Manual Checks
 
-No unit tests are required. Use these quick play checks after each phase:
+No unit tests are required. Use these quick play checks:
 
 - Boot reaches main menu.
 - Start game loads world 1-1.
-- Coin pickup updates score, coins, and text popup.
-- Mushroom, fire flower, starman, and one-up still apply effects.
+- Coin pickup updates score, coins, text popup, and coin sound.
+- Start-game pipe, jump, fireball, stomp, shell kick, power-up, power-down, death, and one-up sounds play.
+- Block bump and block break sounds play.
+- Bullet Bill warning sound plays when cannons fire.
+- Flagpole/stage-clear and game-over sounds play at transitions.
 - Enemy spawning and projectile spawning still work.
 - Level completion and player death still transition correctly.

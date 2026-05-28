@@ -2,18 +2,21 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class BrickBlock : StaticBody2D, IBumpable
 {
     [Export] public Bumpable Bumpable;
 
-    private IScoreAwarder _scoreAwarder;
+    [Dependency] public IScoreAwarder ScoreAwarder => this.DependOn<IScoreAwarder>();
+    [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
 
-    public static BrickBlock Create(Vector2 globalPosition, IScoreAwarder scoreAwarder)
+    public override void _Notification(int what) => this.Notify(what);
+
+    public static BrickBlock Create(Vector2 globalPosition)
     {
         var scene = GD.Load<PackedScene>(Config.BrickBlockScenePath);
         var bb = scene.Instantiate<BrickBlock>();
         bb.GlobalPosition = globalPosition;
-        bb._scoreAwarder = scoreAwarder;
         return bb;
     }
 
@@ -25,10 +28,12 @@ public partial class BrickBlock : StaticBody2D, IBumpable
     {
         if (player.CanBreakBricks)
         {
-            _scoreAwarder.AwardScore(Constants.BrickBreakScore);
+            ScoreAwarder.AwardScore(Constants.BrickBreakScore);
+            Sfx.PlayBlockBreak();
             QueueFree();
             return;
         }
+        Sfx.PlayBlockBump();
         Bumpable.Bump();
     }
 }

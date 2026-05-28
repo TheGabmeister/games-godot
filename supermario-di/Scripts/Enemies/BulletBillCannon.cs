@@ -2,6 +2,7 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class BulletBillCannon : Node2D
 {
     [Export] public PackedScene BulletBillScene;
@@ -9,6 +10,11 @@ public partial class BulletBillCannon : Node2D
     [Export] public float FireInterval = Constants.BulletBillCannonFireInterval;
 
     private float _t;
+
+    [Dependency] public GameMode GameMode => this.DependOn<GameMode>();
+    [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+
+    public override void _Notification(int what) => this.Notify(what);
 
     public override void _PhysicsProcess(double delta)
     {
@@ -22,7 +28,7 @@ public partial class BulletBillCannon : Node2D
     {
         var bb = BulletBillScene.Instantiate<BulletBill>();
         bb.Init(GlobalPosition, Mathf.Sign(Facing) == 0 ? -1 : (int)Mathf.Sign(Facing));
-        var parent = (Node)GetGameMode().CurrentLevel;
-        parent.AddChild(bb);
+        Sfx.PlayWarning();
+        GameMode.CurrentLevel.AddChild(bb);
     }
 }

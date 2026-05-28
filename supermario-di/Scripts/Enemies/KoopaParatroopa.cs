@@ -2,6 +2,7 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class KoopaParatroopa : CharacterBody2D, IStompable, IFireballHittable, IStarHittable
 {
     [Export] public KoopaColor Color = KoopaColor.Green;
@@ -11,6 +12,10 @@ public partial class KoopaParatroopa : CharacterBody2D, IStompable, IFireballHit
 
     private Vector2 _origin;
     private float _t;
+
+    [Dependency] public GameMode GameMode => this.DependOn<GameMode>();
+
+    public override void _Notification(int what) => this.Notify(what);
 
     public override void _Ready()
     {
@@ -38,7 +43,6 @@ public partial class KoopaParatroopa : CharacterBody2D, IStompable, IFireballHit
     {
         var koopa = GroundKoopaScene.Instantiate<Node2D>();
         koopa.GlobalPosition = GlobalPosition;
-        var parent = (Node)GetGameMode().CurrentLevel;
-        parent.AddChild(koopa);
+        GameMode.CurrentLevel.AddChild(koopa);
     }
 }

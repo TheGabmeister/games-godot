@@ -3,7 +3,15 @@ using Godot;
 
 namespace SMB;
 
-public partial class GameMode : Node, IScoreAwarder, ICoinCollector
+[Meta(typeof(IAutoNode))]
+public partial class GameMode : Node,
+    IScoreAwarder,
+    ICoinCollector,
+    IProvide<GameMode>,
+    IProvide<SaveData>,
+    IProvide<TextSpawner>,
+    IProvide<IScoreAwarder>,
+    IProvide<ICoinCollector>
 {
     public event Action SessionEnded;
     public event Action OneUpAwarded;
@@ -16,8 +24,12 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
     private const float DeathPauseSeconds = 1.5f;
 
     public SaveData SaveData { get; } = new();
-    public LevelManager CurrentLevel { get; private set; }
+    public LevelScope CurrentLevel { get; private set; }
+    public PlayerController CurrentPlayer => _currentPlayer;
     public TextSpawner TextSpawner { get; private set; }
+
+    [Dependency] public MusicManager Music => this.DependOn<MusicManager>();
+    [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
 
     private Campaign _campaign;
     private int _currentLevelIndex;
@@ -25,6 +37,14 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
     private PackedScene _playerScene;
     private PackedScene _fireballScene;
     private PlayerController _currentPlayer;
+
+    public override void _Notification(int what) => this.Notify(what);
+
+    GameMode IProvide<GameMode>.Value() => this;
+    SaveData IProvide<SaveData>.Value() => SaveData;
+    TextSpawner IProvide<TextSpawner>.Value() => TextSpawner;
+    IScoreAwarder IProvide<IScoreAwarder>.Value() => this;
+    ICoinCollector IProvide<ICoinCollector>.Value() => this;
 
     public void Start(int startLevelIndex = 0)
     {
@@ -38,12 +58,12 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
         var hudScene = GD.Load<PackedScene>(Config.HudScenePath);
         _hud = hudScene.Instantiate<Hud>();
         AddChild(_hud);
-        _hud.Bind(this);
 
         TextSpawner = new TextSpawner { Name = "TextSpawner" };
         AddChild(TextSpawner);
 
         LoadCurrentLevel();
+        this.Provide();
     }
 
     public void EmitOneUpAwarded() => OneUpAwarded?.Invoke();
@@ -81,9 +101,9 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
         SetLevel(def.Name, def.TimeLimit);
 
         if (def.MusicTrack != null)
-            PlayMusic(def.MusicTrack);
+            Music.Play(def.MusicTrack);
 
-        var level = def.LevelScene.Instantiate<LevelManager>();
+        var level = def.LevelScene.Instantiate<LevelScope>();
         SwapLevel(level);
         SpawnLevelObjects(level);
         level.GoalTrigger.Reached += OnLevelCompleted;
@@ -98,29 +118,29 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
         _currentPlayer = player;
     }
 
-    private void SpawnLevelObjects(LevelManager level)
+    private void SpawnLevelObjects(LevelScope level)
     {
         foreach (var marker in level.Markers)
         {
             switch (marker)
             {
                 case CoinMarker m:
-                    level.AddChild(Coin.Create(m.GlobalPosition, this, this));
+                    level.AddChild(Coin.Create(m.GlobalPosition));
                     break;
                 case QuestionBlockMarker m:
-                    level.AddChild(QuestionBlock.Create(m.GlobalPosition, this, this));
+                    level.AddChild(QuestionBlock.Create(m.GlobalPosition));
                     break;
                 case BrickBlockMarker m:
-                    level.AddChild(BrickBlock.Create(m.GlobalPosition, this));
+                    level.AddChild(BrickBlock.Create(m.GlobalPosition));
                     break;
                 case MushroomMarker m:
-                    level.AddChild(Mushroom.Create(m.GlobalPosition, this));
+                    level.AddChild(Mushroom.Create(m.GlobalPosition));
                     break;
                 case StarmanMarker m:
-                    level.AddChild(Starman.Create(m.GlobalPosition, this));
+                    level.AddChild(Starman.Create(m.GlobalPosition));
                     break;
                 case FireFlowerMarker m:
-                    level.AddChild(FireFlower.Create(m.GlobalPosition, this));
+                    level.AddChild(FireFlower.Create(m.GlobalPosition));
                     break;
             }
         }
@@ -138,6 +158,8 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
 
     private void OnLevelCompleted()
     {
+        Sfx.PlayFlagpole();
+        Sfx.PlayStageClear();
         _currentLevelIndex++;
         if (_currentLevelIndex >= _campaign.Levels.Length)
         {
@@ -203,7 +225,7 @@ public partial class GameMode : Node, IScoreAwarder, ICoinCollector
         TimeRemainingChanged?.Invoke(SaveData.TimeRemaining);
     }
 
-    private void SwapLevel(LevelManager next)
+    private void SwapLevel(LevelScope next)
     {
         if (CurrentLevel != null)
         {

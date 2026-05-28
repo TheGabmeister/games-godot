@@ -2,6 +2,7 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable, IStarHittable
 {
     [Export] public PackedScene HammerScene;
@@ -11,6 +12,10 @@ public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable,
     private float _jumpT;
     private float _throwT;
     private int _direction = -1;
+
+    [Dependency] public GameMode GameMode => this.DependOn<GameMode>();
+
+    public override void _Notification(int what) => this.Notify(what);
 
     public override void _PhysicsProcess(double delta)
     {
@@ -51,12 +56,13 @@ public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable,
 
     private void ThrowHammer()
     {
-        var player = (Node2D)GetTree().GetFirstNodeInGroup("player");
+        var player = GameMode.CurrentPlayer;
+        if (player == null) return;
+
         int facing = player.GlobalPosition.X < GlobalPosition.X ? -1 : 1;
         var hammer = HammerScene.Instantiate<Hammer>();
         hammer.Init(GlobalPosition + new Vector2(0, -32), facing);
-        var parent = (Node)GetGameMode().CurrentLevel;
-        parent.AddChild(hammer);
+        GameMode.CurrentLevel.AddChild(hammer);
     }
 
     public void OnStomped(PlayerController _) => QueueFree();

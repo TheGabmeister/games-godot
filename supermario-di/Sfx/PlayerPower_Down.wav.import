@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://dc40cl8r2yhj0"
-path="res://.godot/imported/powerdown.wav-12d4759dd9976dbe6b68ba6fc4321102.sample"
+path="res://.godot/imported/PlayerPower_Down.wav-e765b120e9687a2c22d8b0035efafba2.sample"
 
 [deps]
 
-source_file="res://Sfx/powerdown.wav"
-dest_files=["res://.godot/imported/powerdown.wav-12d4759dd9976dbe6b68ba6fc4321102.sample"]
+source_file="res://Sfx/PlayerPower_Down.wav"
+dest_files=["res://.godot/imported/PlayerPower_Down.wav-e765b120e9687a2c22d8b0035efafba2.sample"]
 
 [params]
 

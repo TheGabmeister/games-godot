@@ -2,6 +2,7 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class Hud : CanvasLayer
 {
     [Export] public Label ScoreLabel;
@@ -12,14 +13,18 @@ public partial class Hud : CanvasLayer
 
     private GameMode _session;
 
-    public void Bind(GameMode session)
+    [Dependency] public GameMode Session => this.DependOn<GameMode>();
+
+    public override void _Notification(int what) => this.Notify(what);
+
+    public void OnResolved()
     {
-        _session = session;
-        session.ScoreChanged += OnScoreChanged;
-        session.CoinsChanged += OnCoinsChanged;
-        session.LivesChanged += OnLivesChanged;
-        session.LevelChanged += OnLevelChanged;
-        session.TimeRemainingChanged += OnTimeRemainingChanged;
+        _session = Session;
+        _session.ScoreChanged += OnScoreChanged;
+        _session.CoinsChanged += OnCoinsChanged;
+        _session.LivesChanged += OnLivesChanged;
+        _session.LevelChanged += OnLevelChanged;
+        _session.TimeRemainingChanged += OnTimeRemainingChanged;
 
         RefreshLabels();
     }

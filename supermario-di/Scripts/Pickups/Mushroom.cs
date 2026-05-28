@@ -2,19 +2,24 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class Mushroom : CharacterBody2D
 {
     [Export] public Area2D PickupTrigger;
 
-    private IScoreAwarder _scoreAwarder;
     private bool _collected;
 
-    public static Mushroom Create(Vector2 globalPosition, IScoreAwarder scoreAwarder)
+    [Dependency] public IScoreAwarder ScoreAwarder => this.DependOn<IScoreAwarder>();
+    [Dependency] public TextSpawner TextSpawner => this.DependOn<TextSpawner>();
+    [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+
+    public override void _Notification(int what) => this.Notify(what);
+
+    public static Mushroom Create(Vector2 globalPosition)
     {
         var scene = GD.Load<PackedScene>(Config.MushroomScenePath);
         var m = scene.Instantiate<Mushroom>();
         m.GlobalPosition = globalPosition;
-        m._scoreAwarder = scoreAwarder;
         return m;
     }
 
@@ -27,8 +32,9 @@ public partial class Mushroom : CharacterBody2D
     {
         if (_collected || body is not PlayerController player) return;
         _collected = true;
-        _scoreAwarder.AwardScore(Constants.MushroomScore);
-        SpawnText(Constants.MushroomScore.ToString(), GlobalPosition);
+        ScoreAwarder.AwardScore(Constants.MushroomScore);
+        TextSpawner.SpawnText(Constants.MushroomScore.ToString(), GlobalPosition);
+        Sfx.PlayPlayerPowerUp();
         player.ApplyMushroom();
         QueueFree();
     }

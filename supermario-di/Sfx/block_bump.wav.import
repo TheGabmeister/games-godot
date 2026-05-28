@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://s75kcefv0774"
-path="res://.godot/imported/block_bump.wav-97125587fed695aad7d65f1c0ff940b7.sample"
+uid="uid://b3p03imklfmps"
+path="res://.godot/imported/Block_Bump.wav-f6ec203784fe028674fcc6a33bd117eb.sample"
 
 [deps]
 
-source_file="res://Sfx/block_bump.wav"
-dest_files=["res://.godot/imported/block_bump.wav-97125587fed695aad7d65f1c0ff940b7.sample"]
+source_file="res://Sfx/Block_Bump.wav"
+dest_files=["res://.godot/imported/Block_Bump.wav-f6ec203784fe028674fcc6a33bd117eb.sample"]
 
 [params]
 

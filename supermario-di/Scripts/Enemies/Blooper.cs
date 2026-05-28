@@ -2,15 +2,22 @@ using Godot;
 
 namespace SMB;
 
+[Meta(typeof(IAutoNode))]
 public partial class Blooper : CharacterBody2D, IStompable, IFireballHittable, IStarHittable
 {
     private float _t;
+
+    [Dependency] public GameMode GameMode => this.DependOn<GameMode>();
+
+    public override void _Notification(int what) => this.Notify(what);
 
     public override void _PhysicsProcess(double delta)
     {
         float dt = (float)delta;
         _t += dt;
-        var player = (Node2D)GetTree().GetFirstNodeInGroup("player");
+        var player = GameMode.CurrentPlayer;
+        if (player == null) return;
+
         var toPlayer = (player.GlobalPosition - GlobalPosition).Normalized();
 
         var bob = Mathf.Sin(_t * Constants.BlooperBobSpeed) * Constants.BlooperBobStrength;
