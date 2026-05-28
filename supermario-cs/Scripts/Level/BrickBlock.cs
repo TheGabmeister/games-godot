@@ -15,7 +15,7 @@ public partial class BrickBlock : StaticBody2D, IBumpable
     {
         if (player.CanBreakBricks)
         {
-            Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = BreakScore });
+            Events.EmitScoreEarned(BreakScore);
             QueueFree();
             return;
         }

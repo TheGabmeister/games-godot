@@ -17,17 +17,17 @@ public partial class SfxManager : Node
             _players[i] = p;
         }
 
-        Bus<EV_SfxPlay>.Sub(OnSfxPlay);
+        Events.SfxPlayRequested += OnSfxPlay;
     }
 
     public override void _ExitTree()
     {
-        Bus<EV_SfxPlay>.Unsub(OnSfxPlay);
+        Events.SfxPlayRequested -= OnSfxPlay;
     }
 
-    private void OnSfxPlay(EV_SfxPlay ev)
+    private void OnSfxPlay(AudioStream stream)
     {
-        Play(ev.value);
+        Play(stream);
     }
 
     public void Play(AudioStream stream)

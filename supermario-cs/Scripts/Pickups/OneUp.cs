@@ -17,7 +17,7 @@ public partial class OneUp : CharacterBody2D
     {
         if (_collected) return;
         _collected = true;
-        Bus<EV_Pickup_OneUp>.Emit();
+        Events.EmitOneUpPickedUp();
         QueueFree();
     }
 }

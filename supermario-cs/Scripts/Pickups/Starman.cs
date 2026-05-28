@@ -18,9 +18,7 @@ public partial class Starman : CharacterBody2D
     {
         if (_collected) return;
         _collected = true;
-        Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = ScoreValue });
-        Bus<EV_Pickup_Starman>.Emit();
-        Bus<EV_TextSpawn>.Emit(new EV_TextSpawn { text = ScoreValue.ToString(), position = GlobalPosition });
+        Events.EmitStarmanPickedUp(ScoreValue, GlobalPosition);
         QueueFree();
     }
 }

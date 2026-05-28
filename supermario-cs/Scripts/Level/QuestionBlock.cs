@@ -21,8 +21,7 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
         if (_used) return;
         _used = true;
         Visual.Color = UsedColor;
-        Bus<EV_ScoreEarned>.Emit(new EV_ScoreEarned { value = ScoreValue });
-        Bus<EV_Pickup_Coin>.Emit(new EV_Pickup_Coin { value = CoinValue });
+        Events.EmitCoinPickedUp(ScoreValue, CoinValue, GlobalPosition);
         Bumpable.Bump();
     }
 }

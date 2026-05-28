@@ -6,17 +6,17 @@ public partial class TextSpawner : Node2D
 {
     public override void _Ready()
     {
-        Bus<EV_TextSpawn>.Sub(OnTextSpawn);
+        Events.TextSpawnRequested += OnTextSpawn;
     }
 
     public override void _ExitTree()
     {
-        Bus<EV_TextSpawn>.Unsub(OnTextSpawn);
+        Events.TextSpawnRequested -= OnTextSpawn;
     }
 
-    private void OnTextSpawn(EV_TextSpawn ev)
+    private void OnTextSpawn(string text, Vector2 position)
     {
-        SpawnText(ev.text, ev.position);
+        SpawnText(text, position);
     }
 
     public void SpawnText(string text, Vector2 worldPosition)

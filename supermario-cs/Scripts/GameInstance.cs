@@ -17,8 +17,6 @@ public partial class GameInstance : Node
 
     public override void _Ready()
     {
-        EventBusUtil.Initialize();
-
         Music = new MusicManager { Name = "MusicManager" };
         AddChild(Music);
 
@@ -36,7 +34,7 @@ public partial class GameInstance : Node
 
     public override void _ExitTree()
     {
-        EventBusUtil.ClearAllBuses();
+        Events.Clear();
     }
 
     private void PostBoot()

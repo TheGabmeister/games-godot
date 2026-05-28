@@ -54,46 +54,54 @@ public partial class GameMode : Node
 
     private void SubscribeEvents()
     {
-        Bus<EV_ScoreEarned>.Sub(OnScoreEarned);
-        Bus<EV_Pickup_Coin>.Sub(OnCoinPickedUp);
-        Bus<EV_Pickup_Mushroom>.Sub(OnMushroomPickedUp);
-        Bus<EV_Pickup_FireFlower>.Sub(OnFireFlowerPickedUp);
-        Bus<EV_Pickup_Starman>.Sub(OnStarmanPickedUp);
-        Bus<EV_Pickup_OneUp>.Sub(OnOneUpPickedUp);
+        Events.ScoreEarned += OnScoreEarned;
+        Events.CoinPickedUp += OnCoinPickedUp;
+        Events.MushroomPickedUp += OnMushroomPickedUp;
+        Events.FireFlowerPickedUp += OnFireFlowerPickedUp;
+        Events.StarmanPickedUp += OnStarmanPickedUp;
+        Events.OneUpPickedUp += OnOneUpPickedUp;
     }
 
     private void UnsubscribeEvents()
     {
-        Bus<EV_ScoreEarned>.Unsub(OnScoreEarned);
-        Bus<EV_Pickup_Coin>.Unsub(OnCoinPickedUp);
-        Bus<EV_Pickup_Mushroom>.Unsub(OnMushroomPickedUp);
-        Bus<EV_Pickup_FireFlower>.Unsub(OnFireFlowerPickedUp);
-        Bus<EV_Pickup_Starman>.Unsub(OnStarmanPickedUp);
-        Bus<EV_Pickup_OneUp>.Unsub(OnOneUpPickedUp);
+        Events.ScoreEarned -= OnScoreEarned;
+        Events.CoinPickedUp -= OnCoinPickedUp;
+        Events.MushroomPickedUp -= OnMushroomPickedUp;
+        Events.FireFlowerPickedUp -= OnFireFlowerPickedUp;
+        Events.StarmanPickedUp -= OnStarmanPickedUp;
+        Events.OneUpPickedUp -= OnOneUpPickedUp;
     }
 
-    private void OnScoreEarned(EV_ScoreEarned ev)
+    private void OnScoreEarned(int value)
     {
-        AddScore(ev.value);
+        AddScore(value);
     }
 
-    private void OnCoinPickedUp(EV_Pickup_Coin ev)
+    private void OnCoinPickedUp(int scoreValue, int coinValue, Vector2 position)
     {
-        AddCoins(ev.value);
+        AddScore(scoreValue);
+        AddCoins(coinValue);
+        TextSpawner.SpawnText(scoreValue.ToString(), position);
     }
 
-    private void OnMushroomPickedUp(EV_Pickup_Mushroom ev)
+    private void OnMushroomPickedUp(int scoreValue, Vector2 position)
     {
+        AddScore(scoreValue);
+        TextSpawner.SpawnText(scoreValue.ToString(), position);
         _currentPlayer?.ApplyMushroom();
     }
 
-    private void OnFireFlowerPickedUp(EV_Pickup_FireFlower ev)
+    private void OnFireFlowerPickedUp(int scoreValue, Vector2 position)
     {
+        AddScore(scoreValue);
+        TextSpawner.SpawnText(scoreValue.ToString(), position);
         _currentPlayer?.ApplyFireFlower();
     }
 
-    private void OnStarmanPickedUp(EV_Pickup_Starman ev)
+    private void OnStarmanPickedUp(int scoreValue, Vector2 position)
     {
+        AddScore(scoreValue);
+        TextSpawner.SpawnText(scoreValue.ToString(), position);
         _currentPlayer?.ApplyStarman();
     }
 
