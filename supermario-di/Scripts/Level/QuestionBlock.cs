@@ -18,14 +18,6 @@ public partial class QuestionBlock : StaticBody2D, IBumpable
 
     public override void _Notification(int what) => this.Notify(what);
 
-    public static QuestionBlock Create(Vector2 globalPosition)
-    {
-        var scene = GD.Load<PackedScene>(Config.QuestionBlockScenePath);
-        var qb = scene.Instantiate<QuestionBlock>();
-        qb.GlobalPosition = globalPosition;
-        return qb;
-    }
-
     public override void _Ready()
     {
     }

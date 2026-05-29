@@ -124,7 +124,6 @@ public partial class GameMode : Node,
 
         var level = def.LevelScene.Instantiate<LevelScope>();
         SwapLevel(level);
-        SpawnLevelObjects(level);
         level.GoalTrigger.Reached += OnLevelCompleted;
 
         var player = _playerScene.Instantiate<PlayerController>();
@@ -135,34 +134,6 @@ public partial class GameMode : Node,
         player.PowerStateChanged += OnPlayerPowerStateChanged;
         player.FireballRequested += OnFireballRequested;
         _currentPlayer = player;
-    }
-
-    private void SpawnLevelObjects(LevelScope level)
-    {
-        foreach (var marker in level.Markers)
-        {
-            switch (marker)
-            {
-                case CoinMarker m:
-                    level.AddChild(Coin.Create(m.GlobalPosition));
-                    break;
-                case QuestionBlockMarker m:
-                    level.AddChild(QuestionBlock.Create(m.GlobalPosition));
-                    break;
-                case BrickBlockMarker m:
-                    level.AddChild(BrickBlock.Create(m.GlobalPosition));
-                    break;
-                case MushroomMarker m:
-                    level.AddChild(Mushroom.Create(m.GlobalPosition));
-                    break;
-                case StarmanMarker m:
-                    level.AddChild(Starman.Create(m.GlobalPosition));
-                    break;
-                case FireFlowerMarker m:
-                    level.AddChild(FireFlower.Create(m.GlobalPosition));
-                    break;
-            }
-        }
     }
 
     public override void _Process(double delta)

@@ -16,14 +16,6 @@ public partial class Mushroom : CharacterBody2D
 
     public override void _Notification(int what) => this.Notify(what);
 
-    public static Mushroom Create(Vector2 globalPosition)
-    {
-        var scene = GD.Load<PackedScene>(Config.MushroomScenePath);
-        var m = scene.Instantiate<Mushroom>();
-        m.GlobalPosition = globalPosition;
-        return m;
-    }
-
     public override void _Ready()
     {
         PickupTrigger.BodyEntered += OnPickedUp;

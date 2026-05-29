@@ -10,11 +10,10 @@ size = Vector2(4096, 64)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_goal"]
 size = Vector2(16, 256)
 
-[node name="LevelScope" type="Node2D" unique_id=1343455599 node_paths=PackedStringArray("PlayerStart", "GoalTrigger", "_markerRoot")]
+[node name="LevelScope" type="Node2D" unique_id=1343455599 node_paths=PackedStringArray("PlayerStart", "GoalTrigger")]
 script = ExtResource("1_base")
 PlayerStart = NodePath("PlayerStart")
 GoalTrigger = NodePath("GoalTrigger")
-_markerRoot = NodePath("Markers")
 
 [node name="PlayerStart" type="Marker2D" parent="." unique_id=1751259620]
 position = Vector2(64, 256)
@@ -35,5 +34,3 @@ script = ExtResource("5_goal")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GoalTrigger" unique_id=818635006]
 shape = SubResource("RectangleShape2D_goal")
-
-[node name="Markers" type="Node" parent="." unique_id=326710066]

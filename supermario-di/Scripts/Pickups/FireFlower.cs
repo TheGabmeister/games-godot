@@ -14,14 +14,6 @@ public partial class FireFlower : Area2D
 
     public override void _Notification(int what) => this.Notify(what);
 
-    public static FireFlower Create(Vector2 globalPosition)
-    {
-        var scene = GD.Load<PackedScene>(Config.FireFlowerScenePath);
-        var f = scene.Instantiate<FireFlower>();
-        f.GlobalPosition = globalPosition;
-        return f;
-    }
-
     public override void _Ready()
     {
         BodyEntered += OnBodyEntered;

@@ -52,35 +52,13 @@ Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) are s
 - `IScoreAwarder.AwardScore(int points)`
 - `ICoinCollector.CollectCoins(int coins)`
 
-`GameMode` implements both interfaces. Runtime-spawned pickups and blocks receive only the capabilities they need through their static `Create(...)` methods:
-
-```csharp
-level.AddChild(Coin.Create(m.GlobalPosition, this, this));
-level.AddChild(Mushroom.Create(m.GlobalPosition, this));
-```
-
-Dependencies are assigned inside `Create(...)`; do not expose separate public `Initialize(...)` methods for score/coin wiring unless the spawning model changes. These dependencies are required for correct gameplay. Do not use `?.`, no-op/null-object implementations, or silent fallbacks for missing score/coin handlers.
+`GameMode` implements both interfaces. Pre-placed pickups and blocks receive only the capabilities they need through AutoInject. These dependencies are required for correct gameplay. Do not use `?.`, no-op/null-object implementations, or silent fallbacks for missing score/coin handlers.
 
 `GameMode`'s own events (`SessionEnded`, `ScoreChanged`, `LivesChanged`, etc.) are HUD-facing, not entity-facing. HUD subscribes via `_hud.Bind(this)`.
 
-### Marker-Based Entity Spawning
+### Pre-Placed Level Entities
 
-Pickups and blocks are runtime-spawned from markers, not placed in level scenes directly. Each level scene has a `Markers` node wired to `LevelManager._markerRoot`. `LevelManager` only validates `PlayerStart`, `GoalTrigger`, `_markerRoot`, and exposes the marker children through `Markers`; it does not spawn gameplay objects and does not know about score/coin services.
-
-`GameMode` owns marker interpretation and object spawning in `SpawnLevelObjects(LevelManager level)`:
-
-```csharp
-case CoinMarker m:
-    level.AddChild(Coin.Create(m.GlobalPosition, this, this));
-    break;
-case QuestionBlockMarker m:
-    level.AddChild(QuestionBlock.Create(m.GlobalPosition, this, this));
-    break;
-```
-
-One marker class per entity type, each a minimal `Marker2D` subclass (extending `LabeledMarker` for editor visibility). Per-instance config goes on the marker as `[Export]` fields. Each runtime-spawned entity has a static `Create(...)` factory that loads its scene from `Config`, instantiates, assigns injected dependencies, sets position, and returns. `Coin` is the one exception: it builds its visual programmatically and has no `.tscn`.
-
-Entities without event emission (most enemies, decorations) are placed in the level scene at edit time.
+Pickups, blocks, enemies, platforms, and decorations are placed directly in level scenes. `LevelScope` validates only the required level references (`PlayerStart` and `GoalTrigger`); it does not expose marker children or spawn gameplay objects. `GameMode` still owns player, projectile, HUD, and level transition flow.
 
 ### Combat - Defender Decides Reaction
 
@@ -92,7 +70,7 @@ Entities without event emission (most enemies, decorations) are placed in the le
 
 1. **Vertical ownership.** Parent calls down, child signals up. Components reach their owner via `[Export]`. Never `GetParent()` / `GetNode("../...")`.
 2. **App services.** `MusicManager` and `SfxManager` are owned by `GameInstance` and reached through `GameServices` (`PlayMusic(...)`, `PlaySfx(...)`) or `GetGameInstance().Music` / `GetGameInstance().Sfx`. They are not statics; do not add an `Instance` accessor back.
-3. **Score/coin services.** `GameMode` implements `IScoreAwarder` and `ICoinCollector`. It passes itself into runtime-spawned entities through their `Create(...)` methods. Do not resolve score/coin handlers from `_Ready()`.
+3. **Score/coin services.** `GameMode` implements `IScoreAwarder` and `ICoinCollector`. Pre-placed entities resolve these through AutoInject.
 4. **Session service locator access.** Use `GetGameMode()` for runtime projectile/enemy spawn parents and one-up awards. Use `SpawnText(...)` for floating text where injection has not yet reached. Use `PlaySfx(...)` / `PlayMusic(...)` for audio.
 5. **Sibling interactions.** Direct calls via combat interfaces.
 
@@ -100,7 +78,7 @@ Entities without event emission (most enemies, decorations) are placed in the le
 
 - `GetParent()`, `GetNode("../...")`; use `[Export]`.
 - Base classes for enemies / pickups / projectiles. Flat per-entity scripts.
-- EntityFactory-style enum/string registries; `GameMode.SpawnLevelObjects` is the explicit marker dispatch point.
+- EntityFactory-style enum/string registries for level contents.
 - Persistent player across levels; re-spawned per level.
 - Re-introducing `GameEvents`, `IScoreEventSource` / `ICoinEventSource`, or tree-walking event scanners.
 - Re-adding `MusicManager.Instance` / `SfxManager.Instance` statics. Go through `GameInstance` or `GameServices`.
@@ -110,8 +88,8 @@ Entities without event emission (most enemies, decorations) are placed in the le
 ### Required Invariants
 
 - The Player body's `CollisionMask` does **not** include `PickupBody`. Mario walks through pickups; triggering happens via `PickupTrigger`.
-- `GameMode` is the sole owner of live session state and the owner of runtime object spawning from level markers. `SaveData` should only be updated through `GameMode.SaveGame()`.
-- A level scene must have `PlayerStart`, `GoalTrigger`, and `_markerRoot` exports wired; `LevelScope._Ready` throws otherwise.
+- `GameMode` is the sole owner of live session state. `SaveData` should only be updated through `GameMode.SaveGame()`.
+- A level scene must have `PlayerStart` and `GoalTrigger` exports wired; `LevelScope._Ready` throws otherwise.
 
 ## Conventions
 
