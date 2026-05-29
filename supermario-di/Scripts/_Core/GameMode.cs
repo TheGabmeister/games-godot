@@ -8,6 +8,7 @@ public partial class GameMode : Node,
     IScoreAwarder,
     ICoinCollector,
     IProvide<GameMode>,
+    IProvide<GameRules>,
     IProvide<SaveData>,
     IProvide<TextSpawner>,
     IProvide<IScoreAwarder>,
@@ -24,13 +25,13 @@ public partial class GameMode : Node,
     private const float DeathPauseSeconds = 1.5f;
 
     public SaveData SaveData { get; } = new();
+    public GameRules Rules { get; private set; }
     public LevelScope CurrentLevel { get; private set; }
     public PlayerController CurrentPlayer => _currentPlayer;
     public TextSpawner TextSpawner { get; private set; }
 
     [Dependency] public MusicManager Music => this.DependOn<MusicManager>();
     [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
-    [Dependency] public GameRules Rules => this.DependOn<GameRules>();
 
     private Campaign _campaign;
     private int _currentLevelIndex;
@@ -42,6 +43,7 @@ public partial class GameMode : Node,
     public override void _Notification(int what) => this.Notify(what);
 
     GameMode IProvide<GameMode>.Value() => this;
+    GameRules IProvide<GameRules>.Value() => Rules;
     SaveData IProvide<SaveData>.Value() => SaveData;
     TextSpawner IProvide<TextSpawner>.Value() => TextSpawner;
     IScoreAwarder IProvide<IScoreAwarder>.Value() => this;
@@ -50,6 +52,7 @@ public partial class GameMode : Node,
     public void Start(int startLevelIndex = 0)
     {
         _campaign = GD.Load<Campaign>(Config.CampaignPath);
+        Rules = GD.Load<GameRules>(Config.GameRulesPath);
         _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
         _fireballScene = GD.Load<PackedScene>(Config.FireballScenePath);
         _currentLevelIndex = startLevelIndex;

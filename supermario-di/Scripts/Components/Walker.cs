@@ -13,17 +13,15 @@ public partial class Walker : Node
 
     public int Direction = -1;
 
-    [Dependency] public PlayerTuning Tuning => this.DependOn<PlayerTuning>();
-
-    public override void _Notification(int what) => this.Notify(what);
+    private readonly PlayerTuning _tuning = GD.Load<PlayerTuning>(Config.PlayerTuningPath);
 
     public override void _PhysicsProcess(double delta)
     {
         float dt = (float)delta;
 
         var v = Body.Velocity;
-        v.Y += Tuning.Gravity * dt;
-        if (v.Y > Tuning.MaxFallSpeed) v.Y = Tuning.MaxFallSpeed;
+        v.Y += _tuning.Gravity * dt;
+        if (v.Y > _tuning.MaxFallSpeed) v.Y = _tuning.MaxFallSpeed;
         v.X = Direction * Speed;
 
         Body.Velocity = v;

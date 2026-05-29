@@ -33,7 +33,7 @@ If `godot` is not on PATH on Windows, use `D:\Godot\Godot_v4.6.2-stable_mono_win
 - **A `LevelManager` and `OS.HasFeature("editor")`** -> look up the scene's index in `Campaign.tres`, `UnloadCurrentScene()`, `StartGame(index)` (F6 skip-to-level workflow).
 - **Anything else** -> sandbox; services available, no session started.
 
-Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) live under `GameInstance.LevelRoot`. `MusicManager` and `SfxManager` are spawned as `GameInstance` children, not autoloads.
+Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) are spawned as `GameInstance` children. `MusicManager` and `SfxManager` are also spawned as `GameInstance` children, not autoloads.
 
 ### Service Access
 

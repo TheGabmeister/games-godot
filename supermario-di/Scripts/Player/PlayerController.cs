@@ -31,14 +31,16 @@ public partial class PlayerController : CharacterBody2D
     public bool IsStarInvincible => _starTimer > 0f;
     public bool IsInvulnerable => _invulnTimer > 0f;
     public bool CanBreakBricks => _state != PlayerPowerState.Small;
+    public PlayerTuning Tuning { get; private set; }
 
     [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
-    [Dependency] public PlayerTuning Tuning => this.DependOn<PlayerTuning>();
 
     public override void _Notification(int what) => this.Notify(what);
 
     public override void _Ready()
     {
+        Tuning = GD.Load<PlayerTuning>(Config.PlayerTuningPath);
+
         AddToGroup("player");
         CollisionLayer = PhysicsLayers.Player;
         CollisionMask = PhysicsLayers.Environment | PhysicsLayers.PickupTrigger | PhysicsLayers.LevelTrigger;

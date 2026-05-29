@@ -6,21 +6,15 @@ namespace SMB;
 public partial class GameInstance : Node,
     IProvide<GameInstance>,
     IProvide<MusicManager>,
-    IProvide<SfxManager>,
-    IProvide<GameRules>,
-    IProvide<PlayerTuning>
+    IProvide<SfxManager>
 {
     public MusicManager Music { get; private set; }
     public SfxManager Sfx { get; private set; }
-    public GameRules Rules { get; private set; }
-    public PlayerTuning PlayerTuning { get; private set; }
     public GameMode CurrentSession => _session;
-    public Node LevelRoot => _levelRoot;
 
     private PackedScene _mainMenuScene;
     private PackedScene _gameOverScene;
     private GameMode _session;
-    private Node _levelRoot;
     private Node _currentChild;
 
     public override void _Notification(int what) => this.Notify(what);
@@ -28,8 +22,6 @@ public partial class GameInstance : Node,
     GameInstance IProvide<GameInstance>.Value() => this;
     MusicManager IProvide<MusicManager>.Value() => Music;
     SfxManager IProvide<SfxManager>.Value() => Sfx;
-    GameRules IProvide<GameRules>.Value() => Rules;
-    PlayerTuning IProvide<PlayerTuning>.Value() => PlayerTuning;
 
     public override void _Ready()
     {
@@ -39,13 +31,8 @@ public partial class GameInstance : Node,
         Sfx = new SfxManager { Name = "SfxManager" };
         AddChild(Sfx);
 
-        _levelRoot = new Node { Name = "LevelRoot" };
-        AddChild(_levelRoot);
-
         _mainMenuScene = GD.Load<PackedScene>(Config.MainMenuScenePath);
         _gameOverScene = GD.Load<PackedScene>(Config.GameOverScenePath);
-        Rules = GD.Load<GameRules>(Config.GameRulesPath);
-        PlayerTuning = GD.Load<PlayerTuning>(Config.PlayerTuningPath);
 
         this.Provide();
         CallDeferred(MethodName.PostBoot);
@@ -123,7 +110,7 @@ public partial class GameInstance : Node,
             _currentChild.QueueFree();
             _currentChild = null;
         }
-        _levelRoot.AddChild(next);
+        AddChild(next);
         _currentChild = next;
     }
 }

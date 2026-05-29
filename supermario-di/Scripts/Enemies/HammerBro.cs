@@ -19,7 +19,8 @@ public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable,
     private int _direction = -1;
 
     [Dependency] public GameMode GameMode => this.DependOn<GameMode>();
-    [Dependency] public PlayerTuning Tuning => this.DependOn<PlayerTuning>();
+
+    private readonly PlayerTuning _tuning = GD.Load<PlayerTuning>(Config.PlayerTuningPath);
 
     public override void _Notification(int what) => this.Notify(what);
 
@@ -27,8 +28,8 @@ public partial class HammerBro : CharacterBody2D, IStompable, IFireballHittable,
     {
         float dt = (float)delta;
 
-        _velocity.Y += Tuning.Gravity * dt;
-        if (_velocity.Y > Tuning.MaxFallSpeed) _velocity.Y = Tuning.MaxFallSpeed;
+        _velocity.Y += _tuning.Gravity * dt;
+        if (_velocity.Y > _tuning.MaxFallSpeed) _velocity.Y = _tuning.MaxFallSpeed;
 
         _shuffleT += dt;
         if (_shuffleT >= ShuffleInterval)
