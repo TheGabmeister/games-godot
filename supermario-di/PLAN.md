@@ -18,7 +18,7 @@ The downloaded AutoInject repo had an empty `Chickensoft.AutoInject/src`, so the
 ## Executed So Far
 
 - `GameInstance` is now the root provider for `GameInstance`, `MusicManager`, and `SfxManager`.
-- `GameMode` is now the session provider for `GameMode`, `SaveData`, `TextSpawner`, `IScoreAwarder`, and `ICoinCollector`.
+- `GameMode` is now the session provider for `GameMode`, `GameRules`, `TextSpawner`, `IScoreAwarder`, and `ICoinCollector`.
 - `LevelManager` has been replaced by `LevelScope`. Keep the level root concept, but not the manager name.
 - `GameServices` and the static global service lookup were removed.
 - HUD, main menu, pickups, blocks, player, projectiles, and key enemy spawners now use AutoInject dependencies.

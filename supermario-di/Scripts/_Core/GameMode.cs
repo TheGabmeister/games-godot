@@ -9,7 +9,6 @@ public partial class GameMode : Node,
     ICoinCollector,
     IProvide<GameMode>,
     IProvide<GameRules>,
-    IProvide<SaveData>,
     IProvide<TextSpawner>,
     IProvide<IScoreAwarder>,
     IProvide<ICoinCollector>
@@ -29,6 +28,12 @@ public partial class GameMode : Node,
     public LevelScope CurrentLevel { get; private set; }
     public PlayerController CurrentPlayer => _currentPlayer;
     public TextSpawner TextSpawner { get; private set; }
+    public int Score { get; private set; }
+    public int Coins { get; private set; }
+    public int Lives { get; private set; }
+    public PlayerPowerState PowerState { get; private set; } = PlayerPowerState.Small;
+    public string CurrentLevelName { get; private set; } = "";
+    public float TimeRemaining { get; private set; }
 
     [Dependency] public MusicManager Music => this.DependOn<MusicManager>();
     [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
@@ -44,7 +49,6 @@ public partial class GameMode : Node,
 
     GameMode IProvide<GameMode>.Value() => this;
     GameRules IProvide<GameRules>.Value() => Rules;
-    SaveData IProvide<SaveData>.Value() => SaveData;
     TextSpawner IProvide<TextSpawner>.Value() => TextSpawner;
     IScoreAwarder IProvide<IScoreAwarder>.Value() => this;
     ICoinCollector IProvide<ICoinCollector>.Value() => this;
@@ -56,7 +60,7 @@ public partial class GameMode : Node,
         _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
         _fireballScene = GD.Load<PackedScene>(Config.FireballScenePath);
         _currentLevelIndex = startLevelIndex;
-        SaveData.Lives = Rules.StartingLives;
+        Lives = Rules.StartingLives;
 
         OneUpAwarded += OnOneUpAwarded;
 
@@ -69,6 +73,16 @@ public partial class GameMode : Node,
 
         LoadCurrentLevel();
         this.Provide();
+    }
+
+    public void SaveGame()
+    {
+        SaveData.Score = Score;
+        SaveData.Coins = Coins;
+        SaveData.Lives = Lives;
+        SaveData.PowerState = PowerState;
+        SaveData.CurrentLevelName = CurrentLevelName;
+        SaveData.TimeRemaining = TimeRemaining;
     }
 
     public void EmitOneUpAwarded() => OneUpAwarded?.Invoke();
@@ -85,12 +99,12 @@ public partial class GameMode : Node,
 
     private void OnOneUpAwarded()
     {
-        SetLives(SaveData.Lives + 1);
+        SetLives(Lives + 1);
     }
 
     private void OnPlayerPowerStateChanged(PlayerPowerState newState)
     {
-        SaveData.PowerState = newState;
+        PowerState = newState;
     }
 
     private void OnFireballRequested(Vector2 position, int facing, PlayerController owner)
@@ -114,7 +128,7 @@ public partial class GameMode : Node,
         level.GoalTrigger.Reached += OnLevelCompleted;
 
         var player = _playerScene.Instantiate<PlayerController>();
-        player.Initialize(SaveData.PowerState);
+        player.Initialize(PowerState);
         player.GlobalPosition = level.PlayerStart.GlobalPosition;
         level.AddChild(player);
         player.Died += OnPlayerDied;
@@ -154,10 +168,10 @@ public partial class GameMode : Node,
     public override void _Process(double delta)
     {
         if (_currentPlayer == null) return;
-        if (SaveData.TimeRemaining <= 0f) return;
+        if (TimeRemaining <= 0f) return;
 
-        SetTimeRemaining(SaveData.TimeRemaining - (float)delta);
-        if (SaveData.TimeRemaining <= 0f)
+        SetTimeRemaining(TimeRemaining - (float)delta);
+        if (TimeRemaining <= 0f)
             _currentPlayer.KillPlayer();
     }
 
@@ -178,14 +192,14 @@ public partial class GameMode : Node,
     private void OnPlayerDied()
     {
         _currentPlayer = null;
-        SaveData.PowerState = PlayerPowerState.Small;
-        SetLives(SaveData.Lives - 1);
+        PowerState = PlayerPowerState.Small;
+        SetLives(Lives - 1);
 
         var timer = GetTree().CreateTimer(DeathPauseSeconds);
         timer.Timeout += () =>
         {
             if (!IsInsideTree()) return;
-            if (SaveData.Lives <= 0)
+            if (Lives <= 0)
                 SessionEnded?.Invoke();
             else
                 LoadCurrentLevel();
@@ -194,40 +208,40 @@ public partial class GameMode : Node,
 
     private void AddScore(int points)
     {
-        SaveData.Score += points;
-        ScoreChanged?.Invoke(SaveData.Score);
+        Score += points;
+        ScoreChanged?.Invoke(Score);
     }
 
     private void AddCoins(int coins)
     {
-        SaveData.Coins += coins;
-        if (SaveData.Coins >= Rules.CoinsPerLife)
+        Coins += coins;
+        if (Coins >= Rules.CoinsPerLife)
         {
-            var livesEarned = SaveData.Coins / Rules.CoinsPerLife;
-            SaveData.Coins %= Rules.CoinsPerLife;
-            SetLives(SaveData.Lives + livesEarned);
+            var livesEarned = Coins / Rules.CoinsPerLife;
+            Coins %= Rules.CoinsPerLife;
+            SetLives(Lives + livesEarned);
         }
 
-        CoinsChanged?.Invoke(SaveData.Coins);
+        CoinsChanged?.Invoke(Coins);
     }
 
     private void SetLives(int lives)
     {
-        SaveData.Lives = lives;
-        LivesChanged?.Invoke(SaveData.Lives);
+        Lives = lives;
+        LivesChanged?.Invoke(Lives);
     }
 
     private void SetLevel(string name, float timeLimit)
     {
-        SaveData.CurrentLevelName = name;
-        LevelChanged?.Invoke(SaveData.CurrentLevelName);
+        CurrentLevelName = name;
+        LevelChanged?.Invoke(CurrentLevelName);
         SetTimeRemaining(timeLimit);
     }
 
     private void SetTimeRemaining(float seconds)
     {
-        SaveData.TimeRemaining = seconds < 0f ? 0f : seconds;
-        TimeRemainingChanged?.Invoke(SaveData.TimeRemaining);
+        TimeRemaining = seconds < 0f ? 0f : seconds;
+        TimeRemainingChanged?.Invoke(TimeRemaining);
     }
 
     private void SwapLevel(LevelScope next)

@@ -47,7 +47,7 @@ Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) are s
 
 ### Score And Coin Interfaces
 
-`GameMode` is the sole writer to score, coin, lives, and other `SaveData` state. Score and coin collection use narrow capability interfaces:
+`GameMode` is the sole owner of live score, coin, lives, and related session state. `SaveData` is only updated when `GameMode.SaveGame()` copies the live state into the save payload. Score and coin collection use narrow capability interfaces:
 
 - `IScoreAwarder.AwardScore(int points)`
 - `ICoinCollector.CollectCoins(int coins)`
@@ -110,7 +110,7 @@ Entities without event emission (most enemies, decorations) are placed in the le
 ### Required Invariants
 
 - The Player body's `CollisionMask` does **not** include `PickupBody`. Mario walks through pickups; triggering happens via `PickupTrigger`.
-- `GameMode` is the sole writer to `SaveData` and the owner of runtime object spawning from level markers.
+- `GameMode` is the sole owner of live session state and the owner of runtime object spawning from level markers. `SaveData` should only be updated through `GameMode.SaveGame()`.
 - A level scene must have `PlayerStart`, `GoalTrigger`, and `_markerRoot` exports wired; `LevelScope._Ready` throws otherwise.
 
 ## Conventions

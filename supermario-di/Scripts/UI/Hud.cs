@@ -48,12 +48,11 @@ public partial class Hud : CanvasLayer
 
     private void RefreshLabels()
     {
-        var saveData = _session.SaveData;
-        WorldLabel.Text = saveData.CurrentLevelName;
-        OnScoreChanged(saveData.Score);
-        OnCoinsChanged(saveData.Coins);
-        OnLivesChanged(saveData.Lives);
-        OnTimeRemainingChanged(saveData.TimeRemaining);
+        WorldLabel.Text = _session.CurrentLevelName;
+        OnScoreChanged(_session.Score);
+        OnCoinsChanged(_session.Coins);
+        OnLivesChanged(_session.Lives);
+        OnTimeRemainingChanged(_session.TimeRemaining);
     }
 
     private void OnScoreChanged(int score)
