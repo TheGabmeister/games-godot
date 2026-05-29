@@ -2,20 +2,20 @@
 
 [ext_resource type="Script" uid="uid://c5rgniua4qq6q" path="res://Scripts/Level/Platform.cs" id="1_plat"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
-size = Vector2(64, 16)
-
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_plat"]
 size = Vector2(64, 16)
 
-[node name="Platform" type="StaticBody2D"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
+size = Vector2(64, 16)
+
+[node name="Platform" type="StaticBody2D" unique_id=1584649018]
 collision_layer = 8
 collision_mask = 0
 script = ExtResource("1_plat")
 
-[node name="Sprite" type="Sprite2D" parent="."]
-texture = SubResource("PlaceholderTexture2D_plat")
+[node name="Sprite" type="Sprite2D" parent="." unique_id=281322916]
 modulate = Color(0.55, 0.35, 0.15, 1)
+texture = SubResource("PlaceholderTexture2D_plat")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1961737728]
 shape = SubResource("RectangleShape2D_plat")

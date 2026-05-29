@@ -9,33 +9,28 @@ radius = 8.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_fb_hit"]
 radius = 8.0
 
-[node name="Fireball" type="CharacterBody2D"]
+[node name="Fireball" type="CharacterBody2D" unique_id=2006565755]
 collision_layer = 16
 collision_mask = 8
 script = ExtResource("1_fb")
 HitArea = NodePath("HitArea")
-Speed = 400.0
-Gravity = 1400.0
-BounceForce = -500.0
-MaxFallSpeed = 700.0
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=2061478447]
 offset_left = -8.0
 offset_top = -8.0
 offset_right = 8.0
 offset_bottom = 8.0
-color = Color(1.0, 0.55, 0.10, 1)
+color = Color(1, 0.55, 0.1, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1422099394]
 shape = SubResource("CircleShape2D_fb")
 
-[node name="HitArea" type="Area2D" parent="."]
+[node name="HitArea" type="Area2D" parent="." unique_id=411539631]
 collision_layer = 16
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HitArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitArea" unique_id=1795305957]
 shape = SubResource("CircleShape2D_fb_hit")
 
-[node name="Lifetime" type="Node" parent="."]
+[node name="Lifetime" type="Node" parent="." unique_id=1657946555]
 script = ExtResource("2_lf")
-Duration = 3.0

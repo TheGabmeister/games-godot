@@ -3,15 +3,12 @@
 [ext_resource type="Script" uid="uid://b8k3mbg51u8" path="res://Scripts/Enemies/BulletBillCannon.cs" id="1_c"]
 [ext_resource type="PackedScene" uid="uid://bkniq27ca3fhg" path="res://Scenes/Entities/bullet_bill.tscn" id="2_bb"]
 
-[node name="BulletBillCannon" type="Node2D"]
+[node name="BulletBillCannon" type="Node2D" unique_id=1568229034]
 script = ExtResource("1_c")
 BulletBillScene = ExtResource("2_bb")
-Facing = -1
-FireInterval = 4.0
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=569365832]
 offset_left = -16.0
 offset_top = -32.0
 offset_right = 16.0
-offset_bottom = 0.0
 color = Color(0.15, 0.15, 0.15, 1)

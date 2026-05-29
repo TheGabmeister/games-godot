@@ -7,35 +7,30 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_b"]
 size = Vector2(32, 32)
 
-[node name="BuzzyBeetle" type="CharacterBody2D"]
+[node name="BuzzyBeetle" type="CharacterBody2D" unique_id=1240768818]
 collision_layer = 2
 collision_mask = 8
 script = ExtResource("1_b")
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=1022098362]
 offset_left = -16.0
 offset_top = -32.0
 offset_right = 16.0
-offset_bottom = 0.0
-color = Color(0.15, 0.15, 0.40, 1)
+color = Color(0.15, 0.15, 0.4, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=68650499]
 position = Vector2(0, -16)
 shape = SubResource("RectangleShape2D_b")
 
-[node name="Walker" type="Node" parent="."]
+[node name="Walker" type="Node" parent="." unique_id=300349001]
 script = ExtResource("2_w")
 Body = NodePath("..")
-Speed = 80.0
-TurnAtCliffs = false
-BounceForce = 0.0
 
-[node name="Hitbox" type="Area2D" parent="."]
+[node name="Hitbox" type="Area2D" parent="." unique_id=5464835]
 collision_layer = 2
-collision_mask = 1
 script = ExtResource("3_h")
 OwnerNode = NodePath("..")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=1731169725]
 position = Vector2(0, -16)
 shape = SubResource("RectangleShape2D_b")

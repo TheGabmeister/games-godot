@@ -6,26 +6,20 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h"]
 size = Vector2(16, 16)
 
-[node name="Hammer" type="Area2D"]
+[node name="Hammer" type="Area2D" unique_id=1844725691]
 collision_layer = 32
-collision_mask = 1
 script = ExtResource("1_h")
 Visual = NodePath("Visual")
-HorizontalSpeed = 220.0
-InitialUpSpeed = 520.0
-FallGravity = 1400.0
-SpinSpeed = 18.0
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=831385673]
 offset_left = -8.0
 offset_top = -8.0
 offset_right = 8.0
 offset_bottom = 8.0
 color = Color(0.6, 0.4, 0.2, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=224532105]
 shape = SubResource("RectangleShape2D_h")
 
-[node name="Lifetime" type="Node" parent="."]
+[node name="Lifetime" type="Node" parent="." unique_id=988460724]
 script = ExtResource("2_lf")
-Duration = 3.0

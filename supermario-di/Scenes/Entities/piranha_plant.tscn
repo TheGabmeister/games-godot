@@ -5,26 +5,21 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pp"]
 size = Vector2(32, 48)
 
-[node name="PiranhaPlant" type="Node2D"]
+[node name="PiranhaPlant" type="Node2D" unique_id=1619400301]
 script = ExtResource("1_pp")
 Visual = NodePath("Visual")
 Hitbox = NodePath("Hitbox")
 EmergeHeight = 48.0
-EmergeDuration = 1.5
-HideDuration = 1.5
-ProximityRadius = 80.0
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=1131474450]
 offset_left = -16.0
 offset_top = -48.0
 offset_right = 16.0
-offset_bottom = 0.0
-color = Color(0.20, 0.65, 0.10, 1)
+color = Color(0.2, 0.65, 0.1, 1)
 
-[node name="Hitbox" type="Area2D" parent="."]
+[node name="Hitbox" type="Area2D" parent="." unique_id=1466122859]
 collision_layer = 2
-collision_mask = 1
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=1241821195]
 position = Vector2(0, -24)
 shape = SubResource("RectangleShape2D_pp")

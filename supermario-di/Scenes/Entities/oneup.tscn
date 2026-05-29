@@ -6,34 +6,29 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_o"]
 size = Vector2(32, 32)
 
-[node name="OneUp" type="CharacterBody2D"]
+[node name="OneUp" type="CharacterBody2D" unique_id=660811497]
 collision_layer = 4
 collision_mask = 8
 script = ExtResource("1_o")
 PickupTrigger = NodePath("PickupTrigger")
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=410997152]
 offset_left = -16.0
 offset_top = -32.0
 offset_right = 16.0
-offset_bottom = 0.0
 color = Color(0.1, 0.85, 0.15, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1120294590]
 position = Vector2(0, -16)
 shape = SubResource("RectangleShape2D_o")
 
-[node name="Walker" type="Node" parent="."]
+[node name="Walker" type="Node" parent="." unique_id=1478773318 node_paths=PackedStringArray("Body")]
 script = ExtResource("2_w")
 Body = NodePath("..")
-Speed = 80.0
-TurnAtCliffs = false
-BounceForce = 0.0
 
-[node name="PickupTrigger" type="Area2D" parent="."]
+[node name="PickupTrigger" type="Area2D" parent="." unique_id=49360377]
 collision_layer = 64
-collision_mask = 1
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PickupTrigger"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PickupTrigger" unique_id=1871218595]
 position = Vector2(0, -16)
 shape = SubResource("RectangleShape2D_o")

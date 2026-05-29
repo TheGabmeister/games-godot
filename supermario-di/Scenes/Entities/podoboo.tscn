@@ -5,20 +5,16 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_p"]
 radius = 12.0
 
-[node name="Podoboo" type="Area2D"]
+[node name="Podoboo" type="Area2D" unique_id=1659784213]
 collision_layer = 2
-collision_mask = 1
 script = ExtResource("1_p")
-JumpSpeed = 520.0
-FallGravity = 1200.0
-RestDuration = 1.0
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=23179346]
 offset_left = -12.0
 offset_top = -12.0
 offset_right = 12.0
 offset_bottom = 12.0
-color = Color(1.0, 0.35, 0.05, 1)
+color = Color(1, 0.35, 0.05, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=252743729]
 shape = SubResource("CircleShape2D_p")

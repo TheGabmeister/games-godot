@@ -6,26 +6,23 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_q"]
 size = Vector2(32, 32)
 
-[node name="QuestionBlock" type="StaticBody2D" node_paths=PackedStringArray("Bumpable", "Visual")]
+[node name="QuestionBlock" type="StaticBody2D" unique_id=853460641 node_paths=PackedStringArray("Bumpable", "Visual")]
 collision_layer = 8
 collision_mask = 0
 script = ExtResource("1_q")
 Bumpable = NodePath("Bumpable")
 Visual = NodePath("Visual")
-UsedColor = Color(0.55, 0.35, 0.1, 1)
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=18353864]
 offset_left = -16.0
 offset_top = -16.0
 offset_right = 16.0
 offset_bottom = 16.0
 color = Color(0.95, 0.75, 0.18, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=686451482]
 shape = SubResource("RectangleShape2D_q")
 
-[node name="Bumpable" type="Node" parent="."]
+[node name="Bumpable" type="Node" parent="." unique_id=425252165]
 script = ExtResource("2_bump")
 Visual = NodePath("../Visual")
-Distance = 8.0
-Duration = 0.18

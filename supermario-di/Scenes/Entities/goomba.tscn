@@ -7,35 +7,30 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_g"]
 size = Vector2(32, 32)
 
-[node name="Goomba" type="CharacterBody2D"]
+[node name="Goomba" type="CharacterBody2D" unique_id=38145198]
 collision_layer = 2
 collision_mask = 8
 script = ExtResource("1_g")
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=826775772]
 offset_left = -16.0
 offset_top = -32.0
 offset_right = 16.0
-offset_bottom = 0.0
-color = Color(0.45, 0.25, 0.10, 1)
+color = Color(0.45, 0.25, 0.1, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=993540246]
 position = Vector2(0, -16)
 shape = SubResource("RectangleShape2D_g")
 
-[node name="Walker" type="Node" parent="."]
+[node name="Walker" type="Node" parent="." unique_id=1349447679 node_paths=PackedStringArray("Body")]
 script = ExtResource("2_w")
 Body = NodePath("..")
-Speed = 80.0
-TurnAtCliffs = false
-BounceForce = 0.0
 
-[node name="Hitbox" type="Area2D" parent="."]
+[node name="Hitbox" type="Area2D" parent="." unique_id=718028164]
 collision_layer = 2
-collision_mask = 1
 script = ExtResource("3_h")
 OwnerNode = NodePath("..")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=1310028084]
 position = Vector2(0, -16)
 shape = SubResource("RectangleShape2D_g")

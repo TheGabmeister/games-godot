@@ -5,18 +5,16 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_f"]
 size = Vector2(32, 32)
 
-[node name="FireFlower" type="Area2D"]
+[node name="FireFlower" type="Area2D" unique_id=554183238]
 collision_layer = 64
-collision_mask = 1
 script = ExtResource("1_f")
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=1474088776]
 offset_left = -16.0
 offset_top = -32.0
 offset_right = 16.0
-offset_bottom = 0.0
-color = Color(1.0, 0.55, 0.10, 1)
+color = Color(1, 0.55, 0.1, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1135247014]
 position = Vector2(0, -16)
 shape = SubResource("RectangleShape2D_f")

@@ -3,6 +3,8 @@
 [ext_resource type="PackedScene" uid="uid://cr75qnkiioj5i" path="res://Scenes/level_base.tscn" id="1_base"]
 [ext_resource type="PackedScene" uid="uid://c37pxx6yegoeq" path="res://Scenes/Entities/platform.tscn" id="2_plat"]
 [ext_resource type="PackedScene" path="res://Scenes/Entities/coin.tscn" id="3_coin"]
+[ext_resource type="PackedScene" uid="uid://uyhey6bwhiya" path="res://Scenes/Entities/mushroom.tscn" id="4_u04up"]
+[ext_resource type="PackedScene" uid="uid://dcjugf35ylnnc" path="res://Scenes/Entities/goomba.tscn" id="5_rv1i2"]
 
 [node name="World11" unique_id=144288357 instance=ExtResource("1_base")]
 
@@ -10,19 +12,20 @@
 position = Vector2(293, 256)
 
 [node name="Platform" parent="." index="3" unique_id=1106055088 instance=ExtResource("2_plat")]
-position = Vector2(66, 320)
+position = Vector2(149, 320)
+scale = Vector2(5.4399996, 1)
 
-[node name="Platform2" parent="." index="4" unique_id=1907707047 instance=ExtResource("2_plat")]
-position = Vector2(172, 320)
-
-[node name="Platform3" parent="." index="5" unique_id=905141241 instance=ExtResource("2_plat")]
-position = Vector2(291, 321)
-
-[node name="Coin" parent="." index="6" unique_id=1158060375 instance=ExtResource("3_coin")]
+[node name="Coin" parent="." index="4" unique_id=1158060375 instance=ExtResource("3_coin")]
 position = Vector2(128, 280)
 
-[node name="Coin2" parent="." index="7" unique_id=1255589448 instance=ExtResource("3_coin")]
+[node name="Coin2" parent="." index="5" unique_id=1255589448 instance=ExtResource("3_coin")]
 position = Vector2(160, 280)
 
-[node name="Coin3" parent="." index="8" unique_id=895617369 instance=ExtResource("3_coin")]
+[node name="Coin3" parent="." index="6" unique_id=895617369 instance=ExtResource("3_coin")]
 position = Vector2(192, 280)
+
+[node name="Mushroom" parent="." index="7" unique_id=427974082 instance=ExtResource("4_u04up")]
+position = Vector2(208, 250)
+
+[node name="Goomba" parent="." index="8" unique_id=2147444789 instance=ExtResource("5_rv1i2")]
+position = Vector2(261, 250)
