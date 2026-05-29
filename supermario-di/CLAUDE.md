@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for coding agents working in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project
 
@@ -29,9 +29,9 @@ If `godot` is not on PATH on Windows, use `D:\Godot\Godot_v4.6.2-stable_mono_win
 
 **One autoload: `GameInstance`.** Entry point and app-lifetime service locator. Access it via `GameServices.GetGameInstance()` or the globally imported `GetGameInstance()` helper; it does not expose a static `Instance` property. `boot.tscn` is an empty marker scene; the real flow is in `GameInstance.PostBoot`, which defers one frame after `_Ready`, reads `GetTree().CurrentScene`, and branches:
 
-- **Path is `boot.tscn`** -> `LoadMainMenu()` (normal launch).
-- **A `LevelManager` and `OS.HasFeature("editor")`** -> look up the scene's index in `Campaign.tres`, `UnloadCurrentScene()`, `StartGame(index)` (F6 skip-to-level workflow).
-- **Anything else** -> sandbox; services available, no session started.
+- **Path is `boot.tscn`** → `LoadMainMenu()` (normal launch).
+- **A `LevelScope` node and `OS.HasFeature("editor")`** → look up the scene's index in `Campaign.tres`, `UnloadCurrentScene()`, `StartGame(index)` (F6 skip-to-level workflow).
+- **Anything else** → sandbox; services available, no session started.
 
 Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) are spawned as `GameInstance` children. `MusicManager` and `SfxManager` are also spawned as `GameInstance` children, not autoloads.
 
@@ -44,6 +44,38 @@ Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) are s
 | `GameMode.TextSpawner` | Level/session UI | `GameMode.Start` |
 
 `Scripts/_Core/GameServices.cs` is a static facade globally imported by `Scripts/_Core/GlobalUsings.cs`. It provides `GetGameInstance()`, `GetGameMode()`, `SpawnText(...)`, `PlaySfx(...)`, and `PlayMusic(...)`. The returned `GameInstance`, `GameMode`, and `TextSpawner` objects are normal instances, not static singletons. `MusicManager` and `SfxManager` are not statics either; reach them through `GameInstance.Music` / `GameInstance.Sfx` (or, more commonly, via `PlayMusic(...)` / `PlaySfx(...)`).
+
+Scene and resource paths are centralized in `Scripts/_Core/Config.cs`; use those constants rather than inline strings.
+
+### AutoInject Pattern
+
+Every gameplay node that provides or consumes dependencies must follow this boilerplate (packages: `Chickensoft.AutoInject`, `Chickensoft.Introspection` — both globally imported via `GlobalUsings.cs`):
+
+```csharp
+[Meta(typeof(IAutoNode))]
+public partial class MyNode : Node2D
+{
+    public override void _Notification(int what) => this.Notify(what);
+
+    // Consuming a dependency — resolved from ancestor providers before OnResolved()
+    [Dependency] public IScoreAwarder ScoreAwarder => this.DependOn<IScoreAwarder>();
+
+    // Providing a dependency — call this.Provide() in _Ready() or OnResolved()
+    public IScoreAwarder Value() => this;  // implements IProvide<IScoreAwarder>
+
+    public override void _Ready()
+    {
+        this.Provide();  // if this node is a provider
+    }
+
+    public void OnResolved()
+    {
+        // Called after all [Dependency] properties are satisfied; safe to use them here
+    }
+}
+```
+
+`GameInstance` provides `GameInstance`, `MusicManager`, `SfxManager`. `GameMode` provides `GameMode`, `GameRules`, `TextSpawner`, `IScoreAwarder`, `ICoinCollector`. Resolution walks up the scene tree; no manual wiring needed.
 
 ### Score And Coin Interfaces
 
@@ -60,9 +92,22 @@ Top-level screens (`MainMenuController`, `GameMode`, `GameOverController`) are s
 
 Pickups, blocks, enemies, platforms, and decorations are placed directly in level scenes. `LevelScope` validates only the required level references (`PlayerStart` and `GoalTrigger`); it does not expose marker children or spawn gameplay objects. `GameMode` still owns player, projectile, HUD, and level transition flow.
 
-### Combat - Defender Decides Reaction
+Level metadata lives in `Resources/Levels/*.tres` (`LevelDefinition` resources); `Resources/Campaign.tres` holds the ordered array. To add a level: create a `LevelDefinition` resource, add it to `Campaign.tres`, and create the `.tscn` with a `LevelScope` root that has `PlayerStart` and `GoalTrigger` exports wired.
+
+### Combat — Defender Decides Reaction
 
 `IStompable`, `IFireballHittable`, `IStarHittable`, `IBumpable`. The attacker invokes the interface; the defender chooses the reaction. These are not event sources; they are direct sibling dispatch.
+
+`IFireballHittable.OnHitByFireball()` returns `FireballReaction` (`Defeated` or `Blocked`); `Blocked` bounces the fireball back.
+
+### Reusable Components
+
+`Scripts/Components/` contains small behaviors composed onto entity scenes via `[Export]`:
+
+- `Walker` — lateral movement with gravity, cliff detection, and wall bounce.
+- `Bumpable` — plays the block-bump animation; owned by `BrickBlock` / `QuestionBlock`.
+- `Hitbox` — collision shape for hit detection.
+- `Lifetime` — auto-frees the node after a configurable timeout.
 
 ## Rules
 
@@ -101,6 +146,19 @@ Pickups, blocks, enemies, platforms, and decorations are placed directly in leve
 - Collision bit positions in `Scripts/_Core/PhysicsLayers.cs` must stay in sync with the named 2D physics layers in `project.godot`.
 - Shared score/life rules live in `Resources/GameRules.tres`; shared player tuning lives in `Resources/PlayerTuning.tres`; prefab-local tuning belongs on exported scene properties.
 - **Required scene wiring should fail loudly.** Prefer typed exports and `PackedScene.Instantiate<T>()` over defensive null checks. Keep checks only for real gameplay/lifecycle state (`_dead`, `_collected`, "is this body the player?", optional resource fields).
+
+### Input Actions
+
+Defined in `project.godot`; use these `StringName`s (not raw key constants):
+
+| Action | Bindings |
+|---|---|
+| `move_left` | A, Left Arrow |
+| `move_right` | D, Right Arrow |
+| `jump` | Space, W, Up Arrow |
+| `run` | Shift, J (also fires when Fire power) |
+| `crouch` | S, Down Arrow |
+| `pause` | Escape, P |
 
 ### `node_paths` Directive Gotcha
 
