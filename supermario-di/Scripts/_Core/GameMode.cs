@@ -42,7 +42,6 @@ public partial class GameMode : Node,
     private int _currentLevelIndex;
     private Hud _hud;
     private PackedScene _playerScene;
-    private PackedScene _fireballScene;
     private PlayerController _currentPlayer;
 
     public override void _Notification(int what) => this.Notify(what);
@@ -58,7 +57,6 @@ public partial class GameMode : Node,
         _campaign = GD.Load<Campaign>(Config.CampaignPath);
         Rules = GD.Load<GameRules>(Config.GameRulesPath);
         _playerScene = GD.Load<PackedScene>(Config.PlayerScenePath);
-        _fireballScene = GD.Load<PackedScene>(Config.FireballScenePath);
         _currentLevelIndex = startLevelIndex;
         Lives = Rules.StartingLives;
 
@@ -107,13 +105,6 @@ public partial class GameMode : Node,
         PowerState = newState;
     }
 
-    private void OnFireballRequested(Vector2 position, int facing, PlayerController owner)
-    {
-        var fireball = _fireballScene.Instantiate<Fireball>();
-        fireball.Init(position, facing, owner);
-        CurrentLevel.AddChild(fireball);
-    }
-
     private void LoadCurrentLevel()
     {
         var def = _campaign.Levels[_currentLevelIndex];
@@ -132,7 +123,6 @@ public partial class GameMode : Node,
         level.AddChild(player);
         player.Died += OnPlayerDied;
         player.PowerStateChanged += OnPlayerPowerStateChanged;
-        player.FireballRequested += OnFireballRequested;
         _currentPlayer = player;
     }
 

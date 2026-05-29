@@ -28,7 +28,7 @@ script = ExtResource("2_w")
 Body = NodePath("..")
 Speed = 0.0
 
-[node name="Hitbox" type="Area2D" parent="." unique_id=1926820390]
+[node name="Hitbox" type="Area2D" parent="." unique_id=1926820390 node_paths=PackedStringArray("OwnerNode")]
 collision_layer = 2
 script = ExtResource("3_h")
 OwnerNode = NodePath("..")

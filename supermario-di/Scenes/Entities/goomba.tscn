@@ -21,12 +21,13 @@ color = Color(0.45, 0.25, 0.1, 1)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=993540246]
 position = Vector2(0, -16)
 shape = SubResource("RectangleShape2D_g")
+one_way_collision = true
 
 [node name="Walker" type="Node" parent="." unique_id=1349447679 node_paths=PackedStringArray("Body")]
 script = ExtResource("2_w")
 Body = NodePath("..")
 
-[node name="Hitbox" type="Area2D" parent="." unique_id=718028164]
+[node name="Hitbox" type="Area2D" parent="." unique_id=718028164 node_paths=PackedStringArray("OwnerNode")]
 collision_layer = 2
 script = ExtResource("3_h")
 OwnerNode = NodePath("..")

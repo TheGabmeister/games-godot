@@ -8,8 +8,6 @@ public partial class PlayerController : CharacterBody2D
 {
     public event Action Died;
     public event Action<PlayerPowerState> PowerStateChanged;
-    public event Action<Vector2, int, PlayerController> FireballRequested;
-
     private static readonly StringName InputLeft = "move_left";
     private static readonly StringName InputRight = "move_right";
     private static readonly StringName InputJump = "jump";
@@ -26,6 +24,7 @@ public partial class PlayerController : CharacterBody2D
     private float _starTimer;
     private bool _dead;
     private PlayerPowerState _state = PlayerPowerState.Small;
+    private PackedScene _fireballScene;
 
     public PlayerPowerState State => _state;
     public bool IsStarInvincible => _starTimer > 0f;
@@ -40,10 +39,11 @@ public partial class PlayerController : CharacterBody2D
     public override void _Ready()
     {
         Tuning = GD.Load<PlayerTuning>(Config.PlayerTuningPath);
+        _fireballScene = GD.Load<PackedScene>(Config.FireballScenePath);
 
         AddToGroup("player");
         CollisionLayer = PhysicsLayers.Player;
-        CollisionMask = PhysicsLayers.Environment | PhysicsLayers.PickupTrigger | PhysicsLayers.LevelTrigger;
+        CollisionMask = PhysicsLayers.Enemy | PhysicsLayers.Environment | PhysicsLayers.PickupTrigger | PhysicsLayers.LevelTrigger;
 
         _visual = GetNode<ColorRect>("Visual");
         _shape = GetNode<CollisionShape2D>("CollisionShape2D");
@@ -90,6 +90,7 @@ public partial class PlayerController : CharacterBody2D
         if (_velocity.Y > Tuning.MaxFallSpeed)
             _velocity.Y = Tuning.MaxFallSpeed;
 
+        bool wasFalling = _velocity.Y > 0f;
         Velocity = _velocity;
         MoveAndSlide();
         _velocity = Velocity;
@@ -98,6 +99,9 @@ public partial class PlayerController : CharacterBody2D
         {
             var col = GetSlideCollision(i);
             var normal = col.GetNormal();
+            if (HandleEnemyCollision(col.GetCollider(), normal, wasFalling))
+                continue;
+
             if (normal.Y > 0.9f)
             {
                 if (col.GetCollider() is IBumpable bumpable)
@@ -107,9 +111,30 @@ public partial class PlayerController : CharacterBody2D
         }
     }
 
+    private bool HandleEnemyCollision(GodotObject collider, Vector2 normal, bool wasFalling)
+    {
+        if (IsStarInvincible && collider is IStarHittable star)
+        {
+            star.OnHitByStar(this);
+            return true;
+        }
+
+        if (collider is not IStompable stompable)
+            return false;
+
+        if (normal.Y < -0.7f && TryStomp(stompable, wasFalling))
+            return true;
+
+        TakeDamage();
+        return true;
+    }
+
     private void SpawnFireball()
     {
-        FireballRequested?.Invoke(_muzzle.GlobalPosition, _facing, this);
+        var fireball = _fireballScene.Instantiate<Fireball>();
+        fireball.Init(_muzzle.GlobalPosition, _facing, this);
+        GetParent().AddChild(fireball);
+
         _activeFireballs++;
         Sfx.PlayFireball();
     }
@@ -163,8 +188,14 @@ public partial class PlayerController : CharacterBody2D
 
     public bool TryStomp(IStompable stompable)
     {
-        if (_velocity.Y <= 0f) return false;
+        return TryStomp(stompable, _velocity.Y > 0f);
+    }
+
+    private bool TryStomp(IStompable stompable, bool wasFalling)
+    {
+        if (!wasFalling) return false;
         _velocity.Y = Tuning.StompBounceForce;
+        Velocity = _velocity;
         stompable.OnStomped(this);
         Sfx.PlayPlayerStomp();
         return true;

@@ -23,7 +23,7 @@ color = Color(0.2, 0.55, 0.2, 1)
 position = Vector2(0, -24)
 shape = SubResource("RectangleShape2D_hb")
 
-[node name="Hitbox" type="Area2D" parent="." unique_id=1414595065]
+[node name="Hitbox" type="Area2D" parent="." unique_id=1414595065 node_paths=PackedStringArray("OwnerNode")]
 collision_layer = 2
 script = ExtResource("2_h")
 OwnerNode = NodePath("..")

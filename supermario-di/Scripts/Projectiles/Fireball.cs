@@ -5,18 +5,19 @@ namespace SMB;
 [Meta(typeof(IAutoNode))]
 public partial class Fireball : CharacterBody2D
 {
-    [Export] public Area2D HitArea;
-    [Export] public float Speed = 400f;
-    [Export] public float Gravity = 1400f;
-    [Export] public float BounceForce = -500f;
-    [Export] public float MaxFallSpeed = 700f;
-
-    private PlayerController _owner;
-    private int _facing = 1;
-    private bool _destroyed;
-    private Vector2 _velocity;
+    [Export] Area2D _hitArea;
+    [Export] float _speed = 400f;
+    [Export] float _gravity = 1400f;
+    [Export] float _bounceForce = -500f;
+    [Export] float _maxFallSpeed = 700f;
 
     [Dependency] public SfxManager Sfx => this.DependOn<SfxManager>();
+    PlayerController _owner;
+    int _facing = 1;
+    bool _destroyed;
+    Vector2 _velocity;
+
+    
 
     public override void _Notification(int what) => this.Notify(what);
 
@@ -25,22 +26,22 @@ public partial class Fireball : CharacterBody2D
         GlobalPosition = position;
         _facing = facing;
         _owner = owner;
-        _velocity = new Vector2(_facing * Speed, 0f);
+        _velocity = new Vector2(_facing * _speed, 0f);
     }
 
     public override void _Ready()
     {
-        HitArea.BodyEntered += OnHit;
+        _hitArea.BodyEntered += OnHit;
     }
 
     public override void _PhysicsProcess(double delta)
     {
         if (_destroyed) return;
         float dt = (float)delta;
-        _velocity.Y += Gravity * dt;
-        if (_velocity.Y > MaxFallSpeed)
-            _velocity.Y = MaxFallSpeed;
-        _velocity.X = _facing * Speed;
+        _velocity.Y += _gravity * dt;
+        if (_velocity.Y > _maxFallSpeed)
+            _velocity.Y = _maxFallSpeed;
+        _velocity.X = _facing * _speed;
         Velocity = _velocity;
         MoveAndSlide();
         _velocity = Velocity;
@@ -51,7 +52,7 @@ public partial class Fireball : CharacterBody2D
             var n = col.GetNormal();
             if (n.Y < -0.9f)
             {
-                _velocity.Y = BounceForce;
+                _velocity.Y = _bounceForce;
             }
             else if (Mathf.Abs(n.X) > 0.9f)
             {
